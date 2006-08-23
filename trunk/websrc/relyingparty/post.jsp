@@ -1,0 +1,77 @@
+<%@ page import="org.xmldap.util.KeystoreUtil,
+                 org.xmldap.exceptions.KeyStoreException,
+                 org.xmldap.xmlenc.EncryptedData,
+                 org.xmldap.infocard.SelfIssuedToken,
+                 nu.xom.Element,
+                 org.xmldap.exceptions.SerializationException"%>
+
+
+<%
+
+   String givenName =   request.getParameter("GivenName");
+   String sureName =   request.getParameter("Surname");
+   String email =   request.getParameter("EmailAddress");
+   String xml =   request.getParameter("token");
+
+    //Get my keystore
+   KeystoreUtil keystore = null;
+   try {
+       //keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.org.jks", "storepassword");
+       keystore = new KeystoreUtil("/export/home/cmort/xmldap.org.jks", "storepassword");
+   } catch (KeyStoreException e) {
+        throw new ServletException(e);
+   }
+
+   String message="";
+   EncryptedData encryptor = new EncryptedData(keystore, "Server-Cert");
+   SelfIssuedToken token = new SelfIssuedToken(keystore, "Server-Cert", "Server-Cert", "keypassword");
+
+   token.setGivenName(givenName);
+   token.setSurname(sureName);
+   token.setEmailAddress(email);
+   token.setValidityPeriod(20);
+   Element securityToken = null;
+   try {
+       securityToken = token.serialize();
+
+       //System.out.println(securityToken.toXML());
+
+       encryptor.setData(securityToken.toXML());
+       message = encryptor.toXML();
+
+
+   } catch (SerializationException e) {
+       throw new ServletException(e);
+   }
+
+   if (xml == null) {
+
+%>
+
+<body>
+
+<div style="font-family: Helvetica;">
+
+<h2>Here's the token I made for you...</h2>
+    <form name='infocard' method='post' action='https://xmldap.org/relyingparty/infocard'>
+       <textarea cols='150' rows='20' name="xmlToken"><%= message %></textarea><br>
+        <input type=submit value="Login with this token">
+    </form>
+
+
+</div>
+
+</body>
+
+<%
+} else {
+
+    response.setContentType("text/xml");
+    out.println(message);
+    out.flush();
+    out.close();
+    
+}
+
+
+%>

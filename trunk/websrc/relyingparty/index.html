@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Java Based Relying Party</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
+    </script>
+    <script type="text/javascript">
+    _uacct = "UA-147402-2";
+    urchinTracker();
+    </script>
+</head>
+<body>
+
+<div id="login" style="font-family: Helvetica;">
+
+<h2>Login with an InfoCard</h2>
+    <table border=0>
+        <tr>
+            <td>
+                <form name='ctl00' method='post' action='./infocard' id='ctl00'>
+
+                   <h2><img src='img/card.jpg' onClick='ctl00.submit()'/></h2>
+                   <OBJECT type="application/infocard" name="xmlToken">
+                      <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
+                      <PARAM Name="issuer" Value="http://schemas.microsoft.com/ws/2005/05/identity/issuer/self">
+                      <PARAM Name="requiredClaims"
+                             Value="http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier,
+                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname,
+                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/surname,
+                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress">
+                    </OBJECT>
+                </form>Use this one for IE build 5296<br>
+                Or - if you're using Mix06 bits, <a href="./mix06.html">login here.</a><br>
+            </td>
+            <!--
+            <td>
+                 <form name='latestBuild' method='post' action='./infocard' id='latestBuild'>
+                  <h2><img src='img/card.jpg' onClick='latestBuild.submit()'/></h2>
+                   <OBJECT type="application/x-informationCard" name="xmlToken">
+                      <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
+                      <PARAM Name="issuer" Value="http://schemas.microsoft.com/ws/2005/05/identity/issuer/self">
+                      <PARAM Name="requiredClaims"
+                             Value="http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier,
+                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname,
+                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/surname,
+                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress">
+                    </OBJECT>
+                </form>Use this one for the latest IE builds
+
+
+                <br>
+            </td>
+            -->
+        </tr>
+    </table>
+
+
+    <br><br>
+
+    <h2>Or, if you don't yet have InfoCard installed, I can make a security token for you...</h2>
+
+    <form action="./post.jsp" method="POST">
+        <table border="0">
+            <tr><td>First Name:</td><td><input type="text" name="GivenName"><br></td></tr>
+            <tr><td>Last Name:</td><td><input type="text" name="Surname"><br></td></tr>
+            <tr><td>Email:</td><td><input type="text" name="EmailAddress"><br></td></tr>
+            <tr><td colspan="2"><input type="submit" value="Create it for me"></td></tr>
+        </table>
+
+    </form>
+
+    <br><br>
+    <h2>Curious about how it works...?</h2>
+    The RP and Self Asserted Tokens are 100% Java, written from scratch (except for the XOM and the BouncyCastle crypto APIs)  No Microsoft code is used...in fact it's running on Sparc.
+    <br>
+    <br>
+    <a href="http://xmldap.blogspot.com/2006/03/how-to-consume-tokens-from-infocard.html">Here's a brief overview of what it's doing.</a>
+
+</div>
+
+
+
+</body>
+</html>
