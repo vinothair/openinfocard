@@ -1,0 +1,20 @@
+
+<div id="login" style="font-family: Helvetica;">
+
+<h2>Login with an InfoCard using a different STS and WS-Mex</h2>
+    <form name='ctl00' method='post' action='./infocard' id='ctl00'>
+
+       <h2><img src='img/card.jpg' onClick='ctl00.submit()'/></h2>
+       <OBJECT type="application/infocard" name="xmlToken">
+          <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
+          <PARAM Name="issuer" Value="https://xmldap.org/identityprovider/sts">
+          <PARAM Name="issuerPolicy" Value="https://xmldap.org/identityprovider/mex">
+          <PARAM Name="requiredClaims"
+                 Value="http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier,
+                        http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname,
+                        http://schemas.microsoft.com/ws/2005/05/identity/claims/surname,
+                        http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress">
+        </OBJECT>
+    </form>
+    <br><br>
+</div>

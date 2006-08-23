@@ -1,0 +1,146 @@
+<project name="infocard" default="buildall" basedir=".">
+
+    <target name="init">
+        <tstamp/>
+        <!-- read standard properties from properties files -->
+        <property file="project.properties"/>
+        <property environment="env"/>
+        <fileset id="classpath.fileset" dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <path id="classpath.path">
+            <fileset refid="classpath.fileset"/>
+        </path>
+        <property name="classpath.prop" refid="classpath.path"/>
+        <path id="ext.classpath.path">
+            <path refid="classpath.path"/>
+            <fileset dir="${libext.dir}">
+	           <include name="**/*.jar"/>
+            </fileset>
+        </path>
+    </target>
+
+
+    <target name="build"
+            depends="init">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.classes.dir}"/>
+        <javac srcdir="${src.dir}"
+                destdir="${build.classes.dir}"
+                debug="true"
+                deprecation="true"
+                fork="true"
+                includeAntRuntime="false">
+            <classpath>
+                <path refid="ext.classpath.path"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="distRP" depends="init">
+        <war destfile="${build.dir}/rp.war" webxml="${confsrc.dir}/rp-web.xml">
+            <fileset dir="${websrc.dir}/relyingparty/"/>
+            <lib file="${lib.dir}/bcprov-jdk14-131.jar"/>
+            <lib file="${lib.dir}/lightcrypto.jar"/>
+            <lib file="${lib.dir}/xom-1.1.jar"/>
+            <lib file="${lib.dir}/log4j-1.2.8.jar"/>
+            <lib file="${lib.dir}/slf4j-log4j12.jar"/>
+            <classes dir="${build.classes.dir}"/>
+        </war>
+    </target>
+
+
+    <target name="distDSIG"
+            depends="init">
+        <mkdir dir="${build.dir}/xmldsig/"/>
+        <mkdir dir="${build.dir}/xmldsig/lib/"/>
+        <jar destfile="${build.dir}/xmldsig/lib/xmldsig.jar"
+             basedir="${build.classes.dir}">
+            <fileset dir="${build.classes.dir}/org/xmldap/xmldsig/"/>
+            <fileset dir="${build.classes.dir}/org/xmldap/exceptions/"/>
+
+        </jar>
+      <copy file="${confsrc.dir}/dsig.sh" todir="${build.dir}/xmldsig/"/>
+      <copy file="${confsrc.dir}/xmldap.jks" todir="${build.dir}/xmldsig/"/>
+      <copy file="${lib.dir}/xom-1.1.jar" todir="${build.dir}/xmldsig/lib/"/>
+      <copy file="${lib.dir}/slf4j-simple.jar" todir="${build.dir}/xmldsig/lib/"/>
+      <copy file="${lib.dir}/simple-log.jar" todir="${build.dir}/xmldsig/lib/"/>
+
+    </target>
+
+
+    <target name="distFireFox"
+            depends="init,clean,build">
+        <mkdir dir="${firefox.lib.dir}"/>
+        <jar destfile="${firefox.lib.dir}/xmldap.jar"
+             basedir="${build.classes.dir}">
+            <fileset dir="${build.classes.dir}/"/>
+        </jar>
+        <copy file="${lib.dir}/xom-1.1.jar" todir="${firefox.lib.dir}/"/>
+        <copy file="${lib.dir}/slf4j-simple.jar" todir="${firefox.lib.dir}/"/>
+        <copy file="${lib.dir}/simple-log.jar" todir="${firefox.lib.dir}/"/>
+        <copy file="${lib.dir}/lightcrypto.jar" todir="${firefox.lib.dir}/"/>
+        <copy file="${lib.dir}/bcprov-jdk14-131.jar" todir="${firefox.lib.dir}/"/>
+        <copy file="${confsrc.dir}/firefox.jks" todir="${firefox.lib.dir}/"/>
+
+        <zip destfile="${build.dir}/xmldap.xpi"  basedir="${firefox.dir}"/>
+
+    </target>
+
+    <target name="clean"
+            depends="init"
+            description="removes all temporary files related to the build steps">
+        <delete dir="${build.dir}"/>
+        <delete dir="${firefox.lib.dir}"/>
+
+    </target>
+
+
+    <target name="unitTestBuild"
+            depends="init,build"
+            description="compiles test src to test classes dir">
+        <mkdir dir="${build.testclasses.dir}"/>
+        <mkdir dir="${build.dir}/testresults"/>
+        <javac srcdir="${testsrc.dir}"
+                destdir="${build.testclasses.dir}"
+                debug="true"
+                deprecation="true"
+                fork="true"
+                includeAntRuntime="false">
+            <classpath>
+                <path refid="ext.classpath.path"/>
+                <pathelement location="${build.classes.dir}"/>
+            </classpath>
+        </javac>
+    </target>
+
+
+    <target name="unitTest"
+            depends="init,unitTestBuild">
+
+        <junit printsummary="yes" haltonfailure="yes">
+            <classpath>
+                <path refid="ext.classpath.path"/>
+                <pathelement location="${build.testclasses.dir}"/>
+                <pathelement location="${build.classes.dir}"/>
+                <pathelement path="${java.class.path}"/>
+              </classpath>
+
+              <formatter type="plain"/>
+            <batchtest fork="true" todir="${build.dir}/testresults" >
+                <fileset dir="${build.testclasses.dir}">
+                    <include name="**/*Test.class"/>
+                </fileset>
+           </batchtest>
+        </junit>
+
+    </target>
+
+
+    <target name="test" depends="clean, build, unitTest"/>
+
+    <target name="buildRP" depends="clean, build, distRP"/>
+
+    <target name="buildall" depends="clean, build, distRP, distDSIG,distFireFox"/>
+
+</project>
