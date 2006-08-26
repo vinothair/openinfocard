@@ -17,14 +17,14 @@
    KeystoreUtil keystore = null;
    try {
        //keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.org.jks", "storepassword");
-       keystore = new KeystoreUtil("/export/home/cmort/xmldap.org.jks", "storepassword");
+       keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
    } catch (KeyStoreException e) {
         throw new ServletException(e);
    }
 
    String message="";
-   EncryptedData encryptor = new EncryptedData(keystore, "Server-Cert");
-   SelfIssuedToken token = new SelfIssuedToken(keystore, "Server-Cert", "Server-Cert", "keypassword");
+   EncryptedData encryptor = new EncryptedData(keystore, "xmldap");
+   SelfIssuedToken token = new SelfIssuedToken(keystore, "xmldap", "xmldap", "password");
 
    token.setGivenName(givenName);
    token.setSurname(sureName);
