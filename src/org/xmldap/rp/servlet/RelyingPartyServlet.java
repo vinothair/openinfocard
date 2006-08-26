@@ -58,8 +58,9 @@ public class RelyingPartyServlet extends HttpServlet {
 
         keystore = null;
         try {
-            keystore = new KeystoreUtil("/export/home/cmort/xmldap.org.jks", "storepassword");
-            //keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.org.jks", "storepassword");
+
+            keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
+
         } catch (KeyStoreException e) {
             throw new ServletException(e);
         }
@@ -92,7 +93,7 @@ public class RelyingPartyServlet extends HttpServlet {
 
             //Now decrypt it.
             DecryptUtil decrypter = new DecryptUtil(keystore);
-            StringBuffer decryptedXML = decrypter.decryptXML(encryptedXML, "Server-Cert", "keypassword");
+            StringBuffer decryptedXML = decrypter.decryptXML(encryptedXML, "xmldap", "password");
 
             //System.out.println("-----BEGIN POST------");
             //System.out.println(decryptedXML.toString());
@@ -175,7 +176,7 @@ public class RelyingPartyServlet extends HttpServlet {
 
             RSAPrivateKey key = null;
             try {
-                key = (RSAPrivateKey) keystore.getPrivateKey("Server-Cert", "keypassword");
+                key = (RSAPrivateKey) keystore.getPrivateKey("xmldap", "password");
 
             } catch (KeyStoreException e) {
                 e.printStackTrace();

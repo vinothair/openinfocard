@@ -38,13 +38,12 @@
     </target>
 
     <target name="distRP" depends="init">
-        <war destfile="${build.dir}/rp.war" webxml="${confsrc.dir}/rp-web.xml">
+        <war destfile="${build.dir}/relyingparty.war" webxml="${confsrc.dir}/rp-web.xml">
             <fileset dir="${websrc.dir}/relyingparty/"/>
             <lib file="${lib.dir}/bcprov-jdk14-131.jar"/>
             <lib file="${lib.dir}/lightcrypto.jar"/>
             <lib file="${lib.dir}/xom-1.1.jar"/>
-            <lib file="${lib.dir}/log4j-1.2.8.jar"/>
-            <lib file="${lib.dir}/slf4j-log4j12.jar"/>
+            <lib file="${lib.dir}/slf4j-simple.jar"/>
             <classes dir="${build.classes.dir}"/>
         </war>
     </target>
