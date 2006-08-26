@@ -1,0 +1,34 @@
+#mainarea{border:1px solid gray; background-color:#FFFFFF; min-width:320px;}
+#mainbar{-moz-box-align:center;height:32px; background:url(img/back.gif) repeat-x;}
+#listarea{width:300px;border-right:1px solid gray;overflow:auto;background-color:#DDE6F0;}
+#editarea{border-top:1px solid gray;border-bottom:1px solid gray;background-color:#F5F5F5;-moz-box-pack:center;-moz-box-align:center;}
+#logo{margin:6px;height:24px;width:24px;-moz-box-pack:center;}
+
+splitter{background-color:white;width:0px;}
+
+.contact{padding:8px;border-bottom:1px dashed lightblue;}
+.contact:hover{background:none;background-color:#F5F5F5;}
+.photobox:hover{cursor:pointer;}
+.lblname{font-family:verdana,helvetica;font-weight:bold;font-size:1.2em;}
+.lblmail{font-family:verdana,helvetica;font-size:1em;color:blue;cursor:pointer;}
+
+.lblTitle{font-family:verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:right;}
+
+#colText{width:100px;}
+#colData{width:240px;}
+.lblText{text-align:right;}
+
+#daylabel{font-weight:bold; font-size:1.8em;}
+#daybar{border-bottom:1px solid white; background:url(img/back.gif) repeat-x;}
+.daybox{-moz-box-pack:center;border-right:1px solid white;}
+.daybox:hover label{cursor:pointer;}
+.daybox:hover{color:#FFFFFF;background-color:#A0A0F0;}
+
+.hourbox1{height:64px; width:64px; -moz-box-pack:center; border-top:1px solid  gray; border-right:2px solid gray; background:url(img/back.gif);}
+.hourbox2{height:64px; width:64px; -moz-box-pack:center; border-top:1px dashed gray; border-right:2px solid gray; background:url(img/back.gif);}
+.line1{height:16px; border-top:1px solid gray;}
+.line2{height:16px; border-top:1px dashed gainsboro;}
+.line1:hover{background-color:#FFFFCC;}
+.line2:hover{background-color:#FFFFCC;}
+
+#taskbox{height:64px; width:64px; -moz-box-pack:center; border-right:2px solid gray; background:url(img/back.gif);}
