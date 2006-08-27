@@ -84,7 +84,7 @@
                             <row><label id="_email" class="lblText" value="Email:"  /><textbox id="email"   value=""/></row>
                             <row><label id="_streetAddress" class="lblText" value="Street:"  /><textbox id="streetAddress"   value=""/></row>
                             <row><label id="_locality" class="lblText" value="City:"  /><textbox id="locality"   value=""/></row>
-                            <row><label id="_stateOrProvice" class="lblText" value="State:"  /><textbox id="stateOrProvince"   value=""/></row>
+                            <row><label id="_stateOrProvince" class="lblText" value="State:"  /><textbox id="stateOrProvince"   value=""/></row>
                             <row><label id="_postalCode" class="lblText" value="Zip:"  /><textbox id="postalCode"   value=""/></row>
                             <row><label id="_country" class="lblText" value="Country:"  /><textbox id="country"   value=""/></row>
                             <row><label id="_primaryPhone" class="lblText" value="Phone:"  /><textbox id="primaryPhone"   value=""/></row>
