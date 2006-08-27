@@ -48,123 +48,255 @@ import java.io.IOException;
 
 import nu.xom.*;
 
-
 public class TokenIssuer {
 
-    private String path;
+	private String path;
 
-    public TokenIssuer(String path){
+	public TokenIssuer(String path) {
 
-        this.path = URLDecoder.decode(path.substring(7,path.length()));
+		this.path = URLDecoder.decode(path.substring(7, path.length()));
 
+	}
 
-    }
+	public String init(String path) {
 
+		return "TokenIssuer initialized";
 
-    public String init(String path){
+	}
 
-        return "TokenIssuer initialized";
+	private Document getInfocard(String card) throws TokenIssuanceException {
+		Builder parser = new Builder();
+		Document infocard = null;
+		try {
+			infocard = parser.build(card, "");
+		} catch (ParsingException e) {
+			throw new TokenIssuanceException(e);
+		} catch (IOException e) {
+			throw new TokenIssuanceException(e);
+		}
+		return infocard;
+	}
 
-    }
+	public String getDataValue(Element data, String claim)
+			throws TokenIssuanceException {
+		Element nameElm = data.getFirstChildElement(claim);
+		if (nameElm != null)
+			return nameElm.getValue();
+		return "";
+	}
 
+	private SelfIssuedToken setTokenClaims(Element data, SelfIssuedToken token,
+			String claims) throws TokenIssuanceException {
+		// the argument to indexOf is a kind of shorthand...
+		// should  we use the complete string?
+		if (claims.indexOf("givenname") != -1) {
+			String value = getDataValue(data, "givenname");
+			if ((value != null) && !value.equals("")) {
+				token.setGivenName(value);
+			}
+		}
+		if (claims.indexOf("surname") != -1) {
+			String value = getDataValue(data, "surname");
+			if ((value != null) && !value.equals("")) {
+				token.setSurname(value);
+			}
+		}
+		if (claims.indexOf("emailaddress") != -1) {
+			String value = getDataValue(data, "emailaddress");
+			if ((value != null) && !value.equals("")) {
+				token.setEmailAddress(value);
+			}
+		}
+		if (claims.indexOf("streetladdress") != -1) {
+			String value = getDataValue(data, "streetladdress");
+			if ((value != null) && !value.equals("")) {
+				token.setStreetAddress(value);
+			}
+		}
+		if (claims.indexOf("locality") != -1) {
+			String value = getDataValue(data, "locality");
+			if ((value != null) && !value.equals("")) {
+				token.setLocality(value);
+			}
+		}
+		if (claims.indexOf("stateorprovince") != -1) {
+			String value = getDataValue(data, "stateorprovince");
+			if ((value != null) && !value.equals("")) {
+				token.setStateOrProvince(value);
+			}
+		}
+		if (claims.indexOf("postalcode") != -1) {
+			String value = getDataValue(data, "postalcode");
+			if ((value != null) && !value.equals("")) {
+				token.setPostalCode(value);
+			}
+		}
+		if (claims.indexOf("country") != -1) {
+			String value = getDataValue(data, "country");
+			if ((value != null) && !value.equals("")) {
+				token.setCountry(value);
+			}
+		}
+		if (claims.indexOf("primaryphone") != -1) {
+			String value = getDataValue(data, "primaryphone");
+			if ((value != null) && !value.equals("")) {
+				token.setPrimaryPhone(value);
+			}
+		}
+		if (claims.indexOf("otherphone") != -1) {
+			String value = getDataValue(data, "otherphone");
+			if ((value != null) && !value.equals("")) {
+				token.setOtherPhone(value);
+			}
+		}
+		if (claims.indexOf("mobilephone") != -1) {
+			String value = getDataValue(data, "mobilephone");
+			if ((value != null) && !value.equals("")) {
+				token.setMobilePhone(value);
+			}
+		}
+		if (claims.indexOf("dateofbirth") != -1) {
+			String value = getDataValue(data, "dateofbirth");
+			if ((value != null) && !value.equals("")) {
+				token.setDateOfBirth(value);
+			}
+		}
+		if (claims.indexOf("gender") != -1) {
+			String value = getDataValue(data, "gender");
+			if ((value != null) && !value.equals("")) {
+				token.setGender(value);
+			}
+		}
+		return token;
+	}
 
-    public String getToken(String serializedPolicy) throws TokenIssuanceException {
+	public String getToken(String serializedPolicy)
+			throws TokenIssuanceException {
 
-        //TODO - break up this rather large code block
-        JSONObject policy = null;
-        String card = null;
-        String der = null;
-        try {
-            policy = new JSONObject(serializedPolicy);
-            der = (String)policy.get("cert");
-            card = (String)policy.get("card");
-        } catch (JSONException e) {
-            throw new TokenIssuanceException(e);
-        }
+		//TODO - break up this rather large code block
+		JSONObject policy = null;
+		String card = null;
+		String der = null;
+		try {
+			policy = new JSONObject(serializedPolicy);
+			der = (String) policy.get("cert");
+			card = (String) policy.get("card");
+		} catch (JSONException e) {
+			throw new TokenIssuanceException(e);
+		}
 
-        Builder parser = new Builder();
-        Document infocard = null;
-        try {
-            infocard = parser.build(card,"");
-        } catch (ParsingException e) {
-            throw new TokenIssuanceException(e);
-        } catch (IOException e) {
-            throw new TokenIssuanceException(e);
-        }
+		Document infocard = getInfocard(card);
+		;
 
-        Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
-        Element data = (Element) dataNodes.get(0);
+		Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
+		Element data = (Element) dataNodes.get(0);
 
-        //TODO - support all elements including ppi
-        String ppi = "";
-        String givenName = "";
-        String surName = "";
-        String email = "";
+		//TODO - support all elements including ppi
+		String ppi = "";
 
+		Nodes ppiNodes = infocard.query("/infocard/privatepersonalidentifier");
+		Element ppiElm = (Element) ppiNodes.get(0);
+		if (ppiElm != null)
+			ppi = ppiElm.getValue();
 
-        Nodes ppiNodes = infocard.query("/infocard/privatepersonalidentifier");
-        Element ppiElm = (Element) ppiNodes.get(0);
-        if (ppiElm != null) ppi = ppiElm.getValue();
+		byte[] certBytes = Base64.decode(der);
+		ByteArrayInputStream is = new ByteArrayInputStream(certBytes);
+		BufferedInputStream bis = new BufferedInputStream(is);
+		CertificateFactory cf = null;
+		X509Certificate cert = null;
+		try {
+			cf = CertificateFactory.getInstance("X.509");
+			cert = (X509Certificate) cf.generateCertificate(bis);
+		} catch (CertificateException e) {
+			throw new TokenIssuanceException(e);
+		}
 
-        Element givenNameElm = data.getFirstChildElement("givenname");
-        if ( givenNameElm != null) givenName = givenNameElm.getValue();
+		System.out.println("Server Cert: " + cert.getSubjectDN().toString());
 
-        Element surNameElm = data.getFirstChildElement("surname");
-        if ( surNameElm != null) surName = surNameElm.getValue();
+		//TODO - get rid of keystore dependency - gen certs, store, and pass in.
+		String keystorePath = path + "components/lib/firefox.jks";
 
-        Element emailElm = data.getFirstChildElement("emailaddress");
-        if ( emailElm != null) email = emailElm.getValue();
+		//Get my keystore
+		KeystoreUtil keystore = null;
+		try {
+			keystore = new KeystoreUtil(keystorePath, "storepassword");
+		} catch (KeyStoreException e) {
 
+			throw new TokenIssuanceException(e);
 
-        byte[] certBytes = Base64.decode(der);
-        ByteArrayInputStream is = new ByteArrayInputStream(certBytes);
-        BufferedInputStream bis = new BufferedInputStream(is);
-        CertificateFactory cf = null;
-        X509Certificate  cert = null;
-        try {
-            cf = CertificateFactory.getInstance("X.509");
-            cert = (X509Certificate) cf.generateCertificate(bis);
-        } catch (CertificateException e) {
-            throw new TokenIssuanceException(e);
-        }
+		}
 
-        System.out.println("Server Cert: " + cert.getSubjectDN().toString());
+		String issuedToken = "";
+		EncryptedData encryptor = new EncryptedData(cert);
+		SelfIssuedToken token = new SelfIssuedToken(keystore, cert, "firefox",
+				"keypassword");
 
+		token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
+		token.setValidityPeriod(20);
 
-        //TODO - get rid of keystore dependency - gen certs, store, and pass in.
-        String keystorePath = path + "components/lib/firefox.jks";
+		String ALL_CLAIMS = "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/streetaddress"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/locality"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/stateorprovince"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/postalcode"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/country"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/homephone"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/otherphone"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/mobilephone"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/dateofbirth"
+				+ " "
+				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/gender";
 
-        //Get my keystore
-        KeystoreUtil keystore = null;
-        try {
-            keystore = new KeystoreUtil(keystorePath, "storepassword");
-        } catch (KeyStoreException e) {
+		String requiredClaims = null;
+		String optionalClaims = null;
+		try {
+			requiredClaims = (String) policy.get("requiredClaims");
+		} catch (JSONException e) {
+			//throw new TokenIssuanceException(e); // requiredClaims not found
+		}
+		try {
+			optionalClaims = (String) policy.get("optionalClaims");
+		} catch (JSONException e) {
+			//throw new TokenIssuanceException(e); // optionalClaims not found
+		}
+		if (requiredClaims == null) { 
+			if (optionalClaims != null) {
+				token = setTokenClaims(data, token, optionalClaims);
+			} else { // hm, lets throw everything we have at the RP
+				token = setTokenClaims(data, token, ALL_CLAIMS);
+			}
+		}
+		else { // requiredClaim are present
+			token = setTokenClaims(data, token, requiredClaims);
+			if (optionalClaims != null) {
+				token = setTokenClaims(data, token, optionalClaims);
+			}
+		}
 
-            throw new TokenIssuanceException(e);
+		Element securityToken = null;
+		try {
+			securityToken = token.serialize();
+			encryptor.setData(securityToken.toXML());
+			issuedToken = encryptor.toXML();
 
-        }
+		} catch (SerializationException e) {
+			throw new TokenIssuanceException(e);
+		}
 
-        String issuedToken="";
-        EncryptedData encryptor = new EncryptedData(cert);
-        SelfIssuedToken token = new SelfIssuedToken(keystore, cert, "firefox", "keypassword");
-
-
-        token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
-        token.setGivenName(givenName);
-        token.setSurname(surName);
-        token.setEmailAddress(email);
-        token.setValidityPeriod(20);
-        Element securityToken = null;
-        try {
-           securityToken = token.serialize();
-           encryptor.setData(securityToken.toXML());
-           issuedToken = encryptor.toXML();
-
-        } catch (SerializationException e) {
-            throw new TokenIssuanceException(e);
-        }
-
-        return issuedToken;
-    }
+		return issuedToken;
+	}
 
 }

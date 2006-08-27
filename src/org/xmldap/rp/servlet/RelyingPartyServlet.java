@@ -85,6 +85,16 @@ public class RelyingPartyServlet extends HttpServlet {
 
             }
 
+            out.println("<html><head>");
+            out.println("<script src=\"https://ssl.google-analytics.com/urchin.js\" type=\"text/javascript\">\n" +
+                    "</script>\n" +
+                    "<script type=\"text/javascript\">\n" +
+                    "_uacct = \"UA-147402-2\";\n" +
+                    "urchinTracker();\n" +
+                    "</script>");
+
+            out.println("</head><body>");
+
             //We've got the XML
             out.println("<div  style=\"font-family: Helvetica;\"><h2>Here's what you posted:</h2>");
 
@@ -295,7 +305,7 @@ public class RelyingPartyServlet extends HttpServlet {
 
             }
 
-            out.println("<br><a href='mailto:charliemortimore@gmail.com'>Please drop me a line!</a></div>");
+            out.println("<br><a href='mailto:charliemortimore@gmail.com'>Please drop me a line!</a></div></body></html>");
 
 
         } catch (IOException e) {

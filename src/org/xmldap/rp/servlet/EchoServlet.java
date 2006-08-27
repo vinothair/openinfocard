@@ -79,11 +79,11 @@ public class EchoServlet extends HttpServlet {
         String timeStamp = getTimeAndDate();
 
         System.out.println(name + "::init() time = " + timeStamp);
-        Enumeration enum = config.getInitParameterNames();
-        if (enum.hasMoreElements()) {
+        Enumeration ipn = config.getInitParameterNames();
+        if (ipn.hasMoreElements()) {
             System.out.println("Config parameters:");
-            while (enum.hasMoreElements()) {
-                String s = (String) enum.nextElement();
+            while (ipn.hasMoreElements()) {
+                String s = (String) ipn.nextElement();
                 String v = config.getInitParameter(s);
                 System.out.println(s + " = " + v);
             } // while
