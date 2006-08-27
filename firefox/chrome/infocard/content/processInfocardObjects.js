@@ -38,7 +38,7 @@ function do_infocard(e) {
 
         var type = ic.getAttribute("type");
 
-        if ((type == "application/x-informationCard") || (type == "application/infocard")) {
+        if ((type == "application/x-informationcard") || (type == "application/x-informationCard") || (type == "application/infocard")) {
 
             var form = ic;
             while (form.tagName != "FORM") {

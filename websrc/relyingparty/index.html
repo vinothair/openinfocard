@@ -19,45 +19,26 @@
     <table border=0>
         <tr>
             <td>
-                <form name='ctl00' method='post' action='./infocard' id='ctl00'>
 
-                   <h2><img src='img/card.jpg' onClick='ctl00.submit()'/></h2>
-                   <OBJECT type="application/infocard" name="xmlToken">
-                      <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
-                      <PARAM Name="issuer" Value="http://schemas.microsoft.com/ws/2005/05/identity/issuer/self">
-                      <PARAM Name="requiredClaims"
-                             Value="http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier,
-                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname,
-                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/surname,
-                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress">
-                    </OBJECT>
-                </form>Use this one for IE build 5296<br>
-                Or - if you're using Mix06 bits, <a href="./mix06.html">login here.</a><br>
+<form name='infocard' method='post' action='./infocard' id='infocard'>
+<img src="img/click_me_card.png"
+     onMouseOver="this.src='img/card.png';"
+     onMouseOut="this.src='img/click_me_card.png';"
+     onClick="infocard.submit()"/>
+
+       <OBJECT type="application/x-informationCard" name="xmlToken">
+          <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
+          <PARAM Name="requiredClaims"
+Value="http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname http://schemas.microsoft.com/ws/2005/05/identity/claims/surname http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress">        </OBJECT>
+</form>
+
+                    <br>
             </td>
-            <!--
-            <td>
-                 <form name='latestBuild' method='post' action='./infocard' id='latestBuild'>
-                  <h2><img src='img/card.jpg' onClick='latestBuild.submit()'/></h2>
-                   <OBJECT type="application/x-informationCard" name="xmlToken">
-                      <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
-                      <PARAM Name="issuer" Value="http://schemas.microsoft.com/ws/2005/05/identity/issuer/self">
-                      <PARAM Name="requiredClaims"
-                             Value="http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier,
-                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname,
-                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/surname,
-                                    http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress">
-                    </OBJECT>
-                </form>Use this one for the latest IE builds
-
-
-                <br>
-            </td>
-            -->
         </tr>
     </table>
 
+<!-- http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier -->
 
-    <br><br>
 
     <h2>Or, if you don't yet have InfoCard installed, I can make a security token for you...</h2>
 
@@ -73,7 +54,7 @@
 
     <br><br>
     <h2>Curious about how it works...?</h2>
-    The RP and Self Asserted Tokens are 100% Java, written from scratch (except for the XOM and the BouncyCastle crypto APIs)  No Microsoft code is used...in fact it's running on Sparc.
+    The RP and Self Asserted Tokens are 100% Java, written from scratch (except for the XOM and the BouncyCastle crypto APIs)  No Microsoft code is used...in fact it's running on Linux.
     <br>
     <br>
     <a href="http://xmldap.blogspot.com/2006/03/how-to-consume-tokens-from-infocard.html">Here's a brief overview of what it's doing.</a>
