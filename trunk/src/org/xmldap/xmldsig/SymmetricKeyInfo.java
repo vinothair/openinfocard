@@ -50,18 +50,10 @@ public class SymmetricKeyInfo implements KeyInfo {
 
     private byte[] secretKey;
     private X509Certificate cert;
-    private KeystoreUtil keystore;
-    private String alias;
 
     public SymmetricKeyInfo(X509Certificate cert, byte[] secretKey) {
         this.secretKey = secretKey;
         this.cert = cert;
-    }
-
-    public SymmetricKeyInfo(KeystoreUtil keystore, String alias, byte[] secretKey) {
-        this.keystore = keystore;
-        this.alias = alias;
-        this.secretKey = secretKey;
     }
 
     public byte[] getSecretKey() {
@@ -70,19 +62,6 @@ public class SymmetricKeyInfo implements KeyInfo {
 
 
     public Element getEmphemeralSymmetricKeyInfo() throws SerializationException {
-
-        try {
-
-            if ((cert == null) && (alias != null)) cert = keystore.getCertificate(alias);
-
-        } catch (org.xmldap.exceptions.KeyStoreException e) {
-
-            throw new SerializationException("Error accessing keystore", e);
-
-        }
-
-        if (cert == null) throw new SerializationException("Could not load cert with alias: " + alias);
-
 
         Element keyInfo = new Element(WSConstants.DSIG_PREFIX + ":KeyInfo", WSConstants.DSIG_NAMESPACE);
 
@@ -162,10 +141,12 @@ public class SymmetricKeyInfo implements KeyInfo {
 
         SymmetricKeyInfo keyInfo = null;
         try {
-            keyInfo = new SymmetricKeyInfo(keystore, "xmldap", CryptoUtils.genKey(128));
+            keyInfo = new SymmetricKeyInfo(keystore.getCertificate("xmldap"), CryptoUtils.genKey(128));
         } catch (org.xmldap.exceptions.CryptoException e) {
             e.printStackTrace();
-        }
+        } catch (KeyStoreException e) {
+			e.printStackTrace();
+		}
 
 
         try {

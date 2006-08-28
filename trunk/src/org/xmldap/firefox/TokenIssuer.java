@@ -186,7 +186,6 @@ public class TokenIssuer {
 		}
 
 		Document infocard = getInfocard(card);
-		;
 
 		Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
 		Element data = (Element) dataNodes.get(0);
@@ -199,17 +198,7 @@ public class TokenIssuer {
 		if (ppiElm != null)
 			ppi = ppiElm.getValue();
 
-		byte[] certBytes = Base64.decode(der);
-		ByteArrayInputStream is = new ByteArrayInputStream(certBytes);
-		BufferedInputStream bis = new BufferedInputStream(is);
-		CertificateFactory cf = null;
-		X509Certificate cert = null;
-		try {
-			cf = CertificateFactory.getInstance("X.509");
-			cert = (X509Certificate) cf.generateCertificate(bis);
-		} catch (CertificateException e) {
-			throw new TokenIssuanceException(e);
-		}
+		X509Certificate cert = der2cert(der);
 
 		System.out.println("Server Cert: " + cert.getSubjectDN().toString());
 
@@ -297,6 +286,21 @@ public class TokenIssuer {
 		}
 
 		return issuedToken;
+	}
+
+	private X509Certificate der2cert(String der) throws TokenIssuanceException {
+		byte[] certBytes = Base64.decode(der);
+		ByteArrayInputStream is = new ByteArrayInputStream(certBytes);
+		BufferedInputStream bis = new BufferedInputStream(is);
+		CertificateFactory cf = null;
+		X509Certificate cert = null;
+		try {
+			cf = CertificateFactory.getInstance("X.509");
+			cert = (X509Certificate) cf.generateCertificate(bis);
+		} catch (CertificateException e) {
+			throw new TokenIssuanceException(e);
+		}
+		return cert;
 	}
 
 }

@@ -258,7 +258,11 @@ public class SelfIssuedToken implements Serializable {
             if (relyingPartyCert != null) {
                 keyInfo = new SymmetricKeyInfo(relyingPartyCert, secretKey);
             } else {
-                keyInfo = new SymmetricKeyInfo(keystore, relyingPartyAlias, secretKey);
+                try {
+					keyInfo = new SymmetricKeyInfo(keystore.getCertificate(relyingPartyAlias), secretKey);
+				} catch (KeyStoreException e) {
+					throw new SerializationException(e);
+				}
             }
 
 
