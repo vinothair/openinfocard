@@ -30,10 +30,8 @@ package org.xmldap.xmldsig;
 
 import nu.xom.Element;
 
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.Base64;
-import org.xmldap.util.KeystoreUtil;
 
 import java.math.BigInteger;
 import java.security.Principal;
@@ -46,18 +44,11 @@ public class AysmmetricKeyInfo implements KeyInfo {
 
 
     //private KeystoreUtil keystoreUtil = null;
-    private String alias = null;
     X509Certificate cert = null;
 
     public AysmmetricKeyInfo(X509Certificate cert) {
         this.cert = cert;
     }
-
-    public AysmmetricKeyInfo(KeystoreUtil keystoreUtil, String alias) throws KeyStoreException {
-        //Load up the cert
-        cert = keystoreUtil.getCertificate(alias);
-    }
-
 
     private Element getKeyInfo() throws SerializationException {
 
