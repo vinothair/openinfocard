@@ -152,8 +152,13 @@ public class DecryptUtil {
 
 
         Conditions conditions = new Conditions(10);
-
-        org.xmldap.xmldsig.AysmmetricKeyInfo keyInfo = new AysmmetricKeyInfo(myKeystore, "Server-Cert");
+        
+        org.xmldap.xmldsig.AysmmetricKeyInfo keyInfo = null;
+		try {
+			keyInfo = new AysmmetricKeyInfo(myKeystore.getCertificate("Server-Cert"));
+		} catch (KeyStoreException e1) {
+			e1.printStackTrace();
+		}
         Subject subject = new Subject(keyInfo);
         org.xmldap.saml.Attribute given = new org.xmldap.saml.Attribute("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname", "Chuck");
         org.xmldap.saml.Attribute sur = new org.xmldap.saml.Attribute("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname", "Mortimore");

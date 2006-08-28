@@ -29,6 +29,8 @@
 package org.xmldap.xmldsig;
 
 import nu.xom.Element;
+
+import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
@@ -43,7 +45,7 @@ import java.security.interfaces.RSAPublicKey;
 public class AysmmetricKeyInfo implements KeyInfo {
 
 
-    private KeystoreUtil keystoreUtil = null;
+    //private KeystoreUtil keystoreUtil = null;
     private String alias = null;
     X509Certificate cert = null;
 
@@ -51,9 +53,9 @@ public class AysmmetricKeyInfo implements KeyInfo {
         this.cert = cert;
     }
 
-    public AysmmetricKeyInfo(KeystoreUtil keystoreUtil, String alias) {
-        this.keystoreUtil = keystoreUtil;
-        this.alias = alias;
+    public AysmmetricKeyInfo(KeystoreUtil keystoreUtil, String alias) throws KeyStoreException {
+        //Load up the cert
+        cert = keystoreUtil.getCertificate(alias);
     }
 
 
@@ -73,9 +75,6 @@ public class AysmmetricKeyInfo implements KeyInfo {
 
 
         try {
-            //Load up the cert
-            if ((cert == null) && (alias != null)) cert = keystoreUtil.getCertificate(alias);
-
             //Pupulate the cert element
             x509Certificate.appendChild(Base64.encodeBytesNoBreaks(cert.getEncoded()));
 
@@ -100,11 +99,7 @@ public class AysmmetricKeyInfo implements KeyInfo {
 
             throw new SerializationException("Only RSA Public Keys are supported at this time", e);
 
-        } catch (org.xmldap.exceptions.KeyStoreException e) {
-
-            throw new SerializationException("Error accessing keystore", e);
-
-        } catch (CertificateEncodingException e) {
+         } catch (CertificateEncodingException e) {
             throw new SerializationException(e);
         }
 

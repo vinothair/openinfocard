@@ -113,7 +113,12 @@ public class SAMLAssertion implements Serializable {
 
         Conditions conditions = new Conditions(10);
 
-        AysmmetricKeyInfo keyInfo = new AysmmetricKeyInfo(keystore, "xmldap");
+        AysmmetricKeyInfo keyInfo = null;
+		try {
+			keyInfo = new AysmmetricKeyInfo(keystore.getCertificate("xmldap"));
+		} catch (KeyStoreException e1) {
+			e1.printStackTrace();
+		}
         Subject subject = new Subject(keyInfo);
         Attribute given = new Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName", "Chuck");
         Attribute sur = new Attribute("surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/SurName", "Mortimore");
