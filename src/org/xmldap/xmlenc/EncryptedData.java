@@ -85,9 +85,6 @@ public class EncryptedData implements Serializable {
     private KeyInfo keyInfo;
     private String data;
 
-    private KeystoreUtil keystore = null;
-    private String alias = null;
-
     public EncryptedData(X509Certificate certForEncryption) {
 
         //TODO - remove code copy
@@ -100,22 +97,6 @@ public class EncryptedData implements Serializable {
         keyInfo = new KeyInfo(certForEncryption, secretKey);
 
     }
-
-    public EncryptedData(KeystoreUtil keystoreUtil, String alias) {
-        this.keystore = keystoreUtil;
-        this.alias = alias;
-
-        try {
-            secretKey = CryptoUtils.genKey(256);
-        } catch (org.xmldap.exceptions.CryptoException e) {
-            e.printStackTrace();
-        }
-
-        keyInfo = new KeyInfo(keystore, this.alias, secretKey);
-
-
-    }
-
 
     public void setData(String data) {
         this.data = data;
@@ -170,16 +151,14 @@ public class EncryptedData implements Serializable {
 
     public static void main(String[] args) {
 
-
-        KeystoreUtil keystore = null;
+    	EncryptedData encrypted = null;
         try {
-            keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
+            KeystoreUtil keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
+            encrypted = new EncryptedData(keystore.getCertificate("identityblog"));
         } catch (KeyStoreException e) {
             e.printStackTrace();
+            return;
         }
-
-
-        EncryptedData encrypted = new EncryptedData(keystore, "identityblog");
 
         encrypted.setData("Encrypt Me123456");
 

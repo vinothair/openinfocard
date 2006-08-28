@@ -177,7 +177,13 @@ public class DecryptUtil {
 
 
         EnvelopedSignature signer = new EnvelopedSignature(myKeystore, "Server-Cert", "keypassword");
-        EncryptedData encrypted = new EncryptedData(myKeystore, "Server-Cert");
+        EncryptedData encrypted;
+		try {
+			encrypted = new EncryptedData(myKeystore.getCertificate("Server-Cert"));
+		} catch (KeyStoreException e1) {
+			e1.printStackTrace();
+			return;
+		}
 
         try {
             Element signedXML = signer.sign(assertion.serialize());

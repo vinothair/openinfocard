@@ -62,8 +62,6 @@ import java.security.cert.X509Certificate;
 
 public class KeyInfo implements Serializable {
 
-    private KeystoreUtil keystoreUtil = null;
-    private String alias = null;
     private X509Certificate cert = null;
     //TODO - Make this random!
     private byte[] secretKey;
@@ -74,13 +72,6 @@ public class KeyInfo implements Serializable {
         
     }
 
-    public KeyInfo(KeystoreUtil keystoreUtil, String alias, byte[] secretKey) {
-        this.keystoreUtil = keystoreUtil;
-        this.alias = alias;
-        this.secretKey = secretKey;
-    }
-
-
     public String toXML() throws SerializationException {
 
         Element keyInfo = serialize();
@@ -90,15 +81,7 @@ public class KeyInfo implements Serializable {
 
     public Element serialize() throws SerializationException {
 
-        //Load up the cert
-        if ((cert == null) && (alias != null)) try {
-            cert = keystoreUtil.getCertificate(alias);
-        } catch (KeyStoreException e) {
-            throw new SerializationException("Error loading cert " + alias + " from keystore", e);
-        }
-
-
-        Element keyInfo = new Element(WSConstants.DSIG_PREFIX + ":KeyInfo", WSConstants.DSIG_NAMESPACE);
+       Element keyInfo = new Element(WSConstants.DSIG_PREFIX + ":KeyInfo", WSConstants.DSIG_NAMESPACE);
 
         Element encryptedKey = new Element(WSConstants.ENC_PREFIX + ":EncryptedKey", WSConstants.ENC_NAMESPACE);
         Element encryptionMethod = new Element(WSConstants.ENC_PREFIX + ":EncryptionMethod", WSConstants.ENC_NAMESPACE);
@@ -154,17 +137,15 @@ public class KeyInfo implements Serializable {
 
     public static void main(String[] args) {
 
-
-        KeystoreUtil keystore = null;
+    	KeyInfo keyInfo = null;
         try {
+        	KeystoreUtil keystore = null;
             keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
+            keyInfo = new KeyInfo(keystore.getCertificate("identityblog"), "test".getBytes());
         } catch (KeyStoreException e) {
             e.printStackTrace();
+            return;
         }
-
-
-        KeyInfo keyInfo = new KeyInfo(keystore, "identityblog", "test".getBytes());
-
 
         try {
             System.out.println(keyInfo.toXML());
