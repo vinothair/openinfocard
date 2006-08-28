@@ -240,7 +240,11 @@ public class SelfIssuedToken implements Serializable {
         KeyInfo keyInfo = null;
         if (asymmetric) {
 
-            keyInfo = new AysmmetricKeyInfo(keystore, signingAlias);
+            try {
+				keyInfo = new AysmmetricKeyInfo(keystore.getCertificate(signingAlias));
+			} catch (KeyStoreException e) {
+				throw new SerializationException(e);
+			}
 
         } else {
             byte[] secretKey;

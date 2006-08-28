@@ -84,7 +84,12 @@ public class Subject implements Serializable {
         }
 
 
-        AysmmetricKeyInfo keyInfo = new AysmmetricKeyInfo(keystore, "xmldap");
+        AysmmetricKeyInfo keyInfo = null;
+		try {
+			keyInfo = new AysmmetricKeyInfo(keystore.getCertificate("xmldap"));
+		} catch (KeyStoreException e1) {
+			e1.printStackTrace();
+		}
 
         Subject subject = new Subject(keyInfo);
         try {

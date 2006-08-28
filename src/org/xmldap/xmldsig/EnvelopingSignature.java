@@ -32,6 +32,7 @@ import nu.xom.Attribute;
 import nu.xom.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 import org.xmldap.util.KeystoreUtil;
@@ -106,7 +107,13 @@ public class EnvelopingSignature {
         SignatureValue signatureValue = new SignatureValue(signedInfo, keystore, alias, keyPassword);
 
         //Get AysmmetricKeyInfo
-        AysmmetricKeyInfo keyInfo = new AysmmetricKeyInfo(keystore, alias);
+        AysmmetricKeyInfo keyInfo = null;
+		try {
+			keyInfo = new AysmmetricKeyInfo(keystore.getCertificate(alias));
+		} catch (KeyStoreException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 
         //Create the signature block
         Signature signature = new Signature(signedInfo, signatureValue, keyInfo);
