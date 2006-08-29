@@ -188,9 +188,7 @@ TokenComponent.prototype.initialize = function (java, trace) {
             "xmldap.jar",
             "xom-1.1.jar",
             "lightcrypto.jar",
-            "bcprov-jdk14-131.jar",
-            "simple-log.jar",
-            "slf4j-simple.jar"
+            "bcprov-jdk14-131.jar"
         ];
         
         var jarFilepaths = [];

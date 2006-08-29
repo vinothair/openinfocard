@@ -29,12 +29,11 @@
 package org.xmldap.rp.util;
 
 import nu.xom.*;
-
-import java.util.HashMap;
-import java.io.IOException;
-
-import org.xmldap.ws.WSConstants;
 import org.xmldap.exceptions.CryptoException;
+import org.xmldap.ws.WSConstants;
+
+import java.io.IOException;
+import java.util.HashMap;
 
 public class ClaimParserUtil {
 

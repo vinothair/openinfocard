@@ -32,8 +32,6 @@ import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.ParsingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xmldap.exceptions.MessageException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
@@ -48,7 +46,6 @@ import java.util.Vector;
 
 public class MessageImpl implements Message {
 
-    final Logger logger = LoggerFactory.getLogger(MessageImpl.class);
 
     private Vector headers = new Vector();
     private Element body;

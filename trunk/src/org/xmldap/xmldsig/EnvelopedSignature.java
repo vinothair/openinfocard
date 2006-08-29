@@ -29,37 +29,23 @@
 package org.xmldap.xmldsig;
 
 import nu.xom.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
-import org.xmldap.util.KeystoreUtil;
 
 import java.io.IOException;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.Vector;
 
 
 public class EnvelopedSignature {
 
-    private final Logger logger = LoggerFactory.getLogger(EnvelopedSignature.class);
-    private final boolean DEBUG = logger.isDebugEnabled();
+    private X509Certificate signingCert;
+    private PrivateKey privateKey;
 
-    private KeystoreUtil keystore = null;
-    private String alias = null;
-    private String keyPassword = null;
-    private byte[] privateKey = null;
-    private boolean useSymmetricKey = false;
-
-    public EnvelopedSignature(byte[] privateKey) {
+    public EnvelopedSignature(X509Certificate signingCert, PrivateKey privateKey) {
         this.privateKey = privateKey;
-        useSymmetricKey = true;
-    }
-
-    public EnvelopedSignature(KeystoreUtil keystore, String alias, String keyPassword) {
-        this.keystore = keystore;
-        this.alias = alias;
-        this.keyPassword = keyPassword;
+        this.signingCert = signingCert;
     }
 
 
@@ -231,15 +217,11 @@ public class EnvelopedSignature {
         SignedInfo signedInfo = new SignedInfo(references);
 
         //Get sigvalue for the signedInfo
-        SignatureValue signatureValue = new SignatureValue(signedInfo, keystore, alias, keyPassword);
+        SignatureValue signatureValue = new SignatureValue(signedInfo, privateKey);
 
         //Get KeyInfo
-        KeyInfo keyInfo = null;
-		try {
-			keyInfo = new AysmmetricKeyInfo(keystore.getCertificate(alias));
-		} catch (KeyStoreException e1) {
-			throw new SigningException(e1);
-		}
+        KeyInfo keyInfo = new AysmmetricKeyInfo(signingCert);
+
 
         //Create the signature block
         Signature signature = new Signature(signedInfo, signatureValue, keyInfo);

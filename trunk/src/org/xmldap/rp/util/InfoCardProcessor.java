@@ -32,36 +32,22 @@ package org.xmldap.rp.util;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.ParsingException;
-
-import java.io.IOException;
-import java.util.HashMap;
-
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.InfoCardProcessingException;
-import org.xmldap.util.KeystoreUtil;
 
-import javax.servlet.RequestDispatcher;
-
+import java.io.IOException;
+import java.security.PrivateKey;
+import java.util.HashMap;
 
 public class InfoCardProcessor {
 
 
-    private KeystoreUtil keystore;
-    private String alias;
-    private String password;
-
-    public InfoCardProcessor(KeystoreUtil keystore, String alias, String password) {
-        this.keystore = keystore;
-        this.alias = alias;
-        this.password = password;
-    }
-
-    public HashMap processCard(String encryptedXML) throws InfoCardProcessingException {
+    public HashMap processCard(String encryptedXML, PrivateKey privateKey) throws InfoCardProcessingException {
 
 
         //decrypt it.
-        DecryptUtil decrypter = new DecryptUtil(keystore);
-        StringBuffer decryptedXML = decrypter.decryptXML(encryptedXML, alias, password);
+        DecryptUtil decrypter = new DecryptUtil();
+        StringBuffer decryptedXML = decrypter.decryptXML(encryptedXML, privateKey);
 
 
         //let's make a doc

@@ -43,28 +43,8 @@
             <lib file="${lib.dir}/bcprov-jdk14-131.jar"/>
             <lib file="${lib.dir}/lightcrypto.jar"/>
             <lib file="${lib.dir}/xom-1.1.jar"/>
-            <lib file="${lib.dir}/slf4j-simple.jar"/>
             <classes dir="${build.classes.dir}"/>
         </war>
-    </target>
-
-
-    <target name="distDSIG"
-            depends="init">
-        <mkdir dir="${build.dir}/xmldsig/"/>
-        <mkdir dir="${build.dir}/xmldsig/lib/"/>
-        <jar destfile="${build.dir}/xmldsig/lib/xmldsig.jar"
-             basedir="${build.classes.dir}">
-            <fileset dir="${build.classes.dir}/org/xmldap/xmldsig/"/>
-            <fileset dir="${build.classes.dir}/org/xmldap/exceptions/"/>
-
-        </jar>
-      <copy file="${confsrc.dir}/dsig.sh" todir="${build.dir}/xmldsig/"/>
-      <copy file="${confsrc.dir}/xmldap.jks" todir="${build.dir}/xmldsig/"/>
-      <copy file="${lib.dir}/xom-1.1.jar" todir="${build.dir}/xmldsig/lib/"/>
-      <copy file="${lib.dir}/slf4j-simple.jar" todir="${build.dir}/xmldsig/lib/"/>
-      <copy file="${lib.dir}/simple-log.jar" todir="${build.dir}/xmldsig/lib/"/>
-
     </target>
 
 
@@ -76,8 +56,6 @@
             <fileset dir="${build.classes.dir}/"/>
         </jar>
         <copy file="${lib.dir}/xom-1.1.jar" todir="${firefox.lib.dir}/"/>
-        <copy file="${lib.dir}/slf4j-simple.jar" todir="${firefox.lib.dir}/"/>
-        <copy file="${lib.dir}/simple-log.jar" todir="${firefox.lib.dir}/"/>
         <copy file="${lib.dir}/lightcrypto.jar" todir="${firefox.lib.dir}/"/>
         <copy file="${lib.dir}/bcprov-jdk14-131.jar" todir="${firefox.lib.dir}/"/>
         <copy file="${confsrc.dir}/firefox.jks" todir="${firefox.lib.dir}/"/>
@@ -140,6 +118,6 @@
 
     <target name="buildRP" depends="clean, build, distRP"/>
 
-    <target name="buildall" depends="clean, build, distRP, distDSIG,distFireFox"/>
+    <target name="buildall" depends="clean, build, distRP,distFireFox"/>
 
 </project>

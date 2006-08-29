@@ -29,8 +29,6 @@
 package org.xmldap.ws.soap.headers.addressing.impl;
 
 import nu.xom.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
@@ -38,7 +36,6 @@ import org.xmldap.xml.Serializable;
 
 public class ToHeader implements Serializable {
 
-    final Logger logger = LoggerFactory.getLogger(ToHeader.class);
 
 
     private String to = null;

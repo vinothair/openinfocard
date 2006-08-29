@@ -29,23 +29,12 @@
 package org.xmldap.ws.soap.headers.addressing.impl;
 
 import nu.xom.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
 
-/**
- * Created by IntelliJ IDEA.
- * User: cmort
- * Date: Mar 16, 2006
- * Time: 5:26:35 PM
- * To change this template use File | Settings | File Templates.
- */
 public class FromHeader implements Serializable {
 
-
-    final Logger logger = LoggerFactory.getLogger(FromHeader.class);
 
     private String from = null;
 

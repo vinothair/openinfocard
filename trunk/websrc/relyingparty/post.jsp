@@ -1,9 +1,10 @@
-<%@ page import="org.xmldap.util.KeystoreUtil,
+<%@ page import="nu.xom.Element,
                  org.xmldap.exceptions.KeyStoreException,
-                 org.xmldap.xmlenc.EncryptedData,
+                 org.xmldap.exceptions.SerializationException,
                  org.xmldap.infocard.SelfIssuedToken,
-                 nu.xom.Element,
-                 org.xmldap.exceptions.SerializationException"%>
+                 org.xmldap.util.KeystoreUtil,
+                 org.xmldap.xmlenc.EncryptedData"%>
+<%@ page import="javax.servlet.ServletException"%>
 
 
 <%

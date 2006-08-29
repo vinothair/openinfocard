@@ -35,8 +35,6 @@ import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.encodings.OAEPEncoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.util.Base64;
 
@@ -59,9 +57,6 @@ import java.security.spec.RSAPublicKeySpec;
  */
 public class CryptoUtils {
 
-    private final static Logger logger = LoggerFactory.getLogger(CryptoUtils.class);
-    private final static boolean DEBUG = logger.isDebugEnabled();
-
 
     /**
      * Creates a Base64 encoded SHA Digest of a byte[]
@@ -72,20 +67,17 @@ public class CryptoUtils {
      */
     public static String digest(byte[] data) throws CryptoException {
 
-        if (DEBUG) logger.debug("Digesting " + new String(data));
 
         MessageDigest md;
         try {
             md = MessageDigest.getInstance("SHA");
         } catch (NoSuchAlgorithmException e) {
-            logger.error(e.getMessage());
             throw new CryptoException(e);
         }
         md.reset();
         md.update(data);
         byte[] digest = md.digest();
 
-        if (DEBUG) logger.debug("DIGEST B64 encoded:" + Base64.encodeBytesNoBreaks(digest));
 
         return Base64.encodeBytesNoBreaks(digest);
 
@@ -106,10 +98,10 @@ public class CryptoUtils {
         try {
             cipherText = Crypt.encrypt(text, keybytes);
         } catch (net.sourceforge.lightcrypto.CryptoException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         } catch (IOException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         }
 
@@ -133,10 +125,10 @@ public class CryptoUtils {
         try {
             clearText = Crypt.decrypt(text, keybytes);
         } catch (net.sourceforge.lightcrypto.CryptoException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         } catch (IOException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         }
 
@@ -156,7 +148,6 @@ public class CryptoUtils {
     public static String rsaoaepEncrypt(byte[] input, X509Certificate cert) throws CryptoException {
 
 
-        if (DEBUG) logger.debug("Using: \n" + cert.getSubjectDN().toString());
 
         AsymmetricBlockCipher engine = new RSAEngine();
         OAEPEncoding cipher = new OAEPEncoding(engine);
@@ -171,20 +162,13 @@ public class CryptoUtils {
         int inputBlockSize = cipher.getInputBlockSize();
         int outputBlockSize = cipher.getOutputBlockSize();
 
-        if (DEBUG) logger.debug("Secret Key: " + new String(input));
-        if (DEBUG) logger.debug("Input size: " + input.length);
-        if (DEBUG) logger.debug("Input block size: " + inputBlockSize);
-        if (DEBUG) logger.debug("Output block size: " + outputBlockSize);
-
         byte[] cipherText;
         try {
             cipherText = cipher.processBlock(input, 0, input.length);
         } catch (InvalidCipherTextException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         }
-
-        if (DEBUG) logger.debug("CIPERTEXT PRE B64: " + new String(cipherText));
 
         return Base64.encodeBytesNoBreaks(cipherText);
 
@@ -195,17 +179,16 @@ public class CryptoUtils {
      * Decrypts base 64 encoded data using RSA OAEP and the provided Key
      *
      * @param b64EncodedData the base 64 encoded ciphertext
-     * @param key            the private key to use for decryption
+     * @param inputKey            the private key to use for decryption
      * @return a byte[] of clear text
      * @throws CryptoException
      */
-    public static byte[] decryptRSAOAEP(String b64EncodedData, RSAPrivateKey key) throws CryptoException {
+    public static byte[] decryptRSAOAEP(String b64EncodedData, PrivateKey inputKey) throws CryptoException {
 
-        if (DEBUG) logger.debug("decoding: " + b64EncodedData);
         byte[] cipherText = Base64.decode(b64EncodedData);
-        if (DEBUG) logger.debug("CIPERTEXT POST B64: " + new String(cipherText));
 
 
+        RSAPrivateKey key =  (RSAPrivateKey) inputKey;
         RSAEngine engine = new RSAEngine();
         OAEPEncoding cipher = new OAEPEncoding(engine);
         BigInteger mod = key.getModulus();
@@ -216,20 +199,15 @@ public class CryptoUtils {
         int inputBlockSize = cipher.getInputBlockSize();
         int outputBlockSize = cipher.getOutputBlockSize();
 
-        if (DEBUG) logger.debug("Input size: " + cipherText.length);
-        if (DEBUG) logger.debug("Input block size: " + inputBlockSize);
-        if (DEBUG) logger.debug("Output block size: " + outputBlockSize);
 
         byte[] clearText;
 
         try {
             clearText = cipher.processBlock(cipherText, 0, cipherText.length);
         } catch (InvalidCipherTextException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         }
-
-        if (DEBUG) logger.debug("Decrypted Key Length: " + clearText.length);
 
         return clearText;
 
@@ -249,7 +227,7 @@ public class CryptoUtils {
         try {
             keygen = KeyGenerator.getInstance("AES");
         } catch (NoSuchAlgorithmException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         }
 
@@ -273,7 +251,6 @@ public class CryptoUtils {
     public static boolean verify(byte[] data, byte[] signature, BigInteger mod, BigInteger exp) throws CryptoException {
 
 
-        if (DEBUG) logger.debug("----->VERIFYING DATA:" + new String(data));
 
         boolean verified;
 
@@ -288,16 +265,16 @@ public class CryptoUtils {
             verified = sig.verify(signature);
 
         } catch (NoSuchAlgorithmException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         } catch (SignatureException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         } catch (InvalidKeyException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         } catch (InvalidKeySpecException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         }
 
@@ -315,7 +292,6 @@ public class CryptoUtils {
      */
     public static String sign(byte[] data, PrivateKey key) throws CryptoException {
 
-        if (DEBUG) logger.debug("----->SIGNING DATA:" + new String(data));
 
         String signedData;
 
@@ -327,16 +303,15 @@ public class CryptoUtils {
             signedData = Base64.encodeBytesNoBreaks(signature.sign());
 
         } catch (NoSuchAlgorithmException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         } catch (SignatureException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         } catch (InvalidKeyException e) {
-            logger.error(e.getMessage());
+
             throw new CryptoException(e);
         }
-        if (DEBUG) logger.debug("RETURNING SIGNATURE:" + signedData);
 
         return signedData;
 

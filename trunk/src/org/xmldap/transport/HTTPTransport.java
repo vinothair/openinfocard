@@ -33,8 +33,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.protocol.Protocol;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.soap.Message;
 
@@ -42,7 +40,6 @@ import java.io.InputStreamReader;
 
 public class HTTPTransport implements SOAPTransport {
 
-    final Logger logger = LoggerFactory.getLogger(HTTPTransport.class);
 
     private HttpClient httpClient;
     private String endpoint;

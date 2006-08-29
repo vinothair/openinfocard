@@ -1,6 +1,6 @@
-<%@ page import="java.util.Set"%>
-<%@ page import="java.util.Iterator"%>
 <%@ page import="java.util.HashMap"%>
+<%@ page import="java.util.Iterator"%>
+<%@ page import="java.util.Set"%>
 
 <%
     HashMap claims = (HashMap)request.getAttribute("claims");
