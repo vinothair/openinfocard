@@ -29,7 +29,6 @@
 package org.xmldap.xmldsig;
 
 import nu.xom.Element;
-
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.Base64;
 

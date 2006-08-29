@@ -30,20 +30,15 @@ package org.xmldap.transport;
 
 import com.sun.slamd.example.BlindTrustSocketFactory;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xmldap.exceptions.SerializationException;
-import org.xmldap.ws.soap.Message;
 
 import java.io.InputStreamReader;
 
 public class HTTPClient {
 
-    final Logger logger = LoggerFactory.getLogger(HTTPClient.class);
 
     private HttpClient httpClient;
 
@@ -60,7 +55,7 @@ public class HTTPClient {
             blindTrust = new BlindTrustSocketFactory();
         } catch (Exception e) {
 
-            logger.error(e.getMessage());
+            //TODO - something
 
         }
 

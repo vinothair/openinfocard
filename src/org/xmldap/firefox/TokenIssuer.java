@@ -28,41 +28,40 @@
 
 package org.xmldap.firefox;
 
-import org.xmldap.util.KeystoreUtil;
-import org.xmldap.util.Base64;
+import nu.xom.*;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.TokenIssuanceException;
-import org.xmldap.xmlenc.EncryptedData;
 import org.xmldap.infocard.SelfIssuedToken;
-import org.json.JSONObject;
-import org.json.JSONException;
+import org.xmldap.util.Base64;
+import org.xmldap.util.KeystoreUtil;
+import org.xmldap.xmlenc.EncryptedData;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.URLDecoder;
+import java.security.PrivateKey;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.cert.CertificateException;
-import java.io.ByteArrayInputStream;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-
-import nu.xom.*;
 
 public class TokenIssuer {
 
 	private String path;
 
-	public TokenIssuer(String path) {
+
+    public TokenIssuer(String path) {
 
 		this.path = URLDecoder.decode(path.substring(7, path.length()));
 
 	}
 
 	public String init(String path) {
-
-		return "TokenIssuer initialized";
-
-	}
+        return "TokenIssuer initialized";
+    }
 
 	private Document getInfocard(String card) throws TokenIssuanceException {
 		Builder parser = new Builder();
@@ -170,10 +169,29 @@ public class TokenIssuer {
 		return token;
 	}
 
-	public String getToken(String serializedPolicy)
-			throws TokenIssuanceException {
+	public String getToken(String serializedPolicy)  throws TokenIssuanceException {
 
-		//TODO - break up this rather large code block
+//TODO - get rid of keystore dependency - gen certs, store, and pass in.
+        String keystorePath = path + "components/lib/firefox.jks";
+
+        //Get my keystore
+        KeystoreUtil keystore = null;
+        X509Certificate signingCert = null;
+        PrivateKey signingKey = null;
+
+        try {
+            keystore = new KeystoreUtil(keystorePath, "storepassword");
+            signingCert = keystore.getCertificate("firefox");
+            signingKey = keystore.getPrivateKey("firefox", "keypassword");
+
+        } catch (KeyStoreException e) {
+            throw new TokenIssuanceException(e);
+        }
+
+
+
+
+        //TODO - break up this rather large code block
 		JSONObject policy = null;
 		String card = null;
 		String der = null;
@@ -198,27 +216,15 @@ public class TokenIssuer {
 		if (ppiElm != null)
 			ppi = ppiElm.getValue();
 
-		X509Certificate cert = der2cert(der);
+		X509Certificate relyingPartyCert = der2cert(der);
 
-		System.out.println("Server Cert: " + cert.getSubjectDN().toString());
+		System.out.println("Server Cert: " + relyingPartyCert.getSubjectDN().toString());
 
-		//TODO - get rid of keystore dependency - gen certs, store, and pass in.
-		String keystorePath = path + "components/lib/firefox.jks";
 
-		//Get my keystore
-		KeystoreUtil keystore = null;
-		try {
-			keystore = new KeystoreUtil(keystorePath, "storepassword");
-		} catch (KeyStoreException e) {
-
-			throw new TokenIssuanceException(e);
-
-		}
 
 		String issuedToken = "";
-		EncryptedData encryptor = new EncryptedData(cert);
-		SelfIssuedToken token = new SelfIssuedToken(keystore, cert, "firefox",
-				"keypassword");
+		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
+		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert, signingCert, signingKey);
 
 		token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
 		token.setValidityPeriod(20);

@@ -33,6 +33,8 @@ function ok(){
     //TODO - I'm not enforcing policy - do so.
     var policy = window.arguments[0];
     policy["card"] = selectedCard.toString();
+
+    //TRUE of FALSE on the second param enabled debug
     var tokenToReturn = processCard(policy,false);
     window.arguments[1](tokenToReturn);
     window.close();

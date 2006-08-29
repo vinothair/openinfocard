@@ -1,11 +1,7 @@
 package org.xmldap.xmldsig;
 
 import junit.framework.TestCase;
-import nu.xom.Attribute;
-import nu.xom.Document;
-import nu.xom.Element;
 import org.xmldap.util.KeystoreUtil;
-import org.xmldap.ws.WSConstants;
 
 /**
  * SignatureUtil Tester.
@@ -45,7 +41,7 @@ public class EnvelopedSignatureTest extends TestCase {
             "rlPs9TH+M4j/R/LV5QWJ93/X9gsxFrxVFGg3b75EKQP8MZ111/jaeKd80mUOAiTO06EtfjXZPrjP\n" +
             "N4e2l05i2EGDUA==</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature></xmldap:Body>\n";
 
-    
+
     private static final String SIGNED_XML = "<xmldap:Body xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\" xmlns:xmldap=\"http://www.xmldap.org\" wsu:Id=\"urn:guid:58824342-832F-C99B-925B-CB0E858E5D65\"><xmldap:Child /><ds:Signature xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><ds:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\" /><ds:Reference URI=\"\"><ds:Transforms><ds:Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\" /><ds:Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /></ds:Transforms><ds:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\" /><ds:DigestValue>8xRvuAvdu90P9qcwm3kaUNSh4/c=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>udWT9QYo6X/Z0YVIN/deUJxGU3CYiDV6OLYxSo/8xjqEKXYzhpwaGEZMytWRBLM/clcd1PViJCdQ\n" +
             "ZRbHnLzBeXk193c5c06FJC56sruoWg8WoqkABd0ZwY4TxxKxQx2+EHqIJMLV06zPOqkBbR9/l14T\n" +
             "PIv1E7aRR5S+hjycvCTvZ5rkG4HWHo0czdvE0b4T10LN6+aokr5SYDRrouQcU9gDpAOJ9r2l7xTc\n" +

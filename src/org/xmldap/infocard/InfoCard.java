@@ -279,7 +279,12 @@ public class InfoCard implements Serializable {
         card.setClaimList(claimList);
 
         //Get the signing util
-        EnvelopingSignature signer = new EnvelopingSignature(keystore, "xmldap", "keypassword");
+        EnvelopingSignature signer = null;
+        try {
+            signer = new EnvelopingSignature(keystore.getCertificate("xmldap"),keystore.getPrivateKey("xmldap", "keypassword"));
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        }
 
         try {
 

@@ -28,43 +28,47 @@
 
 package org.xmldap.rp.servlet;
 
-import nu.xom.*;
-import org.xmldap.exceptions.KeyStoreException;
+import nu.xom.Builder;
+import nu.xom.Document;
+import nu.xom.ParsingException;
 import org.xmldap.exceptions.CryptoException;
-import org.xmldap.util.KeystoreUtil;
-import org.xmldap.ws.WSConstants;
+import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.rp.util.ClaimParserUtil;
 import org.xmldap.rp.util.DecryptUtil;
 import org.xmldap.rp.util.ValidationUtil;
-import org.xmldap.rp.util.ClaimParserUtil;
+import org.xmldap.util.KeystoreUtil;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.PrivateKey;
 import java.util.HashMap;
-import java.util.Set;
-import java.util.Iterator;
 
 
 public class RelyingPartyServlet extends HttpServlet {
 
-    private KeystoreUtil keystore = null;
+
+    private PrivateKey privateKey = null;
+
 
     public void init(ServletConfig config) throws ServletException {
 
-        keystore = null;
+
         try {
 
-            keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
+            KeystoreUtil keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
+            privateKey = keystore.getPrivateKey("xmldap", "password");
 
         } catch (KeyStoreException e) {
-            throw new ServletException(e);
-        }
 
+            e.printStackTrace();
+            throw new ServletException(e);
+
+        }
 
     }
 
@@ -88,8 +92,8 @@ public class RelyingPartyServlet extends HttpServlet {
 
 
             //decrypt it.
-            DecryptUtil decrypter = new DecryptUtil(keystore);
-            StringBuffer decryptedXML = decrypter.decryptXML(encryptedXML, "xmldap", "password");
+            DecryptUtil decrypter = new DecryptUtil();
+            StringBuffer decryptedXML = decrypter.decryptXML(encryptedXML, privateKey);
 
 
 

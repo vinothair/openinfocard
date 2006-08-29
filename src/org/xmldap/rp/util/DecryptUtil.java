@@ -31,31 +31,14 @@ package org.xmldap.rp.util;
 import net.sourceforge.lightcrypto.SafeObject;
 import nu.xom.*;
 import org.xmldap.crypto.CryptoUtils;
-import org.xmldap.exceptions.KeyStoreException;
-import org.xmldap.exceptions.SerializationException;
-import org.xmldap.exceptions.SigningException;
-import org.xmldap.saml.AttributeStatement;
-import org.xmldap.saml.Conditions;
-import org.xmldap.saml.SAMLAssertion;
-import org.xmldap.saml.Subject;
 import org.xmldap.util.Base64;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
-import org.xmldap.xmldsig.AysmmetricKeyInfo;
-import org.xmldap.xmldsig.EnvelopedSignature;
-import org.xmldap.xmlenc.EncryptedData;
 
 import java.io.IOException;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 
 
 public class DecryptUtil {
-
-    private KeystoreUtil keystore;
-
-    public DecryptUtil(KeystoreUtil keystore) {
-        this.keystore = keystore;
-    }
 
 
     private Document parse(String xml) {
@@ -76,7 +59,7 @@ public class DecryptUtil {
     }
 
 
-    public StringBuffer decryptXML(String encryptedXML, String alias, String password) {
+    public StringBuffer decryptXML(String encryptedXML, PrivateKey key) {
 
         Document xml = parse(encryptedXML);
 
@@ -85,19 +68,15 @@ public class DecryptUtil {
         context.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
         context.addNamespace("wsse", WSConstants.WSSE_NAMESPACE_OASIS_10);
 
-        //Nodes fingerprints = xml.query("/enc:EncryptedData/dsig:KeyInfo/enc:EncryptedKey/dsig:KeyInfo/wsse:SecurityTokenReference/wsse:KeyIdentifier",context);
         Nodes fingerprints = xml.query("//wsse:KeyIdentifier", context);
         Element fingerprintElm = (Element) fingerprints.get(0);
         String fingerprint = fingerprintElm.getValue();
         byte[] fingerPrintBytes = Base64.decode(fingerprint);
-        //System.out.println("Fingerprint: " + CryptoUtils.byteArrayToHexString(fingerPrintBytes));
 
 
         Nodes keys = xml.query("/enc:EncryptedData/dsig:KeyInfo/enc:EncryptedKey/enc:CipherData/enc:CipherValue", context);
         Element cipherValue = (Element) keys.get(0);
         String keyCipherText = cipherValue.getValue();
-        //System.out.println("Key Cipher Text: " + keyCipherText);
-        //System.out.println("Key Bytes: " + Base64.decode(keyCipherText).length);
 
 
         Nodes dataNodes = xml.query("/enc:EncryptedData/enc:CipherData/enc:CipherValue", context);
@@ -106,13 +85,6 @@ public class DecryptUtil {
         //System.out.println("Data Cipher Text: " + dataCipherText);
 
 
-        RSAPrivateKey key = null;
-        try {
-            key = (RSAPrivateKey) keystore.getPrivateKey(alias, password);
-
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
         byte[] clearTextKey = null;
         try {
             clearTextKey = CryptoUtils.decryptRSAOAEP(keyCipherText, key);
@@ -136,90 +108,6 @@ public class DecryptUtil {
             e.printStackTrace();
         }
         return clearText;
-
-    }
-
-
-    public static void main(String[] args) {
-
-        //Get my keystore
-        KeystoreUtil myKeystore = null;
-        try {
-            myKeystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.org.jks", "storepassword");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-
-        Conditions conditions = new Conditions(10);
-        
-        org.xmldap.xmldsig.AysmmetricKeyInfo keyInfo = null;
-		try {
-			keyInfo = new AysmmetricKeyInfo(myKeystore.getCertificate("Server-Cert"));
-		} catch (KeyStoreException e1) {
-			e1.printStackTrace();
-		}
-        Subject subject = new Subject(keyInfo);
-        org.xmldap.saml.Attribute given = new org.xmldap.saml.Attribute("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname", "Chuck");
-        org.xmldap.saml.Attribute sur = new org.xmldap.saml.Attribute("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname", "Mortimore");
-        org.xmldap.saml.Attribute email = new org.xmldap.saml.Attribute("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress", "cmortspam@gmail.com");
-        AttributeStatement statement = new AttributeStatement();
-        statement.setSubject(subject);
-        statement.addAttribute(given);
-        statement.addAttribute(sur);
-        statement.addAttribute(email);
-
-        SAMLAssertion assertion = new SAMLAssertion();
-        assertion.setConditions(conditions);
-        assertion.setAttributeStatement(statement);
-
-        String encryptedXML = "";
-
-
-        EnvelopedSignature signer = new EnvelopedSignature(myKeystore, "Server-Cert", "keypassword");
-        EncryptedData encrypted;
-		try {
-			encrypted = new EncryptedData(myKeystore.getCertificate("Server-Cert"));
-		} catch (KeyStoreException e1) {
-			e1.printStackTrace();
-			return;
-		}
-
-        try {
-            Element signedXML = signer.sign(assertion.serialize());
-            encrypted.setData(signedXML.toXML());
-            encryptedXML = encrypted.toXML();
-        } catch (SigningException e) {
-            e.printStackTrace();
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-
-
-        System.out.println("Encrypted: ");
-
-
-        try {
-            Serializer serializer = new Serializer(System.out, "ISO-8859-1");
-            serializer.setIndent(4);
-            serializer.setMaxLength(64);
-            serializer.setPreserveBaseURI(true);
-            serializer.write(new Document(encrypted.serialize()));
-            serializer.flush();
-        } catch (IOException ex) {
-            System.out.println(
-                    "Due to an IOException, the parser could not check "
-                            + args[0]
-            );
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-
-
-        DecryptUtil decrypt = new DecryptUtil(myKeystore);
-        StringBuffer bufferClearText = decrypt.decryptXML(encryptedXML, "Server-Cert", "keypassword");
-        System.out.println(bufferClearText);
-
 
     }
 

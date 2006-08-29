@@ -30,55 +30,28 @@ package org.xmldap.xmldsig;
 
 import nu.xom.Attribute;
 import nu.xom.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.RandomGUID;
 import org.xmldap.ws.WSConstants;
 
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.Vector;
 
-/**
- * Created by IntelliJ IDEA.
- * User: cmort
- * Date: Mar 25, 2006
- * Time: 4:41:33 PM
- * To change this template use File | Settings | File Templates.
- */
+
 public class EnvelopingSignature {
 
 
-    private final Logger logger = LoggerFactory.getLogger(EnvelopedSignature.class);
-    private final boolean DEBUG = logger.isDebugEnabled();
+    private X509Certificate cert;
+    private PrivateKey privateKey;
 
-    private KeystoreUtil keystore = null;
-    private String alias = null;
-    private String keyPassword = null;
-
-
-    public EnvelopingSignature(KeystoreUtil keystore, String alias, String keyPassword) {
-        this.keystore = keystore;
-        this.alias = alias;
-        this.keyPassword = keyPassword;
+    public EnvelopingSignature(X509Certificate cert, PrivateKey privateKey) {
+        this.cert = cert;
+        this.privateKey = privateKey;
     }
 
-
     public Element sign(Element xml) throws SigningException {
-
-        /*  Commenting out - this really needs to go on object
-        //TODO - figure out something to do with irregular IDs
-        Attribute id = xml.getAttribute("Id");
-        if ( id == null ) {
-
-            RandomGUID guidGen = new RandomGUID();
-            id = new Attribute("Id",guidGen.toURN());
-            xml.addAttribute(id);
-
-        } */
-
 
         Element object = new Element(WSConstants.DSIG_PREFIX + ":Object", WSConstants.DSIG_NAMESPACE);
         RandomGUID guidGen = new RandomGUID();
@@ -89,14 +62,6 @@ public class EnvelopingSignature {
         Reference referenceElm = new Reference(object, id.getValue());
         referenceElm.setEnveloped(false);
 
-        /*
-        try {
-            System.out.println("Reference: " + referenceElm.toXML());
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-        */
-
         Vector references = new Vector();
         references.add(referenceElm);
 
@@ -104,16 +69,11 @@ public class EnvelopingSignature {
         SignedInfo signedInfo = new SignedInfo(references);
 
         //Get sigvalue for the signedInfo
-        SignatureValue signatureValue = new SignatureValue(signedInfo, keystore, alias, keyPassword);
+        SignatureValue signatureValue = new SignatureValue(signedInfo, privateKey);
 
         //Get AysmmetricKeyInfo
-        AysmmetricKeyInfo keyInfo = null;
-		try {
-			keyInfo = new AysmmetricKeyInfo(keystore.getCertificate(alias));
-		} catch (KeyStoreException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+        AysmmetricKeyInfo keyInfo = new AysmmetricKeyInfo(cert);
+
 
         //Create the signature block
         Signature signature = new Signature(signedInfo, signatureValue, keyInfo);

@@ -30,20 +30,19 @@ package org.xmldap.infocard;
 
 import nu.xom.Element;
 import org.xmldap.crypto.CryptoUtils;
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 import org.xmldap.saml.*;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.AysmmetricKeyInfo;
 import org.xmldap.xmldsig.EnvelopedSignature;
 import org.xmldap.xmldsig.KeyInfo;
 import org.xmldap.xmldsig.SymmetricKeyInfo;
 
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.Vector;
-import java.security.cert.X509Certificate;
 
 /**
  * SelfIssuedToken allows you to create Self issued tokens for passing to an RP
@@ -81,29 +80,21 @@ public class SelfIssuedToken implements Serializable {
     private String privatePersonalIdentifier;
     private String gender;
 
-    private KeystoreUtil keystore;
-    private String signingAlias;
-    private String signingAliasPassword;
-    private String relyingPartyAlias;
+    private X509Certificate signingCert;
+    private PrivateKey signingKey;
     private X509Certificate relyingPartyCert;
 
 
     private int validityPeriod = 10; //default to 10 minutes
     private boolean asymmetric = false; //default to symmetric key
 
-    public SelfIssuedToken(KeystoreUtil keystore, X509Certificate relyingPartyCert, String signingAlias, String signingAliasPassword) {
-        this.keystore = keystore;
+    public SelfIssuedToken(X509Certificate relyingPartyCert, X509Certificate signingCert, PrivateKey signingKey ) {
+        this.signingCert = signingCert;
+        this.signingKey = signingKey;
         this.relyingPartyCert = relyingPartyCert;
-        this.signingAlias = signingAlias;
-        this.signingAliasPassword = signingAliasPassword;
+
     }
 
-    public SelfIssuedToken(KeystoreUtil keystore, String relyingPartyAlias, String signingAlias, String signingAliasPassword) {
-        this.keystore = keystore;
-        this.relyingPartyAlias = relyingPartyAlias;
-        this.signingAlias = signingAlias;
-        this.signingAliasPassword = signingAliasPassword;
-    }
 
     public int getValidityPeriod() {
         return validityPeriod;
@@ -225,11 +216,9 @@ public class SelfIssuedToken implements Serializable {
         this.gender = gender;
     }
 
-    public void useAsymmetricKey(String signingAlias, String signingAliasPassword) {
+    public void useAsymmetricKey() {
 
         this.asymmetric = true;
-        this.signingAliasPassword = signingAliasPassword;
-        this.signingAlias = signingAlias;
 
     }
 
@@ -240,29 +229,22 @@ public class SelfIssuedToken implements Serializable {
         KeyInfo keyInfo = null;
         if (asymmetric) {
 
-            try {
-				keyInfo = new AysmmetricKeyInfo(keystore.getCertificate(signingAlias));
-			} catch (KeyStoreException e) {
-				throw new SerializationException(e);
-			}
+            if (signingCert == null) throw new SerializationException("You did not provide a certificate for use with asymetric keys");
+            keyInfo = new AysmmetricKeyInfo(signingCert);
 
         } else {
+
             byte[] secretKey;
             try {
                 secretKey = CryptoUtils.genKey(128);
             } catch (org.xmldap.exceptions.CryptoException e) {
                 throw new SerializationException(e);
             }
-            //System.out.println(keystore + ":" + relyingPartyAlias + ":" + secretKey);
 
             if (relyingPartyCert != null) {
                 keyInfo = new SymmetricKeyInfo(relyingPartyCert, secretKey);
             } else {
-                try {
-					keyInfo = new SymmetricKeyInfo(keystore.getCertificate(relyingPartyAlias), secretKey);
-				} catch (KeyStoreException e) {
-					throw new SerializationException(e);
-				}
+                throw new SerializationException("You did not provide the relying party cert");
             }
 
 
@@ -373,7 +355,7 @@ public class SelfIssuedToken implements Serializable {
         assertion.setAttributeStatement(statement);
 
         //make this support multiple signing modes
-        EnvelopedSignature signer = new EnvelopedSignature(keystore, signingAlias, signingAliasPassword);
+        EnvelopedSignature signer = new EnvelopedSignature(signingCert, signingKey);
 
         Element signedXML = null;
         try {
@@ -398,32 +380,6 @@ public class SelfIssuedToken implements Serializable {
         return getSelfIssuedToken();
     }
 
-
-    public static void main(String[] args) {
-
-        KeystoreUtil keystore = null;
-        try {
-            keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-        SelfIssuedToken token = new SelfIssuedToken(keystore, "identityblog", "xmldap", "keypassword");
-        token.useAsymmetricKey("xmldap", "keypassword");
-        token.setGivenName("Chuck");
-        token.setSurname("Mortimore");
-        token.setEmailAddress("cmortspam@gmail.com");
-        token.setValidityPeriod(20);
-        Element securityToken = null;
-        try {
-            securityToken = token.serialize();
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-        System.out.println(securityToken.toXML());
-
-
-    }
 
 
 }

@@ -30,9 +30,8 @@ package org.xmldap.xmldsig;
 
 import nu.xom.Element;
 import org.xmldap.crypto.CryptoUtils;
-import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.CryptoException;
-import org.xmldap.util.KeystoreUtil;
+import org.xmldap.exceptions.SerializationException;
 import org.xmldap.xml.Serializable;
 
 import java.security.PrivateKey;
@@ -41,31 +40,21 @@ public class SignatureValue implements Serializable {
 
 
     private SignedInfo signedInfo = null;
-    private KeystoreUtil keystore = null;
-    private String alias = null;
-    private String keyPassword = null;
+    private PrivateKey privateKey;
 
-    public SignatureValue(SignedInfo signedInfo, KeystoreUtil keystore, String alias, String keyPassword) {
+    public SignatureValue(SignedInfo signedInfo, PrivateKey privateKey) {
         this.signedInfo = signedInfo;
-        this.keystore = keystore;
-        this.alias = alias;
-        this.keyPassword = keyPassword;
+        this.privateKey = privateKey;
     }
 
 
     private Element getSignatureValue() throws SerializationException {
 
         Element signatureValue = new Element("ds:SignatureValue", "http://www.w3.org/2000/09/xmldsig#");
-        PrivateKey key = null;
-        try {
-            key = keystore.getPrivateKey(alias, keyPassword);
-        } catch (org.xmldap.exceptions.KeyStoreException e) {
-            throw new SerializationException(e);
-        }
 
         byte[] bytes = signedInfo.canonicalize();
         try {
-            signatureValue.appendChild(CryptoUtils.sign(bytes, key));
+            signatureValue.appendChild(CryptoUtils.sign(bytes, privateKey));
         } catch (CryptoException e) {
             throw new SerializationException(e);
         }
