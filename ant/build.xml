@@ -47,6 +47,14 @@
         </war>
     </target>
 
+    <target name="distSTS" depends="init">
+        <war destfile="${build.dir}/sts.war" webxml="${confsrc.dir}/sts-web.xml">
+            <fileset dir="${websrc.dir}/sts/"/>
+            <lib file="${lib.dir}/xom-1.1.jar"/>            
+            <classes dir="${build.classes.dir}"/>
+        </war>
+    </target>
+
 
     <target name="distFireFox"
             depends="init,clean,build">
@@ -118,6 +126,6 @@
 
     <target name="buildRP" depends="clean, build, distRP"/>
 
-    <target name="buildall" depends="clean, build, distRP,distFireFox"/>
+    <target name="buildall" depends="clean, build, distRP,distSTS,distFireFox"/>
 
 </project>
