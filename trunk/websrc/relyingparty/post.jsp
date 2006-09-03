@@ -5,6 +5,8 @@
                  org.xmldap.util.KeystoreUtil,
                  org.xmldap.xmlenc.EncryptedData"%>
 <%@ page import="javax.servlet.ServletException"%>
+<%@ page import="java.security.PrivateKey"%>
+<%@ page import="java.security.cert.X509Certificate"%>
 
 
 <%
@@ -13,19 +15,22 @@
    String sureName =   request.getParameter("Surname");
    String email =   request.getParameter("EmailAddress");
    String xml =   request.getParameter("token");
+   PrivateKey privateKey = null;
+   X509Certificate cert = null;
 
-    //Get my keystore
-   KeystoreUtil keystore = null;
    try {
-       //keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.org.jks", "storepassword");
-       keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
+
+        KeystoreUtil keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
+        privateKey = keystore.getPrivateKey("xmldap", "password");
+        cert = keystore.getCertificate("xmldap");
+
    } catch (KeyStoreException e) {
         throw new ServletException(e);
    }
 
    String message="";
-   EncryptedData encryptor = new EncryptedData(keystore, "xmldap");
-   SelfIssuedToken token = new SelfIssuedToken(keystore, "xmldap", "xmldap", "password");
+   EncryptedData encryptor = new EncryptedData(cert);
+   SelfIssuedToken token = new SelfIssuedToken(cert,cert,privateKey);
 
    token.setGivenName(givenName);
    token.setSurname(sureName);

@@ -88,7 +88,7 @@ public class RelyingPartyServlet extends HttpServlet {
         try {
 
             String encryptedXML = request.getParameter("xmlToken");
-            if (encryptedXML == null) processError("Sorry - you'll need to POST a security token.", request, response);
+            if ((encryptedXML == null) || (encryptedXML.equals(""))) processError("Sorry - you'll need to POST a security token.", request, response);
 
 
             //decrypt it.
