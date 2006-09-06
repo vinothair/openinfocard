@@ -72,11 +72,31 @@
 
     </target>
 
+
+    <target name="distObjcLibrary"
+            description="Creates an archive of the libraries need to run XMLDAP client code in an Objective-C wrapper for the WebKit Plug-In."
+            depends="init,clean,build">
+        <mkdir dir="${objc.lib.dir}"/>
+        <jar destfile="${objc.lib.dir}/xmldap-objc.jar"
+             basedir="${build.classes.dir}">
+                <exclude name="org/xmldap/firefox/**"/>
+                <exclude name="org/json/*"/>
+                <exclude name="org/xmldap/ws/**"/>
+        </jar>
+        <copy file="${lib.dir}/xom-1.1.jar" todir="${objc.lib.dir}/"/>
+        <copy file="${lib.dir}/lightcrypto.jar" todir="${objc.lib.dir}/"/>
+        <copy file="${lib.dir}/bcprov-jdk14-131.jar" todir="${objc.lib.dir}/"/>
+        <copy file="${lib.dir}/bcprov-jdk14-131.jar" todir="${objc.lib.dir}/"/>
+        <zip destfile="${build.dir}/xmldap-objc-support-files.zip"  basedir="${objc.lib.dir}"/>
+
+    </target>
+
     <target name="clean"
             depends="init"
             description="removes all temporary files related to the build steps">
         <delete dir="${build.dir}"/>
         <delete dir="${firefox.lib.dir}"/>
+        <delete dir="${objc.lib.dir}"/>
 
     </target>
 
