@@ -32,7 +32,7 @@
 <h2>And here's the decrypted token:</h2>
 <p><textarea rows='10' cols='150'><%= decryptedXML %></textarea></p>
 
-<h2>Valid Signiture: <%= verified %></h2>
+<h2>Valid Signature: <%= verified %></h2>
 
 <h2>You provided the following claims:</h2>
 
