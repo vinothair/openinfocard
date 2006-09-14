@@ -18,6 +18,7 @@
 	           <include name="**/*.jar"/>
             </fileset>
         </path>
+        <property name="java.ver" value="14" />
     </target>
 
 
@@ -40,7 +41,7 @@
     <target name="distRP" depends="init">
         <war destfile="${build.dir}/relyingparty.war" webxml="${confsrc.dir}/rp-web.xml">
             <fileset dir="${websrc.dir}/relyingparty/"/>
-            <lib file="${lib.dir}/bcprov-jdk14-131.jar"/>
+            <lib file="${lib.dir}/bcprov-jdk${java.ver}-133.jar"/>
             <lib file="${lib.dir}/lightcrypto.jar"/>
             <lib file="${lib.dir}/xom-1.1.jar"/>
             <classes dir="${build.classes.dir}"/>
@@ -65,7 +66,7 @@
         </jar>
         <copy file="${lib.dir}/xom-1.1.jar" todir="${firefox.lib.dir}/"/>
         <copy file="${lib.dir}/lightcrypto.jar" todir="${firefox.lib.dir}/"/>
-        <copy file="${lib.dir}/bcprov-jdk14-131.jar" todir="${firefox.lib.dir}/"/>
+        <copy file="${lib.dir}/bcprov-jdk${java.ver}-133.jar" todir="${firefox.lib.dir}/"/>
         <copy file="${confsrc.dir}/firefox.jks" todir="${firefox.lib.dir}/"/>
 
         <zip destfile="${build.dir}/xmldap.xpi"  basedir="${firefox.dir}"/>
@@ -85,8 +86,8 @@
         </jar>
         <copy file="${lib.dir}/xom-1.1.jar" todir="${objc.lib.dir}/"/>
         <copy file="${lib.dir}/lightcrypto.jar" todir="${objc.lib.dir}/"/>
-        <copy file="${lib.dir}/bcprov-jdk14-131.jar" todir="${objc.lib.dir}/"/>
-        <copy file="${lib.dir}/bcprov-jdk14-131.jar" todir="${objc.lib.dir}/"/>
+        <copy file="${lib.dir}/bcprov-jdk${java.ver}-133.jar" todir="${objc.lib.dir}/"/>
+        <copy file="${lib.dir}/bcprov-jdk${java.ver}-133.jar" todir="${objc.lib.dir}/"/>
         <zip destfile="${build.dir}/xmldap-objc-support-files.zip"  basedir="${objc.lib.dir}"/>
 
     </target>
