@@ -50,7 +50,7 @@ public class SignatureValue implements Serializable {
 
     private Element getSignatureValue() throws SerializationException {
 
-        Element signatureValue = new Element("ds:SignatureValue", "http://www.w3.org/2000/09/xmldsig#");
+        Element signatureValue = new Element("dsig:SignatureValue", "http://www.w3.org/2000/09/xmldsig#");
 
         byte[] bytes = signedInfo.canonicalize();
         try {

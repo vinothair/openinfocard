@@ -30,57 +30,51 @@ package org.xmldap.xmldsig;
 
 import nu.xom.Element;
 import org.xmldap.exceptions.SerializationException;
-import org.xmldap.xml.Serializable;
+import org.xmldap.util.Base64;
 
-/**
- * Created by IntelliJ IDEA.
- * User: cmort
- * Date: Mar 21, 2006
- * Time: 11:28:00 AM
- * To change this template use File | Settings | File Templates.
- */
-public class Signature implements Serializable {
+import java.math.BigInteger;
+import java.security.Principal;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
 
-    SignedInfo signedInfo = null;
-    SignatureValue signatureValue = null;
-    KeyInfo keyInfo = null;
 
-    public Signature(SignedInfo signedInfo, SignatureValue signatureValue, KeyInfo keyInfo) {
-        this.signedInfo = signedInfo;
-        this.signatureValue = signatureValue;
-        this.keyInfo = keyInfo;
+public class InfocardKeyInfo implements KeyInfo {
+
+    X509Certificate cert = null;
+
+    public InfocardKeyInfo(X509Certificate cert) {
+        this.cert = cert;
     }
 
-    private Element getSignature() {
+    private Element getKeyInfo() throws SerializationException {
 
+        //TODO - extract constants!
+        Element keyInfo = new Element("ds:KeyInfo", "http://www.w3.org/2000/09/xmldsig#");
 
-        Element signature = new Element("dsig:Signature", "http://www.w3.org/2000/09/xmldsig#");
+        Element x509Data = new Element("ds:X509Data", "http://www.w3.org/2000/09/xmldsig#");
+        Element x509Certificate = new Element("ds:X509Certificate", "http://www.w3.org/2000/09/xmldsig#");
+
         try {
-            signature.appendChild(signedInfo.serialize());
-        } catch (SerializationException e) {
-            e.printStackTrace();
+            x509Certificate.appendChild(Base64.encodeBytesNoBreaks(cert.getEncoded()));
+        } catch (CertificateEncodingException e) {
+            throw new SerializationException("Error getting Cert for keyinfo", e);
         }
-        try {
-            signature.appendChild(signatureValue.serialize());
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-        try {
-            signature.appendChild(keyInfo.serialize());
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-        return signature;
+
+        x509Data.appendChild(x509Certificate);
+        keyInfo.appendChild(x509Data);
+        return keyInfo;
 
 
     }
+
 
     public String toXML() throws SerializationException {
-        Element sigElm = getSignature();
-        return sigElm.toXML();
+        Element keyInfo = serialize();
+        return keyInfo.toXML();
     }
 
     public Element serialize() throws SerializationException {
-        return getSignature();
+        return getKeyInfo();
     }
 }

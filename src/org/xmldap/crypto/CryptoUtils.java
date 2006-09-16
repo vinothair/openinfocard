@@ -57,6 +57,20 @@ import java.security.spec.RSAPublicKeySpec;
  */
 public class CryptoUtils {
 
+    public static byte[] byteDigest(byte[] data) throws CryptoException {
+
+
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA");
+        } catch (NoSuchAlgorithmException e) {
+            throw new CryptoException(e);
+        }
+        md.reset();
+        md.update(data);
+        return md.digest();
+
+    }
 
     /**
      * Creates a Base64 encoded SHA Digest of a byte[]
@@ -175,6 +189,7 @@ public class CryptoUtils {
     }
 
 
+
     /**
      * Decrypts base 64 encoded data using RSA OAEP and the provided Key
      *
@@ -195,9 +210,6 @@ public class CryptoUtils {
         BigInteger exp = key.getPrivateExponent();
         RSAKeyParameters keyParams = new RSAKeyParameters(true, mod, exp);
         cipher.init(false, keyParams);
-
-        int inputBlockSize = cipher.getInputBlockSize();
-        int outputBlockSize = cipher.getOutputBlockSize();
 
 
         byte[] clearText;

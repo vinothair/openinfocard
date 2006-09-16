@@ -14,6 +14,12 @@
         <description>STSServlet</description>
         <servlet-class>org.xmldap.sts.servlet.STSServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>Card</servlet-name>
+        <display-name>Card</display-name>
+        <description>Card</description>
+        <servlet-class>org.xmldap.sts.servlet.CardServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>MexServlet</servlet-name>
         <url-pattern>/mex</url-pattern>
@@ -21,5 +27,9 @@
     <servlet-mapping>
         <servlet-name>STSServlet</servlet-name>
         <url-pattern>/tokenservice</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Card</servlet-name>
+        <url-pattern>/card/*</url-pattern>
     </servlet-mapping>
 </web-app>

@@ -63,18 +63,18 @@ public class SignedInfo implements Canonicalizable {
         //RandomGUID guidGen = new RandomGUID();
         //String guid = guidGen.toURN();
 
-        Element signedInfo = new Element("ds:SignedInfo", "http://www.w3.org/2000/09/xmldsig#");
+        Element signedInfo = new Element("dsig:SignedInfo", "http://www.w3.org/2000/09/xmldsig#");
         //signedInfo.addNamespaceDeclaration(WSConstants.WSU_PREFIX, WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
         //Attribute idAttr = new Attribute(WSConstants.WSU_PREFIX + ":Id", WSConstants.WSSE_OASIS_10_WSU_NAMESPACE, guid);
         //signedInfo.addAttribute(idAttr);
 
-        Element canonicalizationMethod = new Element("ds:CanonicalizationMethod", "http://www.w3.org/2000/09/xmldsig#");
+        Element canonicalizationMethod = new Element("dsig:CanonicalizationMethod", "http://www.w3.org/2000/09/xmldsig#");
         Attribute canonAlgorithm = new Attribute("Algorithm", Canonicalizer.EXCLUSIVE_XML_CANONICALIZATION);
         //Attribute canonAlgorithm = new Attribute("Algorithm", Canonicalizer.CANONICAL_XML);
         canonicalizationMethod.addAttribute(canonAlgorithm);
         signedInfo.appendChild(canonicalizationMethod);
 
-        Element signatureMethod = new Element("ds:SignatureMethod", "http://www.w3.org/2000/09/xmldsig#");
+        Element signatureMethod = new Element("dsig:SignatureMethod", "http://www.w3.org/2000/09/xmldsig#");
         Attribute signAlgo = new Attribute("Algorithm", "http://www.w3.org/2000/09/xmldsig#rsa-sha1");
         signatureMethod.addAttribute(signAlgo);
         signedInfo.appendChild(signatureMethod);
