@@ -26,52 +26,56 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.xmldap.xmldsig;
 
-import nu.xom.Element;
-import org.xmldap.exceptions.SerializationException;
-import org.xmldap.util.Base64;
+package org.xmldap.sts.db;
 
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.HashMap;
 
 
-public class InfocardKeyInfo implements KeyInfo {
+public class Account {
 
-    X509Certificate cert = null;
+    private String uid;
+    //TODO - move to hash
+    private String password;
+    private HashMap cards = new HashMap();
 
-    public InfocardKeyInfo(X509Certificate cert) {
-        this.cert = cert;
+    public Account() {
     }
 
-    private Element getKeyInfo() throws SerializationException {
+    public Account(String uid, String password) {
+        this.uid = uid;
+        this.password = password;
+    }
 
-        //TODO - extract constants!
-        Element keyInfo = new Element("ds:KeyInfo", "http://www.w3.org/2000/09/xmldsig#");
+    public String getUid() {
+        return uid;
+    }
 
-        Element x509Data = new Element("ds:X509Data", "http://www.w3.org/2000/09/xmldsig#");
-        Element x509Certificate = new Element("ds:X509Certificate", "http://www.w3.org/2000/09/xmldsig#");
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
 
-        try {
-            x509Certificate.appendChild(Base64.encodeBytesNoBreaks(cert.getEncoded()));
-        } catch (CertificateEncodingException e) {
-            throw new SerializationException("Error getting Cert for keyinfo", e);
-        }
+    public String getPassword() {
+        return password;
+    }
 
-        x509Data.appendChild(x509Certificate);
-        keyInfo.appendChild(x509Data);
-        return keyInfo;
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
+    public void addCard(ManagedCard card){
+        this.cards.put(card.getCardId(), card);
+    }
+
+    public Collection getCards() {
+        return cards.values();
+    }
+
+    public ManagedCard getCard(String cardId) {
+        
+        return (ManagedCard) cards.get(cardId);
 
     }
 
-
-    public String toXML() throws SerializationException {
-        Element keyInfo = serialize();
-        return keyInfo.toXML();
-    }
-
-    public Element serialize() throws SerializationException {
-        return getKeyInfo();
-    }
 }

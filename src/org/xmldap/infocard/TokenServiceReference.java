@@ -29,9 +29,7 @@
 package org.xmldap.infocard;
 
 import nu.xom.Element;
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.ws.soap.headers.addressing.IdentityEnabledEndpointReference;
 import org.xmldap.xml.Serializable;

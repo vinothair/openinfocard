@@ -29,13 +29,11 @@
 package org.xmldap.infocard;
 
 import nu.xom.Attribute;
-import nu.xom.Document;
 import nu.xom.Element;
-import nu.xom.Serializer;
+import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
-import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedToken;
@@ -43,13 +41,10 @@ import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
-import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.EnvelopingSignature;
 import org.xmldap.xmldsig.InfoCardSignature;
 
-import java.io.IOException;
-import java.security.cert.X509Certificate;
 import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 
 /**
  * InfoCard allows you to create an InfoCard, and serialize to XML.
