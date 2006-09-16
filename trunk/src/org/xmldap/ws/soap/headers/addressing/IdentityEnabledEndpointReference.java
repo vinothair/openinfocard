@@ -34,7 +34,6 @@ import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.AysmmetricKeyInfo;
 import org.xmldap.xmldsig.InfocardKeyInfo;
 
 import java.security.cert.X509Certificate;

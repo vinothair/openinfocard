@@ -1,22 +1,20 @@
 package org.xmldap.objc.bridge;
 
-import org.xmldap.transport.SSLTransportUtil;
-import org.xmldap.infocard.SelfIssuedToken;
-import org.xmldap.xmlenc.EncryptedData;
-import org.xmldap.exceptions.SerializationException;
-import org.xmldap.util.Base64;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import nu.xom.Element;
 import org.bouncycastle.jce.X509Principal;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
+import org.xmldap.exceptions.SerializationException;
+import org.xmldap.infocard.SelfIssuedToken;
+import org.xmldap.transport.SSLTransportUtil;
+import org.xmldap.xmlenc.EncryptedData;
 
-import java.security.cert.X509Certificate;
-import java.security.cert.Certificate;
-import java.security.*;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.Date;
-
-import nu.xom.Element;
 
 /**
  * This is a bag of utilities and an object "holder" collcted in a single class to make the callouts,

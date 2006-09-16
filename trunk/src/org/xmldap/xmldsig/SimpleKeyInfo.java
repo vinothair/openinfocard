@@ -32,11 +32,8 @@ import nu.xom.Element;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.Base64;
 
-import java.math.BigInteger;
-import java.security.Principal;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPublicKey;
 
 
 public class SimpleKeyInfo implements KeyInfo {
