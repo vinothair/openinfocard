@@ -28,139 +28,122 @@
 
 package org.xmldap.infocard;
 
-import java.security.cert.CertificateException;
-
 import nu.xom.Element;
+import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
+import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.ws.soap.headers.addressing.IdentityEnabledEndpointReference;
 import org.xmldap.xml.Serializable;
+
 import java.security.cert.X509Certificate;
+
 
 public class TokenServiceReference implements Serializable {
 
-	private static final String USERNAME = "UserNamePasswordAuthenticate";
+    private static final String USERNAME = "UserNamePasswordAuthenticate";
+    private static final String SELF_ISSUED = "SelfIssuedAuthenticate";
+    private static final String X509 = "X509V3Authenticate";
+    private static final String KERB = "KerberosV5Authenticate";
 
-	private static final String SELF_ISSUED = "SelfIssuedAuthenticate";
 
-	private static final String X509 = "X509V3Authenticate";
+    private String authType = USERNAME;
+    private String address;
+    private String mexAddress;
+    private String userName;
+    private X509Certificate cert;
 
-	private static final String KERB = "KerberosV5Authenticate";
+    public TokenServiceReference() {
+    }
 
-	private String authType = USERNAME;
+    public TokenServiceReference(String address, String mexAddress) {
+        this.address = address;
+        this.mexAddress = mexAddress;
+    }
 
-	private String address;
+    public TokenServiceReference(String address, String mexAddress, X509Certificate cert) {
+        this.address = address;
+        this.mexAddress = mexAddress;
+        this.cert = cert;
+    }
 
-	private String userName;
+    public String getMexAddress() {
+        return mexAddress;
+    }
 
-	private X509Certificate cert;
+    public void setMexAddress(String mexAddress) {
+        this.mexAddress = mexAddress;
+    }
 
-	public TokenServiceReference() {
-	}
+    public String getAuthType() {
+        return authType;
+    }
 
-	public TokenServiceReference(String address) {
-		this.address = address;
-	}
+    public void setAuthType(String authType) {
+        this.authType = authType;
+    }
 
-	public TokenServiceReference(String address, X509Certificate cert) {
-		this.address = address;
-		this.cert = cert;
-	}
+    public String getAddress() {
+        return address;
+    }
 
-	public String getAuthType() {
-		return authType;
-	}
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
-	public void setAuthType(String authType) {
-		this.authType = authType;
-	}
+    public String getUserName() {
+        return userName;
+    }
 
-	public String getAddress() {
-		return address;
-	}
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-	public void setAddress(String address) {
-		this.address = address;
-	}
+    public X509Certificate getCert() {
+        return cert;
+    }
 
-	public String getUserName() {
-		return userName;
-	}
+    public void setCert(X509Certificate cert) {
+        this.cert = cert;
+    }
 
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
 
-	public X509Certificate getCert() {
-		return cert;
-	}
+    private Element getTokenServiceReference() throws SerializationException {
 
-	public void setCert(X509Certificate cert) {
-		this.cert = cert;
-	}
+        //TODO - support all the reference types
+        Element tokenServiceList = new Element(WSConstants.INFOCARD_PREFIX + ":TokenServiceList", WSConstants.INFOCARD_NAMESPACE);
+        Element tokenService = new Element(WSConstants.INFOCARD_PREFIX + ":TokenService", WSConstants.INFOCARD_NAMESPACE);
+        IdentityEnabledEndpointReference iepr = new IdentityEnabledEndpointReference(address, mexAddress, cert);
+        tokenService.appendChild(iepr.serialize());
 
-	private Element getTokenServiceReference() throws SerializationException {
+        Element userCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UserCredential", WSConstants.INFOCARD_NAMESPACE);
+        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
+        displayCredentialHint.appendChild("Enter your username and password");
+        userCredential.appendChild(displayCredentialHint);
 
-		// TODO - support all the reference types
-		Element tokenServiceList = new Element(WSConstants.INFOCARD_PREFIX
-				+ ":TokenServiceList", WSConstants.INFOCARD_NAMESPACE);
-		Element tokenService = new Element(WSConstants.INFOCARD_PREFIX
-				+ ":TokenService", WSConstants.INFOCARD_NAMESPACE);
-		IdentityEnabledEndpointReference iepr = new IdentityEnabledEndpointReference(
-				address, cert);
-		tokenService.appendChild(iepr.serialize());
+        Element usernamePasswordCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UsernamePasswordCredential", WSConstants.INFOCARD_NAMESPACE);
+        Element username = new Element(WSConstants.INFOCARD_PREFIX + ":Username", WSConstants.INFOCARD_NAMESPACE);
+        username.appendChild(userName);
+        usernamePasswordCredential.appendChild(username);
+        userCredential.appendChild(usernamePasswordCredential);
 
-		Element userCredential = new Element(WSConstants.INFOCARD_PREFIX
-				+ ":UserCredential", WSConstants.INFOCARD_NAMESPACE);
-		Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX
-				+ ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-		displayCredentialHint.appendChild("A credential hint");
-		userCredential.appendChild(displayCredentialHint);
+        tokenService.appendChild(userCredential);
+        tokenServiceList.appendChild(tokenService);
+        return tokenServiceList;
 
-		Element usernamePasswordCredential = new Element(
-				WSConstants.INFOCARD_PREFIX + ":UsernamePasswordCredential",
-				WSConstants.INFOCARD_NAMESPACE);
-		Element username = new Element(WSConstants.INFOCARD_PREFIX
-				+ ":Username", WSConstants.INFOCARD_NAMESPACE);
-		username.appendChild(userName);
-		usernamePasswordCredential.appendChild(username);
-		userCredential.appendChild(usernamePasswordCredential);
+    }
 
-		tokenService.appendChild(userCredential);
-		tokenServiceList.appendChild(tokenService);
-		return tokenServiceList;
 
-	}
+    public String toXML() throws SerializationException {
 
-	public String toXML() throws SerializationException {
+        Element tsr = getTokenServiceReference();
+        return tsr.toXML();
 
-		Element tsr = getTokenServiceReference();
-		return tsr.toXML();
+    }
 
-	}
+    public Element serialize() throws SerializationException {
+        return getTokenServiceReference();
+    }
 
-	public Element serialize() throws SerializationException {
-		return getTokenServiceReference();
-	}
 
-	public static void main(String[] args) {
-		X509Certificate cert = null;
-		try {
-			cert = org.xmldap.util.XmldapCertsAndKeys.getXmldapCert();
-		} catch (CertificateException ex) {
-			ex.printStackTrace();
-			return;
-		}
-
-		TokenServiceReference tsr = new TokenServiceReference("http://test",
-				cert);
-		tsr.setUserName("cmort");
-
-		try {
-			System.out.println(tsr.toXML());
-		} catch (SerializationException e) {
-			e.printStackTrace();
-		}
-
-	}
 }

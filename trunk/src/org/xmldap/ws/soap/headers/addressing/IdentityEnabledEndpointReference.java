@@ -35,6 +35,7 @@ import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.AysmmetricKeyInfo;
+import org.xmldap.xmldsig.InfocardKeyInfo;
 
 import java.security.cert.X509Certificate;
 
@@ -49,52 +50,23 @@ public class IdentityEnabledEndpointReference extends EndpointReference implemen
 
     private X509Certificate cert;
 
-    public IdentityEnabledEndpointReference(String address) {
-        super(address);
+    public IdentityEnabledEndpointReference(String sts, String mex) {
+        super(sts, mex);
     }
 
-    public IdentityEnabledEndpointReference(String address, X509Certificate cert) {
-        super(address);
+    public IdentityEnabledEndpointReference(String sts, String mex, X509Certificate cert) {
+        super(sts, mex);
         this.cert = cert;
     }
 
 
-    /*
-<wsid:Identity>
-      <ds:KeyInfo>
-        <ds:X509Data>
-          <ds:X509Certificate>...</ds:X509Certificate>
-        </ds:X509Data>
-      </ds:KeyInfo>
-    </wsid:Identity>
-
-    */
     private Element getIEPR() throws SerializationException {
 
         Element ref = getEPR();
+        Element identity = new Element(WSConstants.WSA_ID_PREFIX + ":Identity", WSConstants.WSA_ID_06_02);
 
-
-        Element identity = new Element(WSConstants.WSA_ID_PREFIX + ":Identity", WSConstants.WSA_ID_NAMESPACE);
-
-        /*
-        Saving this for later - reuse keyinfo!
-
-        Element keyInfo = new Element(WSConstants.DSIG_PREFIX + ":KeyInfo", WSConstants.DSIG_NAMESPACE);
-        Element x509Data = new Element(WSConstants.DSIG_PREFIX + ":X509Data", WSConstants.DSIG_NAMESPACE);
-        Element x509Certificate = new Element(WSConstants.DSIG_PREFIX + ":X509Certificate", WSConstants.DSIG_NAMESPACE);
-
-        try {
-            x509Certificate.appendChild(Base64.encodeBytes(cert.getEncoded()));
-        } catch (CertificateEncodingException e) {
-            throw new SerializationException("Error serializing certificate", e);
-        }
-
-        x509Data.appendChild(x509Certificate);
-        keyInfo.appendChild(x509Data);
-
-        */
-
-        AysmmetricKeyInfo keyInfo = new AysmmetricKeyInfo(cert);
+        //AysmmetricKeyInfo keyInfo = new AysmmetricKeyInfo(cert);
+        InfocardKeyInfo keyInfo = new InfocardKeyInfo(cert);
         identity.appendChild(keyInfo.serialize());
         ref.appendChild(identity);
         return ref;
@@ -135,7 +107,7 @@ public class IdentityEnabledEndpointReference extends EndpointReference implemen
             e.printStackTrace();
         }
 
-        IdentityEnabledEndpointReference iepr = new IdentityEnabledEndpointReference("http://test", cert);
+        IdentityEnabledEndpointReference iepr = new IdentityEnabledEndpointReference("http://sts", "http://mex", cert);
 
         try {
             System.out.println(iepr.toXML());

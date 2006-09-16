@@ -65,7 +65,7 @@ public class Reference implements Serializable {
 
     private Element getReference() throws SerializationException {
 
-        Element reference = new Element("ds:Reference", "http://www.w3.org/2000/09/xmldsig#");
+        Element reference = new Element("dsig:Reference", "http://www.w3.org/2000/09/xmldsig#");
 
         Attribute uriAttr = null;
 
@@ -81,12 +81,12 @@ public class Reference implements Serializable {
 //        reference.addAttribute(uriAttr);
 
 
-        Element transforms = new Element("ds:Transforms", "http://www.w3.org/2000/09/xmldsig#");
+        Element transforms = new Element("dsig:Transforms", "http://www.w3.org/2000/09/xmldsig#");
 
         //Attribute transformDsigAlgorithm = new Attribute("Algorithm", Canonicalizer.CANONICAL_XML);
         if (enveloped) {
 
-            Element transformEnveloped = new Element("ds:Transform", "http://www.w3.org/2000/09/xmldsig#");
+            Element transformEnveloped = new Element("dsig:Transform", "http://www.w3.org/2000/09/xmldsig#");
             Attribute transformEnvelopedAlgorithm = new Attribute("Algorithm", "http://www.w3.org/2000/09/xmldsig#enveloped-signature");
             transformEnveloped.addAttribute(transformEnvelopedAlgorithm);
             transforms.appendChild(transformEnveloped);
@@ -95,7 +95,7 @@ public class Reference implements Serializable {
         }
 
 
-        Element transformDsig = new Element("ds:Transform", "http://www.w3.org/2000/09/xmldsig#");
+        Element transformDsig = new Element("dsig:Transform", "http://www.w3.org/2000/09/xmldsig#");
         Attribute transformDsigAlgorithm = new Attribute("Algorithm", Canonicalizer.EXCLUSIVE_XML_CANONICALIZATION);
         transformDsig.addAttribute(transformDsigAlgorithm);
         transforms.appendChild(transformDsig);
@@ -103,12 +103,12 @@ public class Reference implements Serializable {
 
         reference.appendChild(transforms);
 
-        Element digestMethod = new Element("ds:DigestMethod", "http://www.w3.org/2000/09/xmldsig#");
+        Element digestMethod = new Element("dsig:DigestMethod", "http://www.w3.org/2000/09/xmldsig#");
         Attribute digestAlgorithm = new Attribute("Algorithm", "http://www.w3.org/2000/09/xmldsig#sha1");
         digestMethod.addAttribute(digestAlgorithm);
         reference.appendChild(digestMethod);
 
-        Element digestValue = new Element("ds:DigestValue", "http://www.w3.org/2000/09/xmldsig#");
+        Element digestValue = new Element("dsig:DigestValue", "http://www.w3.org/2000/09/xmldsig#");
         byte[] dataBytes = null;
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();

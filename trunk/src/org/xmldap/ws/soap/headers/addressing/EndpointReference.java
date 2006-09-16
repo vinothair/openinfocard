@@ -31,21 +31,45 @@ package org.xmldap.ws.soap.headers.addressing;
 import nu.xom.Element;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.xml.Serializable;
+import org.xmldap.ws.WSConstants;
 
 public class EndpointReference implements Serializable {
 
-    String address = null;
+    String sts = null;
+    String mex = null;
 
-    public EndpointReference(String address) {
-        this.address = address;
+    public EndpointReference(String sts, String mex) {
+        this.sts = sts;
+        this.mex = mex;
     }
 
     protected Element getEPR() throws SerializationException {
 
-        Element epr = new Element("wsa:EndpointReference", "http://schemas.xmlsoap.org/ws/2004/08/addressing");
-        Element addressElm = new Element("wsa:Address", "http://schemas.xmlsoap.org/ws/2004/08/addressing");
-        addressElm.appendChild(address);
+        Element epr = new Element("wsa:EndpointReference", WSConstants.WSA_NAMESPACE_05_08);
+
+        Element addressElm = new Element("wsa:Address", WSConstants.WSA_NAMESPACE_05_08);
+        addressElm.appendChild(sts);
         epr.appendChild(addressElm);
+
+        Element metaDataElm = new Element("wsa:Metadata", WSConstants.WSA_NAMESPACE_05_08);
+
+
+        Element mexMetaDataElm = new Element("mex:Metadata", WSConstants.MEX_04_09);
+        //mexMetaDataElm.addNamespaceDeclaration("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        //mexMetaDataElm.addNamespaceDeclaration("xsd", "http://www.w3.org/2001/XMLSchema");
+
+        Element mexMetaDataSectionElm = new Element("mex:MetadataSection", WSConstants.MEX_04_09);
+        Element mexMetaDataReferenceElm = new Element("mex:MetadataReference", WSConstants.MEX_04_09);
+
+
+
+        Element mexAddressElm = new Element("wsa:Address", WSConstants.WSA_NAMESPACE_05_08);
+        mexAddressElm.appendChild(mex);
+        mexMetaDataReferenceElm.appendChild(mexAddressElm);
+        mexMetaDataSectionElm.appendChild(mexMetaDataReferenceElm);
+        mexMetaDataElm.appendChild(mexMetaDataSectionElm);
+        metaDataElm.appendChild(mexMetaDataElm);
+        epr.appendChild(metaDataElm);
         return epr;
 
     }

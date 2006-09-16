@@ -1,0 +1,93 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope"
+            xmlns:wsa="http://www.w3.org/2005/08/addressing"
+            xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+            xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+            xmlns:wst="http://schemas.xmlsoap.org/ws/2005/02/trust"
+            xmlns:ic="http://schemas.microsoft.com/ws/2005/05/identity">
+    <s:Header>
+        <wsa:Action s:mustUnderstand="1">http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue</wsa:Action>
+        <wsa:RelatesTo>{0}</wsa:RelatesTo>
+        <wsa:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</wsa:To>
+        <wsse:Security s:mustUnderstand="1">
+          <wsu:Timestamp>
+            <wsu:Created>{1}</wsu:Created>
+            <wsu:Expires>{2}</wsu:Expires>
+          </wsu:Timestamp>
+        </wsse:Security>
+    </s:Header>
+    <s:Body>
+        <wst:RequestSecurityTokenResponse Context="ProcessRequestSecurityToken"
+                                    xmlns:wst="http://schemas.xmlsoap.org/ws/2005/02/trust">
+            <wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType>
+            <wst:RequestedSecurityToken>
+                <saml:Assertion MajorVersion="1" MinorVersion="1" AssertionID="uuid-6d9b73bc-5fdc-4d62-a8b5-9eaa69c62d38"
+                                Issuer="www.fabrikam.com" IssueInstant="2006-09-11T00:51:39.504Z"
+                                xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion">
+                    <saml:Conditions NotBefore="{1}"
+                                     NotOnOrAfter="{2}"></saml:Conditions>
+                    <saml:AuthenticationStatement AuthenticationMethod="urn:oasis:namespace:tc:SAML:1.0:am:unspecified"
+                                                  AuthenticationInstant="{1}">
+                        <saml:Subject>
+                            <saml:SubjectConfirmation>
+                                <saml:ConfirmationMethod>
+                                    urn:oasis:names:tc:SAML:1.0:cm:sender-vouches</saml:ConfirmationMethod>
+                            </saml:SubjectConfirmation>
+                        </saml:Subject>
+                    </saml:AuthenticationStatement>
+                    <saml:AttributeStatement>
+                        <saml:Subject>
+                            <saml:SubjectConfirmation>
+                                <saml:ConfirmationMethod>
+                                    urn:oasis:names:tc:SAML:1.0:cm:sender-vouches</saml:ConfirmationMethod>
+                            </saml:SubjectConfirmation>
+                        </saml:Subject>
+                        <saml:Attribute AttributeName="privatepersonalidentifier"
+                                        AttributeNamespace="http://schemas.microsoft.com/ws/2005/05/identity/claims">
+                            <saml:AttributeValue>PPI_GOES_HERE</saml:AttributeValue>
+                        </saml:Attribute>
+                    </saml:AttributeStatement>
+                    <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+                        <SignedInfo>
+                            <CanonicalizationMethod
+                                    Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></CanonicalizationMethod>
+                            <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"></SignatureMethod>
+                            <Reference URI="#uuid-6d9b73bc-5fdc-4d62-a8b5-9eaa69c62d38">
+                                <Transforms>
+                                    <Transform
+                                            Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></Transform>
+                                    <Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></Transform>
+                                </Transforms>
+                                <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></DigestMethod>
+                                <DigestValue>oKOIan/sW/iWc1kVqes29EWumuk=</DigestValue>
+                            </Reference>
+                        </SignedInfo>
+                        <SignatureValue>
+                            mG2gVgDSN/CuNq+V6RzRhcFzv2AEtIzUKMZui7PPbqh8S46qhILgBp8z0wWm283AJpfA8850WirIFVH2ZsAi/u0rcsA7a/u6kLbrtjbj6c/FMjyAITm/VFbNU0Eif4c3FYij9YA8oAKUDqs2MzwXx5qzotfb+3eocTiKcM4PoSlz7vFdCYWgqn7X0gFXxM/M2oq+ZeyCIH1AMSyJbfcKPuilngTldWSpjiW5AtFkf5QgbmNavmZzeGff4iUnT5qAsgyjNaUGFwviCFJ0ijQBu0OUFcnCmrymwNFLMi+4TSmE2ZHzv9ZkqNCf5+QG7dSxqsmwigA7ZGdzEW4KkGGQBg==</SignatureValue>
+                        <KeyInfo>
+                            <X509Data>
+                                <X509Certificate>
+                                    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</X509Certificate>
+                            </X509Data>
+                        </KeyInfo>
+                    </Signature>
+                </saml:Assertion>
+            </wst:RequestedSecurityToken>
+            <wst:RequestedAttachedReference>
+                <o:SecurityTokenReference
+                        xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                    <o:KeyIdentifier
+                            ValueType="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.0#SAMLAssertionID">
+                        uuid-6d9b73bc-5fdc-4d62-a8b5-9eaa69c62d38</o:KeyIdentifier>
+                </o:SecurityTokenReference>
+            </wst:RequestedAttachedReference>
+            <wst:RequestedUnattachedReference>
+                <o:SecurityTokenReference
+                        xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                    <o:KeyIdentifier
+                            ValueType="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.0#SAMLAssertionID">
+                        uuid-6d9b73bc-5fdc-4d62-a8b5-9eaa69c62d38</o:KeyIdentifier>
+                </o:SecurityTokenReference>
+            </wst:RequestedUnattachedReference>
+        </wst:RequestSecurityTokenResponse>
+    </s:Body>
+</s:Envelope>

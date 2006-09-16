@@ -45,11 +45,20 @@ public class XSDDateTime {
 
     public String getDateTime() {
 
+
+        /*
+        long now = System.currentTimeMillis();
+        now = now + ( ( moreMinutes * 60 ) * 1000 );
+        Date date = new Date(now);
+        int year = date.getYear() + 1900;
+        int month = date.getMonth();
+        month++;    */
         Date hereDate = new Date();
         long time = hereDate.getTime();
         int offset = hereDate.getTimezoneOffset();
-        //add incremental minutes if required
-        offset = offset + moreMinutes;
+        //add incremental minutes if required - TODO - what's with this 5 minutes bug??  Sub 5 for now.
+        offset = offset + moreMinutes - 5;
+        //offset = offset + moreMinutes;
         long offsetMillis = (offset * 60) * 1000;
         Date date = new Date(time + offsetMillis);
         int year = date.getYear() + 1900;

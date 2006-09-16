@@ -70,9 +70,11 @@ public interface WSConstants {
     public final static String INFOCARD = "http://schemas.microsoft.com/ws/2005/05/identity";
 
     public final static String MEX_04_08 = "http://schemas.xmlsoap.org/ws/2004/08/mex";
+    public final static String MEX_04_09 = "http://schemas.xmlsoap.org/ws/2004/09/mex";
+    public final static String MEX_PREFIX = "mex";
 
     public final static String DSIG_NAMESPACE = "http://www.w3.org/2000/09/xmldsig#";
-    public final static String DSIG_PREFIX = "dsig";
+    public final static String DSIG_PREFIX = "ds";
 
     public final static String ENC_NAMESPACE = "http://www.w3.org/2001/04/xmlenc#";
     public final static String ENC_PREFIX = "enc";
@@ -81,6 +83,7 @@ public interface WSConstants {
     public final static String INFOCARD_PREFIX = "ic";
 
     public final static String WSA_ID_NAMESPACE = "http://schemas.microsoft.com/windows/wcf/2005/09/addressingidentityextension";
+    public final static String WSA_ID_06_02 = "http://schemas.xmlsoap.org/ws/2006/02/addressingidentity";
     public final static String WSA_ID_PREFIX = "wsid";
 
 

@@ -52,6 +52,9 @@
         <war destfile="${build.dir}/sts.war" webxml="${confsrc.dir}/sts-web.xml">
             <fileset dir="${websrc.dir}/sts/"/>
             <lib file="${lib.dir}/xom-1.1.jar"/>            
+            <lib file="${lib.dir}/db4o-5.5-java1.2.jar"/> 
+            <lib file="${lib.dir}/bcprov-jdk14-131.jar"/>
+            <lib file="${lib.dir}/lightcrypto.jar"/>
             <classes dir="${build.classes.dir}"/>
         </war>
     </target>
