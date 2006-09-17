@@ -37,6 +37,7 @@ import org.xmldap.rp.util.ClaimParserUtil;
 import org.xmldap.rp.util.DecryptUtil;
 import org.xmldap.rp.util.ValidationUtil;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.Base64;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
@@ -45,7 +46,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
 
 
@@ -53,7 +57,7 @@ public class RelyingPartyServlet extends HttpServlet {
 
 
     private PrivateKey privateKey = null;
-
+    private String cert = null;
 
     public void init(ServletConfig config) throws ServletException {
 
@@ -63,11 +67,19 @@ public class RelyingPartyServlet extends HttpServlet {
             KeystoreUtil keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
             privateKey = keystore.getPrivateKey("xmldap", "password");
 
+            X509Certificate certificate = keystore.getCertificate("xmldap");
+            StringBuffer sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
+            sb.append(Base64.encodeBytes(certificate.getEncoded()));
+            sb.append("\n-----END CERTIFICATE-----\n");
+            cert = sb.toString();
+
         } catch (KeyStoreException e) {
 
             e.printStackTrace();
             throw new ServletException(e);
 
+        } catch (CertificateEncodingException e) {
+            throw new ServletException(e);
         }
 
     }
@@ -78,6 +90,23 @@ public class RelyingPartyServlet extends HttpServlet {
         RequestDispatcher dispatcher = request.getRequestDispatcher("./error.jsp");
         request.setAttribute("error", message);
         dispatcher.forward(request,response);
+
+    }
+
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        PrintWriter out = response.getWriter();
+
+        out.println("<html>\n" +
+                "<body>\n" +
+                "<b>The xmldap certificate:</b><br><br>" +
+                "<textarea cols=80 rows=20>" + cert + "</textarea>\n" +
+                "</body>\n" +
+                "</html>");
+        out.close();
+        return;
+
 
     }
 

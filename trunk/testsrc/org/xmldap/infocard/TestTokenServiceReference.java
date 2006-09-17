@@ -27,7 +27,7 @@ public class TestTokenServiceReference extends TestCase {
             assertFalse(e.getMessage(), true);
         }
         
-        TokenServiceReference tsr = new TokenServiceReference("http://test", cert);
+        TokenServiceReference tsr = new TokenServiceReference("https://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
         tsr.setUserName("cmort");
         
         String actual = null;

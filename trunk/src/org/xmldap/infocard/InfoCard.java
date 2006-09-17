@@ -229,7 +229,7 @@ public class InfoCard {
         Element issuerNameElm = new Element(WSConstants.INFOCARD_PREFIX + ":IssuerName", WSConstants.INFOCARD_NAMESPACE);
         issuerNameElm.appendChild(issuerName);
         //TODO - Remove this for RC1
-        infoCard.appendChild(issuerNameElm);
+        //infoCard.appendChild(issuerNameElm);
 
         Element timeIssuedElm = new Element(WSConstants.INFOCARD_PREFIX + ":TimeIssued", WSConstants.INFOCARD_NAMESPACE);
         timeIssuedElm.appendChild(timeIssued);
@@ -251,8 +251,8 @@ public class InfoCard {
             throw new InfoCardProcessingException(e);
         }
         //TODO - RC1 change
-        //Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNotice", WSConstants.INFOCARD_NAMESPACE);
-        Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNoticeAt", WSConstants.INFOCARD_NAMESPACE);
+        Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNotice", WSConstants.INFOCARD_NAMESPACE);
+        //Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNoticeAt", WSConstants.INFOCARD_NAMESPACE);
         ppElm.appendChild(privacyPolicy);
         infoCard.appendChild(ppElm);
 
@@ -329,10 +329,14 @@ public class InfoCard {
         card.setTokenList(tokenList);
 
         SupportedClaimList claimList = new SupportedClaimList();
-        SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname");
-        SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname");
-        SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress");
-        SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier");
+        //SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname");
+        //SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname");
+        //SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress");
+        //SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier");
+        SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname");
+        SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname");
+        SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+        SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier");
         claimList.addSupportedClaim(given);
         claimList.addSupportedClaim(sur);
         claimList.addSupportedClaim(email);
