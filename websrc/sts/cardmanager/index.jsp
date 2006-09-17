@@ -10,7 +10,7 @@
 %>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Java Based Relying Party</title>
+	<title>XMLDAP Card Manager</title>
 
 
     <style>

@@ -79,7 +79,7 @@ public interface WSConstants {
     public final static String ENC_NAMESPACE = "http://www.w3.org/2001/04/xmlenc#";
     public final static String ENC_PREFIX = "enc";
 
-    public final static String INFOCARD_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity";
+    public final static String INFOCARD_NAMESPACE = "http://schemas.xmlsoap.org/ws/2005/05/identity";
     public final static String INFOCARD_PREFIX = "ic";
 
     public final static String WSA_ID_NAMESPACE = "http://schemas.microsoft.com/windows/wcf/2005/09/addressingidentityextension";
