@@ -88,7 +88,10 @@ public class RelyingPartyServlet extends HttpServlet {
         try {
 
             String encryptedXML = request.getParameter("xmlToken");
-            if ((encryptedXML == null) || (encryptedXML.equals(""))) processError("Sorry - you'll need to POST a security token.", request, response);
+            if ((encryptedXML == null) || (encryptedXML.equals(""))) {
+                processError("Sorry - you'll need to POST a security token.", request, response);
+                return;
+            }
 
 
             //decrypt it.
@@ -116,6 +119,7 @@ public class RelyingPartyServlet extends HttpServlet {
                 verified = validator.validate(assertion);
             } catch (CryptoException e) {
                 processError(e.getMessage(), request, response);
+                return;
             }
 
 
