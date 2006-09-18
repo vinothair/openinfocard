@@ -102,49 +102,7 @@
                                   xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract"
                                   xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl"
                                   xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
-                                  xmlns:wsa10="http://www.w3.org/2005/08/addressing"
-                                  xmlns:sp="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy">
-
-                    <wsp:Policy  wsu:Id="CustomBinding_IWSTrustContract_policy">
-                        <wsp:ExactlyOne>
-                            <wsp:All>
-                                <sp:TransportBinding>
-                                    <wsp:Policy>
-                                        <sp:TransportToken>
-                                            <wsp:Policy>
-                                              <sp:HttpsToken />
-                                            </wsp:Policy>
-                                        </sp:TransportToken>
-                                        <sp:AlgorithmSuite>
-                                            <wsp:Policy>
-                                              <sp:Basic256 />
-                                            </wsp:Policy>
-                                        </sp:AlgorithmSuite>
-                                        <sp:Layout>
-                                            <wsp:Policy>
-                                              <sp:Strict />
-                                            </wsp:Policy>
-                                        </sp:Layout>
-                                        <sp:IncludeTimestamp />
-                                    </wsp:Policy>
-                                </sp:TransportBinding>
-                                <sp:SignedSupportingTokens>
-                                     <wsp:Policy>
-                                         <sp:UsernameToken
-                                                 sp:IncludeToken="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy/IncludeToken/AlwaysToRecipient">
-                                             <wsp:Policy>
-                                                 <sp:WssUsernameToken10/>
-                                             </wsp:Policy>
-                                         </sp:UsernameToken>
-                                     </wsp:Policy>
-                                 </sp:SignedSupportingTokens>
-                                <wsaw:UsingAddressing/>
-                            </wsp:All>
-                        </wsp:ExactlyOne>
-                    </wsp:Policy>
-
-                    <!--
-
+                                  xmlns:wsa10="http://www.w3.org/2005/08/addressing">
                     <wsp:Policy wsu:Id="CustomBinding_IWSTrustContract_policy">
                         <wsp:ExactlyOne>
                             <wsp:All>
@@ -152,9 +110,12 @@
                                     <wsp:Policy>
                                         <sp:ProtectionToken>
                                             <wsp:Policy>
-                                                <sp:X509Token sp:IncludeToken="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy/IncludeToken/Never">
+                                                <sp:X509Token
+                                                        sp:IncludeToken="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy/IncludeToken/Never">
                                                     <wsp:Policy>
+                                                        <!--
                                                         <sp:RequireDerivedKeys/>
+                                                        -->
                                                         <sp:RequireThumbprintReference/>
                                                         <sp:WssX509V3Token10/>
                                                     </wsp:Policy>
@@ -163,7 +124,7 @@
                                         </sp:ProtectionToken>
                                         <sp:AlgorithmSuite>
                                             <wsp:Policy>
-                                                <sp:Basic128/>
+                                                <sp:Basic256/>
                                             </wsp:Policy>
                                         </sp:AlgorithmSuite>
                                         <sp:Layout>
@@ -172,7 +133,9 @@
                                             </wsp:Policy>
                                         </sp:Layout>
                                         <sp:IncludeTimestamp/>
+                                        <!--
                                         <sp:EncryptSignature/>
+                                        -->
                                         <sp:OnlySignEntireHeadersAndBody/>
                                     </wsp:Policy>
                                 </sp:SymmetricBinding>
@@ -205,7 +168,6 @@
                             </wsp:All>
                         </wsp:ExactlyOne>
                     </wsp:Policy>
-                    -->
                     <wsp:Policy wsu:Id="CustomBinding_IWSTrustContract_Cancel_Input_policy">
                         <wsp:ExactlyOne>
                             <wsp:All>
@@ -225,8 +187,6 @@
                             </wsp:All>
                         </wsp:ExactlyOne>
                     </wsp:Policy>
-
-
                     <wsp:Policy wsu:Id="CustomBinding_IWSTrustContract_Cancel_output_policy">
                         <wsp:ExactlyOne>
                             <wsp:All>
@@ -280,7 +240,6 @@
                             </wsp:All>
                         </wsp:ExactlyOne>
                     </wsp:Policy>
-
                     <wsp:Policy wsu:Id="CustomBinding_IWSTrustContract_Issue_output_policy">
                         <wsp:ExactlyOne>
                             <wsp:All>
@@ -435,7 +394,7 @@
                         <wsdl:port name="CustomBinding_IWSTrustContract" binding="tns:CustomBinding_IWSTrustContract">
                             <soap12:address location="http://xmldap.org/sts/tokenservice"/>
                             <wsa10:EndpointReference>
-                                <wsa10:Address>https://xmldap.org/sts/tokenservice</wsa10:Address>
+                                <wsa10:Address>http://xmldap.org/sts/tokenservice</wsa10:Address>
                                 <Identity xmlns="http://schemas.xmlsoap.org/ws/2006/02/addressingidentity">
                                     <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
                                         <X509Data>
@@ -462,3 +421,4 @@
         </Metadata>
     </s:Body>
 </s:Envelope>
+         

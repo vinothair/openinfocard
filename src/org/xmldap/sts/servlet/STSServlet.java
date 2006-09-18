@@ -31,6 +31,9 @@ package org.xmldap.sts.servlet;
 import nu.xom.*;
 import org.xmldap.util.Bag;
 import org.xmldap.util.XSDDateTime;
+import org.xmldap.util.KeystoreUtil;
+import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.crypto.CryptoUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -38,10 +41,97 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.text.MessageFormat;
+import java.security.interfaces.RSAPrivateKey;
+
+import net.sourceforge.lightcrypto.SafeObject;
 
 
 public class STSServlet  extends HttpServlet {
 
+
+    RSAPrivateKey key;
+
+    public void init() throws ServletException {
+
+        //Get my keystore
+       try {
+
+           KeystoreUtil keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
+           key = (RSAPrivateKey) keystore.getPrivateKey("xmldap", "password");
+
+       } catch (KeyStoreException e) {
+           e.printStackTrace();
+       }
+
+    }
+
+
+
+    private Bag parseToken(String tokenXML) throws ParsingException{
+
+        Bag tokenElements = new Bag();
+
+        //let's make a doc
+        Builder parser = new Builder();
+        Document req = null;
+        try {
+            req = parser.build(tokenXML, "");
+        } catch (ParsingException e) {
+            e.printStackTrace();
+            throw new ParsingException("Issue parsing request", e);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new ParsingException("Issue parsing request", e);
+        }
+
+
+        XPathContext context = new XPathContext();
+        context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
+        context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
+        context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
+        context.addNamespace("wsid","http://schemas.microsoft.com/ws/2005/05/identity");
+        context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
+        context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
+
+        Nodes uns = req.query("//o:Username",context);
+        Element un = (Element) uns.get(0);
+        String userName = un.getValue();
+        System.out.println("userName: " + userName);
+        tokenElements.put("userName", userName);
+
+
+        Nodes pws = req.query("//o:Password",context);
+        Element pw = (Element) pws.get(0);
+        String password = pw.getValue();
+        System.out.println("password: " + password);
+        tokenElements.put("password", password);
+
+        return tokenElements;
+
+    }
+
+
+    /*
+    <wst:RequestSecurityToken Context="ProcessRequestSecurityToken" xmlns:wst="http://schemas.xmlsoap.org/ws/2005/02/trust">
+    <wsid:InformationCardReference xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity">
+        <wsid:CardId>https://xmldap.org/sts/card/2E55ECBE-1423-38AE-DA05-0B27F44907F8</wsid:CardId>
+        <wsid:CardVersion>1</wsid:CardVersion>
+    </wsid:InformationCardReference>
+    <wst:Claims>
+        <wsid:ClaimType Uri="http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname"
+                        xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity"/>
+        <wsid:ClaimType Uri="http://schemas.microsoft.com/ws/2005/05/identity/claims/surname"
+                        xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity"/>
+        <wsid:ClaimType Uri="http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress"
+                        xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity"/>
+    </wst:Claims>
+    <wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>
+    <wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType>
+    <wsid:RequestDisplayToken xml:lang="en" xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity"/>
+</wst:RequestSecurityToken>
+
+    */
 
     private Bag parseRequest(String requestXML) throws ParsingException{
 
@@ -59,43 +149,16 @@ public class STSServlet  extends HttpServlet {
             throw new ParsingException("Issue parsing request", e);
         }
 
-
         Bag requestElements = new Bag();
+
 
         XPathContext context = new XPathContext();
         context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
         context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
         context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
-        context.addNamespace("wsid","http://schemas.microsoft.com/ws/2005/05/identity");
+        context.addNamespace("wsid","http://schemas.xmlsoap.org/ws/2005/05/identity");
         context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
         context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
-
-        Nodes ids = req.query("//a:MessageID",context);
-        Element id = (Element) ids.get(0);
-        String messageId = id.getValue();
-        System.out.println("ID: " + messageId);
-        requestElements.put("messageId", messageId);
-
-        Nodes uns = req.query("//o:Username",context);
-        Element un = (Element) uns.get(0);
-        String userName = un.getValue();
-        System.out.println("userName: " + userName);
-        requestElements.put("userName", userName);
-
-
-        Nodes pws = req.query("//o:Password",context);
-        Element pw = (Element) pws.get(0);
-        String password = pw.getValue();
-        System.out.println("password: " + password);
-        requestElements.put("password", password);
-
-
-        Nodes types = req.query("//wst:RequestType",context);
-        Element type = (Element) types.get(0);
-        String requestType = type.getValue();
-        System.out.println("requestType: " + requestType);
-        requestElements.put("requestType", requestType);
-
 
         Nodes cids = req.query("//wsid:CardId",context);
         Element cid = (Element) cids.get(0);
@@ -134,17 +197,6 @@ public class STSServlet  extends HttpServlet {
         System.out.println("tokenType: " + tokenType);
         requestElements.put("tokenType", tokenType);
 
-
-        /*
-        TODO - add i18n
-        Nodes rdts = req.query("//wsid:RequestDisplayToken",context);
-        Element rd = (Element) rdts.get(0);
-        String requestDisplayToken = rd.getValue();
-        System.out.println("RequestDisplayToken: " + requestDisplayToken);
-        requestElements.put("requestDisplayToken", requestDisplayToken);
-        */
-
-
         return requestElements;
 
 
@@ -155,34 +207,131 @@ public class STSServlet  extends HttpServlet {
         System.out.println("STS got a request");
         int contentLen = request.getContentLength();
 
-        String reqXML = null;
+        String requestXML = null;
         if (contentLen > 0) {
 
             DataInputStream inStream = new DataInputStream(request.getInputStream());
             byte[] buf = new byte[contentLen];
             inStream.readFully(buf);
-            reqXML = new String(buf);
+            requestXML = new String(buf);
 
             System.out.println("STS Request:");
-            System.out.println(reqXML);
+            //System.out.println(requestXML);
 
         }
 
+        //let's make a doc
+        Builder parser = new Builder();
+        Document req = null;
+        try {
+            req = parser.build(requestXML, "");
+        } catch (ParsingException e) {
+            e.printStackTrace();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+        System.out.println("We have a doc");
+
+        XPathContext context = new XPathContext();
+        context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
+        context.addNamespace("e","http://www.w3.org/2001/04/xmlenc#");
+        context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
+        context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
+        context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
+        context.addNamespace("c","http://schemas.xmlsoap.org/ws/2005/02/sc");
+
+        Nodes keyCipher = req.query("//e:EncryptedKey/e:CipherData/e:CipherValue",context);
+        Element keyElm = (Element) keyCipher.get(0);
+        String cipherKey = keyElm.getValue();
+        System.out.println("We have a key");
+
+
+        Nodes bodCipher = req.query("//s:Body//e:CipherValue",context);
+        Element bod = (Element) bodCipher.get(0);
+        String cipherText = bod.getValue();
+        System.out.println("We have a body");
+
+
+        Nodes tokenCipher = req.query("//s:Header/o:Security/e:EncryptedData/e:CipherData/e:CipherValue",context);
+        Element tok = (Element) tokenCipher.get(0);
+        String tokenCipherText = tok.getValue();
+        System.out.println("We have a token");
+
+
+        Nodes ids = req.query("//a:MessageID",context);
+        Element id = (Element) ids.get(0);
+        String messageId = id.getValue();
+        System.out.println("ID: " + messageId);
+
+
+
+
+        byte[] clearTextKey = null;
+        try {
+            clearTextKey = CryptoUtils.decryptRSAOAEP(cipherKey, key);
+        } catch (org.xmldap.exceptions.CryptoException e) {
+            e.printStackTrace();
+        }
+
+
+        SafeObject keyBytes = new SafeObject();
+        try {
+            keyBytes.setText(clearTextKey);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+         StringBuffer clearTextBuffer = new StringBuffer(cipherText);
+
+         StringBuffer rst = null;
+         try {
+             rst = CryptoUtils.decryptAESCBC(clearTextBuffer, keyBytes);
+         } catch (org.xmldap.exceptions.CryptoException e) {
+             e.printStackTrace();
+         }
+
+         System.out.println(rst);
+
+
+         StringBuffer tokenBuffer = new StringBuffer(tokenCipherText);
+         StringBuffer token = null;
+         try {
+             token = CryptoUtils.decryptAESCBC(tokenBuffer, keyBytes);
+         } catch (org.xmldap.exceptions.CryptoException e) {
+             e.printStackTrace();
+         }
+
+         System.out.println(token);
+
+
+
         Bag requestElements = null;
         try {
-            requestElements = parseRequest(reqXML);
+            requestElements = parseRequest(rst.toString());
         } catch (ParsingException e) {
             e.printStackTrace();
             //TODO - SOAP Fault
         }
 
-        String type = (String)requestElements.get("requestType");
-        String stsResponse = "";
-        if ( type.equals("http://schemas.xmlsoap.org/ws/2005/02/trust/Issue")) {
 
-            stsResponse = issue(requestElements);
+        Bag tokenElements = null;
+        try {
+            requestElements = parseToken(token.toString());
+        } catch (ParsingException e) {
+            e.printStackTrace();
+            //TODO - SOAP Fault
         }
 
+
+        //TODO - authenticate!
+
+
+        String stsResponse = issue(messageId, requestElements);
 
         response.setContentType("application/soap+xml; charset=\"utf-8\"");
         response.setContentLength(stsResponse.length());
@@ -194,28 +343,25 @@ public class STSServlet  extends HttpServlet {
 
     }
 
-    private String issue(Bag requestElements) throws IOException {
+    private String issue(String messageId, Bag requestElements) throws IOException {
 
-
-        //ServletContext application = getServletConfig().getServletContext();
-        //InputStream in = application.getResourceAsStream("/issue.xml");
         InputStream in = new FileInputStream("/home/cmort/issue.xml");
 
-        StringBuffer mexBuff = new StringBuffer();
+        StringBuffer issueBuff = new StringBuffer();
         DataInputStream ins = new DataInputStream(in);
 
         while (in.available() !=0) {
-            mexBuff.append(ins.readLine());
+            issueBuff.append(ins.readLine());
         }
 
         in.close();
         ins.close();
 
-        MessageFormat issueResponse = new MessageFormat(mexBuff.toString());
+        MessageFormat issueResponse = new MessageFormat(issueBuff.toString());
 
         XSDDateTime now = new XSDDateTime();
         XSDDateTime later = new XSDDateTime(10);   //one week -what's up with window's time???
-        String[] args = {(String)requestElements.get("messageId"),now.getDateTime(),later.getDateTime()};
+        String[] args = {messageId, now.getDateTime(), later.getDateTime()};
 
         return issueResponse.format(args);
 
