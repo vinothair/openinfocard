@@ -112,14 +112,14 @@ public class CardServlet extends HttpServlet {
         card.setCardName(managedCard.getCardName());
         card.setCardVersion(1);
         card.setIssuerName("xmldap.org");
-        card.setIssuer("https://xmldap.org/sts/tokenservice");
+        card.setIssuer("http://xmldap.org/sts/tokenservice");
         XSDDateTime issued = new XSDDateTime();
         XSDDateTime expires = new XSDDateTime(525600);
 
         card.setTimeIssued(issued.getDateTime());
         card.setTimeExpires(expires.getDateTime());
 
-        TokenServiceReference tsr = new TokenServiceReference("https://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
+        TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
         tsr.setUserName(account.getUid());
         card.setTokenServiceReference(tsr);
 

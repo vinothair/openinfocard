@@ -318,7 +318,8 @@ public class InfoCard {
         card.setTimeIssued(issued.getDateTime());
         card.setTimeExpires(expires.getDateTime());
 
-        TokenServiceReference tsr = new TokenServiceReference("https://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
+        //TokenServiceReference tsr = new TokenServiceReference("https://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
+        TokenServiceReference tsr = new TokenServiceReference("http://www.fabrikam.com:7000/sample/trust/usernamepassword/sts", "https://www.fabrikam.com:7001/sample/trust/usernamepassword/mex", cert);
         tsr.setUserName("cmort");
         card.setTokenServiceReference(tsr);
 
