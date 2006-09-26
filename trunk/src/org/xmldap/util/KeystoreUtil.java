@@ -45,27 +45,16 @@ public class KeystoreUtil {
     private KeyStore keystore = null;
 
     public KeystoreUtil(String keystorePath, String keystorePassword) throws KeyStoreException {
-
-        try {
-            this.keystore = KeyStore.getInstance("JKS");
-            keystore.load(new FileInputStream(keystorePath), keystorePassword.toCharArray());
-        } catch (IOException e) {
-            throw new KeyStoreException(e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new KeyStoreException(e);
-        } catch (CertificateException e) {
-            throw new KeyStoreException(e);
-        } catch (java.security.KeyStoreException e) {
-            throw new KeyStoreException(e);
-        }
-
-
+        load(keystorePath, keystorePassword, "JKS");
     }
 
     //TODO - fix this to use types in constructor
     public KeystoreUtil(String keystorePath, String keystorePassword, String type) throws KeyStoreException {
+        load(keystorePath, keystorePassword, type);
+    }
 
-        try {
+	private void load(String keystorePath, String keystorePassword, String type) throws KeyStoreException {
+		try {
             this.keystore = KeyStore.getInstance(type);
             keystore.load(new FileInputStream(keystorePath), keystorePassword.toCharArray());
         } catch (IOException e) {
@@ -77,9 +66,7 @@ public class KeystoreUtil {
         } catch (java.security.KeyStoreException e) {
             throw new KeyStoreException(e);
         }
-
-
-    }
+	}
 
     public X509Certificate getCertificate(String alias) throws KeyStoreException {
 
