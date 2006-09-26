@@ -18,7 +18,11 @@ import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
+import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -29,6 +33,7 @@ import java.security.spec.RSAPrivateKeySpec;
 import java.util.Date;
 
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.xmldap.exceptions.TokenIssuanceException;
 
@@ -86,8 +91,18 @@ public class XmldapCertsAndKeys {
 		return (RSAPrivateKey) kf.generatePrivate(ks);
 	}
 
+	public static KeyPair generateKeyPair() 
+	 throws NoSuchAlgorithmException, NoSuchProviderException 
+	{
+		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024, new SecureRandom());
+        return keyGen.generateKeyPair();
+    }
+
 	public static X509Certificate generateCertificate(KeyPair kp)
 			throws TokenIssuanceException {
+		Security.addProvider( new BouncyCastleProvider() );
+		
 		X509Certificate cert = null;
 		String issuer = "CN=firefox, OU=infocard selector, O=xmldap, L=San Francisco, ST=California, C=US";
 
