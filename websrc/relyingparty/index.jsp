@@ -34,7 +34,6 @@
 
             %>
 
-             <!-- <%= agentString %> -->
             <%
 
             if (agentString.compareTo(".0.04308)") > 0){
@@ -133,6 +132,9 @@
         <tr>
             <td>
 
+<%
+ if (request.isSecure()) {
+%>
 <form name='infocard' method='post' action='./infocard' id='infocard'>
 <img src="img/click_me_card.png"
      onMouseOver="this.src='img/card.png';"
@@ -144,13 +146,18 @@
           <%= objectClaims %>
 </OBJECT>
 </form>
+                    <br>Click on the image above to login with and Infocard.  
+<%
+ } else {
+%>
+The infocard login will only work if you're on my secure site.  <p><a href="https://xmldap.org/relyingparty/">https://xmldap.org/relyingparty/</a>
+<%
+ }
+%>
 
-                    <br>Click on the image above to login with and Infocard.  This will only work if you're on my secure site.  <p><a href="https://xmldap.org/relyingparty/">https://xmldap.org/relyingparty/</a>
             </td>
         </tr>
     </table>
-
-<!-- http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier -->
 
 
     <h2>Or, if you don't yet have InfoCard installed, I can make a security token for you...</h2>
