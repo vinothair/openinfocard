@@ -37,31 +37,104 @@ import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.infocard.SelfIssuedToken;
 import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.XmldapCertsAndKeys;
 import org.xmldap.xmlenc.EncryptedData;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 public class TokenIssuer {
 
-	private String path;
+	X509Certificate signingCert = null;
+	PrivateKey signingKey = null;
 
+	private String initExtensionPath(String path) throws TokenIssuanceException {
+		try {
+			path = URLDecoder.decode(path.substring(7, path.length()), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new TokenIssuanceException(e);
+		}
+		return path + "components/lib/firefox.jks";
+    }	
+	
+	private String initProfilePath(String path) throws TokenIssuanceException {
+		return path + "firefox.jks";
+    }
+	
+	private void storeCertKey(String keystorePath) throws TokenIssuanceException {
+		try {
+			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+			ks.load(null, "storepassword".toCharArray());
+			Certificate[] chain = {signingCert};
+			ks.setKeyEntry("firefox", signingKey, "keypassword".toCharArray(), chain);
+			// store away the keystore
+		    FileOutputStream fos =
+		        new java.io.FileOutputStream(keystorePath);
+		    ks.store(fos, "storepassword".toCharArray());
+		    fos.close();
+		} catch (java.security.KeyStoreException e) {
+			throw new TokenIssuanceException(e);
+		} catch (NoSuchAlgorithmException e) {
+			throw new TokenIssuanceException(e);
+		} catch (CertificateException e) {
+			throw new TokenIssuanceException(e);
+		} catch (IOException e) {
+			throw new TokenIssuanceException(e);
+		}
+    }
+	
+	private void initCertKey(String keystorePath) throws TokenIssuanceException {
+		// Get my keystore
+		KeystoreUtil keystore = null;
 
-    public TokenIssuer(String path) {
+		try {
+			keystore = new KeystoreUtil(keystorePath, "storepassword");
+			signingCert = keystore.getCertificate("firefox");
+			signingKey = keystore.getPrivateKey("firefox", "keypassword");
 
-		this.path = URLDecoder.decode(path.substring(7, path.length()));
-
+		} catch (KeyStoreException e) {
+			throw new TokenIssuanceException(e);
+		}
+    }
+	
+	public TokenIssuer(String path) throws TokenIssuanceException {
+		String keystorePath = initExtensionPath(path);
+		try {
+			initCertKey(keystorePath);
+		} 
+		catch (TokenIssuanceException e) {
+			// first try to init the cert and key failed
+			// now try to generate them
+			KeyPair kp = null;
+			try {
+				kp = XmldapCertsAndKeys.generateKeyPair();
+				signingCert = XmldapCertsAndKeys.generateCertificate(kp);
+				signingKey = kp.getPrivate();
+				storeCertKey(keystorePath);
+			} catch (NoSuchAlgorithmException e1) {
+				throw new TokenIssuanceException(e);
+			} catch (NoSuchProviderException e1) {
+				throw new TokenIssuanceException(e);
+			}
+		}
 	}
 
 	public String init(String path) {
-        return "TokenIssuer initialized";
-    }
+		return "TokenIssuer initialized";
+	}
 
 	private Document getInfocard(String card) throws TokenIssuanceException {
 		Builder parser = new Builder();
@@ -87,7 +160,7 @@ public class TokenIssuer {
 	private SelfIssuedToken setTokenClaims(Element data, SelfIssuedToken token,
 			String claims) throws TokenIssuanceException {
 		// the argument to indexOf is a kind of shorthand...
-		// should  we use the complete string?
+		// should we use the complete string?
 		if (claims.indexOf("givenname") != -1) {
 			String value = getDataValue(data, "givenname");
 			if ((value != null) && !value.equals("")) {
@@ -169,29 +242,10 @@ public class TokenIssuer {
 		return token;
 	}
 
-	public String getToken(String serializedPolicy)  throws TokenIssuanceException {
+	public String getToken(String serializedPolicy)
+			throws TokenIssuanceException {
 
-//TODO - get rid of keystore dependency - gen certs, store, and pass in.
-        String keystorePath = path + "components/lib/firefox.jks";
-
-        //Get my keystore
-        KeystoreUtil keystore = null;
-        X509Certificate signingCert = null;
-        PrivateKey signingKey = null;
-
-        try {
-            keystore = new KeystoreUtil(keystorePath, "storepassword");
-            signingCert = keystore.getCertificate("firefox");
-            signingKey = keystore.getPrivateKey("firefox", "keypassword");
-
-        } catch (KeyStoreException e) {
-            throw new TokenIssuanceException(e);
-        }
-
-
-
-
-        //TODO - break up this rather large code block
+		// TODO - break up this rather large code block
 		JSONObject policy = null;
 		String card = null;
 		String der = null;
@@ -208,7 +262,7 @@ public class TokenIssuer {
 		Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
 		Element data = (Element) dataNodes.get(0);
 
-		//TODO - support all elements including ppi
+		// TODO - support all elements including ppi
 		String ppi = "";
 
 		Nodes ppiNodes = infocard.query("/infocard/privatepersonalidentifier");
@@ -218,13 +272,13 @@ public class TokenIssuer {
 
 		X509Certificate relyingPartyCert = der2cert(der);
 
-		System.out.println("Server Cert: " + relyingPartyCert.getSubjectDN().toString());
-
-
+		System.out.println("Server Cert: "
+				+ relyingPartyCert.getSubjectDN().toString());
 
 		String issuedToken = "";
 		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
-		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert, signingCert, signingKey);
+		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
+				signingCert, signingKey);
 
 		token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
 		token.setValidityPeriod(20);
@@ -260,21 +314,20 @@ public class TokenIssuer {
 		try {
 			requiredClaims = (String) policy.get("requiredClaims");
 		} catch (JSONException e) {
-			//throw new TokenIssuanceException(e); // requiredClaims not found
+			// throw new TokenIssuanceException(e); // requiredClaims not found
 		}
 		try {
 			optionalClaims = (String) policy.get("optionalClaims");
 		} catch (JSONException e) {
-			//throw new TokenIssuanceException(e); // optionalClaims not found
+			// throw new TokenIssuanceException(e); // optionalClaims not found
 		}
-		if (requiredClaims == null) { 
+		if (requiredClaims == null) {
 			if (optionalClaims != null) {
 				token = setTokenClaims(data, token, optionalClaims);
 			} else { // hm, lets throw everything we have at the RP
 				token = setTokenClaims(data, token, ALL_CLAIMS);
 			}
-		}
-		else { // requiredClaim are present
+		} else { // requiredClaim are present
 			token = setTokenClaims(data, token, requiredClaims);
 			if (optionalClaims != null) {
 				token = setTokenClaims(data, token, optionalClaims);
