@@ -112,7 +112,7 @@ public class XmldapCertsAndKeys {
 				.setNotBefore(new Date(System.currentTimeMillis()
 						- (1000 * 60 * 2))); // 2 minutes
 		gen.setNotAfter(new Date(System.currentTimeMillis()
-				+ (1000 * 60 * 60 * 24 * 30))); // 30 days
+				+ (1000 * 60 * 60 * 24 * 364 * 5)));
 		gen.setSubjectDN(new X509Name(issuer));
 		gen.setPublicKey(kp.getPublic());
 		gen.setSignatureAlgorithm("MD5WithRSAEncryption");
