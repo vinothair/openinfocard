@@ -30,6 +30,7 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateKeySpec;
+import java.util.Calendar;
 import java.util.Date;
 
 import org.bouncycastle.asn1.x509.X509Name;
@@ -108,11 +109,11 @@ public class XmldapCertsAndKeys {
 
 		X509V3CertificateGenerator gen = new X509V3CertificateGenerator();
 		gen.setIssuerDN(new X509Name(issuer));
-		gen
-				.setNotBefore(new Date(System.currentTimeMillis()
-						- (1000 * 60 * 2))); // 2 minutes
-		gen.setNotAfter(new Date(System.currentTimeMillis()
-				+ (1000 * 60 * 60 * 24 * 364 * 5)));
+		Calendar rightNow = Calendar.getInstance();
+		rightNow.add(Calendar.MINUTE, -2); // 2 minutes
+		gen.setNotBefore(rightNow.getTime());
+		rightNow.add(Calendar.YEAR, 5);
+		gen.setNotAfter(rightNow.getTime());
 		gen.setSubjectDN(new X509Name(issuer));
 		gen.setPublicKey(kp.getPublic());
 		gen.setSignatureAlgorithm("MD5WithRSAEncryption");
