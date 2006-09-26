@@ -12,14 +12,25 @@
     String julyClaims = "<PARAM Name=\"issuer\" Value=\"urn:schemas-microsoft-com:ws:2005:05:identity:issuer:self\"><PARAM Name=\"requiredClaims\" Value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\">";
 
     String objectClaims = septemberClaims;
+
+
+    // ONLY GOING TO ALLOW SEPTEMBER OR LATER
+
+    String optionalObjectClaims = "";
+
+    String namespacedOptionalObjectClaims = "<PARAM Name=\"optionalClaims\"\n" +
+            "Value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender\">";
+
+
     
-	String userAgent = request.getHeader("User-Agent");
+    String userAgent = request.getHeader("User-Agent");
 %>
 <!-- <%= userAgent %> -->
 <%
     if (userAgent == null) {
 
         objectClaims = septemberClaims;
+        optionalObjectClaims = namespacedOptionalObjectClaims;
 
     } else {
 
@@ -27,6 +38,8 @@
         if (index == -1) {
 
             objectClaims = septemberClaims;
+            optionalObjectClaims = namespacedOptionalObjectClaims;
+
 
         } else {
 
@@ -39,6 +52,8 @@
             if (agentString.compareTo(".0.04308)") > 0){
 
                 objectClaims = septemberClaims;
+                optionalObjectClaims = namespacedOptionalObjectClaims;
+
 
             } else if (agentString.equals(".04307.00)")){
 
@@ -144,6 +159,7 @@
 <OBJECT type="application/x-informationCard" name="xmlToken">
           <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
           <%= objectClaims %>
+          <%= optionalObjectClaims%>
 </OBJECT>
 </form>
                     <br>Click on the image above to login with and Infocard.  
