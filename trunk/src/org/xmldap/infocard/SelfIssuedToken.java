@@ -41,6 +41,8 @@ import org.xmldap.xmldsig.SymmetricKeyInfo;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -49,22 +51,11 @@ import java.util.Vector;
  */
 public class SelfIssuedToken implements Serializable {
 
-    private static final String GivenName_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname";
-    private static final String Surname_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname";
-    private static final String EmailAddress_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress";
-    private static final String StreetAddress_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/streetaddress";
-    private static final String Locality_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/locality";
-    private static final String StateOrProvince_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/stateorprovince";
-    private static final String PostalCode_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/postalcode";
-    private static final String Country_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/country";
-    private static final String PrimaryPhone_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/homephone";
-    private static final String OtherPhone_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/otherphone";
-    private static final String MobilePhone_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/mobilephone";
-    private static final String DateOfBirth_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/dateofbirth";
-    private static final String PrivatePersonalIdentifier_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier";
-    private static final String Gender_NAMESPACE = "http://schemas.microsoft.com/ws/2005/05/identity/claims/gender";
+    public static final String MS_NAMESPACE_PREFIX = "http://schemas.microsoft.com/ws/2005/05/identity/claims/";
+	public static final String XS_NAMESPACE_PREFIX = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/";
 
-
+	private String namespacePrefix = null;
+	
     private String givenName;
     private String surname;
     private String emailAddress;
@@ -92,9 +83,17 @@ public class SelfIssuedToken implements Serializable {
         this.signingCert = signingCert;
         this.signingKey = signingKey;
         this.relyingPartyCert = relyingPartyCert;
-
+        namespacePrefix = XS_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
     }
 
+
+    public void setNamespacePrefix(String namespacePrefix) {
+        this.namespacePrefix = namespacePrefix;
+    }
+
+    public String getNamespacePrefix() {
+    	return namespacePrefix;
+    }
 
     public int getValidityPeriod() {
         return validityPeriod;
@@ -257,85 +256,85 @@ public class SelfIssuedToken implements Serializable {
 
         if (givenName != null) {
 
-            Attribute attr = new Attribute("givenname", GivenName_NAMESPACE, givenName);
+            Attribute attr = new Attribute("givenname", namespacePrefix+"givenname", givenName);
             attributes.add(attr);
         }
 
         if (surname != null) {
 
-            Attribute attr = new Attribute("surname", Surname_NAMESPACE, surname);
+            Attribute attr = new Attribute("surname", namespacePrefix+"surname", surname);
             attributes.add(attr);
         }
 
         if (emailAddress != null) {
 
-            Attribute attr = new Attribute("emailaddress", EmailAddress_NAMESPACE, emailAddress);
+            Attribute attr = new Attribute("emailaddress", namespacePrefix+"emailaddress", emailAddress);
             attributes.add(attr);
         }
 
         if (streetAddress != null) {
 
-            Attribute attr = new Attribute("streetaddress", StreetAddress_NAMESPACE, streetAddress);
+            Attribute attr = new Attribute("streetaddress", namespacePrefix+"streetaddress", streetAddress);
             attributes.add(attr);
         }
 
         if (locality != null) {
 
-            Attribute attr = new Attribute("locality", Locality_NAMESPACE, locality);
+            Attribute attr = new Attribute("locality", namespacePrefix+locality, locality);
             attributes.add(attr);
         }
 
         if (stateOrProvince != null) {
 
-            Attribute attr = new Attribute("stateorprovince", StateOrProvince_NAMESPACE, stateOrProvince);
+            Attribute attr = new Attribute("stateorprovince", namespacePrefix+"stateorprovince", stateOrProvince);
             attributes.add(attr);
         }
 
         if (postalCode != null) {
 
-            Attribute attr = new Attribute("postalcode", PostalCode_NAMESPACE, postalCode);
+            Attribute attr = new Attribute("postalcode", namespacePrefix+"postalcode", postalCode);
             attributes.add(attr);
         }
 
         if (country != null) {
 
-            Attribute attr = new Attribute("country", Country_NAMESPACE, country);
+            Attribute attr = new Attribute("country", namespacePrefix+"country", country);
             attributes.add(attr);
         }
 
         if (primaryPhone != null) {
 
-            Attribute attr = new Attribute("primaryphone", PrimaryPhone_NAMESPACE, primaryPhone);
+            Attribute attr = new Attribute("primaryphone", namespacePrefix+"primaryphone", primaryPhone);
             attributes.add(attr);
         }
 
         if (otherPhone != null) {
 
-            Attribute attr = new Attribute("otherphone", OtherPhone_NAMESPACE, otherPhone);
+            Attribute attr = new Attribute("otherphone", namespacePrefix+"otherphone", otherPhone);
             attributes.add(attr);
         }
 
         if (mobilePhone != null) {
 
-            Attribute attr = new Attribute("mobilephone", MobilePhone_NAMESPACE, mobilePhone);
+            Attribute attr = new Attribute("mobilephone", namespacePrefix+"mobilephone", mobilePhone);
             attributes.add(attr);
         }
 
         if (dateOfBirth != null) {
 
-            Attribute attr = new Attribute("dateofbirth", DateOfBirth_NAMESPACE, dateOfBirth);
+            Attribute attr = new Attribute("dateofbirth", namespacePrefix+"dateofbirth", dateOfBirth);
             attributes.add(attr);
         }
 
         if (privatePersonalIdentifier != null) {
 
-            Attribute attr = new Attribute("privatepersonalidentifier", PrivatePersonalIdentifier_NAMESPACE, privatePersonalIdentifier);
+            Attribute attr = new Attribute("privatepersonalidentifier", namespacePrefix+"privatepersonalidentifier", privatePersonalIdentifier);
             attributes.add(attr);
         }
 
         if (gender != null) {
 
-            Attribute attr = new Attribute("gender", Gender_NAMESPACE, gender);
+            Attribute attr = new Attribute("gender", namespacePrefix+"gender", gender);
             attributes.add(attr);
         }
 
