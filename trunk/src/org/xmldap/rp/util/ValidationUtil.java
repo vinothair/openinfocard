@@ -33,12 +33,14 @@ import nu.xom.canonical.Canonicalizer;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.util.Base64;
+import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Canonicalizable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Calendar;
 
 
 public class ValidationUtil {
@@ -57,6 +59,21 @@ public class ValidationUtil {
             throw new CryptoException(e);
         }
 
+    }
+
+    public boolean validateConditions(Document assertion) throws CryptoException {
+//    	<saml:Conditions NotBefore="2006-09-27T13:26:59Z" NotOnOrAfter="2006-09-27T13:46:59Z" />
+        XPathContext thisContext = new XPathContext();
+        thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
+        Nodes nodes = assertion.query("//saml:Conditions", thisContext);
+        Element element = (Element)nodes.get(0);
+        String notBefore = (String)element.getAttribute("NotBefore").getValue();
+        String notOnOrAfter = (String)element.getAttribute("NotOnOrAfter").getValue();
+        Calendar now = XSDDateTime.parse(new XSDDateTime().getDateTime());
+        Calendar nb = XSDDateTime.parse(notBefore);
+        Calendar na = XSDDateTime.parse(notOnOrAfter);
+        // TODO take care of "on"
+    	return (now.after(nb) && now.before(na));
     }
 
     public boolean validate(Document assertion) throws CryptoException {
