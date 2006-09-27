@@ -41,8 +41,6 @@ import org.xmldap.xmldsig.SymmetricKeyInfo;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
 
