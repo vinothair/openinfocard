@@ -61,7 +61,7 @@ public class ValidationUtil {
 
     }
 
-    public boolean validateConditions(Document assertion) throws CryptoException {
+    public boolean validateConditions(Document assertion) {
 //    	<saml:Conditions NotBefore="2006-09-27T13:26:59Z" NotOnOrAfter="2006-09-27T13:46:59Z" />
         XPathContext thisContext = new XPathContext();
         thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
