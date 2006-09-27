@@ -28,7 +28,9 @@
 
 package org.xmldap.util;
 
-import java.util.Date;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class XSDDateTime {
 
@@ -42,40 +44,43 @@ public class XSDDateTime {
         this.moreMinutes = moreMinutes;
     }
 
+     public static Calendar parse(String dt) {
+    	String[] dateTime = dt.split("T");
+    	String date = dateTime[0];
+    	String time = dateTime[1];
+    	String[] ymd = date.split("-");
+    	int year = Integer.parseInt(ymd[0]);
+    	int month = Integer.parseInt(ymd[1])-1;
+    	int day = Integer.parseInt(ymd[2]);
+    	String[] hms = time.split(":");
+    	int hour = Integer.parseInt(hms[0]);
+    	int minutes = Integer.parseInt(hms[1]);
+    	int seconds = Integer.parseInt(hms[2].substring(0, 2));
+        TimeZone tz = TimeZone.getTimeZone("GMT+00:00");
+        Calendar cal = Calendar.getInstance(tz, Locale.US);
+        cal.set(year, month, day, hour, minutes, seconds);
+        return cal;
+    }
 
     public String getDateTime() {
-
-
-        /*
-        long now = System.currentTimeMillis();
-        now = now + ( ( moreMinutes * 60 ) * 1000 );
-        Date date = new Date(now);
-        int year = date.getYear() + 1900;
-        int month = date.getMonth();
-        month++;    */
-        Date hereDate = new Date();
-        long time = hereDate.getTime();
-        int offset = hereDate.getTimezoneOffset();
-        //add incremental minutes if required - TODO - what's with this 5 minutes bug??  Sub 5 for now.
-        offset = offset + moreMinutes - 5;
-        //offset = offset + moreMinutes;
-        long offsetMillis = (offset * 60) * 1000;
-        Date date = new Date(time + offsetMillis);
-        int year = date.getYear() + 1900;
-        int month = date.getMonth();
+        TimeZone tz = TimeZone.getTimeZone("GMT+00:00");
+        Calendar cal = Calendar.getInstance(tz, Locale.US);
+        cal.add(Calendar.MINUTE, moreMinutes);
+        
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH);
         month++;
         String monthString = pad(month);
-        int day = date.getDate();
+        int day = cal.get(Calendar.DAY_OF_MONTH);
         String dayString = pad(day);
-        int hour = date.getHours();
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
         String hourString = pad(hour);
-        int minutes = date.getMinutes();
+        int minutes = cal.get(Calendar.MINUTE);
         String minutesString = pad(minutes);
-        int seconds = date.getSeconds();
+        int seconds = cal.get(Calendar.SECOND);
         String secondsString = pad(seconds);
 
         return year + "-" + monthString + "-" + dayString + "T" + hourString + ":" + minutesString + ":" + secondsString + "Z";
-
     }
 
     protected String pad(int value) {
