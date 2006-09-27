@@ -31,7 +31,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateKeySpec;
 import java.util.Calendar;
-import java.util.Date;
 
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -100,8 +99,14 @@ public class XmldapCertsAndKeys {
         return keyGen.generateKeyPair();
     }
 
-	public static X509Certificate generateCertificate(KeyPair kp)
-			throws TokenIssuanceException {
+		public static X509Certificate infocard2Certificate(KeyPair kp)
+				throws TokenIssuanceException {
+			X509Certificate cert = null;
+			return cert;
+	    }
+
+		public static X509Certificate generateCertificate(KeyPair kp)
+				throws TokenIssuanceException {
 		Security.addProvider( new BouncyCastleProvider() );
 		
 		X509Certificate cert = null;
