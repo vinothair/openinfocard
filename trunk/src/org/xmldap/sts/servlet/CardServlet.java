@@ -41,6 +41,7 @@ import org.xmldap.sts.db.Account;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.ManagedCardDB;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.ServletUtil;
 import org.xmldap.util.XSDDateTime;
 
 import javax.servlet.RequestDispatcher;
@@ -58,10 +59,11 @@ import java.security.cert.X509Certificate;
 public class CardServlet extends HttpServlet {
 
     private static ManagedCardDB db;
+    private static ServletUtil _su;
 
     public void init() throws ServletException {
-
-         db = ManagedCardDB.getInstance();
+         _su = new ServletUtil(getServletConfig());
+         db = ManagedCardDB.getInstance(_su.getManagedCardPathString());
 
     }
 
@@ -75,51 +77,62 @@ public class CardServlet extends HttpServlet {
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("/cardmanager/");
             dispatcher.forward(request,response);
-
+	    return;
         }
 
 
         String url = request.getRequestURL().toString();
         String cardURL = url.substring(0, url.length() - 4);
         ManagedCard managedCard = account.getCard(cardURL);
-
+	if (managedCard == null) {
+	    /* log */
+	    return;
+	}
+	
+	if (_su == null) {
+	    _su = new ServletUtil(getServletConfig());
+	}
 
         //Get my keystore
         KeystoreUtil keystore = null;
         try {
-            keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
+	    keystore = _su.getKeystore();
         } catch (KeyStoreException e) {
             e.printStackTrace();
+	    return;
         }
 
         X509Certificate cert = null;
         try {
-            cert = keystore.getCertificate("xmldap");
+            cert = _su.getCertificate();
         } catch (KeyStoreException e) {
             e.printStackTrace();
+	    return;
         }
 
         PrivateKey pKey = null;
         try {
-            pKey = keystore.getPrivateKey("xmldap", "password");
+	    pKey = _su.getPrivateKey();
         } catch (KeyStoreException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+	    return;
         }
 
+	String domainname = _su.getDomainName();
 
         InfoCard card = new InfoCard(cert, pKey);
         card.setCardId(managedCard.getCardId());
         card.setCardName(managedCard.getCardName());
         card.setCardVersion(1);
-        card.setIssuerName("xmldap.org");
-        card.setIssuer("http://xmldap.org/sts/tokenservice");
+        card.setIssuerName(domainname);
+        card.setIssuer("http://" + domainname + "/sts/tokenservice");
         XSDDateTime issued = new XSDDateTime();
         XSDDateTime expires = new XSDDateTime(525600);
 
         card.setTimeIssued(issued.getDateTime());
         card.setTimeExpires(expires.getDateTime());
 
-        TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
+        TokenServiceReference tsr = new TokenServiceReference("http://" + domainname + "/sts/tokenservice", "https://" + domainname + "/sts/mex", cert);
         tsr.setUserName(account.getUid());
         card.setTokenServiceReference(tsr);
 
@@ -140,7 +153,7 @@ public class CardServlet extends HttpServlet {
         claimList.addSupportedClaim(ppid);
         card.setClaimList(claimList);
 
-        card.setPrivacyPolicy("https://xmldap.org/PrivacyPolicy.xml");
+        card.setPrivacyPolicy("https://" + domainname + "/PrivacyPolicy.xml");
 
 
         PrintWriter out = response.getWriter();

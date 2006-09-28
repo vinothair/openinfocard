@@ -32,6 +32,7 @@ import nu.xom.*;
 import org.xmldap.util.Bag;
 import org.xmldap.util.XSDDateTime;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.ServletUtil;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.crypto.CryptoUtils;
 
@@ -50,14 +51,17 @@ public class STSServlet  extends HttpServlet {
 
 
     RSAPrivateKey key;
+    private ServletUtil _su;
 
     public void init() throws ServletException {
 
         //Get my keystore
        try {
 
-           KeystoreUtil keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
-           key = (RSAPrivateKey) keystore.getPrivateKey("xmldap", "password");
+	   _su = new ServletUtil(getServletConfig());
+	   KeystoreUtil keystore = _su.getKeystore();
+	   
+           key = (RSAPrivateKey) _su.getPrivateKey();
 
        } catch (KeyStoreException e) {
            e.printStackTrace();
@@ -344,8 +348,12 @@ public class STSServlet  extends HttpServlet {
     }
 
     private String issue(String messageId, Bag requestElements) throws IOException {
-
-        InputStream in = new FileInputStream("/home/cmort/issue.xml");
+	String issuePath = _su.getIssueFilePathString();
+	
+	if (issuePath == null) {
+	    issuePath = "/home/cmort/issue.xml";
+	}
+        InputStream in = new FileInputStream(issuePath);
 
         StringBuffer issueBuff = new StringBuffer();
         DataInputStream ins = new DataInputStream(in);
