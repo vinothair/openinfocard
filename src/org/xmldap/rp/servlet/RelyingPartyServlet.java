@@ -163,7 +163,9 @@ public class RelyingPartyServlet extends HttpServlet {
 		return;
 	    }
 
-
+	    // no processError for the assertion contitions for now
+	    // if conditions are not met
+            boolean verifiedConditions = validator.validateConditions(assertion);
 
             //Parse the claims
             ClaimParserUtil claimParser = new ClaimParserUtil();
@@ -178,6 +180,11 @@ public class RelyingPartyServlet extends HttpServlet {
                 request.setAttribute("verified", "TRUE");
             } else {
                 request.setAttribute("verified", "FALSE");
+            }
+            if (verifiedConditions) {
+                request.setAttribute("verifiedConditions", "TRUE");
+            } else {
+                request.setAttribute("verifiedConditions", "FALSE");
             }
             request.setAttribute("claims", claims);
             dispatcher.forward(request,response);
