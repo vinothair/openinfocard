@@ -40,8 +40,16 @@ public class ManagedCardDB {
     private static ManagedCardDB ourInstance = new ManagedCardDB();
     private static ObjectContainer db;
     private static boolean initialized = false;
+    private static String _path = null;
+    public static final String PATH_DEFAULT = "/home/cmort/carddb.dbo";
 
     public static ManagedCardDB getInstance() {
+        if (!initialized)  init();
+        return ourInstance;
+    }
+
+    public static ManagedCardDB getInstance(String pathname) {
+	setPath(pathname);
         if (!initialized)  init();
         return ourInstance;
     }
@@ -49,10 +57,15 @@ public class ManagedCardDB {
     private ManagedCardDB() {
     }
 
+    public static void setPath(String pathname) {
+	_path = pathname;
+    }
 
     private static void init(){
-
-        db = Db4o.openFile("/home/cmort/carddb.dbo");
+	if (_path == null) {
+	    _path = PATH_DEFAULT;
+	}
+        db = Db4o.openFile(_path);
         initialized = true;
 
     }
