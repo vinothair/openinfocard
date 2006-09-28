@@ -37,6 +37,7 @@ import org.xmldap.rp.util.ClaimParserUtil;
 import org.xmldap.rp.util.DecryptUtil;
 import org.xmldap.rp.util.ValidationUtil;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.ServletUtil;
 import org.xmldap.util.Base64;
 
 import javax.servlet.RequestDispatcher;
@@ -60,14 +61,14 @@ public class RelyingPartyServlet extends HttpServlet {
     private String cert = null;
 
     public void init(ServletConfig config) throws ServletException {
-
+	super.init(config);
 
         try {
+            ServletUtil su = new ServletUtil(config);
+            KeystoreUtil keystore = su.getKeystore();
+            privateKey = su.getPrivateKey();
 
-            KeystoreUtil keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
-            privateKey = keystore.getPrivateKey("xmldap", "password");
-
-            X509Certificate certificate = keystore.getCertificate("xmldap");
+            X509Certificate certificate = su.getCertificate();
             StringBuffer sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
             sb.append(Base64.encodeBytes(certificate.getEncoded()));
             sb.append("\n-----END CERTIFICATE-----\n");
@@ -127,7 +128,10 @@ public class RelyingPartyServlet extends HttpServlet {
             DecryptUtil decrypter = new DecryptUtil();
             StringBuffer decryptedXML = decrypter.decryptXML(encryptedXML, privateKey);
 
-
+	    if (decryptedXML == null) {
+                processError("Sorry - could not decrypt your XML (perhaps the web server is using a different key than this servlet)?", request, response);
+		return;
+	    }
 
             //let's make a doc
             Builder parser = new Builder();
@@ -136,8 +140,10 @@ public class RelyingPartyServlet extends HttpServlet {
                 assertion = parser.build(decryptedXML.toString(), "");
             } catch (ParsingException e) {
                 processError(e.getMessage(), request, response);
+		return;
             } catch (IOException e) {
                 processError(e.getMessage(), request, response);
+		return;
             }
 
 
@@ -152,7 +158,10 @@ public class RelyingPartyServlet extends HttpServlet {
             }
 
 
-            if (!verified) processError("Signiture Validation Failed!", request, response);
+            if (!verified) {
+		processError("Signature Validation Failed!", request, response);
+		return;
+	    }
 
 
 
