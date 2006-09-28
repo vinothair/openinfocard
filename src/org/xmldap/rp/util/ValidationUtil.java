@@ -39,6 +39,7 @@ import org.xmldap.xml.Canonicalizable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.util.Calendar;
 
@@ -187,5 +188,28 @@ public class ValidationUtil {
 
     }
 
+    /**
+     * test ValidationUtil by validating a digest and signature in a SAML assertion contained in a file.
+     * @param args an array of Strings, in which arg[0] is a filename of an input file
+     */
+    public static void main(String []args) throws Exception {
+	String fn = args[0];
+	FileInputStream fis = new FileInputStream(fn);
+	int avail = fis.available();
+	byte []b = new byte[avail];
+	fis.read(b);
+	fis.close();
+	String decstr = new String(b,"UTF-8");
 
+	Builder parser = new Builder();
+	Document assertion = parser.build(decstr,"");
+	
+	ValidationUtil validator = new ValidationUtil();
+	boolean verified = validator.validate(assertion);
+	if (!verified) {
+	    System.err.println("FAIL");
+	    System.exit(1);
+	}
+	System.exit(0);
+    }
 }
