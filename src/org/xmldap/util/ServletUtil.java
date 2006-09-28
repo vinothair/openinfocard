@@ -51,6 +51,7 @@ public class ServletUtil {
     public static final String PARAM_KEYNAME = "key";
     public static final String PARAM_DOMAIN = "domain";
     public static final String PARAM_CARDSTORE = "cards-file";
+    public static final String PARAM_ISSUE_FILE = "issue-file";
 
     public static final String VAL_KEYSTORE_DEFAULT = "/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks";
     public static final String VAL_KEYSTORE_PASSWORD_DEFAULT = "password";
@@ -112,6 +113,10 @@ public class ServletUtil {
 
     public String getManagedCardPathString() {
 	return _config.getInitParameter(PARAM_CARDSTORE);
+    }
+
+    public String getIssueFilePathString() {
+	return _config.getInitParameter(PARAM_ISSUE_FILE);
     }
 
 }

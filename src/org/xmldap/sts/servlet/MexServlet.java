@@ -32,6 +32,7 @@ import nu.xom.*;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.ServletUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -53,10 +54,11 @@ public class MexServlet extends HttpServlet {
 
 
         try {
+            ServletUtil su = new ServletUtil(getServletConfig());
+            KeystoreUtil keystore = su.getKeystore();
 
-            KeystoreUtil keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
 
-            X509Certificate certificate = (X509Certificate) keystore.getCertificate("xmldap");
+            X509Certificate certificate = su.getCertificate();
 
             try {
                 cert = Base64.encodeBytes(certificate.getEncoded());
