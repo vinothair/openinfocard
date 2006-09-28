@@ -90,6 +90,7 @@ public class DecryptUtil {
             clearTextKey = CryptoUtils.decryptRSAOAEP(keyCipherText, key);
         } catch (org.xmldap.exceptions.CryptoException e) {
             e.printStackTrace();
+	    return null;
         }
 
 
@@ -98,6 +99,7 @@ public class DecryptUtil {
             keyBytes.setText(clearTextKey);
         } catch (Exception e) {
             e.printStackTrace();
+	    return null;
         }
         StringBuffer clearTextBuffer = new StringBuffer(dataCipherText);
 
