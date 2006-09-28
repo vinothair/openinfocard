@@ -60,7 +60,7 @@ public class STSServlet  extends HttpServlet {
 
 	   _su = new ServletUtil(getServletConfig());
 	   KeystoreUtil keystore = _su.getKeystore();
-	   
+
            key = (RSAPrivateKey) _su.getPrivateKey();
 
        } catch (KeyStoreException e) {
@@ -349,7 +349,7 @@ public class STSServlet  extends HttpServlet {
 
     private String issue(String messageId, Bag requestElements) throws IOException {
 	String issuePath = _su.getIssueFilePathString();
-	
+
 	if (issuePath == null) {
 	    issuePath = "/home/cmort/issue.xml";
 	}
