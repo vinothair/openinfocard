@@ -140,10 +140,10 @@ public class RelyingPartyServlet extends HttpServlet {
                 assertion = parser.build(decryptedXML.toString(), "");
             } catch (ParsingException e) {
                 processError(e.getMessage(), request, response);
-		return;
+                return;
             } catch (IOException e) {
                 processError(e.getMessage(), request, response);
-		return;
+                return;
             }
 
 
@@ -159,9 +159,10 @@ public class RelyingPartyServlet extends HttpServlet {
 
 
             if (!verified) {
-		processError("Signature Validation Failed!", request, response);
-		return;
-	    }
+                processError("Signiture Validation Failed!", request, response);
+                return;
+            }
+
 
 	    // no processError for the assertion contitions for now
 	    // if conditions are not met
@@ -171,6 +172,7 @@ public class RelyingPartyServlet extends HttpServlet {
             ClaimParserUtil claimParser = new ClaimParserUtil();
             HashMap claims = claimParser.parseClaims(assertion);
 
+            if (claims.containsKey("emailaddress")) System.out.println("Login from: " + claims.get("emailaddress"));
 
             //Dispatch to UI
             RequestDispatcher dispatcher = request.getRequestDispatcher("./success.jsp");
