@@ -220,7 +220,7 @@ public class EnvelopedSignature {
         SignatureValue signatureValue = new SignatureValue(signedInfo, privateKey);
 
         //Get KeyInfo
-        KeyInfo keyInfo = new AysmmetricKeyInfo(signingCert);
+        KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
 
 
         //Create the signature block

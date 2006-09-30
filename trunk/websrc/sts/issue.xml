@@ -3,7 +3,9 @@
             xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
             xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
             xmlns:wst="http://schemas.xmlsoap.org/ws/2005/02/trust"
-            xmlns:ic="http://schemas.microsoft.com/ws/2005/05/identity">
+            xmlns:ic="http://schemas.xmlsoap.org/ws/2005/05/identity">
+    <!--
+
     <s:Header>
         <wsa:Action s:mustUnderstand="1">http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue</wsa:Action>
         <wsa:RelatesTo>{0}</wsa:RelatesTo>
@@ -15,6 +17,8 @@
           </wsu:Timestamp>
         </wsse:Security>
     </s:Header>
+        -->
+
     <s:Body>
         <wst:RequestSecurityTokenResponse Context="ProcessRequestSecurityToken"
                                     xmlns:wst="http://schemas.xmlsoap.org/ws/2005/02/trust">
@@ -42,10 +46,23 @@
                             </saml:SubjectConfirmation>
                         </saml:Subject>
                         <saml:Attribute AttributeName="privatepersonalidentifier"
+                                        AttributeNamespace="http://schemas.microsoft.com/ws/2005/05/identity/givenname">
+                            <saml:AttributeValue>chuck</saml:AttributeValue>
+                        </saml:Attribute>
+                        <saml:Attribute AttributeName="privatepersonalidentifier"
+                                        AttributeNamespace="http://schemas.microsoft.com/ws/2005/05/identity/surname">
+                            <saml:AttributeValue>mortimore</saml:AttributeValue>
+                        </saml:Attribute>
+                        <saml:Attribute AttributeName="privatepersonalidentifier"
+                                        AttributeNamespace="http://schemas.microsoft.com/ws/2005/05/identity/email">
+                            <saml:AttributeValue>cmort@xmldap.org</saml:AttributeValue>
+                        </saml:Attribute>
+                        <saml:Attribute AttributeName="privatepersonalidentifier"
                                         AttributeNamespace="http://schemas.microsoft.com/ws/2005/05/identity/claims">
-                            <saml:AttributeValue>PPI_GOES_HERE</saml:AttributeValue>
+                            <saml:AttributeValue>http://123131312313123123</saml:AttributeValue>
                         </saml:Attribute>
                     </saml:AttributeStatement>
+                    <!--
                     <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
                         <SignedInfo>
                             <CanonicalizationMethod
@@ -70,8 +87,12 @@
                             </X509Data>
                         </KeyInfo>
                     </Signature>
+                    -->
                 </saml:Assertion>
+
             </wst:RequestedSecurityToken>
+
+            <!--
             <wst:RequestedAttachedReference>
                 <o:SecurityTokenReference
                         xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
@@ -88,6 +109,7 @@
                         uuid-6d9b73bc-5fdc-4d62-a8b5-9eaa69c62d38</o:KeyIdentifier>
                 </o:SecurityTokenReference>
             </wst:RequestedUnattachedReference>
+            -->
         </wst:RequestSecurityTokenResponse>
     </s:Body>
 </s:Envelope>

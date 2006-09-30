@@ -71,8 +71,8 @@ public class EnvelopingSignature {
         //Get sigvalue for the signedInfo
         SignatureValue signatureValue = new SignatureValue(signedInfo, privateKey);
 
-        //Get AysmmetricKeyInfo
-        AysmmetricKeyInfo keyInfo = new AysmmetricKeyInfo(cert);
+        //Get AsymmetricKeyInfo
+        AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(cert);
 
 
         //Create the signature block

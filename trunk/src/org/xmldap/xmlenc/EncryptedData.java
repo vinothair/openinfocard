@@ -45,23 +45,23 @@ import java.security.cert.X509Certificate;
 
     <enc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes256-cbc" />
 
-    <AysmmetricKeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
+    <AsymmetricKeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
         <e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">
             <e:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p">
                 <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
             </e:EncryptionMethod>
-            <AysmmetricKeyInfo>
+            <AsymmetricKeyInfo>
                 <o:SecurityTokenReference xmlns:o="http://docs.oasis-open.org/wss/2004/01/oas is-200401-wss-wssecurity-secext-1.0.xsd">
                     <o:KeyIdentifier ValueType="http://docs.oasis-open.org/wss/oasis-wss-soap-mes sage-security-1.1#ThumbprintSHA1" EncodingType="http://docs.oasis-open.org/ws s/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">
                         +PYbznDaB/dlhjIfqCQ458E72wA=
                     </o:KeyIdentifier>
                 </o:SecurityTokenReference>
-            </AysmmetricKeyInfo>
+            </AsymmetricKeyInfo>
             <e:CipherData>
                 <e:CipherValue> Eq9UhAJ8C9K5l4Mr3qmgX0XnyL1ChKs2PqMj0Sk6snw/IRNtXqLzmgbj2Vd3vFA4Vx1hileSTyqc1 kAsskqpqBc4bMHT61w1f0NxU10HDor0DlNVcVDm/AfLcyLqEP+oh05B+5ntVIJzL8Ro3typF0eoSm 3S6UnINOHIjHaVWyg= </e:CipherValue>
             </e:CipherData>
         </e:EncryptedKey>
-    </AysmmetricKeyInfo>
+    </AsymmetricKeyInfo>
 
     <enc:CipherData>
         <enc:CipherValue> ...= </enc:CipherValue>

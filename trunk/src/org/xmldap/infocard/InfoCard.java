@@ -311,15 +311,15 @@ public class InfoCard {
         card.setCardName("Custom card");
         card.setCardVersion(1);
         card.setIssuerName("xmldap.org");
-        card.setIssuer("https://xmldap.org/sts/tokenservice");
+        card.setIssuer("http://xmldap.org/jaxws-sts/sts");
         XSDDateTime issued = new XSDDateTime();
         XSDDateTime expires = new XSDDateTime(525600);
 
         card.setTimeIssued(issued.getDateTime());
         card.setTimeExpires(expires.getDateTime());
 
-        //TokenServiceReference tsr = new TokenServiceReference("https://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
-        TokenServiceReference tsr = new TokenServiceReference("http://www.fabrikam.com:7000/sample/trust/usernamepassword/sts", "https://www.fabrikam.com:7001/sample/trust/usernamepassword/mex", cert);
+        TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/jaxws-sts/sts", "https://xmldap.org/sts/mex", cert);
+        //TokenServiceReference tsr = new TokenServiceReference("https://www.fabrikam.com:7000/sample/trust/usernamepassword/sts", "https://www.fabrikam.com:7001/sample/trust/usernamepassword/mex", cert);
         tsr.setUserName("cmort");
         card.setTokenServiceReference(tsr);
 
@@ -334,10 +334,10 @@ public class InfoCard {
         //SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname");
         //SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress");
         //SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier");
-        SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname");
-        SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname");
-        SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
-        SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier");
+        SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname");
+        SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname");
+        SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress");
+        SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier");
         claimList.addSupportedClaim(given);
         claimList.addSupportedClaim(sur);
         claimList.addSupportedClaim(email);

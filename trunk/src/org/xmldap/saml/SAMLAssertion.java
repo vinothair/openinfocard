@@ -36,7 +36,7 @@ import org.xmldap.util.RandomGUID;
 import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.AysmmetricKeyInfo;
+import org.xmldap.xmldsig.AsymmetricKeyInfo;
 
 
 public class SAMLAssertion implements Serializable {
@@ -57,6 +57,17 @@ public class SAMLAssertion implements Serializable {
         RandomGUID guidGen = new RandomGUID();
         assertionID = "uuid-" + guidGen.toString();
         issuer = "http://schemas.microsoft.com/ws/2005/05/identity/issuer/self";
+        XSDDateTime dateTime = new XSDDateTime();
+        issueInstant = dateTime.getDateTime();
+
+    }
+
+
+    public SAMLAssertion(String issuer) {
+
+        RandomGUID guidGen = new RandomGUID();
+        assertionID = "uuid-" + guidGen.toString();
+        this.issuer = issuer;
         XSDDateTime dateTime = new XSDDateTime();
         issueInstant = dateTime.getDateTime();
 
@@ -113,9 +124,9 @@ public class SAMLAssertion implements Serializable {
 
         Conditions conditions = new Conditions(10);
 
-        AysmmetricKeyInfo keyInfo = null;
+        AsymmetricKeyInfo keyInfo = null;
 		try {
-			keyInfo = new AysmmetricKeyInfo(keystore.getCertificate("xmldap"));
+			keyInfo = new AsymmetricKeyInfo(keystore.getCertificate("xmldap"));
 		} catch (KeyStoreException e1) {
 			e1.printStackTrace();
 		}

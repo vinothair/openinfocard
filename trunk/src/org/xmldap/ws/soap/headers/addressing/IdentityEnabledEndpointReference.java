@@ -64,7 +64,7 @@ public class IdentityEnabledEndpointReference extends EndpointReference implemen
         Element ref = getEPR();
         Element identity = new Element(WSConstants.WSA_ID_PREFIX + ":Identity", WSConstants.WSA_ID_06_02);
 
-        //AysmmetricKeyInfo keyInfo = new AysmmetricKeyInfo(cert);
+        //AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(cert);
         InfocardKeyInfo keyInfo = new InfocardKeyInfo(cert);
         identity.appendChild(keyInfo.serialize());
         ref.appendChild(identity);

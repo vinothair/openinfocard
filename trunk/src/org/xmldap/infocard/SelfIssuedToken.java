@@ -34,7 +34,7 @@ import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 import org.xmldap.saml.*;
 import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.AysmmetricKeyInfo;
+import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.xmldsig.EnvelopedSignature;
 import org.xmldap.xmldsig.KeyInfo;
 import org.xmldap.xmldsig.SymmetricKeyInfo;
@@ -227,7 +227,7 @@ public class SelfIssuedToken implements Serializable {
         if (asymmetric) {
 
             if (signingCert == null) throw new SerializationException("You did not provide a certificate for use with asymetric keys");
-            keyInfo = new AysmmetricKeyInfo(signingCert);
+            keyInfo = new AsymmetricKeyInfo(signingCert);
 
         } else {
 
