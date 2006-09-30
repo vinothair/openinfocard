@@ -108,7 +108,7 @@ public class KeyInfo implements Serializable {
             fingerPrint = CryptoUtils.digest(key.getEncoded());
 
         } catch (org.xmldap.exceptions.CryptoException e) {
-            e.printStackTrace();
+            throw new SerializationException(e);
         }
 
         keyIdentifier.appendChild(fingerPrint);
@@ -123,7 +123,7 @@ public class KeyInfo implements Serializable {
             String cipherText = CryptoUtils.rsaoaepEncrypt(secretKey, cert);
             cipherValue.appendChild(cipherText);
         } catch (org.xmldap.exceptions.CryptoException e) {
-            e.printStackTrace();
+            throw new SerializationException(e);
         }
         cipherData.appendChild(cipherValue);
         encryptedKey.appendChild(cipherData);
