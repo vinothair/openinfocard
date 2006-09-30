@@ -166,8 +166,14 @@ public class CryptoUtils {
         AsymmetricBlockCipher engine = new RSAEngine();
         OAEPEncoding cipher = new OAEPEncoding(engine);
 
+        PublicKey pk = cert.getPublicKey();
+        String algorithm = pk.getAlgorithm();
+        if (!algorithm.equalsIgnoreCase("RSA")) {
+        	throw new CryptoException("Algorithm " + algorithm + " is not supported");
+        }
+        
         //populate modulus
-        RSAPublicKey key = (RSAPublicKey) cert.getPublicKey();
+        RSAPublicKey key = (RSAPublicKey) pk;
         BigInteger mod = key.getModulus();
         BigInteger exp = key.getPublicExponent();
         RSAKeyParameters keyParams = new RSAKeyParameters(false, mod, exp);
