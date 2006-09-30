@@ -36,6 +36,8 @@
                 <path refid="ext.classpath.path"/>
             </classpath>
         </javac>
+        <jar destfile="${build.dir}/xmldap.jar"
+             basedir="${build.classes.dir}"/>
     </target>
 
     <target name="distRP" depends="init">
@@ -55,7 +57,7 @@
             <lib file="${lib.dir}/db4o-5.5-java1.2.jar"/> 
             <lib file="${lib.dir}/bcprov-jdk${java.ver}-133.jar"/>
             <lib file="${lib.dir}/lightcrypto.jar"/>
-            <classes dir="${build.classes.dir}"/>
+            <lib file="${build.dir}/xmldap.jar"/>
         </war>
     </target>
 

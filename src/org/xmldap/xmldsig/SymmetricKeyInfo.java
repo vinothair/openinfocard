@@ -80,7 +80,7 @@ public class SymmetricKeyInfo implements KeyInfo {
         keyIdentifier.addAttribute(encodingType);
         PublicKey key = cert.getPublicKey();
 
-        System.out.println(cert.toString());
+        //System.out.println(cert.toString());
 
         String fingerPrint = "";
         try {

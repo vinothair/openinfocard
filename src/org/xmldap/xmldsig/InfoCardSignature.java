@@ -73,7 +73,7 @@ public class InfoCardSignature {
         //Get sigvalue for the signedInfo
         SignatureValue signatureValue = new SignatureValue(signedInfo, privateKey);
 
-        //Get AysmmetricKeyInfo
+        //Get AsymmetricKeyInfo
         //InfocardKeyInfo keyInfo = new InfocardKeyInfo(cert);
         SimpleKeyInfo keyInfo = new SimpleKeyInfo(cert);
 

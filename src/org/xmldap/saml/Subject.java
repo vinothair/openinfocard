@@ -34,7 +34,7 @@ import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.AysmmetricKeyInfo;
+import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.xmldsig.KeyInfo;
 
 
@@ -84,9 +84,9 @@ public class Subject implements Serializable {
         }
 
 
-        AysmmetricKeyInfo keyInfo = null;
+        AsymmetricKeyInfo keyInfo = null;
 		try {
-			keyInfo = new AysmmetricKeyInfo(keystore.getCertificate("xmldap"));
+			keyInfo = new AsymmetricKeyInfo(keystore.getCertificate("xmldap"));
 		} catch (KeyStoreException e1) {
 			e1.printStackTrace();
 		}
