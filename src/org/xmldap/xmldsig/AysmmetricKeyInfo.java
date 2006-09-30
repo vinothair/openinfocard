@@ -31,6 +31,7 @@ package org.xmldap.xmldsig;
 import nu.xom.Element;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.Base64;
+import org.xmldap.ws.WSConstants;
 
 import java.math.BigInteger;
 import java.security.Principal;
@@ -51,17 +52,16 @@ public class AysmmetricKeyInfo implements KeyInfo {
 
     private Element getKeyInfo() throws SerializationException {
 
-        //TODO - extract constants!
-        Element keyInfo = new Element("dsig:KeyInfo", "http://www.w3.org/2000/09/xmldsig#");
-        Element keyName = new Element("dsig:KeyName", "http://www.w3.org/2000/09/xmldsig#");
-        Element keyValue = new Element("dsig:KeyValue", "http://www.w3.org/2000/09/xmldsig#");
+        Element keyInfo = new Element("dsig:KeyInfo", WSConstants.DSIG_NAMESPACE);
+        Element keyName = new Element("dsig:KeyName", WSConstants.DSIG_NAMESPACE);
+        Element keyValue = new Element("dsig:KeyValue", WSConstants.DSIG_NAMESPACE);
 
         //TODO - based on key
-        Element rsaKeyValue = new Element("dsig:RSAKeyValue", "http://www.w3.org/2000/09/xmldsig#");
-        Element modulus = new Element("dsig:Modulus", "http://www.w3.org/2000/09/xmldsig#");
-        Element exponent = new Element("dsig:Exponent", "http://www.w3.org/2000/09/xmldsig#");
-        Element x509Data = new Element("dsig:X509Data", "http://www.w3.org/2000/09/xmldsig#");
-        Element x509Certificate = new Element("dsig:X509Certificate", "http://www.w3.org/2000/09/xmldsig#");
+        Element rsaKeyValue = new Element("dsig:RSAKeyValue", WSConstants.DSIG_NAMESPACE);
+        Element modulus = new Element("dsig:Modulus", WSConstants.DSIG_NAMESPACE);
+        Element exponent = new Element("dsig:Exponent", WSConstants.DSIG_NAMESPACE);
+        Element x509Data = new Element("dsig:X509Data", WSConstants.DSIG_NAMESPACE);
+        Element x509Certificate = new Element("dsig:X509Certificate", WSConstants.DSIG_NAMESPACE);
 
 
         try {
