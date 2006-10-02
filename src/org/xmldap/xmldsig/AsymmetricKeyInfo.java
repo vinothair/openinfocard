@@ -40,13 +40,13 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 
 
-public class AysmmetricKeyInfo implements KeyInfo {
+public class AsymmetricKeyInfo implements KeyInfo {
 
 
     //private KeystoreUtil keystoreUtil = null;
     X509Certificate cert = null;
 
-    public AysmmetricKeyInfo(X509Certificate cert) {
+    public AsymmetricKeyInfo(X509Certificate cert) {
         this.cert = cert;
     }
 
