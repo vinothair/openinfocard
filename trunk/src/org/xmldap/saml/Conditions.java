@@ -41,13 +41,17 @@ public class Conditions implements Serializable {
     private String notBefore;
     private String notOnOrAfter;
 
-    public Conditions(int mins) {
+    /**
+     * @param beforeNow negativ value in minutes before now
+     * @param mins		positiv value in minutes after now
+     */
+    public Conditions(int nowMinus, int nowPlus) {
 
-        XSDDateTime now = new XSDDateTime();
+        XSDDateTime now = new XSDDateTime(nowMinus);
         notBefore = now.getDateTime();
 
         //TODO - make setable
-        XSDDateTime andLater = new XSDDateTime(mins);
+        XSDDateTime andLater = new XSDDateTime(nowPlus);
         notOnOrAfter = andLater.getDateTime();
 
 
@@ -78,7 +82,7 @@ public class Conditions implements Serializable {
 
     public static void main(String[] args) {
 
-        Conditions conditions = new Conditions(10);
+        Conditions conditions = new Conditions(-10, 10);
         try {
             System.out.println(conditions.toXML());
         } catch (SerializationException e) {

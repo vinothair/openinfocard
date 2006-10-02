@@ -122,7 +122,7 @@ public class SAMLAssertion implements Serializable {
         }
 
 
-        Conditions conditions = new Conditions(10);
+        Conditions conditions = new Conditions(-5, 10);
 
         AsymmetricKeyInfo keyInfo = null;
 		try {

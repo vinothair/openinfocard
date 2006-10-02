@@ -74,7 +74,8 @@ public class SelfIssuedToken implements Serializable {
     private X509Certificate relyingPartyCert;
 
 
-    private int validityPeriod = 10; //default to 10 minutes
+    private int nowPlus = 10; //default to 10 minutes
+    private int nowMinus = 10; //default to 5 minutes
     private boolean asymmetric = false; //default to symmetric key
 
     public SelfIssuedToken(X509Certificate relyingPartyCert, X509Certificate signingCert, PrivateKey signingKey ) {
@@ -93,12 +94,13 @@ public class SelfIssuedToken implements Serializable {
     	return namespacePrefix;
     }
 
-    public int getValidityPeriod() {
-        return validityPeriod;
-    }
+//    public int getValidityPeriod() {
+//        return nowPlus;
+//    }
 
-    public void setValidityPeriod(int validityPeriod) {
-        this.validityPeriod = validityPeriod;
+    public void setValidityPeriod(int nowMinus, int nowPlus) {
+        this.nowMinus = nowMinus;
+        this.nowPlus = nowPlus;
     }
 
     public String getGivenName() {
@@ -222,7 +224,7 @@ public class SelfIssuedToken implements Serializable {
 
     public Element getSelfIssuedToken() throws SerializationException {
 
-        Conditions conditions = new Conditions(validityPeriod);
+        Conditions conditions = new Conditions(nowMinus, nowPlus);
         KeyInfo keyInfo = null;
         if (asymmetric) {
 

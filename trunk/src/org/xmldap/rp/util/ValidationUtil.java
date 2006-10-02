@@ -37,17 +37,24 @@ import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Canonicalizable;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.FileInputStream;
 import java.math.BigInteger;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509Certificate;
+import java.text.DateFormat;
 import java.util.Calendar;
 
 
 public class ValidationUtil {
 
 
-    public boolean validate(String toValidate) throws CryptoException {
+    public static boolean validate(String toValidate) throws CryptoException {
 
         Builder parser = new Builder();
         Document assertion = null;
@@ -62,7 +69,13 @@ public class ValidationUtil {
 
     }
 
-    public boolean validateConditions(Document assertion) {
+    /**
+     * 
+     * @param assertion
+     * @return true if the notbefore and the notOnOrAfter dates fit to the current date
+     * 
+     */
+    public static String validateConditions(Document assertion) {
 //    	<saml:Conditions NotBefore="2006-09-27T13:26:59Z" NotOnOrAfter="2006-09-27T13:46:59Z" />
         XPathContext thisContext = new XPathContext();
         thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
@@ -74,10 +87,60 @@ public class ValidationUtil {
         Calendar nb = XSDDateTime.parse(notBefore);
         Calendar na = XSDDateTime.parse(notOnOrAfter);
         // TODO take care of "on"
-    	return (now.after(nb) && now.before(na));
+        StringBuffer res = null;
+		DateFormat df = DateFormat.getTimeInstance();
+    	if (now.after(nb)) {
+    		res = new StringBuffer("("+df.format(nb.getTime())+"<"+df.format(now.getTime())+")");
+    	} else {
+    		res = new StringBuffer("!("+df.format(nb.getTime())+"<"+df.format(now.getTime())+")");
+    	}
+    	if (now.before(na)) {
+    		res = res.append(" && ("+df.format(now.getTime())+"<"+df.format(na.getTime())+")");
+    	} else {
+    		res = res.append(" && !("+df.format(now.getTime())+"<"+df.format(na.getTime())+")");
+    	}
+    	return res.toString();
     }
 
-    public boolean validate(Document assertion) throws CryptoException {
+    public static X509Certificate getCertificate(Document assertion) throws CertificateException {
+        XPathContext thisContext = new XPathContext();
+        thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
+        thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
+        Nodes nodes = assertion.query("//dsig:X509Data/dsig:X509Certificate", thisContext);
+        if ((nodes != null) && (nodes.size() > 0)) {
+        	String element = nodes.get(0).getValue();
+            StringBuffer sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
+            sb.append(element);
+            sb.append("\n-----END CERTIFICATE-----\n");
+
+        	ByteArrayInputStream bis = new ByteArrayInputStream(sb.toString().getBytes());
+			CertificateFactory cf = CertificateFactory.getInstance("X509");
+			X509Certificate cert = (X509Certificate)cf.generateCertificate(bis);
+        	return cert;
+        } else {
+        	return null;
+        }
+    }
+
+    public static String validateCertificate(Document assertion) 
+     throws CertificateException
+    {
+    	try {
+    		X509Certificate cert = getCertificate(assertion);
+    		if (cert != null) {
+    			cert.checkValidity();
+    			return "is valid";
+    		} else {
+    			return "is missing"; // if it is not there then it is invalid
+    		}
+    	} catch (CertificateExpiredException e) {
+    		return "has expired";
+    	} catch (CertificateNotYetValidException e) {
+    		return "is not yet valid";
+    	}
+    }
+
+    public static boolean validate(Document assertion) throws CryptoException {
 
         //OK - on to signature validation - we need to get the SignedInfo Element, and the Signature Element
         XPathContext thisContext = new XPathContext();
