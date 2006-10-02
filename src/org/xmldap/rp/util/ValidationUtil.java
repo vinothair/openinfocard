@@ -72,7 +72,12 @@ public class ValidationUtil {
     /**
      * 
      * @param assertion
-     * @return true if the notbefore and the notOnOrAfter dates fit to the current date
+     * 
+     * @return String (NotBefore<now) && (now<NotOnOrAfter) 
+     * 	if the notbefore and the notOnOrAfter dates fit to the current date
+     * or !(NotBefore<now) && (now<NotOnOrAfter)
+     * or (NotBefore<now) && !(now<NotOnOrAfter)
+     *  
      * 
      */
     public static String validateConditions(Document assertion) {
