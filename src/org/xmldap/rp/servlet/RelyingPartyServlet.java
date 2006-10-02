@@ -49,6 +49,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
@@ -147,11 +148,21 @@ public class RelyingPartyServlet extends HttpServlet {
             }
 
 
-            //Validate it
-            ValidationUtil validator = new ValidationUtil();
+            // no processError for the assertion contitions for now
+    	    // if conditions are not met
+        	// This has to be done before the signature validation
+        	// because signature validation changes the assertion
+            String verifiedConditions = ValidationUtil.validateConditions(assertion);
+            try {
+				String verifiedCertificate = ValidationUtil.validateCertificate(assertion);
+                request.setAttribute("verifiedCertificate", verifiedCertificate);
+			} catch (CertificateException e) {
+				request.setAttribute("verifiedCertificate", e.getMessage());
+			}
+
             boolean verified = false;
             try {
-                verified = validator.validate(assertion);
+                verified = ValidationUtil.validate(assertion);
             } catch (CryptoException e) {
                 processError(e.getMessage(), request, response);
                 return;
@@ -159,14 +170,10 @@ public class RelyingPartyServlet extends HttpServlet {
 
 
             if (!verified) {
-                processError("Signiture Validation Failed!", request, response);
+                processError("Signature Validation Failed!", request, response);
                 return;
             }
 
-
-	    // no processError for the assertion contitions for now
-	    // if conditions are not met
-            boolean verifiedConditions = validator.validateConditions(assertion);
 
             //Parse the claims
             ClaimParserUtil claimParser = new ClaimParserUtil();
@@ -183,11 +190,7 @@ public class RelyingPartyServlet extends HttpServlet {
             } else {
                 request.setAttribute("verified", "FALSE");
             }
-            if (verifiedConditions) {
-                request.setAttribute("verifiedConditions", "TRUE");
-            } else {
-                request.setAttribute("verifiedConditions", "FALSE");
-            }
+            request.setAttribute("verifiedConditions", verifiedConditions);
             request.setAttribute("claims", claims);
             dispatcher.forward(request,response);
 

@@ -5,6 +5,8 @@
 <%
     HashMap claims = (HashMap)request.getAttribute("claims");
     String verified = (String)request.getAttribute("verified");
+    String verifiedCertificate = 
+     (String)request.getAttribute("verifiedCertificate");
     String verifiedConditions = 
      (String)request.getAttribute("verifiedConditions");
     String encryptedXML = (String)request.getAttribute("encryptedXML");
@@ -35,7 +37,8 @@
 <p><textarea rows='10' cols='150'><%= decryptedXML %></textarea></p>
 
 <h2>Valid Signature: <%= verified %></h2>
-<h2>Valid Conditions: <%= verifiedConditions %></h2>
+<h2>Conditions: <%= verifiedConditions %></h2>
+<h2>Certificate <%= verifiedCertificate %></h2>
 
 <h2>You provided the following claims:</h2>
 

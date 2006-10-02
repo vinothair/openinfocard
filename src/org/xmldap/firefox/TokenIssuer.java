@@ -281,7 +281,7 @@ public class TokenIssuer {
 				signingCert, signingKey);
 
 		token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
-		token.setValidityPeriod(20);
+		token.setValidityPeriod(-5, 10);
 
 		String ALL_CLAIMS = "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname"
 				+ " "
