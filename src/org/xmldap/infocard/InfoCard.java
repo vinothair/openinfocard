@@ -311,14 +311,17 @@ public class InfoCard {
         card.setCardName("Custom card");
         card.setCardVersion(1);
         card.setIssuerName("xmldap.org");
-        card.setIssuer("http://xmldap.org/jaxws-sts/sts");
+        //card.setIssuer("http://xmldap.org/jaxws-sts/sts");
+        card.setIssuer("http://xmldap.org/");
         XSDDateTime issued = new XSDDateTime();
         XSDDateTime expires = new XSDDateTime(525600);
 
         card.setTimeIssued(issued.getDateTime());
         card.setTimeExpires(expires.getDateTime());
 
-        TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/jaxws-sts/sts", "https://xmldap.org/sts/mex", cert);
+        TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
+        //TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/jaxws-sts/sts", "https://xmldap.org/sts/mex", cert);
+        //TokenServiceReference tsr = new TokenServiceReference("http://localhost:8080/jaxws-sts/sts", "https://xmldap.org/sts/mex", cert);
         //TokenServiceReference tsr = new TokenServiceReference("https://www.fabrikam.com:7000/sample/trust/usernamepassword/sts", "https://www.fabrikam.com:7001/sample/trust/usernamepassword/mex", cert);
         tsr.setUserName("cmort");
         card.setTokenServiceReference(tsr);

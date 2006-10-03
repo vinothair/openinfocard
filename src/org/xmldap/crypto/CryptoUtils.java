@@ -268,9 +268,7 @@ public class CryptoUtils {
      */
     public static boolean verify(byte[] data, byte[] signature, BigInteger mod, BigInteger exp) throws CryptoException {
 
-
-
-        boolean verified;
+        boolean verified = false;
 
         try {
 
@@ -281,18 +279,15 @@ public class CryptoUtils {
             sig.initVerify(pubKey);
             sig.update(data);
             verified = sig.verify(signature);
+            //System.out.println("verify(): " + verified);
 
         } catch (NoSuchAlgorithmException e) {
-
             throw new CryptoException(e);
         } catch (SignatureException e) {
-
             throw new CryptoException(e);
         } catch (InvalidKeyException e) {
-
             throw new CryptoException(e);
         } catch (InvalidKeySpecException e) {
-
             throw new CryptoException(e);
         }
 
