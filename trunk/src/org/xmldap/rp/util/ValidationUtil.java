@@ -68,14 +68,14 @@ public class ValidationUtil {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param assertion
-	 * 
+	 *
 	 * @return String (NotBefore<now) && (now<NotOnOrAfter) if the notbefore
 	 *         and the notOnOrAfter dates fit to the current date or !(NotBefore<now) &&
 	 *         (now<NotOnOrAfter) or (NotBefore<now) && !(now<NotOnOrAfter)
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	public static String validateConditions(Document assertion) {
 		// <saml:Conditions NotBefore="2006-09-27T13:26:59Z"
@@ -290,7 +290,7 @@ public class ValidationUtil {
 	/**
 	 * test ValidationUtil by validating a digest and signature in a SAML
 	 * assertion contained in a file.
-	 * 
+	 *
 	 * @param args
 	 *            an array of Strings, in which arg[0] is a filename of an input
 	 *            file

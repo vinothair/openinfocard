@@ -29,12 +29,10 @@
 package org.xmldap.sts.servlet;
 
 import nu.xom.*;
-import org.xmldap.util.Bag;
-import org.xmldap.util.XSDDateTime;
-import org.xmldap.util.KeystoreUtil;
-import org.xmldap.util.ServletUtil;
+import org.xmldap.util.*;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.crypto.CryptoUtils;
+import org.xmldap.ws.WSConstants;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -220,7 +218,7 @@ public class STSServlet  extends HttpServlet {
             requestXML = new String(buf);
 
             System.out.println("STS Request:");
-            //System.out.println(requestXML);
+            System.out.println(requestXML);
 
         }
 
@@ -251,13 +249,13 @@ public class STSServlet  extends HttpServlet {
         Nodes keyCipher = req.query("//e:EncryptedKey/e:CipherData/e:CipherValue",context);
         Element keyElm = (Element) keyCipher.get(0);
         String cipherKey = keyElm.getValue();
-        System.out.println("We have a key");
+        System.out.println("We have a key ciphervalue");
 
 
         Nodes bodCipher = req.query("//s:Body//e:CipherValue",context);
         Element bod = (Element) bodCipher.get(0);
         String cipherText = bod.getValue();
-        System.out.println("We have a body");
+        System.out.println("We have a body ciphervalue");
 
 
         Nodes tokenCipher = req.query("//s:Header/o:Security/e:EncryptedData/e:CipherData/e:CipherValue",context);
@@ -325,7 +323,7 @@ public class STSServlet  extends HttpServlet {
 
         Bag tokenElements = null;
         try {
-            requestElements = parseToken(token.toString());
+            tokenElements = parseToken(token.toString());
         } catch (ParsingException e) {
             e.printStackTrace();
             //TODO - SOAP Fault
@@ -348,9 +346,11 @@ public class STSServlet  extends HttpServlet {
     }
 
     private String issue(String messageId, Bag requestElements) throws IOException {
+
+    /*  OLD TEST ISSUE
 	String issuePath = _su.getIssueFilePathString();
 
-	if (issuePath == null) {
+    if (issuePath == null) {
 	    issuePath = "/home/cmort/issue.xml";
 	}
         InputStream in = new FileInputStream(issuePath);
@@ -374,6 +374,66 @@ public class STSServlet  extends HttpServlet {
         return issueResponse.format(args);
 
 
+    } */
+
+
+        Element envelope = new Element(WSConstants.SOAP_PREFIX + ":Envelope", WSConstants.SOAP12_NAMESPACE);
+        envelope.addNamespaceDeclaration(WSConstants.WSA_PREFIX, WSConstants.WSA_NAMESPACE_05_08);
+        envelope.addNamespaceDeclaration(WSConstants.WSU_PREFIX, WSConstants.WSU_NAMESPACE);
+        envelope.addNamespaceDeclaration(WSConstants.WSSE_PREFIX, WSConstants.WSSE_NAMESPACE_OASIS_10);
+        envelope.addNamespaceDeclaration(WSConstants.TRUST_PREFIX, WSConstants.TRUST_NAMESPACE_05_02);
+        envelope.addNamespaceDeclaration("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+
+        Element header = new Element(WSConstants.SOAP_PREFIX + ":Header", WSConstants.SOAP12_NAMESPACE);
+        Element body = new Element(WSConstants.SOAP_PREFIX + ":Body", WSConstants.SOAP12_NAMESPACE);
+
+
+        envelope.appendChild(header);
+        envelope.appendChild(body);
+
+
+
+        //Build headers
+
+        Element action = new Element(WSConstants.WSA_PREFIX + ":Action", WSConstants.WSA_NAMESPACE_05_08);
+        Attribute id1 = new Attribute("wsu:Id", WSConstants.WSU_NAMESPACE, "_1");
+        action.addAttribute(id1);
+        action.appendChild("http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue");
+        header.appendChild(action);
+
+        Element relatesTo = new Element(WSConstants.WSA_PREFIX + ":RelatesTo", WSConstants.WSA_NAMESPACE_05_08);
+        Attribute id2 = new Attribute("wsu:Id", WSConstants.WSU_NAMESPACE, "_2");
+        relatesTo.addAttribute(id2);
+        relatesTo.appendChild(messageId);
+        header.appendChild(relatesTo);
+
+        Element to = new Element(WSConstants.WSA_PREFIX + ":To", WSConstants.WSA_NAMESPACE_05_08);
+        Attribute id3 = new Attribute("wsu:Id", WSConstants.WSU_NAMESPACE, "_3");
+        to.addAttribute(id3);
+        to.appendChild("http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous");
+        header.appendChild(to);
+
+        Element security = new Element(WSConstants.WSSE_PREFIX + ":Security", WSConstants.WSSE_NAMESPACE_OASIS_10);
+        //Attribute id3 = new Attribute("wsu:Id", WSConstants.WSU_NAMESPACE, "_3");
+        //to.addAttribute(id3);
+        header.appendChild(security);
+
+
+        //Build body
+        Element rstr = new Element(WSConstants.TRUST_PREFIX + ":RequestSecurityTokenResponse", WSConstants.TRUST_NAMESPACE_05_02);
+        Element tokenType = new Element(WSConstants.TRUST_PREFIX + ":TokenType", WSConstants.TRUST_NAMESPACE_05_02);
+        tokenType.appendChild("urn:oasis:names:tc:SAML:1.0:assertion");
+        rstr.appendChild(tokenType);
+        Element rst = new Element(WSConstants.TRUST_PREFIX + ":RequestedSecurityToken", WSConstants.TRUST_NAMESPACE_05_02);
+        Element assertion = new Element(WSConstants.SAML_PREFIX + ":Assertion", WSConstants.SAML11_NAMESPACE);
+
+        rst.appendChild(assertion);
+        rstr.appendChild(rst);
+
+        body.appendChild(rstr);
+
+        return envelope.toXML();
     }
+
 
 }
