@@ -6,7 +6,7 @@
 
     String mayClaims = "<PARAM Name=\"issuer\" Value=\"urn:schemas-microsoft-com:ws:2005:05:identity:issuer:self\"><PARAM Name=\"requiredClaims\" Value=\"http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname, http://schemas.microsoft.com/ws/2005/05/identity/claims/surname, http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress\">";
 
-	String septemberClaims = "<PARAM Name=\"requiredClaims\" Value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\">";
+	String septemberClaims = "<PARAM Name=\"requiredClaims\" Value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\">";
 		//+ "<PARAM Name=\"optionalClaims\" value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/webpage\">";
 
     String julyClaims = "<PARAM Name=\"issuer\" Value=\"urn:schemas-microsoft-com:ws:2005:05:identity:issuer:self\"><PARAM Name=\"requiredClaims\" Value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\">";
