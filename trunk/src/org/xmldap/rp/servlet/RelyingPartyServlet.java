@@ -39,6 +39,7 @@ import org.xmldap.rp.util.ValidationUtil;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.ServletUtil;
 import org.xmldap.util.Base64;
+import org.xmldap.xmldsig.EnvelopedSignature;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
@@ -162,7 +163,7 @@ public class RelyingPartyServlet extends HttpServlet {
 
             boolean verified = false;
             try {
-                verified = ValidationUtil.validate(assertion);
+                verified = EnvelopedSignature.validate(assertion);
             } catch (CryptoException e) {
                 processError(e.getMessage(), request, response);
                 return;

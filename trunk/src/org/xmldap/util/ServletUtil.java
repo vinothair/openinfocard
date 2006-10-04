@@ -53,10 +53,11 @@ public class ServletUtil {
     public static final String PARAM_CARDSTORE = "cards-file";
     public static final String PARAM_ISSUE_FILE = "issue-file";
 
-    public static final String VAL_KEYSTORE_DEFAULT = "/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks";
-    public static final String VAL_KEYSTORE_PASSWORD_DEFAULT = "password";
-    public static final String VAL_KEY_PASSWORD_DEFAULT = "password";
-    public static final String VAL_KEYNAME_DEFAULT = "xmldap";
+//    public static final String VAL_KEYSTORE_DEFAULT = "/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks";
+    public static final String VAL_KEYSTORE_DEFAULT = "D:\\Programme\\jboss-4.0.4.GA\\server\\default\\conf\\keystore\\keystore.jks";
+    public static final String VAL_KEYSTORE_PASSWORD_DEFAULT = "changeit";
+    public static final String VAL_KEY_PASSWORD_DEFAULT = "changeit";
+    public static final String VAL_KEYNAME_DEFAULT = "tomcat";
     public static final String VAL_DOMAIN_DEFAULT = "xmldap.org";
     
     private ServletConfig _config;
