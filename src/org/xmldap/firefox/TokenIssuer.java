@@ -29,6 +29,9 @@
 package org.xmldap.firefox;
 
 import nu.xom.*;
+
+import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.asn1.x509.X509Name;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xmldap.exceptions.KeyStoreException;
@@ -37,7 +40,7 @@ import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.infocard.SelfIssuedToken;
 import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
-import org.xmldap.util.XmldapCertsAndKeys;
+import org.xmldap.util.CertsAndKeys;
 import org.xmldap.xmlenc.EncryptedData;
 
 import java.io.BufferedInputStream;
@@ -120,8 +123,8 @@ public class TokenIssuer {
 			// now try to generate them
 			KeyPair kp = null;
 			try {
-				kp = XmldapCertsAndKeys.generateKeyPair();
-				signingCert = XmldapCertsAndKeys.generateCertificate(kp);
+				kp = CertsAndKeys.generateKeyPair();
+				signingCert = CertsAndKeys.generateCertificate(kp);
 				signingKey = kp.getPrivate();
 				storeCertKey(keystorePath);
 			} catch (NoSuchAlgorithmException e1) {
@@ -240,6 +243,104 @@ public class TokenIssuer {
 			}
 		}
 		return token;
+	}
+
+	private String claims2String(Element data) throws TokenIssuanceException {
+		StringBuffer sb = new StringBuffer("");
+		
+			String value = getDataValue(data, "givenname");
+			if ((value != null) && !value.equals("")) {
+				sb.append("givenanme=");
+				sb.append(value);
+			}
+			value = getDataValue(data, "surname");
+			if ((value != null) && !value.equals("")) {
+				sb.append(" surname=");
+				sb.append(value);
+			}
+			value = getDataValue(data, "emailaddress");
+			if ((value != null) && !value.equals("")) {
+				sb.append(" E=");
+				sb.append(value);
+			}
+			value = getDataValue(data, "streetladdress");
+			if ((value != null) && !value.equals("")) {
+				sb.append(" streetladdress=");
+				sb.append(value);
+			}
+			value = getDataValue(data, "locality");
+			if ((value != null) && !value.equals("")) {
+				sb.append(" l=");
+				sb.append(value);
+			}
+			value = getDataValue(data, "stateorprovince");
+			if ((value != null) && !value.equals("")) {
+				sb.append(" ST=");
+				sb.append(value);
+			}
+//			value = getDataValue(data, "postalcode");
+//			if ((value != null) && !value.equals("")) {
+//				sb.append("postalcode=");
+//				sb.append(value);
+//			}
+			value = getDataValue(data, "country");
+			if ((value != null) && !value.equals("")) {
+				sb.append(" C=");
+				sb.append(value);
+			}
+//			value = getDataValue(data, "primaryphone");
+//			if ((value != null) && !value.equals("")) {
+//				sb.append(" primaryphone=");
+//				sb.append(value);
+//			}
+//			value = getDataValue(data, "otherphone");
+//			if ((value != null) && !value.equals("")) {
+//				sb.append(" otherphone=");
+//				sb.append(value);
+//			}
+//			value = getDataValue(data, "mobilephone");
+//			if ((value != null) && !value.equals("")) {
+//				sb.append(" mobilephone=");
+//				sb.append(value);
+//			}
+//			value = getDataValue(data, "dateofbirth");
+//			if ((value != null) && !value.equals("")) {
+//				sb.append(" dateofbirth=");
+//				sb.append(value);
+//			}
+//			value = getDataValue(data, "gender");
+//			if ((value != null) && !value.equals("")) {
+//				sb.append(" gender=");
+//				sb.append(value);
+//			}
+		return sb.toString();
+	}
+
+	public X509Certificate token2Certificate(String serializedPolicy)
+			throws TokenIssuanceException {
+		X509Certificate cert = null;
+		KeyPair kp = new KeyPair(signingCert.getPublicKey(), signingKey);
+		X509Name issuer = new X509Name("CN=firefox, OU=infocard selector, O=xmldap, L=San Francisco, ST=California, C=US");
+		
+		JSONObject policy = null;
+		String card = null;
+		String der = null;
+		try {
+			policy = new JSONObject(serializedPolicy);
+			der = (String) policy.get("cert");
+			card = (String) policy.get("card");
+		} catch (JSONException e) {
+			throw new TokenIssuanceException(e);
+		}
+
+		Document infocard = getInfocard(card);
+
+		Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
+		Element data = (Element) dataNodes.get(0);
+		String subjectStr = claims2String(data);
+		X509Name subject = new X509Name(subjectStr);
+		cert = CertsAndKeys.generateCertificate(kp, issuer, subject);
+		return cert; 
 	}
 
 	public String getToken(String serializedPolicy)
