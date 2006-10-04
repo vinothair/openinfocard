@@ -34,6 +34,7 @@ import nu.xom.Document;
 import nu.xom.ParsingException;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.InfoCardProcessingException;
+import org.xmldap.xmldsig.EnvelopedSignature;
 
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -62,10 +63,9 @@ public class InfoCardProcessor {
         }
 
         //Validate it
-        ValidationUtil validator = new ValidationUtil();
         boolean verified = false;
         try {
-            verified = validator.validate(assertion);
+            verified = EnvelopedSignature.validate(assertion);
         } catch (CryptoException e) {
             throw new InfoCardProcessingException(e);
         }
