@@ -68,14 +68,14 @@ public class ValidationUtil {
 	}
 
 	/**
-	 *
+	 * 
 	 * @param assertion
-	 *
+	 * 
 	 * @return String (NotBefore<now) && (now<NotOnOrAfter) if the notbefore
 	 *         and the notOnOrAfter dates fit to the current date or !(NotBefore<now) &&
 	 *         (now<NotOnOrAfter) or (NotBefore<now) && !(now<NotOnOrAfter)
-	 *
-	 *
+	 * 
+	 * 
 	 */
 	public static String validateConditions(Document assertion) {
 		// <saml:Conditions NotBefore="2006-09-27T13:26:59Z"
@@ -273,9 +273,17 @@ public class ValidationUtil {
 
 	private static byte[] getSignedInfoCanonicalBytes(Document assertion,
 			XPathContext thisContext) throws IOException {
-		Nodes signedInfoVals = assertion.query(
-				"/saml:Assertion/dsig:Signature/dsig:SignedInfo", thisContext);
-		Element signedInfo = (Element) signedInfoVals.get(0);
+//		Nodes signedInfoVals = assertion.query(
+//				"/saml:Assertion/dsig:Signature/dsig:SignedInfo", thisContext);
+//		Element signedInfo = (Element) signedInfoVals.get(0);
+		// Axel Nennker: removed the dependency to saml:Assertion
+		// The following lines get the "SignedInfo". 
+		// This way the ValidationUtils can be used to validate other signed XML too.
+		Element root = assertion.getRootElement();
+		Element signature = root.getFirstChildElement("Signature",
+				WSConstants.DSIG_NAMESPACE);
+		Element signedInfo = signature.getFirstChildElement("SignedInfo",
+				WSConstants.DSIG_NAMESPACE);
 
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		Canonicalizer outputter = new Canonicalizer(stream,
@@ -290,7 +298,7 @@ public class ValidationUtil {
 	/**
 	 * test ValidationUtil by validating a digest and signature in a SAML
 	 * assertion contained in a file.
-	 *
+	 * 
 	 * @param args
 	 *            an array of Strings, in which arg[0] is a filename of an input
 	 *            file
