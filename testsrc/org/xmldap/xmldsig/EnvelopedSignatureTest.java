@@ -3,6 +3,7 @@ package org.xmldap.xmldsig;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 
+import org.xmldap.rp.util.ValidationUtil;
 import org.xmldap.ws.WSConstants;
 
 import nu.xom.Attribute;
@@ -137,8 +138,8 @@ public class EnvelopedSignatureTest extends TestCase {
 		EnvelopedSignature signer = new EnvelopedSignature(signingCert,
 				signingKey);
 		Element signedXML = signer.sign(body);
-		System.out.println(signedXML.toXML());
-		assertEquals(SIGNED_XML, signedXML.toXML());
+//		System.out.println(signedXML.toXML());
+		assertTrue(ValidationUtil.validate(signedXML.toXML()));
 
 	}
 
@@ -163,12 +164,12 @@ public class EnvelopedSignatureTest extends TestCase {
 		EnvelopedSignature signer = new EnvelopedSignature(signingCert,
 				signingKey);
 		Document signedXML = signer.sign(bodyDoc);
-		String test = signedXML.toXML();
-		System.out.println(test);
-		System.out.println(test.length() + ":" + SIGNED_XML_DOC.length());
+//		String test = signedXML.toXML();
+//		System.out.println(test);
+//		System.out.println(test.length() + ":" + SIGNED_XML_DOC.length());
 
-		System.out.println(signedXML.toXML());
-		assertEquals(SIGNED_XML_DOC, signedXML.toXML());
+//		System.out.println(signedXML.toXML());
+		assertTrue(ValidationUtil.validate(signedXML.toXML()));
 
 	}
 
@@ -182,7 +183,7 @@ public class EnvelopedSignatureTest extends TestCase {
 		EnvelopedSignature signer = new EnvelopedSignature(signingCert,
 				signingKey);
 
-		assertEquals(SIGNED_XML_DOC, signer.sign(XML));
+		assertTrue(ValidationUtil.validate(signer.sign(XML)));
 
 	}
 
