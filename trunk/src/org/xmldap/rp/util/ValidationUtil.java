@@ -34,6 +34,7 @@ import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.util.Base64;
 import org.xmldap.util.XSDDateTime;
+import org.xmldap.util.XmlFileUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Canonicalizable;
 import org.xmldap.xmldsig.EnvelopedSignature;
@@ -150,15 +151,7 @@ public class ValidationUtil {
 	 */
 	public static void main(String[] args) throws Exception {
 		String fn = args[0];
-		FileInputStream fis = new FileInputStream(fn);
-		int avail = fis.available();
-		byte[] b = new byte[avail];
-		fis.read(b);
-		fis.close();
-		String decstr = new String(b, "UTF-8");
-
-		Builder parser = new Builder();
-		Document assertion = parser.build(decstr, "");
+		Document assertion = XmlFileUtil.readXmlFile(fn);
 
 		boolean verified = EnvelopedSignature.validate(assertion);
 		if (!verified) {
