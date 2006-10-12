@@ -528,24 +528,25 @@ public class TokenIssuer {
 	}
 
 	/**
-	 * Uses the first bytes of the infoCardPpi to encrypt the signature of the
-	 * relying party's certificate using AES. The input parameter infoCardPpi is
-	 * generated in the Firefox Identity Selector as a SHA-1 hash of the string
-	 * "cardname + random-numer + cardversion". This hash is 160 bit long. For
-	 * the AES encryption we need a 128 bit key. This function just truncates
-	 * the hash and uses the result as the key for the AES encryption. As long
-	 * as neither the infoCardPpi and the rpSignature don't change this yields
-	 * the same PPI for this RP everytime. The result is then SHA-1 hashed again
-	 * (to get a short ppi) and Base64 encoded to make it printable. The schema
-	 * http://xmldap.org/Infocard.xsd defines it as <xs:element
-	 * name="PrivatePersonalIdentifier" type="tns:Base64BinaryMaxSize1K"/>.
+	 * Uses the first bytes of the infoCardPpi to encrypt a String which is
+	 * fixed for the relying party using AES. Remember: The input parameter
+	 * infoCardPpi is generated in the Firefox Identity Selector as a SHA-1 hash
+	 * of the string "cardname + random-numer + cardversion" once the card is
+	 * issued. This hash is 160 bit long. For the AES encryption we need a 128
+	 * bit key. This function just truncates the hash and uses the result as the
+	 * key for the AES encryption. As long as neither the infoCardPpi and the
+	 * rpSignature don't change this yields the same PPI for this RP everytime.
+	 * The result is then SHA-1 hashed again (to get a short ppi) and Base64
+	 * encoded to make it printable. The schema http://xmldap.org/Infocard.xsd
+	 * defines it as <xs:element name="PrivatePersonalIdentifier"
+	 * type="tns:Base64BinaryMaxSize1K"/>.
 	 * 
 	 * @param infoCardPpi
 	 * @param rpSignature
 	 * @return the new PPI which is unique for this relying party
 	 * @throws TokenIssuanceException
 	 */
-	public String generatePpiForThisRP(String infoCardPpi, byte[] rpSignature)
+	public String generatePpiForThisRP(String infoCardPpi, String rpData)
 			throws TokenIssuanceException {
 		byte[] keyBytes = new byte[16];
 		byte[] b;
@@ -562,7 +563,7 @@ public class TokenIssuer {
 		try {
 			Cipher cipher = Cipher.getInstance("AES");
 			cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
-			byte[] encrypted = cipher.doFinal(rpSignature);
+			byte[] encrypted = cipher.doFinal(rpData.getBytes("UTF-8"));
 			MessageDigest mdAlgorithm = MessageDigest.getInstance("SHA-1");
 			mdAlgorithm.update(encrypted);
 			byte[] digest = mdAlgorithm.digest();
@@ -576,6 +577,8 @@ public class TokenIssuer {
 		} catch (IllegalBlockSizeException e) {
 			throw new TokenIssuanceException(e);
 		} catch (BadPaddingException e) {
+			throw new TokenIssuanceException(e);
+		} catch (UnsupportedEncodingException e) {
 			throw new TokenIssuanceException(e);
 		}
 	}
@@ -642,7 +645,8 @@ public class TokenIssuer {
 
 		// storeInfoCardAsCertificate(ppi, infocard);
 
-		ppi = generatePpiForThisRP(ppi, relyingPartyCert.getSignature());
+		ppi = generatePpiForThisRP(ppi, relyingPartyCert
+				.getSubjectX500Principal().getName());
 
 		System.out.println("Server Cert: "
 				+ relyingPartyCert.getSubjectDN().toString());
