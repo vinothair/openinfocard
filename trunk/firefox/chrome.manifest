@@ -1,0 +1,4 @@
+overlay chrome://browser/content/browser.xul           chrome://infocard/content/browser.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+content infocard chrome/infocard/content/
+locale infocard en-US chrome/infocard/locale/en-US/
+locale infocard de-DE chrome/infocard/locale/de-DE/
