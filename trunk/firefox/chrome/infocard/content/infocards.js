@@ -58,6 +58,7 @@ function getCard(cardid){
 
 
 function load(){
+    var stringsBundle = document.getElementById("string-bundle");
 
     var cardFile = read(db);
     var cardArea = document.getElementById("listarea");
@@ -74,10 +75,14 @@ function load(){
     if ( count != 0) {
         var policy = window.arguments[0];
         var label = document.getElementById("notify");
-        label.setAttribute("value", "Please select a card for " + policy["cn"]);
+	var site = policy["cn"];
+        var please = stringsBundle.getFormattedString('pleaseselectacard', [site]);
+        label.setAttribute("value", please);
     } else {
         var label = document.getElementById("notify");
-        label.setAttribute("value", "You don't yet have any cards.  Click 'New Card'");
+	var button = stringsBundle.getString('newcard');
+        var youdont = stringsBundle.getFormattedString('youdonthaveanycards', [button]);
+        label.setAttribute("value", youdont);
     }
 
 }

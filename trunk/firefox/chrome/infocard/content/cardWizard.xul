@@ -33,6 +33,10 @@
 <!DOCTYPE window SYSTEM "chrome://infocard/locale/cardmanager.dtd">
 <wizard id="card-window" title="New Card Wizard" onwizardfinish=""
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <stringbundleset id="stringbundleset">
+     <stringbundle id="string-bundle" src="chrome://infocard/locale/infocards.properties"/>
+    </stringbundleset>
+
   <script src="chrome://infocard/content/infocards.js"/>
  
   <wizardpage pageid="type" next="selfAsserted">
