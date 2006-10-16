@@ -102,15 +102,15 @@
         <vbox>
             <hbox>
                <button id="newCard" class="normal"
-                       label="New Card" oncommand="newCard();"/>
+                       label="&infocard.cardmanager.newcard;" oncommand="newCard();"/>
                <button id="deleteCard" class="normal"
-                       label="Delete Card" oncommand="alert('Delete Card not yet implemented');"/>
+                       label="&infocard.cardmanager.deletecard;" oncommand="alert('Delete Card not yet implemented');"/>
                <button id="saveCard" class="normal"
-                       label="Update Card" oncommand="alert('Update Card not yet implemented');"/>
+                       label="&infocard.cardmanager.updatecard;" oncommand="alert('Update Card not yet implemented');"/>
                <button id="cancel" class="normal"
-                       label="Cancel" oncommand="cancel();"/>
+                       label="&infocard.cardmanager.cancel;" oncommand="cancel();"/>
                <button id="select" class="normal"
-                       label="Select This Card" oncommand="ok();"/>
+                       label="&infocard.cardmanager.selectcard;" oncommand="ok();"/>
             </hbox>
         </vbox>
         </vbox>

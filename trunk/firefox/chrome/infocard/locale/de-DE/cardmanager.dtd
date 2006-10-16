@@ -14,3 +14,8 @@
 <!ENTITY infocard.cardmanager.dateofbirth "Geburtsdatum:">
 <!ENTITY infocard.cardmanager.gender "Geschlecht:">
 <!ENTITY infocard.cardmanager.imgurl "Bild URL:"> 
+<!ENTITY infocard.cardmanager.newcard "Neue Karte">
+<!ENTITY infocard.cardmanager.deletecard "Karte loeschen">
+<!ENTITY infocard.cardmanager.updatecard "Karte speichern">
+<!ENTITY infocard.cardmanager.cancel "Abbrechen">
+<!ENTITY infocard.cardmanager.selectcard "Karte auswaehlen">
