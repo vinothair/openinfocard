@@ -1,1 +1,16 @@
-<!ENTITY infocard.cardmanager.title "Meine Kontakte">
+<!ENTITY infocard.cardmanager.title "Infokarten">
+<!ENTITY infocard.cardmanager.daylabel "Identity Selector">
+<!ENTITY infocard.cardmanager.givenname "Vorname:">
+<!ENTITY infocard.cardmanager.surname "Nachname:">
+<!ENTITY infocard.cardmanager.email "Email:">
+<!ENTITY infocard.cardmanager.streetaddress "Strasse:">
+<!ENTITY infocard.cardmanager.locality "Stadt:">
+<!ENTITY infocard.cardmanager.stateorprovince "Bundesland:">
+<!ENTITY infocard.cardmanager.postalcode "Postleitzahl:">
+<!ENTITY infocard.cardmanager.country "Staat:">
+<!ENTITY infocard.cardmanager.primaryphone "Telefonnummer:">
+<!ENTITY infocard.cardmanager.mobilephone "Handynummer:">
+<!ENTITY infocard.cardmanager.otherphone "Andere Telefonnummer:">
+<!ENTITY infocard.cardmanager.dateofbirth "Geburtsdatum:">
+<!ENTITY infocard.cardmanager.gender "Geschlecht:">
+<!ENTITY infocard.cardmanager.imgurl "Bild URL:"> 
