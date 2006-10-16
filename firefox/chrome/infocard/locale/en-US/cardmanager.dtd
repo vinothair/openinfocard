@@ -14,3 +14,8 @@
 <!ENTITY infocard.cardmanager.dateOfBirth "Date of Birth:">
 <!ENTITY infocard.cardmanager.gender "Gender:">
 <!ENTITY infocard.cardmanager.imgurl "Image URL:"> 
+<!ENTITY infocard.cardmanager.newcard "New Card">
+<!ENTITY infocard.cardmanager.deletecard "Delete Card">
+<!ENTITY infocard.cardmanager.updatecard "Save Card">
+<!ENTITY infocard.cardmanager.cancel "Cancel">
+<!ENTITY infocard.cardmanager.selectcard "Select Card">

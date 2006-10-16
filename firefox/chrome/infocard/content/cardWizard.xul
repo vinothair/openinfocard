@@ -30,7 +30,7 @@
  */
  -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-
+<!DOCTYPE window SYSTEM "chrome://infocard/locale/cardmanager.dtd">
 <wizard id="card-window" title="New Card Wizard" onwizardfinish=""
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://infocard/content/infocards.js"/>
@@ -79,20 +79,20 @@
             <columns><column id="colText"/><column id="colData"/></columns>
             <rows>
                 <row><label class="lblText" value="Card Name:"   /><textbox id="cardname"    value=""/></row>
-                <row><label class="lblText" value="First Name:"   /><textbox id="givenname"    value=""/></row>
-                <row><label class="lblText" value="Last Name:"  /><textbox id="surname"   value=""/></row>
-                <row><label class="lblText" value="Email:"  /><textbox id="email"   value=""/></row>
-                <row><label class="lblText" value="Street:"  /><textbox id="streetAddress"   value=""/></row>
-                <row><label class="lblText" value="City:"  /><textbox id="locality"   value=""/></row>
-                <row><label class="lblText" value="State:"  /><textbox id="stateOrProvince"   value=""/></row>
-                <row><label class="lblText" value="Zip:"  /><textbox id="postalCode"   value=""/></row>
-                <row><label class="lblText" value="Country:"  /><textbox id="country"   value=""/></row>
-                <row><label class="lblText" value="Phone:"  /><textbox id="primaryPhone"   value=""/></row>
-                <row><label class="lblText" value="Mobile Phone:" /><textbox id="mobilePhone"  value=""/></row>
-                <row><label class="lblText" value="Other Phone:"    /><textbox id="otherPhone"     value=""/></row>
-                <row><label class="lblText" value="Date of Birth:"    /><textbox id="dateOfBirth"     value=""/></row>
-                <row><label class="lblText" value="Gender:"    /><textbox id="gender"     value=""/></row>
-                <row><label class="lblText" value="Image URL:"    /><textbox id="imgurl"     value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.email;"  /><textbox id="email"   value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.country;"  /><textbox id="country"   value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.dateofbirth;"    /><textbox id="dateOfBirth"     value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.gender;"    /><textbox id="gender"     value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.imgurl;"    /><textbox id="imgurl"     value=""/></row>
             </rows>
         </grid>
     </vbox>
