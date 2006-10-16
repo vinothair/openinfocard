@@ -30,8 +30,13 @@
  */
  -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://infocard/locale/cardmanager.dtd">
-<wizard id="card-window" title="New Card Wizard" onwizardfinish=""
+<!DOCTYPE window [
+ <!ENTITY % cardmanagerDTD SYSTEM "chrome://infocard/locale/cardmanager.dtd" >
+ %cardmanagerDTD;
+ <!ENTITY % cardwizardDTD SYSTEM "chrome://infocard/locale/cardwizard.dtd" >
+ %cardwizardDTD;
+]>
+<wizard id="card-window" title="&infocard.cardwizard.title;" onwizardfinish=""
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <stringbundleset id="stringbundleset">
      <stringbundle id="string-bundle" src="chrome://infocard/locale/infocards.properties"/>
@@ -41,17 +46,17 @@
  
   <wizardpage pageid="type" next="selfAsserted">
     <description>
-    First, let's choose from a variety of supported card types.
+    &infocard.cardwizard.first;
     </description>
-    <label value="Select a type of card:"/>
+    <label value="&infocard.cardwizard.selectatypeofcard;"/>
     <menulist>
       <menupopup>
-        <menuitem label="Self Asserted" value="selfAsserted"/>
+        <menuitem label="&infocard.cardwizard.selfasserted;" value="selfAsserted"/>
       </menupopup>
     </menulist>
   </wizardpage>
 
-  <wizardpage description="Card Details" pageid="selfAsserted" onpageadvanced="selfAssertedCallback();">
+  <wizardpage description="&infocard.cardwizard.carddetails;" pageid="selfAsserted" onpageadvanced="selfAssertedCallback();">
      <script>
      function selfAssertedCallback() {
 
@@ -77,12 +82,12 @@
 
      }
      </script>
-    <label value="Self Asserted Card"/>
+    <label value="&infocard.cardwizard.selfasserted;"/>
       <vbox id="editarea" flex="1">
         <grid>
             <columns><column id="colText"/><column id="colData"/></columns>
             <rows>
-                <row><label class="lblText" value="Card Name:"   /><textbox id="cardname"    value=""/></row>
+                <row><label class="lblText" value="&infocard.cardmanager.cardname;"   /><textbox id="cardname"    value=""/></row>
                 <row><label class="lblText" value="&infocard.cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
                 <row><label class="lblText" value="&infocard.cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
                 <row><label class="lblText" value="&infocard.cardmanager.email;"  /><textbox id="email"   value=""/></row>
@@ -205,11 +210,11 @@
 
   </wizardpage>
 
-  <wizardpage description="Card Details" pageid="lid">
+  <wizardpage description="&infocard.cardwizard.carddetails;" pageid="lid">
     <label value="LID"/>
   </wizardpage>
 
-  <wizardpage description="Card Details" pageid="google">
+  <wizardpage description="&infocard.cardwizard.carddetails;" pageid="google">
     <label value="Google"/>
   </wizardpage>
 

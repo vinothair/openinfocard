@@ -1,5 +1,6 @@
 <!ENTITY infocard.cardmanager.title "Infokarten">
 <!ENTITY infocard.cardmanager.daylabel "Identity Selector">
+<!ENTITY infocard.cardmanager.cardname "Kartenname:">
 <!ENTITY infocard.cardmanager.givenname "Vorname:">
 <!ENTITY infocard.cardmanager.surname "Nachname:">
 <!ENTITY infocard.cardmanager.email "Email:">
