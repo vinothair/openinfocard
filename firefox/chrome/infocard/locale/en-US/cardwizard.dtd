@@ -1,0 +1,5 @@
+<!ENTITY infocard.cardwizard.selectatypeofcard "Select a type of card:" >
+<!ENTITY infocard.cardwizard.title "New Card Wizard" >
+<!ENTITY infocard.cardwizard.first "First, let's choose from a variety of supported card types." >
+<!ENTITY infocard.cardwizard.selfasserted "self asserted card" >
+<!ENTITY infocard.cardwizard.carddetails "Card Details" >
