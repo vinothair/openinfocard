@@ -39,6 +39,10 @@
 	xmlns:html="http://www.w3.org/1999/xhtml"
         onload="load();">
 
+    <stringbundleset id="stringbundleset">
+     <stringbundle id="string-bundle" src="chrome://infocard/locale/infocards.properties"/>
+    </stringbundleset>
+
     <script src="chrome://infocard/content/sha1.js"/>
     <script src="chrome://infocard/content/json.js"/>
     <script src="chrome://infocard/content/infocards.js"/>
