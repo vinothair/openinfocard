@@ -1,0 +1,22 @@
+<!ENTITY infocard.cardmanager.title "Kontakt">
+<!ENTITY infocard.cardmanager.daylabel "Identity Selector">
+<!ENTITY infocard.cardmanager.cardname "Kort Navn:">
+<!ENTITY infocard.cardmanager.givenname "Fornavn:">
+<!ENTITY infocard.cardmanager.surname "Navn:">
+<!ENTITY infocard.cardmanager.email "E-postadresse:">
+<!ENTITY infocard.cardmanager.streetAddress "Adresse:">
+<!ENTITY infocard.cardmanager.locality "Poststed:">
+<!ENTITY infocard.cardmanager.stateOrProvince "Land:">
+<!ENTITY infocard.cardmanager.postalCode "Postnummer:">
+<!ENTITY infocard.cardmanager.country "Fylke:">
+<!ENTITY infocard.cardmanager.primaryPhone "Telefonnummer:">
+<!ENTITY infocard.cardmanager.mobilePhone "Mobiltelefon:">
+<!ENTITY infocard.cardmanager.otherPhone "Annen  Telefonnummer:">
+<!ENTITY infocard.cardmanager.dateOfBirth "F&#248;dt:">
+<!ENTITY infocard.cardmanager.gender "Gender:">
+<!ENTITY infocard.cardmanager.imgurl "Bilde URL:"> 
+<!ENTITY infocard.cardmanager.newcard "Ny Kort">
+<!ENTITY infocard.cardmanager.deletecard "Slett Kort">
+<!ENTITY infocard.cardmanager.updatecard "Lagre Kort">
+<!ENTITY infocard.cardmanager.cancel "Avbryt">
+<!ENTITY infocard.cardmanager.selectcard "Velg Kort">
