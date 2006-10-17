@@ -1,0 +1,22 @@
+<!ENTITY infocard.cardmanager.title "My Contacts">
+<!ENTITY infocard.cardmanager.daylabel "Identity Selector">
+<!ENTITY infocard.cardmanager.cardname "Card Name:">
+<!ENTITY infocard.cardmanager.givenname "Krestn&#237; Jm&#233;no:">
+<!ENTITY infocard.cardmanager.surname "Pr&#237;jmen&#237;:">
+<!ENTITY infocard.cardmanager.email "Po&#353;tovn&#237; Adresa:">
+<!ENTITY infocard.cardmanager.streetAddress "Ulice:">
+<!ENTITY infocard.cardmanager.locality "Mesto:">
+<!ENTITY infocard.cardmanager.stateOrProvince "St&#225;t:">
+<!ENTITY infocard.cardmanager.postalCode "PSC:">
+<!ENTITY infocard.cardmanager.country "Country:">
+<!ENTITY infocard.cardmanager.primaryPhone "Telefonn&#237; C&#237;slo:">
+<!ENTITY infocard.cardmanager.mobilePhone "Mobiln&#237;:">
+<!ENTITY infocard.cardmanager.otherPhone "Other Phone:">
+<!ENTITY infocard.cardmanager.dateOfBirth "Narozeniny:">
+<!ENTITY infocard.cardmanager.gender "Gender:">
+<!ENTITY infocard.cardmanager.imgurl "URL obr&#225;zku:">
+<!ENTITY infocard.cardmanager.newcard "Vytvorit Kartu">
+<!ENTITY infocard.cardmanager.deletecard "Odstranit Kartu">
+<!ENTITY infocard.cardmanager.updatecard "Upravit Kartu">
+<!ENTITY infocard.cardmanager.cancel "Zru&#353;it">
+<!ENTITY infocard.cardmanager.selectcard "Vybrat Kartu">
