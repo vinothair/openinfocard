@@ -1,0 +1,22 @@
+<!ENTITY infocard.cardmanager.title "Mina Kontakter">
+<!ENTITY infocard.cardmanager.daylabel "Identity Selector">
+<!ENTITY infocard.cardmanager.cardname "Kontakt namn:">
+<!ENTITY infocard.cardmanager.givenname "F&#246;rnamn:">
+<!ENTITY infocard.cardmanager.surname "Efternamn:">
+<!ENTITY infocard.cardmanager.email "Epost adress:">
+<!ENTITY infocard.cardmanager.streetAddress "Gatuadress:">
+<!ENTITY infocard.cardmanager.locality "Stad:">
+<!ENTITY infocard.cardmanager.stateOrProvince "L&#228;n">
+<!ENTITY infocard.cardmanager.postalCode "Postnummer:">
+<!ENTITY infocard.cardmanager.country "Land:">
+<!ENTITY infocard.cardmanager.primaryPhone "Telefon:">
+<!ENTITY infocard.cardmanager.mobilePhone "Mobiltelefon:">
+<!ENTITY infocard.cardmanager.otherPhone "Annan telefon:">
+<!ENTITY infocard.cardmanager.dateOfBirth "F&#246;delsedatum:">
+<!ENTITY infocard.cardmanager.gender "K&#246;n:">
+<!ENTITY infocard.cardmanager.imgurl "Image URL:"> 
+<!ENTITY infocard.cardmanager.newcard "Ny kontakt">
+<!ENTITY infocard.cardmanager.deletecard "Ta bort kontakt">
+<!ENTITY infocard.cardmanager.updatecard "Spara kontakt">
+<!ENTITY infocard.cardmanager.cancel "Avbryta">
+<!ENTITY infocard.cardmanager.selectcard "V&#228;lj kontakt">
