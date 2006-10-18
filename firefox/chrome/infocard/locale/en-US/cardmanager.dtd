@@ -1,22 +1,22 @@
-<!ENTITY infocard.cardmanager.title "My Contacts">
-<!ENTITY infocard.cardmanager.daylabel "Identity Selector">
-<!ENTITY infocard.cardmanager.cardname "Card Name:">
-<!ENTITY infocard.cardmanager.givenname "First Name:">
-<!ENTITY infocard.cardmanager.surname "Last Name:">
-<!ENTITY infocard.cardmanager.email "Email:">
-<!ENTITY infocard.cardmanager.streetAddress "Street:">
-<!ENTITY infocard.cardmanager.locality "City:">
-<!ENTITY infocard.cardmanager.stateOrProvince "State:">
-<!ENTITY infocard.cardmanager.postalCode "Zip:">
-<!ENTITY infocard.cardmanager.country "Country:">
-<!ENTITY infocard.cardmanager.primaryPhone "Phone:">
-<!ENTITY infocard.cardmanager.mobilePhone "Mobile Phone:">
-<!ENTITY infocard.cardmanager.otherPhone "Other Phone:">
-<!ENTITY infocard.cardmanager.dateOfBirth "Date of Birth:">
-<!ENTITY infocard.cardmanager.gender "Gender:">
-<!ENTITY infocard.cardmanager.imgurl "Image URL:"> 
-<!ENTITY infocard.cardmanager.newcard "New Card">
-<!ENTITY infocard.cardmanager.deletecard "Delete Card">
-<!ENTITY infocard.cardmanager.updatecard "Save Card">
-<!ENTITY infocard.cardmanager.cancel "Cancel">
-<!ENTITY infocard.cardmanager.selectcard "Select Card">
+<!ENTITY cardmanager.title "My Contacts">
+<!ENTITY cardmanager.daylabel "Identity Selector">
+<!ENTITY cardmanager.cardname "Card Name:">
+<!ENTITY cardmanager.givenname "First Name:">
+<!ENTITY cardmanager.surname "Last Name:">
+<!ENTITY cardmanager.email "Email:">
+<!ENTITY cardmanager.streetAddress "Street:">
+<!ENTITY cardmanager.locality "City:">
+<!ENTITY cardmanager.stateOrProvince "State:">
+<!ENTITY cardmanager.postalCode "Zip:">
+<!ENTITY cardmanager.country "Country:">
+<!ENTITY cardmanager.primaryPhone "Phone:">
+<!ENTITY cardmanager.mobilePhone "Mobile Phone:">
+<!ENTITY cardmanager.otherPhone "Other Phone:">
+<!ENTITY cardmanager.dateOfBirth "Date of Birth:">
+<!ENTITY cardmanager.gender "Gender:">
+<!ENTITY cardmanager.imgurl "Image URL:"> 
+<!ENTITY cardmanager.newcard "New Card">
+<!ENTITY cardmanager.deletecard "Delete Card">
+<!ENTITY cardmanager.updatecard "Save Card">
+<!ENTITY cardmanager.cancel "Cancel">
+<!ENTITY cardmanager.selectcard "Select Card">

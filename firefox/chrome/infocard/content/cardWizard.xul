@@ -36,7 +36,7 @@
  <!ENTITY % cardwizardDTD SYSTEM "chrome://infocard/locale/cardwizard.dtd" >
  %cardwizardDTD;
 ]>
-<wizard id="card-window" title="&infocard.cardwizard.title;" onwizardfinish=""
+<wizard id="card-window" title="&cardwizard.title;" onwizardfinish=""
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <stringbundleset id="stringbundleset">
      <stringbundle id="string-bundle" src="chrome://infocard/locale/infocards.properties"/>
@@ -46,17 +46,17 @@
  
   <wizardpage pageid="type" next="selfAsserted">
     <description>
-    &infocard.cardwizard.first;
+    &cardwizard.first;
     </description>
-    <label value="&infocard.cardwizard.selectatypeofcard;"/>
+    <label value="&cardwizard.selectatypeofcard;"/>
     <menulist>
       <menupopup>
-        <menuitem label="&infocard.cardwizard.selfasserted;" value="selfAsserted"/>
+        <menuitem label="&cardwizard.selfasserted;" value="selfAsserted"/>
       </menupopup>
     </menulist>
   </wizardpage>
 
-  <wizardpage description="&infocard.cardwizard.carddetails;" pageid="selfAsserted" onpageadvanced="selfAssertedCallback();">
+  <wizardpage description="&cardwizard.carddetails;" pageid="selfAsserted" onpageadvanced="selfAssertedCallback();">
      <script>
      function selfAssertedCallback() {
 
@@ -82,26 +82,26 @@
 
      }
      </script>
-    <label value="&infocard.cardwizard.selfasserted;"/>
+    <label value="&cardwizard.selfasserted;"/>
       <vbox id="editarea" flex="1">
         <grid>
             <columns><column id="colText"/><column id="colData"/></columns>
             <rows>
-                <row><label class="lblText" value="&infocard.cardmanager.cardname;"   /><textbox id="cardname"    value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.email;"  /><textbox id="email"   value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.country;"  /><textbox id="country"   value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.dateofbirth;"    /><textbox id="dateOfBirth"     value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.gender;"    /><textbox id="gender"     value=""/></row>
-                <row><label class="lblText" value="&infocard.cardmanager.imgurl;"    /><textbox id="imgurl"     value=""/></row>
+                <row><label class="lblText" value="&cardmanager.cardname;"   /><textbox id="cardname"    value=""/></row>
+                <row><label class="lblText" value="&cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
+                <row><label class="lblText" value="&cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.email;"  /><textbox id="email"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.country;"  /><textbox id="country"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
+                <row><label class="lblText" value="&cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
+                <row><label class="lblText" value="&cardmanager.dateofbirth;"    /><textbox id="dateOfBirth"     value=""/></row>
+                <row><label class="lblText" value="&cardmanager.gender;"    /><textbox id="gender"     value=""/></row>
+                <row><label class="lblText" value="&cardmanager.imgurl;"    /><textbox id="imgurl"     value=""/></row>
             </rows>
         </grid>
     </vbox>
@@ -210,11 +210,11 @@
 
   </wizardpage>
 
-  <wizardpage description="&infocard.cardwizard.carddetails;" pageid="lid">
+  <wizardpage description="&cardwizard.carddetails;" pageid="lid">
     <label value="LID"/>
   </wizardpage>
 
-  <wizardpage description="&infocard.cardwizard.carddetails;" pageid="google">
+  <wizardpage description="&cardwizard.carddetails;" pageid="google">
     <label value="Google"/>
   </wizardpage>
 

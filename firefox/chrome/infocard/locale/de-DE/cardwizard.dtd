@@ -1,5 +1,5 @@
-<!ENTITY infocard.cardwizard.selectatypeofcard "W&#228;hlen Sie eine Kartenart:" >
-<!ENTITY infocard.cardwizard.title "Neue Karte Assistent" >
-<!ENTITY infocard.cardwizard.first "Zuerst w&#228;hlen Sie aus der der Auswahl der unterst&#252;tzten Karten aus." >
-<!ENTITY infocard.cardwizard.selfasserted "Selbst erstellte Karte" >
-<!ENTITY infocard.cardwizard.carddetails "Kartendetails" >
+<!ENTITY cardwizard.selectatypeofcard "W&#228;hlen Sie eine Kartenart:" >
+<!ENTITY cardwizard.title "Neue Karte Assistent" >
+<!ENTITY cardwizard.first "Zuerst w&#228;hlen Sie aus der der Auswahl der unterst&#252;tzten Karten aus." >
+<!ENTITY cardwizard.selfasserted "Selbst erstellte Karte" >
+<!ENTITY cardwizard.carddetails "Kartendetails" >

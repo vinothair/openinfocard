@@ -1,22 +1,22 @@
-<!ENTITY infocard.cardmanager.title "Infokarten">
-<!ENTITY infocard.cardmanager.daylabel "Identity Selector">
-<!ENTITY infocard.cardmanager.cardname "Kartenname:">
-<!ENTITY infocard.cardmanager.givenname "Vorname:">
-<!ENTITY infocard.cardmanager.surname "Nachname:">
-<!ENTITY infocard.cardmanager.email "Email:">
-<!ENTITY infocard.cardmanager.streetaddress "Stra&#223;e:">
-<!ENTITY infocard.cardmanager.locality "Stadt:">
-<!ENTITY infocard.cardmanager.stateorprovince "Bundesland:">
-<!ENTITY infocard.cardmanager.postalcode "Postleitzahl:">
-<!ENTITY infocard.cardmanager.country "Staat:">
-<!ENTITY infocard.cardmanager.primaryphone "Telefonnummer:">
-<!ENTITY infocard.cardmanager.mobilephone "Handynummer:">
-<!ENTITY infocard.cardmanager.otherphone "Andere Telefonnummer:">
-<!ENTITY infocard.cardmanager.dateofbirth "Geburtsdatum:">
-<!ENTITY infocard.cardmanager.gender "Geschlecht:">
-<!ENTITY infocard.cardmanager.imgurl "Bild URL:"> 
-<!ENTITY infocard.cardmanager.newcard "Neue Karte">
-<!ENTITY infocard.cardmanager.deletecard "Karte l&#246;schen">
-<!ENTITY infocard.cardmanager.updatecard "Karte speichern">
-<!ENTITY infocard.cardmanager.cancel "Abbrechen">
-<!ENTITY infocard.cardmanager.selectcard "Karte ausw&#228;hlen">
+<!ENTITY cardmanager.title "Infokarten">
+<!ENTITY cardmanager.daylabel "Identity Selector">
+<!ENTITY cardmanager.cardname "Kartenname:">
+<!ENTITY cardmanager.givenname "Vorname:">
+<!ENTITY cardmanager.surname "Nachname:">
+<!ENTITY cardmanager.email "Email:">
+<!ENTITY cardmanager.streetaddress "Stra&#223;e:">
+<!ENTITY cardmanager.locality "Stadt:">
+<!ENTITY cardmanager.stateorprovince "Bundesland:">
+<!ENTITY cardmanager.postalcode "Postleitzahl:">
+<!ENTITY cardmanager.country "Staat:">
+<!ENTITY cardmanager.primaryphone "Telefonnummer:">
+<!ENTITY cardmanager.mobilephone "Handynummer:">
+<!ENTITY cardmanager.otherphone "Andere Telefonnummer:">
+<!ENTITY cardmanager.dateofbirth "Geburtsdatum:">
+<!ENTITY cardmanager.gender "Geschlecht:">
+<!ENTITY cardmanager.imgurl "Bild URL:"> 
+<!ENTITY cardmanager.newcard "Neue Karte">
+<!ENTITY cardmanager.deletecard "Karte l&#246;schen">
+<!ENTITY cardmanager.updatecard "Karte speichern">
+<!ENTITY cardmanager.cancel "Abbrechen">
+<!ENTITY cardmanager.selectcard "Karte ausw&#228;hlen">

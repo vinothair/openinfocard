@@ -1,5 +1,5 @@
-<!ENTITY infocard.cardwizard.selectatypeofcard "Bir kart seciniz:" >
-<!ENTITY infocard.cardwizard.title "Yeni kart asistani" >
-<!ENTITY infocard.cardwizard.first "&#214;ncelikle &#246;nerilen su kartlardan seciniz." >
-<!ENTITY infocard.cardwizard.selfasserted "Kendi cikardiniz kart" >
-<!ENTITY infocard.cardwizard.carddetails "Kart ayrintilari" >
+<!ENTITY cardwizard.selectatypeofcard "Bir kart seciniz:" >
+<!ENTITY cardwizard.title "Yeni kart asistani" >
+<!ENTITY cardwizard.first "&#214;ncelikle &#246;nerilen su kartlardan seciniz." >
+<!ENTITY cardwizard.selfasserted "Kendi cikardiniz kart" >
+<!ENTITY cardwizard.carddetails "Kart ayrintilari" >

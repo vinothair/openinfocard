@@ -1,22 +1,22 @@
-<!ENTITY infocard.cardmanager.title "Infokarten">
-<!ENTITY infocard.cardmanager.daylabel "Identity Selector">
-<!ENTITY infocard.cardmanager.cardname "N&#225;zev karty:">
-<!ENTITY infocard.cardmanager.givenname "Jm&#233;no :">
-<!ENTITY infocard.cardmanager.surname "P&#345;&#237;jmeni:">
-<!ENTITY infocard.cardmanager.email "Email:">
-<!ENTITY infocard.cardmanager.streetaddress "Ulice:">
-<!ENTITY infocard.cardmanager.locality "M&#283;sto:">
-<!ENTITY infocard.cardmanager.stateorprovince "Kraj:">
-<!ENTITY infocard.cardmanager.postalcode "Sm&#283;rovac&#237; &#269;&#237;slo:">
-<!ENTITY infocard.cardmanager.country "St&#225;t:">
-<!ENTITY infocard.cardmanager.primaryphone "Telefonn&#237; &#269;&#237;slo:">
-<!ENTITY infocard.cardmanager.mobilephone "&#268;&#237;slo mobiln&#237;ho telefonu:">
-<!ENTITY infocard.cardmanager.otherphone "Jin&#233; telefonn&#237; &#269;&#237;slo:">
-<!ENTITY infocard.cardmanager.dateofbirth "Datum Narozeni:">
-<!ENTITY infocard.cardmanager.gender "Geschlecht:">
-<!ENTITY infocard.cardmanager.imgurl "Obrazek URL:"> 
-<!ENTITY infocard.cardmanager.newcard "Nova karta">
-<!ENTITY infocard.cardmanager.deletecard "Vyma&#382;te kartu">
-<!ENTITY infocard.cardmanager.updatecard "Ulo&#382;it kartu do pam&#283;ti">
-<!ENTITY infocard.cardmanager.cancel "Ukon&#269;it">
-<!ENTITY infocard.cardmanager.selectcard "Vyberte si kartu">
+<!ENTITY cardmanager.title "Infokarten">
+<!ENTITY cardmanager.daylabel "Identity Selector">
+<!ENTITY cardmanager.cardname "N&#225;zev karty:">
+<!ENTITY cardmanager.givenname "Jm&#233;no :">
+<!ENTITY cardmanager.surname "P&#345;&#237;jmeni:">
+<!ENTITY cardmanager.email "Email:">
+<!ENTITY cardmanager.streetaddress "Ulice:">
+<!ENTITY cardmanager.locality "M&#283;sto:">
+<!ENTITY cardmanager.stateorprovince "Kraj:">
+<!ENTITY cardmanager.postalcode "Sm&#283;rovac&#237; &#269;&#237;slo:">
+<!ENTITY cardmanager.country "St&#225;t:">
+<!ENTITY cardmanager.primaryphone "Telefonn&#237; &#269;&#237;slo:">
+<!ENTITY cardmanager.mobilephone "&#268;&#237;slo mobiln&#237;ho telefonu:">
+<!ENTITY cardmanager.otherphone "Jin&#233; telefonn&#237; &#269;&#237;slo:">
+<!ENTITY cardmanager.dateofbirth "Datum Narozeni:">
+<!ENTITY cardmanager.gender "Geschlecht:">
+<!ENTITY cardmanager.imgurl "Obrazek URL:"> 
+<!ENTITY cardmanager.newcard "Nova karta">
+<!ENTITY cardmanager.deletecard "Vyma&#382;te kartu">
+<!ENTITY cardmanager.updatecard "Ulo&#382;it kartu do pam&#283;ti">
+<!ENTITY cardmanager.cancel "Ukon&#269;it">
+<!ENTITY cardmanager.selectcard "Vyberte si kartu">

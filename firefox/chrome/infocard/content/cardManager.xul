@@ -34,7 +34,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="cards.css" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://infocard/locale/cardmanager.dtd">
-<window title="&infocard.cardmanager.title;" 
+<window title="&cardmanager.title;" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	xmlns:html="http://www.w3.org/1999/xhtml"
         onload="load();">
@@ -54,7 +54,7 @@
 
     <hbox id="mainbar">
         <spacer flex="1"/>
-        <label id="daylabel" value="&infocard.cardmanager.daylabel;"/>
+        <label id="daylabel" value="&cardmanager.daylabel;"/>
     </hbox>
 
     <hbox id="mainarea" flex="1" >
@@ -84,20 +84,20 @@
                         <columns><column id="colText"/><column id="colData"/></columns>
                         <rows>
                             <row><label/><label class="lblTitle" id="cardname" value=""/></row>
-                            <row><label id="_givenname" class="lblText" value="&infocard.cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
-                            <row><label id="_surname" class="lblText" value="&infocard.cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
-                            <row><label id="_email" class="lblText" value="&infocard.cardmanager.email;"  /><textbox id="email"   value=""/></row>
-                            <row><label id="_streetAddress" class="lblText" value="&infocard.cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
-                            <row><label id="_locality" class="lblText" value="&infocard.cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
-                            <row><label id="_stateOrProvince" class="lblText" value="&infocard.cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
-                            <row><label id="_postalCode" class="lblText" value="&infocard.cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
-                            <row><label id="_country" class="lblText" value="&infocard.cardmanager.country;"  /><textbox id="country"   value=""/></row>
-                            <row><label id="_primaryPhone" class="lblText" value="&infocard.cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
-                            <row><label id="_mobilePhone" class="lblText" value="&infocard.cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
-                            <row><label id="_otherPhone" class="lblText" value="&infocard.cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
-                            <row><label id="_dateOfBirth" class="lblText" value="&infocard.cardmanager.dateofbirth;"    /><textbox id="dateOfBirth"     value=""/></row>
-                            <row><label id="_gender" class="lblText" value="&infocard.cardmanager.gender;"    /><textbox id="gender"     value=""/></row>
-                            <row><label class="lblText" value="&infocard.cardmanager.imgurl;"    /><textbox id="imgurl"     value=""/></row>
+                            <row><label id="_givenname" class="lblText" value="&cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
+                            <row><label id="_surname" class="lblText" value="&cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
+                            <row><label id="_email" class="lblText" value="&cardmanager.email;"  /><textbox id="email"   value=""/></row>
+                            <row><label id="_streetAddress" class="lblText" value="&cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
+                            <row><label id="_locality" class="lblText" value="&cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
+                            <row><label id="_stateOrProvince" class="lblText" value="&cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
+                            <row><label id="_postalCode" class="lblText" value="&cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
+                            <row><label id="_country" class="lblText" value="&cardmanager.country;"  /><textbox id="country"   value=""/></row>
+                            <row><label id="_primaryPhone" class="lblText" value="&cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
+                            <row><label id="_mobilePhone" class="lblText" value="&cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
+                            <row><label id="_otherPhone" class="lblText" value="&cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
+                            <row><label id="_dateOfBirth" class="lblText" value="&cardmanager.dateofbirth;"    /><textbox id="dateOfBirth"     value=""/></row>
+                            <row><label id="_gender" class="lblText" value="&cardmanager.gender;"    /><textbox id="gender"     value=""/></row>
+                            <row><label class="lblText" value="&cardmanager.imgurl;"    /><textbox id="imgurl"     value=""/></row>
                         </rows>
                     </grid>
 
@@ -106,15 +106,15 @@
         <vbox>
             <hbox>
                <button id="newCard" class="normal"
-                       label="&infocard.cardmanager.newcard;" oncommand="newCard();"/>
+                       label="&cardmanager.newcard;" oncommand="newCard();"/>
                <button id="deleteCard" class="normal"
-                       label="&infocard.cardmanager.deletecard;" oncommand="alert('Delete Card not yet implemented');"/>
+                       label="&cardmanager.deletecard;" oncommand="alert('Delete Card not yet implemented');"/>
                <button id="saveCard" class="normal"
-                       label="&infocard.cardmanager.updatecard;" oncommand="alert('Update Card not yet implemented');"/>
+                       label="&cardmanager.updatecard;" oncommand="alert('Update Card not yet implemented');"/>
                <button id="cancel" class="normal"
-                       label="&infocard.cardmanager.cancel;" oncommand="cancel();"/>
+                       label="&cardmanager.cancel;" oncommand="cancel();"/>
                <button id="select" class="normal"
-                       label="&infocard.cardmanager.selectcard;" oncommand="ok();"/>
+                       label="&cardmanager.selectcard;" oncommand="ok();"/>
             </hbox>
         </vbox>
         </vbox>
