@@ -2,3 +2,9 @@ overlay chrome://browser/content/browser.xul           chrome://infocard/content
 content infocard chrome/infocard/content/
 locale infocard en-US chrome/infocard/locale/en-US/
 locale infocard de-DE chrome/infocard/locale/de-DE/
+locale infocard cs-CZ chrome/infocard/locale/cs-CZ/
+locale infocard ar chrome/infocard/locale/ar/
+locale infocard fr chrome/infocard/locale/fr/
+locale infocard no chrome/infocard/locale/no/
+locale infocard sv-SE chrome/infocard/locale/sv-SE/
+locale infocard tr-TR chrome/infocard/locale/tr-TR/

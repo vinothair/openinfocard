@@ -1,22 +1,22 @@
-<!ENTITY infocard.cardmanager.title "Kontakt">
-<!ENTITY infocard.cardmanager.daylabel "Identity Selector">
-<!ENTITY infocard.cardmanager.cardname "Kort Navn:">
-<!ENTITY infocard.cardmanager.givenname "Fornavn:">
-<!ENTITY infocard.cardmanager.surname "Navn:">
-<!ENTITY infocard.cardmanager.email "E-postadresse:">
-<!ENTITY infocard.cardmanager.streetAddress "Adresse:">
-<!ENTITY infocard.cardmanager.locality "Poststed:">
-<!ENTITY infocard.cardmanager.stateOrProvince "Land:">
-<!ENTITY infocard.cardmanager.postalCode "Postnummer:">
-<!ENTITY infocard.cardmanager.country "Fylke:">
-<!ENTITY infocard.cardmanager.primaryPhone "Telefonnummer:">
-<!ENTITY infocard.cardmanager.mobilePhone "Mobiltelefon:">
-<!ENTITY infocard.cardmanager.otherPhone "Annen  Telefonnummer:">
-<!ENTITY infocard.cardmanager.dateOfBirth "F&#248;dt:">
-<!ENTITY infocard.cardmanager.gender "Gender:">
-<!ENTITY infocard.cardmanager.imgurl "Bilde URL:"> 
-<!ENTITY infocard.cardmanager.newcard "Ny Kort">
-<!ENTITY infocard.cardmanager.deletecard "Slett Kort">
-<!ENTITY infocard.cardmanager.updatecard "Lagre Kort">
-<!ENTITY infocard.cardmanager.cancel "Avbryt">
-<!ENTITY infocard.cardmanager.selectcard "Velg Kort">
+<!ENTITY cardmanager.title "Kontakt">
+<!ENTITY cardmanager.daylabel "Identity Selector">
+<!ENTITY cardmanager.cardname "Kort Navn:">
+<!ENTITY cardmanager.givenname "Fornavn:">
+<!ENTITY cardmanager.surname "Navn:">
+<!ENTITY cardmanager.email "E-postadresse:">
+<!ENTITY cardmanager.streetAddress "Adresse:">
+<!ENTITY cardmanager.locality "Poststed:">
+<!ENTITY cardmanager.stateOrProvince "Land:">
+<!ENTITY cardmanager.postalCode "Postnummer:">
+<!ENTITY cardmanager.country "Fylke:">
+<!ENTITY cardmanager.primaryPhone "Telefonnummer:">
+<!ENTITY cardmanager.mobilePhone "Mobiltelefon:">
+<!ENTITY cardmanager.otherPhone "Annen  Telefonnummer:">
+<!ENTITY cardmanager.dateOfBirth "F&#248;dt:">
+<!ENTITY cardmanager.gender "Gender:">
+<!ENTITY cardmanager.imgurl "Bilde URL:"> 
+<!ENTITY cardmanager.newcard "Ny Kort">
+<!ENTITY cardmanager.deletecard "Slett Kort">
+<!ENTITY cardmanager.updatecard "Lagre Kort">
+<!ENTITY cardmanager.cancel "Avbryt">
+<!ENTITY cardmanager.selectcard "Velg Kort">

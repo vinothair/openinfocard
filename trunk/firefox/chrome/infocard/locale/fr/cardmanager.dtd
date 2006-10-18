@@ -1,22 +1,22 @@
-<!ENTITY infocard.cardmanager.title "My Contacts">
-<!ENTITY infocard.cardmanager.daylabel "Identity Selector">
-<!ENTITY infocard.cardmanager.cardname "Nom de carte:">
-<!ENTITY infocard.cardmanager.givenname "Pr&#233;nom:">
-<!ENTITY infocard.cardmanager.surname "Nom de famille:">
-<!ENTITY infocard.cardmanager.email "Adresse &#233;lectronique:">
-<!ENTITY infocard.cardmanager.streetAddress "L'Adresse Postale:">
-<!ENTITY infocard.cardmanager.locality "La Ville:">
-<!ENTITY infocard.cardmanager.stateOrProvince "Etat/Province:">
-<!ENTITY infocard.cardmanager.postalCode "Code postal:">
-<!ENTITY infocard.cardmanager.country "Pais:">
-<!ENTITY infocard.cardmanager.primaryPhone "Phone:">
-<!ENTITY infocard.cardmanager.mobilePhone "Mobile Phone:">
-<!ENTITY infocard.cardmanager.otherPhone "Other Phone:">
-<!ENTITY infocard.cardmanager.dateOfBirth "Date de naissance:">
-<!ENTITY infocard.cardmanager.gender "Sexe:">
-<!ENTITY infocard.cardmanager.imgurl "URL de l'image:"> 
-<!ENTITY infocard.cardmanager.newcard "Nouveau  Carte">
-<!ENTITY infocard.cardmanager.deletecard "Supprimer ">
-<!ENTITY infocard.cardmanager.updatecard "Save Carte">
-<!ENTITY infocard.cardmanager.cancel "Annuler">
-<!ENTITY infocard.cardmanager.selectcard "S&#233;lectionnez cette carte">
+<!ENTITY cardmanager.title "My Contacts">
+<!ENTITY cardmanager.daylabel "Identity Selector">
+<!ENTITY cardmanager.cardname "Nom de carte:">
+<!ENTITY cardmanager.givenname "Pr&#233;nom:">
+<!ENTITY cardmanager.surname "Nom de famille:">
+<!ENTITY cardmanager.email "Adresse &#233;lectronique:">
+<!ENTITY cardmanager.streetAddress "L'Adresse Postale:">
+<!ENTITY cardmanager.locality "La Ville:">
+<!ENTITY cardmanager.stateOrProvince "Etat/Province:">
+<!ENTITY cardmanager.postalCode "Code postal:">
+<!ENTITY cardmanager.country "Pais:">
+<!ENTITY cardmanager.primaryPhone "Phone:">
+<!ENTITY cardmanager.mobilePhone "Mobile Phone:">
+<!ENTITY cardmanager.otherPhone "Other Phone:">
+<!ENTITY cardmanager.dateOfBirth "Date de naissance:">
+<!ENTITY cardmanager.gender "Sexe:">
+<!ENTITY cardmanager.imgurl "URL de l'image:"> 
+<!ENTITY cardmanager.newcard "Nouveau  Carte">
+<!ENTITY cardmanager.deletecard "Supprimer ">
+<!ENTITY cardmanager.updatecard "Save Carte">
+<!ENTITY cardmanager.cancel "Annuler">
+<!ENTITY cardmanager.selectcard "S&#233;lectionnez cette carte">
