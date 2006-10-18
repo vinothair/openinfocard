@@ -1,5 +1,5 @@
-<!ENTITY infocard.cardwizard.selectatypeofcard "Vybrat typ kartu:" >
-<!ENTITY infocard.cardwizard.title "Nov&#225; kartu pruvodce" >
-<!ENTITY infocard.cardwizard.first "First, let's choose from a variety of supported card types." >
-<!ENTITY infocard.cardwizard.selfasserted "self asserted card" >
-<!ENTITY infocard.cardwizard.carddetails "Podrobnosti o kartu" >
+<!ENTITY infocard.cardwizard.selectatypeofcard "Vyberte si typ karty:" >
+<!ENTITY infocard.cardwizard.title "Nov&#253; asistent karty" >
+<!ENTITY infocard.cardwizard.first "Nejprve si vyberte z nab&#237;dky podporovan&#253;ch karet:" >
+<!ENTITY infocard.cardwizard.selfasserted "Vlastoru&#269;n&#283; vytvo&#345;en&#225; karta:" >
+<!ENTITY infocard.cardwizard.carddetails "Detaily o kart&#283;" >
