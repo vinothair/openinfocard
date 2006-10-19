@@ -4,15 +4,15 @@
 <!ENTITY cardmanager.givenname "Fornavn:">
 <!ENTITY cardmanager.surname "Navn:">
 <!ENTITY cardmanager.email "E-postadresse:">
-<!ENTITY cardmanager.streetAddress "Adresse:">
+<!ENTITY cardmanager.streetaddress "Adresse:">
 <!ENTITY cardmanager.locality "Poststed:">
-<!ENTITY cardmanager.stateOrProvince "Land:">
-<!ENTITY cardmanager.postalCode "Postnummer:">
+<!ENTITY cardmanager.stateorprovince "Land:">
+<!ENTITY cardmanager.postalcode "Postnummer:">
 <!ENTITY cardmanager.country "Fylke:">
-<!ENTITY cardmanager.primaryPhone "Telefonnummer:">
-<!ENTITY cardmanager.mobilePhone "Mobiltelefon:">
-<!ENTITY cardmanager.otherPhone "Annen  Telefonnummer:">
-<!ENTITY cardmanager.dateOfBirth "F&#248;dt:">
+<!ENTITY cardmanager.primaryphone "Telefonnummer:">
+<!ENTITY cardmanager.mobilephone "Mobiltelefon:">
+<!ENTITY cardmanager.otherphone "Annen  Telefonnummer:">
+<!ENTITY cardmanager.dateofbirth "F&#248;dt:">
 <!ENTITY cardmanager.gender "Gender:">
 <!ENTITY cardmanager.imgurl "Bilde URL:"> 
 <!ENTITY cardmanager.newcard "Ny Kort">
