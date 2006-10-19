@@ -13,8 +13,8 @@
 <!ENTITY cardmanager.mobilephone "&#268;&#237;slo mobiln&#237;ho telefonu:">
 <!ENTITY cardmanager.otherphone "Jin&#233; telefonn&#237; &#269;&#237;slo:">
 <!ENTITY cardmanager.dateofbirth "Datum Narozeni:">
-<!ENTITY cardmanager.gender "Geschlecht:">
-<!ENTITY cardmanager.imgurl "Obrazek URL:"> 
+<!ENTITY cardmanager.gender "Pohlav&#237;:">
+<!ENTITY cardmanager.imgurl "Osobn&#237; URL:"> 
 <!ENTITY cardmanager.newcard "Nova karta">
 <!ENTITY cardmanager.deletecard "Vyma&#382;te kartu">
 <!ENTITY cardmanager.updatecard "Ulo&#382;it kartu do pam&#283;ti">

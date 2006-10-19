@@ -4,15 +4,15 @@
 <!ENTITY cardmanager.givenname "First Name:">
 <!ENTITY cardmanager.surname "Last Name:">
 <!ENTITY cardmanager.email "Email:">
-<!ENTITY cardmanager.streetAddress "Street:">
+<!ENTITY cardmanager.streetaddress "Street:">
 <!ENTITY cardmanager.locality "City:">
-<!ENTITY cardmanager.stateOrProvince "State:">
-<!ENTITY cardmanager.postalCode "Zip:">
+<!ENTITY cardmanager.stateorprovince "State:">
+<!ENTITY cardmanager.postalcode "Zip:">
 <!ENTITY cardmanager.country "Country:">
-<!ENTITY cardmanager.primaryPhone "Phone:">
-<!ENTITY cardmanager.mobilePhone "Mobile Phone:">
-<!ENTITY cardmanager.otherPhone "Other Phone:">
-<!ENTITY cardmanager.dateOfBirth "Date of Birth:">
+<!ENTITY cardmanager.primaryphone "Phone:">
+<!ENTITY cardmanager.mobilephone "Mobile Phone:">
+<!ENTITY cardmanager.otherphone "Other Phone:">
+<!ENTITY cardmanager.dateofbirth "Date of Birth:">
 <!ENTITY cardmanager.gender "Gender:">
 <!ENTITY cardmanager.imgurl "Image URL:"> 
 <!ENTITY cardmanager.newcard "New Card">
