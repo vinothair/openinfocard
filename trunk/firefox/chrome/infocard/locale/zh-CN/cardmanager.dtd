@@ -1,0 +1,22 @@
+<!ENTITY cardmanager.title "&#22909;&#21451;">
+<!ENTITY cardmanager.daylabel "&#36523;&#20221; &#36984;&#25799;">
+<!ENTITY cardmanager.cardname "&#21345;&#29255;&#22995;&#21517;:">
+<!ENTITY cardmanager.givenname "&#21517;:">
+<!ENTITY cardmanager.surname "&#22995;:">
+<!ENTITY cardmanager.email "&#37109;&#20214;:">
+<!ENTITY cardmanager.streetaddress "&#34903;&#36947;t:">
+<!ENTITY cardmanager.locality "&#22478;&#24066;:">
+<!ENTITY cardmanager.stateorprovince "&#30465;:">
+<!ENTITY cardmanager.postalcode "&#37109;&#32232;:">
+<!ENTITY cardmanager.country "&#22283;&#23478;:">
+<!ENTITY cardmanager.primaryphone "&#38651;&#35441;:">
+<!ENTITY cardmanager.mobilephone "&#31227;&#21205;:">
+<!ENTITY cardmanager.otherphone "&#20854;&#20182;&#38651;&#35441;:">
+<!ENTITY cardmanager.dateofbirth "&#20986;&#29983;&#24180;&#26376;:">
+<!ENTITY cardmanager.gender "&#24615;&#21029;:">
+<!ENTITY cardmanager.imgurl "&#22294;&#29255; URL&#22320;&#22336;:"> 
+<!ENTITY cardmanager.newcard "&#24314;&#31435;&#21345;&#29255;">
+<!ENTITY cardmanager.deletecard "&#21034;&#38500;&#21345;&#29255;">
+<!ENTITY cardmanager.updatecard "&#20786;&#23384; &#21345;&#29255;">
+<!ENTITY cardmanager.cancel "&#21462;&#28040;">
+<!ENTITY cardmanager.selectcard "&#36984;&#25799; &#21345;&#29255;">
