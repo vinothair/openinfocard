@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Vector;
 
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -119,7 +120,9 @@ public class CertsAndKeys {
 		OtherLogotypeInfo[] otherLogos = null;
 		Logotype logotype = new Logotype(communityLogos, issuerLogo,
 				subjectLogo, otherLogos);
-		gen.addExtension(Logotype.id_pe_logotype, false, logotype.toASN1Object());
+		DERObject obj = logotype.toASN1Object();
+		byte[] logotypeBytes = obj.getDEREncoded();
+		gen.addExtension(Logotype.id_pe_logotype, false, logotypeBytes);
 		return gen;
 	}	
 
