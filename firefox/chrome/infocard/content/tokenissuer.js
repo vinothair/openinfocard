@@ -52,6 +52,54 @@ TokenIssuer.initialize = function() {
     }
 };
 
+TokenIssuer.getAllCards = function(dirName, password) {
+    try {
+        var tokenIssuer = this.getTokenIssuer();
+        
+        var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
+        var result = issuer.getAllCards(dirName, password);
+        return result;
+    } catch (e) {
+        this._fail(e);
+    }
+};
+
+TokenIssuer.getCard = function(dirName, password, card) {
+    try {
+        var tokenIssuer = this.getTokenIssuer();
+        
+        var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
+        var result = issuer.getCard(dirName, password, card);
+        return result;
+    } catch (e) {
+        this._fail(e);
+    }
+};
+
+TokenIssuer.newCard = function(dirName, password, card) {
+    try {
+        var tokenIssuer = this.getTokenIssuer();
+        
+        var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
+        var result = issuer.newCard(dirName, password, card);
+        return result;
+    } catch (e) {
+        this._fail(e);
+    }
+};
+
+TokenIssuer.deleteCard = function(cardId) {
+    try {
+        var tokenIssuer = this.getTokenIssuer();
+        
+        var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
+        var result = issuer.deleteCard(cardId);
+        return result;
+    } catch (e) {
+        this._fail(e);
+    }
+};
+
 TokenIssuer.getToken = function(policy) {
     try {
         var tokenIssuer = this.getTokenIssuer();
