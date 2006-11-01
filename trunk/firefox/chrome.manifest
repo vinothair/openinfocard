@@ -8,3 +8,4 @@ locale infocard fr chrome/infocard/locale/fr/
 locale infocard no chrome/infocard/locale/no/
 locale infocard sv-SE chrome/infocard/locale/sv-SE/
 locale infocard tr-TR chrome/infocard/locale/tr-TR/
+locale infocard zh-CN chrome/infocard/locale/zh-CN/
