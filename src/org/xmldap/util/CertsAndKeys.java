@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -27,13 +28,12 @@ import java.security.SignatureException;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Vector;
 
-import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERSet;
-import org.bouncycastle.asn1.DERUniversalString;
-import org.bouncycastle.asn1.x509.Attribute;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
@@ -41,6 +41,12 @@ import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
+import org.xmldap.asn1.Logotype;
+import org.xmldap.asn1.LogotypeAudio;
+import org.xmldap.asn1.LogotypeData;
+import org.xmldap.asn1.LogotypeDetails;
+import org.xmldap.asn1.LogotypeInfo;
+import org.xmldap.asn1.OtherLogotypeInfo;
 import org.xmldap.exceptions.TokenIssuanceException;
 
 /**
@@ -86,6 +92,36 @@ public class CertsAndKeys {
 
 		return gen;
 	}
+	
+	static public X509V3CertificateGenerator addLogotype(
+			X509V3CertificateGenerator gen) {
+		String mediaType = "image/jpg";
+		AlgorithmIdentifier algId = new AlgorithmIdentifier("1.3.14.3.2.26");
+		byte[] digest = { (byte) 0x96, (byte) 0xda, (byte) 0x5a, (byte) 0xf6,
+				(byte) 0x0f, (byte) 0x50, (byte) 0xf1, (byte) 0x84,
+				(byte) 0x84, (byte) 0x3a, (byte) 0x3f, (byte) 0x2c,
+				(byte) 0x2d, (byte) 0x9a, (byte) 0x5b, (byte) 0xf3,
+				(byte) 0x8e, (byte) 0xa1, (byte) 0xd0, (byte) 0xd4 };
+		DigestInfo digestInfo = new DigestInfo(algId, digest);
+		DigestInfo[] logotypeHash = { digestInfo };
+		String[] logotypeURI = { "http://static.flickr.com/10/buddyicons/18119196@N00.jpg?1115549486" };
+		LogotypeDetails imageDetails = new LogotypeDetails(mediaType,
+				logotypeHash, logotypeURI);
+		// LogotypeImageInfo imageInfo = null;
+		// LogotypeImage image = new LogotypeImage(imageDetails, imageInfo);
+		// LogotypeImage[] images = { image };
+		LogotypeDetails[] images = { imageDetails };
+		LogotypeAudio[] audio = null;
+		LogotypeData direct = new LogotypeData(images, audio);
+		LogotypeInfo[] communityLogos = null;
+		LogotypeInfo issuerLogo = new LogotypeInfo(direct);
+		LogotypeInfo subjectLogo = null;
+		OtherLogotypeInfo[] otherLogos = null;
+		Logotype logotype = new Logotype(communityLogos, issuerLogo,
+				subjectLogo, otherLogos);
+		gen.addExtension(Logotype.id_pe_logotype, false, logotype.toASN1Object());
+		return gen;
+	}	
 
 	static public X509V3CertificateGenerator addCaExtensions(
 			X509V3CertificateGenerator gen) {
@@ -96,6 +132,27 @@ public class CertsAndKeys {
 						| KeyUsage.dataEncipherment | KeyUsage.keyCertSign));
 		gen.addExtension(X509Extensions.ExtendedKeyUsage, true,
 				new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
+		// gen.addExtension(X509Extensions.SubjectAlternativeName, false,
+		// new GeneralNames(new GeneralName(GeneralName.rfc822Name,
+		// "test@test.test")));
+		return gen;
+	}
+
+	static public X509V3CertificateGenerator addSSLServerExtensions(
+			X509V3CertificateGenerator gen) {
+		gen.addExtension(X509Extensions.BasicConstraints, true,
+				new BasicConstraints(false));
+		gen.addExtension(X509Extensions.KeyUsage, true, new KeyUsage(
+				KeyUsage.keyEncipherment|KeyUsage.digitalSignature));
+		Vector extendedKeyUsageV = new Vector();
+		extendedKeyUsageV.add(KeyPurposeId.id_kp_serverAuth);
+		extendedKeyUsageV.add(KeyPurposeId.id_kp_clientAuth);
+		// Netscape Server Gated Crypto
+		extendedKeyUsageV.add(new DERObjectIdentifier("2.16.840.1.113730.4.1"));
+		// Microsoft Server Gated Crypto
+		extendedKeyUsageV.add(new DERObjectIdentifier("1.3.6.1.4.1.311.10.3.3"));
+		gen.addExtension(X509Extensions.ExtendedKeyUsage, true,
+				new ExtendedKeyUsage(extendedKeyUsageV));
 		// gen.addExtension(X509Extensions.SubjectAlternativeName, false,
 		// new GeneralNames(new GeneralName(GeneralName.rfc822Name,
 		// "test@test.test")));
@@ -185,7 +242,49 @@ public class CertsAndKeys {
 		gen.setSignatureAlgorithm("MD5WithRSAEncryption");
 		gen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
 		gen = addCaExtensions(gen);
+		gen = addLogotype(gen);
+		try {
+			cert = gen.generateX509Certificate(kp.getPrivate());
+		} catch (InvalidKeyException e) {
+			throw new TokenIssuanceException(e);
+		} catch (SecurityException e) {
+			throw new TokenIssuanceException(e);
+		} catch (SignatureException e) {
+			throw new TokenIssuanceException(e);
+		}
+		return cert;
+	}
 
+	/**
+	 * generates an X509 certificate 
+	 * 
+	 * @param kp
+	 * @param issuer
+	 * @param subject
+	 * @return
+	 * @throws TokenIssuanceException
+	 */
+	public static X509Certificate generateSSLServerCertificate(KeyPair kp,
+			X509Name issuer, X509Name subject) throws TokenIssuanceException {
+		if (Security.getProvider("BC") == null) {
+			Security.addProvider(new BouncyCastleProvider());
+		}
+
+		X509Certificate cert = null;
+
+		X509V3CertificateGenerator gen = new X509V3CertificateGenerator();
+		gen.setIssuerDN(issuer);
+		Calendar rightNow = Calendar.getInstance();
+		rightNow.add(Calendar.MINUTE, -2); // 2 minutes
+		gen.setNotBefore(rightNow.getTime());
+		rightNow.add(Calendar.YEAR, 5);
+		gen.setNotAfter(rightNow.getTime());
+		gen.setSubjectDN(subject);
+		gen.setPublicKey(kp.getPublic());
+		gen.setSignatureAlgorithm("MD5WithRSAEncryption");
+		gen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
+		gen = addSSLServerExtensions(gen);
+		gen = addLogotype(gen);
 		try {
 			cert = gen.generateX509Certificate(kp.getPrivate());
 		} catch (InvalidKeyException e) {
