@@ -34,6 +34,7 @@ import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.XML;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.TokenIssuanceException;
@@ -42,6 +43,7 @@ import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.CertsAndKeys;
 import org.xmldap.xmlenc.EncryptedData;
+import org.xmldap.util.Crds;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -609,6 +611,42 @@ public class TokenIssuer {
 		}
 	}
 
+	public String getAllCards(String dirName, String password)
+			throws TokenIssuanceException {
+		Crds crdStore = Crds.getInstance();
+		String cardXml = crdStore.getAllCards(dirName, password);
+		return cardXml;
+//		System.out.println(cardXml);
+//		try {
+//			JSONObject json = XML.toJSONObject(cardXml);
+//			return json.toString();
+//		} catch (JSONException e) {
+//			throw new TokenIssuanceException(e);
+//		}
+	}
+
+	public String getCard(String dirName, String password, String cardId)
+			throws TokenIssuanceException {
+		Crds crdStore = Crds.getInstance();
+		String cardXml = crdStore.getCard(dirName, password, cardId);
+		JSONObject json;
+		try {
+			json = XML.toJSONObject(cardXml);
+		} catch (JSONException e) {
+			throw new TokenIssuanceException(e);
+		}
+		return json.toString();
+	}
+
+	public String newCard(String dirName, String password, String card)
+			throws TokenIssuanceException {
+
+		Document infocard = getInfocard(card);
+
+		Crds crdStore = Crds.getInstance();
+		return crdStore.newCard(dirName, password, infocard);
+	}
+
 	public String getToken(String serializedPolicy)
 			throws TokenIssuanceException {
 
@@ -648,8 +686,8 @@ public class TokenIssuer {
 		ppi = generatePpiForThisRP(ppi, relyingPartyCert
 				.getSubjectX500Principal().getName());
 
-		System.out.println("Server Cert: "
-				+ relyingPartyCert.getSubjectDN().toString());
+//		System.out.println("Server Cert: "
+//				+ relyingPartyCert.getSubjectDN().toString());
 
 		String issuedToken = "";
 		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
@@ -659,31 +697,31 @@ public class TokenIssuer {
 		token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
 		token.setValidityPeriod(-5, 10);
 
-		String ALL_CLAIMS = "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname"
+		final String ALL_CLAIMS = "givenname"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress"
+				+ "emailaddress"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname"
+				+ "surname"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/streetaddress"
+				+ "streetaddress"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/locality"
+				+ "locality"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/stateorprovince"
+				+ "stateorprovince"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/postalcode"
+				+ "postalcode"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/country"
+				+ "country"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/homephone"
+				+ "homephone"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/otherphone"
+				+ "otherphone"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/mobilephone"
+				+ "mobilephone"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/dateofbirth"
+				+ "dateofbirth"
 				+ " "
-				+ "http://schemas.microsoft.com/ws/2005/05/identity/claims/gender";
+				+ "gender";
 
 		String requiredClaims = null;
 		String optionalClaims = null;
