@@ -35,7 +35,7 @@ function ok(){
     policy["card"] = selectedCard.toString();
 
     //TRUE of FALSE on the second param enabled debug
-    var tokenToReturn = processCard(policy,false);
+    var tokenToReturn = processCard(policy,true);
     window.arguments[1](tokenToReturn);
     window.close();
 
@@ -58,6 +58,9 @@ function getCard(cardid){
 
 
 function load(){
+    var jvm = Components.classes["@mozilla.org/oji/jvm-mgr;1"].getService(Components.interfaces.nsIJVMManager);
+    jvm.showJavaConsole();
+
     var stringsBundle = document.getElementById("string-bundle");
 
     var cardFile = read(db);
@@ -75,16 +78,25 @@ function load(){
     if ( count != 0) {
         var policy = window.arguments[0];
         var label = document.getElementById("notify");
-	var site = policy["cn"];
+		var site = policy["cn"];
         var please = stringsBundle.getFormattedString('pleaseselectacard', [site]);
         label.setAttribute("value", please);
     } else {
         var label = document.getElementById("notify");
-	var button = stringsBundle.getString('newcard');
+		var button = stringsBundle.getString('newcard');
         var youdont = stringsBundle.getFormattedString('youdonthaveanycards', [button]);
         label.setAttribute("value", youdont);
     }
-
+	{
+		var policy = window.arguments[0];
+		var cert = policy["cert"];
+		var issuerLogoURL = TokenIssuer.getIssuerLogoURL(cert);
+		if (issuerLogoURL != undefined) {
+			var issuerlogo = document.getElementById("issuerlogo");
+			issuerlogo.src = issuerLogoURL;
+			issuerlogo.hidden = false;
+		}
+	}
 }
 
 function indicateRequiredClaim(requiredClaims, claim){

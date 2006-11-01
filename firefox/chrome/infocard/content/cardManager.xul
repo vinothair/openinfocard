@@ -80,6 +80,11 @@
                     <spacer height="15"/>
                     <label class="lblTitle" id="notify" value=""/>
                     <spacer height="15"/>
+                    <hbox id="issuer_hbox" flex="0">
+                    	<label class="lblTitle" id="issuer_logo" value="issuer logo: (hash value not verified)"/>
+	                    <image id="issuerlogo" src="chrome://infocard/content/xmldap.png" hidden="true" />
+	                </hbox>
+                    <spacer height="15"/>
                     <grid id="editgrid" hidden="true">
                         <columns><column id="colText"/><column id="colData"/></columns>
                         <rows>

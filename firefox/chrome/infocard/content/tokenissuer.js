@@ -100,6 +100,20 @@ TokenIssuer.deleteCard = function(cardId) {
     }
 };
 
+
+TokenIssuer.getIssuerLogoURL = function(cert) {
+    try {
+        var tokenIssuer = this.getTokenIssuer();
+
+        var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
+        var result = issuer.getIssuerLogoURL(cert);
+        return result;
+
+    } catch (e) {
+        this._fail(e);
+    }
+};
+
 TokenIssuer.getToken = function(policy) {
     try {
         var tokenIssuer = this.getTokenIssuer();
