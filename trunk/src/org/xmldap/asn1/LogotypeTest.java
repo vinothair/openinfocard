@@ -135,12 +135,8 @@ public class LogotypeTest extends TestCase {
 	/**
 	 * @param root
 	 */
-	private void verifyToi(byte[] toiLogotypeExtension)   throws Exception {
-        ByteArrayInputStream   stream = new ByteArrayInputStream(toiLogotypeExtension);
-        ASN1InputStream        aStream = new ASN1InputStream(stream);
-        
-        ASN1Sequence root = (ASN1Sequence)aStream.readObject();
-		Logotype logotype = Logotype.getInstance(root);
+	private void verifyToi(byte[] logotypeBytes)   throws Exception {
+		Logotype logotype = Logotype.getInstance(logotypeBytes);
 		LogotypeInfo[] communityLogos = logotype.getCommunityLogos();
 		assertNull(communityLogos);
 		LogotypeInfo issuerLogo = logotype.getIssuerLogo();

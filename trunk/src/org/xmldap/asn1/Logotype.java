@@ -28,11 +28,14 @@
 
 package org.xmldap.asn1;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Vector;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.DEREncodable;
@@ -42,12 +45,12 @@ import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 
 public class Logotype extends ASN1Encodable {
-//	LogotypeExtn ::= SEQUENCE {
-//		   communityLogos  [0] EXPLICIT SEQUENCE OF LogotypeInfo OPTIONAL,
-//		   issuerLogo      [1] EXPLICIT LogotypeInfo OPTIONAL,
-//		   subjectLogo     [2] EXPLICIT LogotypeInfo OPTIONAL,
-//		   otherLogos      [3] EXPLICIT SEQUENCE OF OtherLogotypeInfo OPTIONAL }
-	
+	//	LogotypeExtn ::= SEQUENCE {
+	//		   communityLogos  [0] EXPLICIT SEQUENCE OF LogotypeInfo OPTIONAL,
+	//		   issuerLogo      [1] EXPLICIT LogotypeInfo OPTIONAL,
+	//		   subjectLogo     [2] EXPLICIT LogotypeInfo OPTIONAL,
+	//		   otherLogos      [3] EXPLICIT SEQUENCE OF OtherLogotypeInfo OPTIONAL }
+
 	public static final DERObjectIdentifier id_pe_logotype = new DERObjectIdentifier(
 			"1.3.6.1.5.5.7.1.12");
 
@@ -61,25 +64,28 @@ public class Logotype extends ASN1Encodable {
 			"1.3.6.1.5.5.7.20.2");
 
 	ASN1Sequence communityLogos = null;
-	ASN1TaggedObject issuerLogo = null;
-	ASN1TaggedObject subjectLogo = null;
-	ASN1Sequence otherLogos = null;
-	
-//	public static Logotype getInstance(ASN1TaggedObject obj, boolean explicit) {
-//		return getInstance(ASN1Sequence.getInstance(obj, explicit));
-//	}
-//
-//	public static Logotype getInstance(Object obj) {
-//		if (obj instanceof Logotype) {
-//			return (Logotype) obj;
-//		} else if (obj instanceof ASN1Sequence) {
-//			return new Logotype((ASN1Sequence) obj);
-//		}
-//
-//		throw new IllegalArgumentException("unknown object in factory");
-//	}
 
-    public static Logotype getInstance(ASN1Sequence seq) {
+	ASN1TaggedObject issuerLogo = null;
+
+	ASN1TaggedObject subjectLogo = null;
+
+	ASN1Sequence otherLogos = null;
+
+	//	public static Logotype getInstance(ASN1TaggedObject obj, boolean explicit) {
+	//		return getInstance(ASN1Sequence.getInstance(obj, explicit));
+	//	}
+	//
+	//	public static Logotype getInstance(Object obj) {
+	//		if (obj instanceof Logotype) {
+	//			return (Logotype) obj;
+	//		} else if (obj instanceof ASN1Sequence) {
+	//			return new Logotype((ASN1Sequence) obj);
+	//		}
+	//
+	//		throw new IllegalArgumentException("unknown object in factory");
+	//	}
+
+	public static Logotype getInstance(ASN1Sequence seq) {
 		ASN1Sequence communityLogosSeq = null;
 		ASN1TaggedObject issuerLogoSeq = null;
 		ASN1TaggedObject subjectLogoSeq = null;
@@ -94,10 +100,10 @@ public class Logotype extends ASN1Encodable {
 				communityLogosSeq = ASN1Sequence.getInstance(obj);
 				break;
 			case 1:
-				issuerLogoSeq = (ASN1TaggedObject)obj;
+				issuerLogoSeq = (ASN1TaggedObject) obj;
 				break;
 			case 2:
-				subjectLogoSeq = (ASN1TaggedObject)obj;
+				subjectLogoSeq = (ASN1TaggedObject) obj;
 				break;
 			case 3:
 				otherLogosSeq = ASN1Sequence.getInstance(obj);
@@ -109,13 +115,14 @@ public class Logotype extends ASN1Encodable {
 		LogotypeInfo[] communityLogos = null;
 		if (communityLogosSeq != null) {
 			Vector<LogotypeInfo> v = new Vector<LogotypeInfo>();
-			for (int index=0; index<communityLogosSeq.size(); index++) {
+			for (int index = 0; index < communityLogosSeq.size(); index++) {
 				DEREncodable obj = communityLogosSeq.getObjectAt(index);
-				ASN1TaggedObject coli = (ASN1TaggedObject)obj;
+				ASN1TaggedObject coli = (ASN1TaggedObject) obj;
 				LogotypeInfo li = LogotypeInfo.getInstance(coli);
 				v.add(li);
 			}
-			communityLogos = v.toArray(new LogotypeInfo[communityLogosSeq.size()]); 
+			communityLogos = v.toArray(new LogotypeInfo[communityLogosSeq
+					.size()]);
 		}
 		LogotypeInfo issuerLogo = null;
 		if (issuerLogoSeq != null) {
@@ -128,32 +135,40 @@ public class Logotype extends ASN1Encodable {
 		OtherLogotypeInfo[] otherLogos = null;
 		if (otherLogosSeq != null) {
 			Vector<OtherLogotypeInfo> v = new Vector<OtherLogotypeInfo>();
-			for (int index=0; index<otherLogosSeq.size(); index++) {
+			for (int index = 0; index < otherLogosSeq.size(); index++) {
 				DEREncodable obj = otherLogosSeq.getObjectAt(index);
-				ASN1Sequence coli = (ASN1Sequence)obj;
+				ASN1Sequence coli = (ASN1Sequence) obj;
 				OtherLogotypeInfo li = OtherLogotypeInfo.getInstance(coli);
 				v.add(li);
 			}
-			communityLogos = v.toArray(new LogotypeInfo[otherLogosSeq.size()]); 
+			communityLogos = v.toArray(new LogotypeInfo[otherLogosSeq.size()]);
 		}
 		return new Logotype(communityLogos, issuerLogo, subjectLogo, otherLogos);
 	}
 
-	public Logotype(LogotypeInfo[] communityLogos,
-			LogotypeInfo issuerLogo, LogotypeInfo subjectLogo,
-			OtherLogotypeInfo[] otherLogos) {
+	public static Logotype getInstance(byte[] logotypeBytes) throws IOException {
+		ByteArrayInputStream stream = new ByteArrayInputStream(logotypeBytes);
+		ASN1InputStream aStream = new ASN1InputStream(stream);
+
+		ASN1Sequence root = (ASN1Sequence) aStream.readObject();
+		Logotype logotype = Logotype.getInstance(root);
+		return logotype;
+	}
+
+	public Logotype(LogotypeInfo[] communityLogos, LogotypeInfo issuerLogo,
+			LogotypeInfo subjectLogo, OtherLogotypeInfo[] otherLogos) {
 		if (communityLogos != null) {
 			this.communityLogos = new DERSequence(communityLogos);
 		} else {
 			this.communityLogos = null;
 		}
 		if (issuerLogo != null) {
-			this.issuerLogo = (ASN1TaggedObject)issuerLogo.toASN1Object();
+			this.issuerLogo = (ASN1TaggedObject) issuerLogo.toASN1Object();
 		} else {
 			this.issuerLogo = null;
 		}
 		if (subjectLogo != null) {
-			this.subjectLogo = (ASN1TaggedObject)subjectLogo.toASN1Object();
+			this.subjectLogo = (ASN1TaggedObject) subjectLogo.toASN1Object();
 		} else {
 			this.subjectLogo = null;
 		}
@@ -163,14 +178,16 @@ public class Logotype extends ASN1Encodable {
 			this.otherLogos = null;
 		}
 	}
-	
+
 	public LogotypeInfo[] getCommunityLogos() {
 		if (communityLogos != null) {
 			Vector<LogotypeDetails> v = new Vector<LogotypeDetails>();
-			for (int i=0; i<communityLogos.size(); i++) {
-				v.add(LogotypeDetails.getInstance(communityLogos.getObjectAt(i)));
+			for (int i = 0; i < communityLogos.size(); i++) {
+				v.add(LogotypeDetails
+						.getInstance(communityLogos.getObjectAt(i)));
 			}
-			LogotypeInfo[] infos = (LogotypeInfo[])v.toArray(new LogotypeInfo[communityLogos.size()]);
+			LogotypeInfo[] infos = (LogotypeInfo[]) v
+					.toArray(new LogotypeInfo[communityLogos.size()]);
 			return infos;
 		} else {
 			return null;
@@ -196,45 +213,40 @@ public class Logotype extends ASN1Encodable {
 	public LogotypeInfo[] getOtherLogos() {
 		if (otherLogos != null) {
 			Vector<LogotypeDetails> v = new Vector<LogotypeDetails>();
-			for (int i=0; i<otherLogos.size(); i++) {
+			for (int i = 0; i < otherLogos.size(); i++) {
 				v.add(LogotypeDetails.getInstance(otherLogos.getObjectAt(i)));
 			}
-			LogotypeInfo[] infos = (LogotypeInfo[])v.toArray(new LogotypeInfo[otherLogos.size()]);
+			LogotypeInfo[] infos = (LogotypeInfo[]) v
+					.toArray(new LogotypeInfo[otherLogos.size()]);
 			return infos;
 		} else {
 			return null;
 		}
 	}
 
-    /**
-     * Produce an object suitable for an ASN1OutputStream.
-     */
-    public DERObject toASN1Object()
-    {
-        ASN1EncodableVector  v = new ASN1EncodableVector();
+	/**
+	 * Produce an object suitable for an ASN1OutputStream.
+	 */
+	public DERObject toASN1Object() {
+		ASN1EncodableVector v = new ASN1EncodableVector();
 
-        if (communityLogos != null)
-        {
-            v.add(new DERTaggedObject(true, 0, communityLogos));
-        }
+		if (communityLogos != null) {
+			v.add(new DERTaggedObject(true, 0, communityLogos));
+		}
 
-        if (issuerLogo != null)
-        {
-            v.add(new DERTaggedObject(true, 1, issuerLogo));
-        }
+		if (issuerLogo != null) {
+			v.add(new DERTaggedObject(true, 1, issuerLogo));
+		}
 
-        if (subjectLogo != null)
-        {
-            v.add(new DERTaggedObject(true, 2, subjectLogo));
-        }
+		if (subjectLogo != null) {
+			v.add(new DERTaggedObject(true, 2, subjectLogo));
+		}
 
-        if (otherLogos != null)
-        {
-            v.add(new DERTaggedObject(true, 3, otherLogos));
-        }
+		if (otherLogos != null) {
+			v.add(new DERTaggedObject(true, 3, otherLogos));
+		}
 
-
-        return new DERSequence(v);
-    }
+		return new DERSequence(v);
+	}
 
 }
