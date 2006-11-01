@@ -28,7 +28,10 @@
 package org.xmldap.asn1;
 
 import java.io.ByteArrayInputStream;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
 
+import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERIA5String;
@@ -39,6 +42,9 @@ import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.DigestInfo;
+import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.x509.extension.X509ExtensionUtil;
+import org.xmldap.util.CertsAndKeys;
 
 import junit.framework.TestCase;
 
@@ -83,6 +89,58 @@ public class LogotypeTest extends TestCase {
 
 	public void setUp() throws Exception {
 		super.setUp();
+	}
+	
+	public void testLogotypeCert()  throws Exception {
+		KeyPair kp = CertsAndKeys.generateKeyPair();
+		X509Name issuer = new X509Name(
+				"CN=w4de3esy0069028.gdc-bln01.t-systems.com, OU=SSC ENPS, O=T-Systems, L=Berlin, ST=Berln, C=DE");
+		X509Name subject = issuer;
+		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate(kp,
+				issuer, subject);
+		byte[] fromExtensionValue = cert.getExtensionValue(Logotype.id_pe_logotype.getId());
+		ASN1Encodable extVal = X509ExtensionUtil.fromExtensionValue(fromExtensionValue);
+		Logotype logotype = Logotype.getInstance((ASN1Sequence)extVal);
+		LogotypeInfo[] communityLogos = logotype.getCommunityLogos();
+		assertNull(communityLogos);
+		LogotypeInfo issuerLogo = logotype.getIssuerLogo();
+		assertNotNull(issuerLogo);
+		LogotypeInfo subjectLogo = logotype.getSubjectLogo();
+		assertNull(subjectLogo);
+		LogotypeInfo[] otherLogos = logotype.getOtherLogos();
+		assertNull(otherLogos);
+		
+		assertEquals(0, issuerLogo.getTagNo());
+		assertTrue((issuerLogo.getTagNo() == LogotypeInfo.direct) || (issuerLogo.getTagNo() == LogotypeInfo.indirect));
+		if (issuerLogo.getTagNo() == LogotypeInfo.direct) {
+			LogotypeData direct = issuerLogo.getLogotypeData();
+			assertNotNull(direct);
+			LogotypeDetails[] images = direct.getImages();
+			assertEquals(1, images.length);
+			LogotypeDetails logotypeDetails = images[0];
+			String mediaType = logotypeDetails.getMediaType();
+			assertEquals("image/jpg", mediaType);
+			DigestInfo[] dis = logotypeDetails.getLogotypeHash();
+			assertEquals(1, dis.length);
+			DigestInfo di = dis[0];
+			AlgorithmIdentifier algId = di.getAlgorithmId();
+			assertEquals("1.3.14.3.2.26", algId.getObjectId().getId());
+			byte[] digest = di.getDigest();
+			byte[] expected = { -106, -38, 90, -10, 15, 80, -15, -124, -124, 58, 63, 44, 45, -102, 91, -13, -114, -95, -48, -44};
+			assertEquals(expected.length , digest.length);
+			for (int i=0; i<digest.length; i++) {
+				assertEquals(expected[i], digest[i]);
+			}
+			String[] uris = logotypeDetails.getLogotypeURI();
+			assertEquals(1, uris.length);
+			String uri = uris[0];
+			assertEquals("http://static.flickr.com/10/buddyicons/18119196@N00.jpg?1115549486", uri);
+		} else if (issuerLogo.getTagNo() == LogotypeInfo.indirect) {
+			LogotypeReference indirect = issuerLogo.getLogotypeReference();
+//			LogotypeReference indirect = LogotypeReference.getInstance((ASN1TaggedObject)issuerLogo.toASN1Object(), false);
+			assertNotNull(indirect);
+		}
+
 	}
 	
 	public void testTOILogotypeExtensionCreation()  throws Exception {

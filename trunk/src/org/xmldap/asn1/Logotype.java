@@ -43,6 +43,7 @@ import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.x509.extension.X509ExtensionUtil;
 
 public class Logotype extends ASN1Encodable {
 	//	LogotypeExtn ::= SEQUENCE {
