@@ -58,9 +58,6 @@ function getCard(cardid){
 
 
 function load(){
-    var jvm = Components.classes["@mozilla.org/oji/jvm-mgr;1"].getService(Components.interfaces.nsIJVMManager);
-    jvm.showJavaConsole();
-
     var stringsBundle = document.getElementById("string-bundle");
 
     var cardFile = read(db);
