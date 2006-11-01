@@ -30,11 +30,20 @@ package org.xmldap.firefox;
 
 import nu.xom.*;
 
-import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
+import org.xmldap.asn1.Logotype;
+import org.xmldap.asn1.LogotypeData;
+import org.xmldap.asn1.LogotypeDetails;
+import org.xmldap.asn1.LogotypeInfo;
+import org.xmldap.asn1.LogotypeReference;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.TokenIssuanceException;
@@ -48,7 +57,6 @@ import org.xmldap.util.Crds;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -60,7 +68,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -75,7 +82,6 @@ import java.util.Vector;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -647,6 +653,59 @@ public class TokenIssuer {
 		return crdStore.newCard(dirName, password, infocard);
 	}
 
+	public String getIssuerLogoURL(String der) throws JSONException,
+			TokenIssuanceException, IOException 
+	{
+		String url = null;
+		X509Certificate relyingPartyCert = der2cert(der);
+		byte[] fromExtensionValue = relyingPartyCert
+				.getExtensionValue(Logotype.id_pe_logotype.getId());
+		if ((fromExtensionValue == null) || (fromExtensionValue.length == 0)) {
+			// certificat does not contain a logotype extension
+			return null;
+		}
+		ASN1Encodable extVal = X509ExtensionUtil.fromExtensionValue(fromExtensionValue);
+		Logotype logotype = Logotype.getInstance((ASN1Sequence)extVal);
+		LogotypeInfo logotypeInfo = logotype.getIssuerLogo();
+		if (logotypeInfo == null) {
+			// logotype contains no issuer logo
+			return null;
+		}
+		if (logotypeInfo.getTagNo() == LogotypeInfo.direct) {
+			LogotypeData direct = logotypeInfo.getLogotypeData();
+			LogotypeDetails[] images = direct.getImages();
+			LogotypeDetails logotypeDetails = images[0];
+			// String mediaType = logotypeDetails.getMediaType();
+			// assertEquals("image/gif", mediaType);
+			// DigestInfo[] dis = logotypeDetails.getLogotypeHash();
+			// assertEquals(1, dis.length);
+			// DigestInfo di = dis[0];
+			// AlgorithmIdentifier algId = di.getAlgorithmId();
+			// assertEquals("1.3.14.3.2.26", algId.getObjectId().getId());
+			// byte[] digest = di.getDigest();
+			// byte[] expected = { -113, -27, -45, 26, -122, -84, -115,
+			// -114, 107, -61, -49, -128, 106, -44, 72, 24, 44, 123, 25,
+			// 46};
+			// assertEquals(expected.length , digest.length);
+			// for (int i=0; i<digest.length; i++) {
+			// assertEquals(expected[i], digest[i]);
+			// }
+			String[] uris = logotypeDetails.getLogotypeURI();
+			// assertEquals(1, uris.length);
+			url = uris[0];
+			// assertEquals("http://logo.verisign.com/vslogo.gif", uri);
+		} else if (logotypeInfo.getTagNo() == LogotypeInfo.indirect) {
+			// LogotypeReference indirect = logotypeInfo
+			// .getLogotypeReference();
+			// TODO
+			// LogotypeReference indirect =
+			// LogotypeReference.getInstance((ASN1TaggedObject)issuerLogo.toASN1Object(),
+			// false);
+			// assertNotNull(indirect);
+		}
+		return url;
+	}
+	
 	public String getToken(String serializedPolicy)
 			throws TokenIssuanceException {
 
