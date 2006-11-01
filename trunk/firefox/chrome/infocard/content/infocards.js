@@ -35,7 +35,7 @@ function ok(){
     policy["card"] = selectedCard.toString();
 
     //TRUE of FALSE on the second param enabled debug
-    var tokenToReturn = processCard(policy,true);
+    var tokenToReturn = processCard(policy,false);
     window.arguments[1](tokenToReturn);
     window.close();
 
