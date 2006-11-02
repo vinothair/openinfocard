@@ -92,6 +92,8 @@ function load(){
 			var issuerlogo = document.getElementById("issuerlogo");
 			issuerlogo.src = issuerLogoURL;
 			issuerlogo.hidden = false;
+			var issuerlogo_label = document.getElementById("issuerlogo_label");
+                        issuerlogo_label.hidden = false;
 		}
 	}
 }
