@@ -14,7 +14,7 @@
 
 
     <style>
-    BODY {background: #FFF url(./img/banner.png) repeat-x;
+    BODY {background: #FFFFFF;
          color:#000;
          font-family: verdana, arial, sans-serif;}
 

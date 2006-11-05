@@ -7,6 +7,8 @@
 <%@ page import="javax.servlet.ServletException"%>
 <%@ page import="java.security.PrivateKey"%>
 <%@ page import="java.security.cert.X509Certificate"%>
+<%@ page import="org.xmldap.util.ServletUtil"%>
+<%@ page import="org.xmldap.util.Base64"%>
 
 
 <%
@@ -18,15 +20,13 @@
    PrivateKey privateKey = null;
    X509Certificate cert = null;
 
-   try {
 
-        KeystoreUtil keystore = new KeystoreUtil("/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks", "password");
-        privateKey = keystore.getPrivateKey("xmldap", "password");
-        cert = keystore.getCertificate("xmldap");
 
-   } catch (KeyStoreException e) {
-        throw new ServletException(e);
-   }
+    ServletUtil su = new ServletUtil(config);
+    KeystoreUtil keystore = su.getKeystore();
+    privateKey = su.getPrivateKey();
+    cert = su.getCertificate();
+    
 
    String message="";
    EncryptedData encryptor = new EncryptedData(cert);
@@ -35,7 +35,7 @@
    token.setGivenName(givenName);
    token.setSurname(sureName);
    token.setEmailAddress(email);
-   token.setValidityPeriod(20);
+   token.setValidityPeriod(1, 10);
    Element securityToken = null;
    try {
        securityToken = token.serialize();
