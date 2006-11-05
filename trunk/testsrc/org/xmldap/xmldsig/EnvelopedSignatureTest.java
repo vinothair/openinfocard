@@ -139,7 +139,7 @@ public class EnvelopedSignatureTest extends TestCase {
 				signingKey);
 		Element signedXML = signer.sign(body);
 //		System.out.println(signedXML.toXML());
-		assertTrue(ValidationUtil.validate(signedXML.toXML()));
+		assertTrue(signer.validate(signedXML.toXML()));
 
 	}
 
@@ -169,7 +169,7 @@ public class EnvelopedSignatureTest extends TestCase {
 //		System.out.println(test.length() + ":" + SIGNED_XML_DOC.length());
 
 //		System.out.println(signedXML.toXML());
-		assertTrue(ValidationUtil.validate(signedXML.toXML()));
+		assertTrue(signer.validate(signedXML.toXML()));
 
 	}
 
@@ -183,7 +183,7 @@ public class EnvelopedSignatureTest extends TestCase {
 		EnvelopedSignature signer = new EnvelopedSignature(signingCert,
 				signingKey);
 
-		assertTrue(ValidationUtil.validate(signer.sign(XML)));
+		assertTrue(signer.validate(signer.sign(XML)));
 
 	}
 
