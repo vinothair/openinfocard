@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2006 Informed Control Inc. All rights reserved.
  *
+ * Contributors: cmort@xmldap.org
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
@@ -29,17 +31,10 @@ package org.xmldap.util;
 
 import org.xmldap.exceptions.KeyStoreException;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.cert.CertificateEncodingException;
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
+
 
 /**
  * Extracts configuration parameters from a ServletConfig. 
@@ -52,72 +47,80 @@ public class ServletUtil {
     public static final String PARAM_DOMAIN = "domain";
     public static final String PARAM_CARDSTORE = "cards-file";
     public static final String PARAM_ISSUE_FILE = "issue-file";
+    public static final String PARAM_MEX_FILE = "mex-file";
 
-//    public static final String VAL_KEYSTORE_DEFAULT = "/home/cmort/apps/apache-tomcat-5.5.17/conf/xmldap_org.jks";
-    public static final String VAL_KEYSTORE_DEFAULT = "D:\\Programme\\jboss-4.0.4.GA\\server\\default\\conf\\keystore\\keystore.jks";
-    public static final String VAL_KEYSTORE_PASSWORD_DEFAULT = "changeit";
-    public static final String VAL_KEY_PASSWORD_DEFAULT = "changeit";
-    public static final String VAL_KEYNAME_DEFAULT = "tomcat";
+
+    //Changing defaults to be for the xmldap.org RP
+    public static final String VAL_KEYSTORE_DEFAULT = "/Users/cmort/xmldap_files/xmldap_org.jks";
+    public static final String VAL_MEX_DEFAULT = "/Users/cmort/xmldap_files/mex.xml";
+    public static final String VAL_KEYSTORE_PASSWORD_DEFAULT = "password";
+    public static final String VAL_KEY_PASSWORD_DEFAULT = "password";
+    public static final String VAL_KEYNAME_DEFAULT = "xmldap";
     public static final String VAL_DOMAIN_DEFAULT = "xmldap.org";
     
     private ServletConfig _config;
     private KeystoreUtil _keystore;
 
     public ServletUtil (ServletConfig config) {
-	_config = config;
+        _config = config;
     }
     
     public synchronized KeystoreUtil getKeystore() throws KeyStoreException {
-	if (_keystore == null) {
-	    String path = _config.getInitParameter(PARAM_KEYSTORE);
-	    if (path == null) path = VAL_KEYSTORE_DEFAULT;
-	    
-	    String pass = _config.getInitParameter(PARAM_KEYSTORE_PASSWORD);
-	    if (pass == null) pass = VAL_KEYSTORE_PASSWORD_DEFAULT;
-	    
+        if (_keystore == null) {
+            String path = _config.getInitParameter(PARAM_KEYSTORE);
+            if (path == null) path = VAL_KEYSTORE_DEFAULT;
 
-	    KeystoreUtil keystore = new KeystoreUtil(path, pass);
-	    _keystore = keystore;
-	}
-	return _keystore;
+            String pass = _config.getInitParameter(PARAM_KEYSTORE_PASSWORD);
+            if (pass == null) pass = VAL_KEYSTORE_PASSWORD_DEFAULT;
+
+
+            KeystoreUtil keystore = new KeystoreUtil(path, pass);
+            _keystore = keystore;
+        }
+        return _keystore;
     }
 
     public PrivateKey getPrivateKey() throws KeyStoreException {
-	if (_keystore == null) {
-	    if (getKeystore() == null) return null;
-	}
-	
-	String keyname = _config.getInitParameter(PARAM_KEYNAME);
-	if (keyname == null) keyname = VAL_KEYNAME_DEFAULT;
-	String pass = _config.getInitParameter(PARAM_KEY_PASSWORD);
-	if (pass == null) pass = VAL_KEY_PASSWORD_DEFAULT;
-	
-	return _keystore.getPrivateKey(keyname,pass);
+        if (_keystore == null) {
+            if (getKeystore() == null) return null;
+        }
+
+        String keyname = _config.getInitParameter(PARAM_KEYNAME);
+        if (keyname == null) keyname = VAL_KEYNAME_DEFAULT;
+        String pass = _config.getInitParameter(PARAM_KEY_PASSWORD);
+        if (pass == null) pass = VAL_KEY_PASSWORD_DEFAULT;
+
+        return _keystore.getPrivateKey(keyname,pass);
     }
 
     public X509Certificate getCertificate() throws KeyStoreException {
-	if (_keystore == null) {
-	    if (getKeystore() == null) return null;
-	}
+        if (_keystore == null) {
+            if (getKeystore() == null) return null;
+        }
 	
-	String keyname = _config.getInitParameter(PARAM_KEYNAME);
-	if (keyname == null) keyname = VAL_KEYNAME_DEFAULT;
-
-	return _keystore.getCertificate(keyname);
+	    String keyname = _config.getInitParameter(PARAM_KEYNAME);
+	    if (keyname == null) keyname = VAL_KEYNAME_DEFAULT;
+        return _keystore.getCertificate(keyname);
     }
 
     public String getDomainName() {
-	String dn = _config.getInitParameter(PARAM_DOMAIN);
-	if (dn == null) dn = VAL_DOMAIN_DEFAULT;
-	return dn;
+        String dn = _config.getInitParameter(PARAM_DOMAIN);
+        if (dn == null) dn = VAL_DOMAIN_DEFAULT;
+        return dn;
     }
 
     public String getManagedCardPathString() {
-	return _config.getInitParameter(PARAM_CARDSTORE);
+	    return _config.getInitParameter(PARAM_CARDSTORE);
     }
 
     public String getIssueFilePathString() {
-	return _config.getInitParameter(PARAM_ISSUE_FILE);
+	    return _config.getInitParameter(PARAM_ISSUE_FILE);
+    }
+
+    public String getMexFilePathString() {
+	    String mex =  _config.getInitParameter(PARAM_MEX_FILE);
+        if (mex == null) mex = VAL_MEX_DEFAULT;
+        return mex;
     }
 
 }

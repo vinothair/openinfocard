@@ -48,16 +48,18 @@ public class MexServlet extends HttpServlet {
 
 
     private String cert = null;
+    private String mexFile = null;
 
 
     public void init() throws ServletException {
 
+        ServletUtil su = new ServletUtil(getServletConfig());
+
+        mexFile = su.getMexFilePathString();
 
         try {
-            ServletUtil su = new ServletUtil(getServletConfig());
+
             KeystoreUtil keystore = su.getKeystore();
-
-
             X509Certificate certificate = su.getCertificate();
 
             try {
@@ -72,6 +74,8 @@ public class MexServlet extends HttpServlet {
             throw new ServletException(e);
 
         }
+
+
 
     }
 
@@ -111,7 +115,7 @@ public class MexServlet extends HttpServlet {
 
         //ServletContext application = getServletConfig().getServletContext();
         //InputStream in = application.getResourceAsStream("/mex.xml");
-        InputStream in = new FileInputStream("/home/cmort/mex.xml");
+        InputStream in = new FileInputStream(mexFile);
 
 
 

@@ -63,6 +63,16 @@ public class SAMLAssertion implements Serializable {
     }
 
 
+    public SAMLAssertion(RandomGUID uuid) {
+
+        assertionID = "uuid-" + uuid.toString();
+        issuer = "http://schemas.microsoft.com/ws/2005/05/identity/issuer/self";
+        XSDDateTime dateTime = new XSDDateTime();
+        issueInstant = dateTime.getDateTime();
+
+    }
+
+
     public SAMLAssertion(String issuer) {
 
         RandomGUID guidGen = new RandomGUID();
@@ -71,6 +81,10 @@ public class SAMLAssertion implements Serializable {
         XSDDateTime dateTime = new XSDDateTime();
         issueInstant = dateTime.getDateTime();
 
+    }
+
+    public void setIssuer(String issuer) {
+        this.issuer = issuer;
     }
 
     public void setConditions(Conditions conditions) {

@@ -41,7 +41,7 @@ public class ManagedCardDB {
     private static ObjectContainer db;
     private static boolean initialized = false;
     private static String _path = null;
-    public static final String PATH_DEFAULT = "/home/cmort/carddb.dbo";
+    public static final String PATH_DEFAULT = "/Users/cmort/xmldap_files/carddb.dbo";
 
     public static ManagedCardDB getInstance() {
         if (!initialized)  init();
