@@ -28,32 +28,31 @@
 
 package org.xmldap.infocard;
 
-import nu.xom.Element;
+import nu.xom.*;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 import org.xmldap.saml.*;
+import org.xmldap.saml.Attribute;
 import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.AsymmetricKeyInfo;
-import org.xmldap.xmldsig.EnvelopedSignature;
-import org.xmldap.xmldsig.KeyInfo;
-import org.xmldap.xmldsig.SymmetricKeyInfo;
+import org.xmldap.xmldsig.*;
+import org.xmldap.ws.WSConstants;
+import org.xmldap.util.RandomGUID;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.Vector;
 
-/**
- * SelfIssuedToken allows you to create Self issued tokens for passing to an RP
- */
-public class SelfIssuedToken implements Serializable {
+
+public class ManagedToken implements Serializable {
 
     public static final String MS_NAMESPACE_PREFIX = "http://schemas.microsoft.com/ws/2005/05/identity/claims/";
 	public static final String XS_NAMESPACE_PREFIX = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/";
 
 	private String namespacePrefix = null;
-	
+
     private String givenName;
     private String surname;
     private String emailAddress;
@@ -71,17 +70,14 @@ public class SelfIssuedToken implements Serializable {
 
     private X509Certificate signingCert;
     private PrivateKey signingKey;
-    private X509Certificate relyingPartyCert;
 
 
     private int nowPlus = 10; //default to 10 minutes
     private int nowMinus = 10; //default to 5 minutes
-    private boolean asymmetric = false; //default to symmetric key
 
-    public SelfIssuedToken(X509Certificate relyingPartyCert, X509Certificate signingCert, PrivateKey signingKey ) {
+    public ManagedToken( X509Certificate signingCert, PrivateKey signingKey ) {
         this.signingCert = signingCert;
         this.signingKey = signingKey;
-        this.relyingPartyCert = relyingPartyCert;
         namespacePrefix = XS_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
     }
 
@@ -102,7 +98,7 @@ public class SelfIssuedToken implements Serializable {
         this.nowMinus = nowMinus;
         this.nowPlus = nowPlus;
     }
-    
+
 
     public String getGivenName() {
         return givenName;
@@ -216,40 +212,15 @@ public class SelfIssuedToken implements Serializable {
         this.gender = gender;
     }
 
-    public void useAsymmetricKey() {
-
-        this.asymmetric = true;
-
-    }
 
 
-    public Element getSelfIssuedToken() throws SerializationException {
+    public Element getToken(RandomGUID uuid) throws SerializationException {
 
         Conditions conditions = new Conditions(nowMinus, nowPlus);
-        KeyInfo keyInfo = null;
-        if (asymmetric) {
-
-            if (signingCert == null) throw new SerializationException("You did not provide a certificate for use with asymetric keys");
-            keyInfo = new AsymmetricKeyInfo(signingCert);
-
-        } else {
-
-            byte[] secretKey;
-            try {
-                secretKey = CryptoUtils.genKey(128);
-            } catch (org.xmldap.exceptions.CryptoException e) {
-                throw new SerializationException(e);
-            }
-
-            if (relyingPartyCert != null) {
-                keyInfo = new SymmetricKeyInfo(relyingPartyCert, secretKey);
-            } else {
-                throw new SerializationException("You did not provide the relying party cert");
-            }
 
 
-
-        }
+        //SimpleKeyInfo keyInfo = new SimpleKeyInfo(signingCert);
+        AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
 
         Subject subject = new Subject(keyInfo);
 
@@ -350,7 +321,8 @@ public class SelfIssuedToken implements Serializable {
 
         }
 
-        SAMLAssertion assertion = new SAMLAssertion();
+        SAMLAssertion assertion = new SAMLAssertion(uuid);
+        assertion.setIssuer("https://xmldap.org/sts/tokenservice");
         assertion.setConditions(conditions);
         assertion.setAttributeStatement(statement);
 
@@ -377,7 +349,14 @@ public class SelfIssuedToken implements Serializable {
     }
 
     public Element serialize() throws SerializationException {
-        return getSelfIssuedToken();
+        //TODO - clean up hack
+        return null;
+
+
+    }
+
+    public Element serialize(RandomGUID uuid) throws SerializationException {
+        return getToken(uuid);
     }
 
 

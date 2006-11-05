@@ -125,14 +125,14 @@ public class CardServlet extends HttpServlet {
         card.setCardName(managedCard.getCardName());
         card.setCardVersion(1);
         card.setIssuerName(domainname);
-        card.setIssuer("http://" + domainname + "/sts/tokenservice");
+        card.setIssuer("https://" + domainname + "/sts/tokenservice");
         XSDDateTime issued = new XSDDateTime();
         XSDDateTime expires = new XSDDateTime(525600);
 
         card.setTimeIssued(issued.getDateTime());
         card.setTimeExpires(expires.getDateTime());
 
-        TokenServiceReference tsr = new TokenServiceReference("http://" + domainname + "/sts/tokenservice", "https://" + domainname + "/sts/mex", cert);
+        TokenServiceReference tsr = new TokenServiceReference("https://" + domainname + "/sts/tokenservice", "https://" + domainname + "/sts/mex", cert);
         tsr.setUserName(account.getUid());
         card.setTokenServiceReference(tsr);
 
