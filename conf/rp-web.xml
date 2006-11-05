@@ -13,6 +13,26 @@
         <display-name>RP Servlet</display-name>
         <description>Processes Infocard Posts</description>
         <servlet-class>org.xmldap.rp.servlet.RelyingPartyServlet</servlet-class>
+        <init-param>
+            <param-name>keystore</param-name>
+            <param-value>/Users/cmort/xmldap_files/xmldap_org.jks</param-value>
+        </init-param>
+        <init-param>
+            <param-name>keystore-password</param-name>
+            <param-value>password</param-value>
+        </init-param>
+        <init-param>
+            <param-name>key</param-name>
+            <param-value>xmldap</param-value>
+        </init-param>
+        <init-param>
+            <param-name>key</param-name>
+            <param-value>xmldap</param-value>
+        </init-param>
+        <init-param>
+            <param-name>key-password</param-name>
+            <param-value>password</param-value>
+        </init-param>
     </servlet>
     <servlet-mapping>
         <servlet-name>EchoServlet</servlet-name>
