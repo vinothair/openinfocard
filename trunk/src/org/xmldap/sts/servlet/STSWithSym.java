@@ -28,21 +28,23 @@
 
 package org.xmldap.sts.servlet;
 
+import net.sourceforge.lightcrypto.SafeObject;
 import nu.xom.*;
-import org.xmldap.util.*;
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.crypto.CryptoUtils;
+import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.util.Bag;
+import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.ServletUtil;
 import org.xmldap.ws.WSConstants;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.text.MessageFormat;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.interfaces.RSAPrivateKey;
-
-import net.sourceforge.lightcrypto.SafeObject;
 
 
 public class STSWithSym  extends HttpServlet {

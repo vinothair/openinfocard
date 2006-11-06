@@ -28,19 +28,16 @@
 
 package org.xmldap.infocard;
 
-import nu.xom.*;
-import org.xmldap.crypto.CryptoUtils;
+import nu.xom.Element;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 import org.xmldap.saml.*;
-import org.xmldap.saml.Attribute;
-import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.*;
-import org.xmldap.ws.WSConstants;
 import org.xmldap.util.RandomGUID;
+import org.xmldap.xml.Serializable;
+import org.xmldap.xmldsig.AsymmetricKeyInfo;
+import org.xmldap.xmldsig.EnvelopedSignature;
 
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.Vector;

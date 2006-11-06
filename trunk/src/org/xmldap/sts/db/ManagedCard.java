@@ -56,17 +56,15 @@ public class ManagedCard {
     private String gender;
 
     public ManagedCard() {
-	initRandom("xmldap.org");
+        RandomGUID guid = new RandomGUID();
+        cardId =  guid.toString();
+        privatePersonalIdentifier =  guid.toString();
     }
 
-    public ManagedCard(String domainname) {
-	initRandom(domainname);
-    }
-    
-    private void initRandom(String domainname) {
-        RandomGUID guid = new RandomGUID();
-        cardId = "https://" + domainname + "/sts/card/" + guid.toString();
-        privatePersonalIdentifier =  guid.toString();
+
+    public ManagedCard(String cardId) {
+        this.cardId =  cardId;
+        privatePersonalIdentifier =  cardId;
     }
 
     public String getCardName() {

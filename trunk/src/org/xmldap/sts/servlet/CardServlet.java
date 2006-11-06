@@ -37,9 +37,9 @@ import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
-import org.xmldap.sts.db.Account;
 import org.xmldap.sts.db.ManagedCard;
-import org.xmldap.sts.db.ManagedCardDB;
+import org.xmldap.sts.db.CardStorage;
+import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.ServletUtil;
 import org.xmldap.util.XSDDateTime;
@@ -58,13 +58,12 @@ import java.security.cert.X509Certificate;
 
 public class CardServlet extends HttpServlet {
 
-    private static ManagedCardDB db;
     private static ServletUtil _su;
+    private static CardStorage storage = new CardStorageEmbeddedDBImpl();
 
     public void init() throws ServletException {
          _su = new ServletUtil(getServletConfig());
-         db = ManagedCardDB.getInstance(_su.getManagedCardPathString());
-
+        storage.startup();
     }
 
 
@@ -72,8 +71,8 @@ public class CardServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         HttpSession session = request.getSession(true);
-        Account account = (Account)session.getAttribute("account");
-        if (account == null) {
+        String username = (String)session.getAttribute("username");
+        if (username == null) {
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("/cardmanager/");
             dispatcher.forward(request,response);
@@ -82,16 +81,19 @@ public class CardServlet extends HttpServlet {
 
 
         String url = request.getRequestURL().toString();
-        String cardURL = url.substring(0, url.length() - 4);
-        ManagedCard managedCard = account.getCard(cardURL);
-	if (managedCard == null) {
-	    /* log */
-	    return;
-	}
-	
-	if (_su == null) {
-	    _su = new ServletUtil(getServletConfig());
-	}
+        int index = url.lastIndexOf("/");
+        index++;
+        String cardID = url.substring(index, url.length() - 4);
+        System.out.println(cardID);
+        ManagedCard managedCard = storage.getCard(cardID);
+        if (managedCard == null) {
+            /* log */
+            return;
+        }
+
+        if (_su == null) {
+            _su = new ServletUtil(getServletConfig());
+        }
 
         //Get my keystore
         KeystoreUtil keystore = null;
@@ -118,10 +120,10 @@ public class CardServlet extends HttpServlet {
 	    return;
         }
 
-	String domainname = _su.getDomainName();
+	    String domainname = _su.getDomainName();
 
         InfoCard card = new InfoCard(cert, pKey);
-        card.setCardId(managedCard.getCardId());
+        card.setCardId("https://xmldap.org/sts/card/" + managedCard.getCardId() );
         card.setCardName(managedCard.getCardName());
         card.setCardVersion(1);
         card.setIssuerName(domainname);
@@ -133,7 +135,7 @@ public class CardServlet extends HttpServlet {
         card.setTimeExpires(expires.getDateTime());
 
         TokenServiceReference tsr = new TokenServiceReference("https://" + domainname + "/sts/tokenservice", "https://" + domainname + "/sts/mex", cert);
-        tsr.setUserName(account.getUid());
+        tsr.setUserName(username);
         card.setTokenServiceReference(tsr);
 
 
@@ -143,10 +145,10 @@ public class CardServlet extends HttpServlet {
         card.setTokenList(tokenList);
 
         SupportedClaimList claimList = new SupportedClaimList();
-        SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname");
-        SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname");
-        SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress");
-        SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier");
+        SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname");
+        SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname");
+        SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+        SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier");
         claimList.addSupportedClaim(given);
         claimList.addSupportedClaim(sur);
         claimList.addSupportedClaim(email);

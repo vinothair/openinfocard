@@ -27,26 +27,17 @@
  */
 package org.xmldap.asn1;
 
-import java.io.ByteArrayInputStream;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERIA5String;
-import org.bouncycastle.asn1.DERObject;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.DERTaggedObject;
+import junit.framework.TestCase;
+import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.xmldap.util.CertsAndKeys;
 
-import junit.framework.TestCase;
+import java.io.ByteArrayInputStream;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
 
 public class LogotypeTest extends TestCase {
 

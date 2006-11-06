@@ -28,27 +28,17 @@
 
 package org.xmldap.rp.util;
 
-import nu.xom.*;
-import nu.xom.canonical.Canonicalizer;
-import org.xmldap.crypto.CryptoUtils;
-import org.xmldap.exceptions.CryptoException;
-import org.xmldap.util.Base64;
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Nodes;
+import nu.xom.XPathContext;
 import org.xmldap.util.XSDDateTime;
 import org.xmldap.util.XmlFileUtil;
 import org.xmldap.ws.WSConstants;
-import org.xmldap.xml.Canonicalizable;
 import org.xmldap.xmldsig.EnvelopedSignature;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.FileInputStream;
-import java.math.BigInteger;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
 import java.text.DateFormat;
 import java.util.Calendar;
 

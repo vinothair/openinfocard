@@ -26,22 +26,11 @@
  * 
  */package org.xmldap.util;
 
+import nu.xom.*;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashSet;
-
-import nu.xom.Attribute;
-import nu.xom.DocType;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.Node;
-import nu.xom.Nodes;
-import nu.xom.ParsingException;
-import nu.xom.Serializer;
-import nu.xom.Text;
-import nu.xom.ValidityException;
 
 public class Crds {
 

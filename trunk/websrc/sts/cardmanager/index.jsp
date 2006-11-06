@@ -1,11 +1,15 @@
-<%@ page import="org.xmldap.sts.db.Account"%>
-<%@ page import="org.xmldap.sts.db.ManagedCardDB"%>
 <%@ page import="java.util.Collection"%>
 <%@ page import="java.util.Iterator"%>
 <%@ page import="org.xmldap.sts.db.ManagedCard"%>
+<%@ page import="org.xmldap.sts.db.CardStorage"%>
+<%@ page import="org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl"%>
+<%@ page import="java.util.List"%>
+<%@ page import="org.xmldap.exceptions.StorageException"%>
 <%!
 
-    static ManagedCardDB db = ManagedCardDB.getInstance();
+
+    CardStorage storage = new CardStorageEmbeddedDBImpl();
+
 
 %>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -14,7 +18,7 @@
 
 
     <style>
-    BODY {background: #FFF url(./img/banner.png) repeat-x;
+    BODY {background: #FFFFFF;
          color:#000;
          font-family: verdana, arial, sans-serif;}
 
@@ -72,28 +76,40 @@
 <body>
 <%
 
-    Account account = (Account)session.getAttribute("account");
+    String username = (String)session.getAttribute("username");
 
-    if (account == null) {
+    if (username == null) {
 
         String uid = request.getParameter("uid");
         String password = request.getParameter("password");
 
         if ((uid != null) && (password != null))  {
 
-            account = db.authenticate(uid,password);
-            if ( account == null ) {
-                account = new Account(uid,password);
-                db.addAccount(account);
+            storage.startup();
+            boolean isUser = storage.authenticate(uid,password);
+            if ( isUser ) {
+                username = uid;
+                session.setAttribute("username",uid);
+
+            } else {
+                try {
+                    storage.addAccount(uid,password);
+                    session.setAttribute("username",uid);
+                    username = uid;
+                } catch (StorageException e) {
+                    %>
+
+                        <b>Authentication failed.</b><p>
+
+                    <%
+
+                }
             }
 
-            session.setAttribute("account",account);
-
         }
-
     }
 
-    if (account == null) {
+    if (username == null) {
 
 %>
 
@@ -115,20 +131,21 @@
 
 %>
 
-     <b>Welcome, <%= account.getUid() %></b>  <br><br>
+     <b>Welcome, <%= username %></b>  <br><br>
 
-Here you can create and download managed cards.   Please note that your cards may disappear at anytime, as this is quite alpha, and I may need to wipe things out.
+Here you can create and download managed cards.
 <br><br>
 
 <table  border="0" cellpadding="5">
 <%
 
-    Collection cards = account.getCards();
+    List cards = storage.getCards(username);
     Iterator iter = cards.iterator();
     while (iter.hasNext()) {
 
-        ManagedCard thisCard = (ManagedCard)iter.next();
-        out.println("<tr><td>" + thisCard.getCardName() + "</td><td><a href=\"" + thisCard.getCardId() + ".crd\">" + thisCard.getCardId() + ".crd</a></td></tr>");
+        String cardId = (String)iter.next();
+        ManagedCard thisCard = storage.getCard(cardId);
+        out.println("<tr><td><a href=\"/sts/card/" + thisCard.getCardId() + ".crd\">" + thisCard.getCardName() + "</a></td></tr>");
 
     }
 

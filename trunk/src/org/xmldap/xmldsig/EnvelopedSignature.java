@@ -30,7 +30,6 @@ package org.xmldap.xmldsig;
 
 import nu.xom.*;
 import nu.xom.canonical.Canonicalizer;
-
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.SerializationException;

@@ -162,7 +162,8 @@
           <%= optionalObjectClaims%>
 </OBJECT>
 </form>
-                    <br>Click on the image above to login with and Infocard.  
+                    <br>Click on the image above to login with and Infocard.<br>
+                    <br><a href="/sts/cardmanager/">Click here to create a managed card.</a>
 <%
  } else {
 %>
@@ -176,7 +177,7 @@ The infocard login will only work if you're on my secure site.  <p><a href="http
     </table>
 
 
-    <h2>Or, if you don't yet have InfoCard installed, I can make a security token for you...</h2>
+    <h2>Or, if you don't yet have CardSpace installed, I can make a security token for you...</h2>
 
     <form action="./post.jsp" method="POST">
         <table border="0">

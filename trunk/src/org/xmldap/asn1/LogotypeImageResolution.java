@@ -27,12 +27,7 @@
  */
 package org.xmldap.asn1;
 
-import org.bouncycastle.asn1.ASN1Choice;
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObject;
-import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.asn1.*;
 
 public class LogotypeImageResolution extends ASN1Encodable implements ASN1Choice {
 //	LogotypeImageResolution ::= CHOICE {
