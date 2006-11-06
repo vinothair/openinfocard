@@ -71,7 +71,7 @@
         </jar>
         <copy file="${lib.dir}/xom-1.1.jar" todir="${firefox.lib.dir}/"/>
         <copy file="${lib.dir}/lightcrypto.jar" todir="${firefox.lib.dir}/"/>
-        <copy file="${lib.dir}/bcprov-jdk${java.ver}-133.jar" todir="${firefox.lib.dir}/"/>
+        <copy file="${lib.dir}/bcprov-jdk${java.ver}-133.jar" tofile="${firefox.lib.dir}/bcprov-133.jar"/>
         <!-- <copy file="${confsrc.dir}/firefox.jks" todir="${firefox.lib.dir}/"/> -->
 
         <zip destfile="${build.dir}/xmldap.xpi"  basedir="${firefox.dir}"/>
