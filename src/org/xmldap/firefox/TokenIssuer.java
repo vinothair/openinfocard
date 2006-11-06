@@ -29,11 +29,8 @@
 package org.xmldap.firefox;
 
 import nu.xom.*;
-
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
-import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.json.JSONException;
@@ -43,47 +40,30 @@ import org.xmldap.asn1.Logotype;
 import org.xmldap.asn1.LogotypeData;
 import org.xmldap.asn1.LogotypeDetails;
 import org.xmldap.asn1.LogotypeInfo;
-import org.xmldap.asn1.LogotypeReference;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.infocard.SelfIssuedToken;
 import org.xmldap.util.Base64;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.CertsAndKeys;
-import org.xmldap.xmlenc.EncryptedData;
 import org.xmldap.util.Crds;
-
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.KeyStore;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Vector;
+import org.xmldap.util.KeystoreUtil;
+import org.xmldap.xmlenc.EncryptedData;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
+import java.net.URLDecoder;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.Vector;
 
 public class TokenIssuer {
 

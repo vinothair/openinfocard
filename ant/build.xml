@@ -18,7 +18,7 @@
 	           <include name="**/*.jar"/>
             </fileset>
         </path>
-        <property name="java.ver" value="14" />
+        <property name="java.ver" value="15" />
     </target>
 
 
@@ -54,7 +54,7 @@
         <war destfile="${build.dir}/sts.war" webxml="${confsrc.dir}/sts-web.xml">
             <fileset dir="${websrc.dir}/sts/"/>
             <lib file="${lib.dir}/xom-1.1.jar"/>            
-            <lib file="${lib.dir}/db4o-5.5-java1.2.jar"/> 
+            <lib file="${lib.dir}/derby.jar"/> 
             <lib file="${lib.dir}/bcprov-jdk${java.ver}-133.jar"/>
             <lib file="${lib.dir}/lightcrypto.jar"/>
             <lib file="${build.dir}/xmldap.jar"/>

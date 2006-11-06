@@ -31,9 +31,9 @@ package org.xmldap.util;
 
 import org.xmldap.exceptions.KeyStoreException;
 
+import javax.servlet.ServletConfig;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import javax.servlet.ServletConfig;
 
 
 /**

@@ -1,16 +1,16 @@
-<%@ page import="org.xmldap.sts.db.Account"%>
-<%@ page import="org.xmldap.sts.db.ManagedCardDB"%>
 <%@ page import="java.util.Collection"%>
 <%@ page import="java.util.Iterator"%>
 <%@ page import="org.xmldap.sts.db.ManagedCard"%>
+<%@ page import="org.xmldap.sts.db.CardStorage"%>
+<%@ page import="org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl"%>
 <%!
 
-    static ManagedCardDB db = ManagedCardDB.getInstance();
+    CardStorage storage = new CardStorageEmbeddedDBImpl();
 
 %>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>XMLDAP Card Manager</title>
+    <title>XMLDAP Card Manager</title>
 
 
     <style>
@@ -72,14 +72,17 @@
 <body>
 <%
 
-    Account account = (Account)session.getAttribute("account");
 
-    if (account == null) {
+    String username = (String)session.getAttribute("username");
+
+    if (username == null) {
 
 
 %>
 
-    <jsp:forward page="./" />
+    <script type="text/javascript">
+        document.location = "/sts/cardmanager/";
+    </script>
 
 
 <%
@@ -115,6 +118,8 @@
 <%
     } else {
 
+        storage.startup();
+
         ManagedCard card = new ManagedCard();
         String cardName = request.getParameter("cardName");
         if (cardName != null ) card.setCardName(cardName);
@@ -122,15 +127,20 @@
         String givenName = request.getParameter("givenName");
         if (givenName != null ) card.setGivenName(givenName);
 
+        String surName = request.getParameter("surName");
+        if (surName != null ) card.setSurname(surName);
+
         String email = request.getParameter("email");
         if (email != null ) card.setEmailAddress(email);
 
-        account.addCard(card);
-        db.updateAccount(account);
+        storage.addCard(username, card);
 
 %>
 
-    <jsp:forward page="./" />
+    
+    <script type="text/javascript">
+        document.location = "/sts/cardmanager/";
+    </script>
 
 <%
 

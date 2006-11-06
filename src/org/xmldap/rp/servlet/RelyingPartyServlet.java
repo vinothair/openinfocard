@@ -36,9 +36,9 @@ import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.rp.util.ClaimParserUtil;
 import org.xmldap.rp.util.DecryptUtil;
 import org.xmldap.rp.util.ValidationUtil;
+import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.ServletUtil;
-import org.xmldap.util.Base64;
 import org.xmldap.xmldsig.EnvelopedSignature;
 
 import javax.servlet.RequestDispatcher;
@@ -50,9 +50,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
 
 

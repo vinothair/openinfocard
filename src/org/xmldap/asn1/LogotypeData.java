@@ -27,16 +27,9 @@
  */
 package org.xmldap.asn1;
 
-import java.util.Vector;
+import org.bouncycastle.asn1.*;
 
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1EncodableVector;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.DEREncodableVector;
-import org.bouncycastle.asn1.DERObject;
-import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.DERTaggedObject;
+import java.util.Vector;
 
 public class LogotypeData extends ASN1Encodable {
 //	LogotypeData ::= SEQUENCE {

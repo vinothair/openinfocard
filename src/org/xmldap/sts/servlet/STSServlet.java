@@ -29,32 +29,37 @@
 package org.xmldap.sts.servlet;
 
 import nu.xom.*;
-import org.xmldap.util.*;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
-import org.xmldap.crypto.CryptoUtils;
-import org.xmldap.ws.WSConstants;
-import org.xmldap.infocard.SelfIssuedToken;
 import org.xmldap.infocard.ManagedToken;
+import org.xmldap.util.Bag;
+import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.RandomGUID;
+import org.xmldap.util.ServletUtil;
+import org.xmldap.ws.WSConstants;
+import org.xmldap.sts.db.CardStorage;
+import org.xmldap.sts.db.ManagedCard;
+import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.text.MessageFormat;
-import java.security.interfaces.RSAPrivateKey;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.cert.X509Certificate;
-
-import net.sourceforge.lightcrypto.SafeObject;
+import java.security.interfaces.RSAPrivateKey;
 
 
 public class STSServlet  extends HttpServlet {
 
 
+    private boolean DEBUG = false;
     RSAPrivateKey key;
     X509Certificate cert;
     private ServletUtil _su;
+    CardStorage storage = new CardStorageEmbeddedDBImpl();
 
     public void init() throws ServletException {
 
@@ -70,6 +75,8 @@ public class STSServlet  extends HttpServlet {
        } catch (KeyStoreException e) {
            e.printStackTrace();
        }
+
+       storage.startup();
 
     }
 
@@ -90,14 +97,13 @@ public class STSServlet  extends HttpServlet {
         Nodes uns = tokenXML.query("//o:Username",context);
         Element un = (Element) uns.get(0);
         String userName = un.getValue();
-        System.out.println("userName: " + userName);
-        tokenElements.put("userName", userName);
+        if (DEBUG) System.out.println("username: " + userName);
+        tokenElements.put("username", userName);
 
 
         Nodes pws = tokenXML.query("//o:Password",context);
         Element pw = (Element) pws.get(0);
         String password = pw.getValue();
-        System.out.println("password: " + password);
         tokenElements.put("password", password);
 
         return tokenElements;
@@ -105,26 +111,6 @@ public class STSServlet  extends HttpServlet {
     }
 
 
-    /*
-    <wst:RequestSecurityToken Context="ProcessRequestSecurityToken" xmlns:wst="http://schemas.xmlsoap.org/ws/2005/02/trust">
-    <wsid:InformationCardReference xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity">
-        <wsid:CardId>https://xmldap.org/sts/card/2E55ECBE-1423-38AE-DA05-0B27F44907F8</wsid:CardId>
-        <wsid:CardVersion>1</wsid:CardVersion>
-    </wsid:InformationCardReference>
-    <wst:Claims>
-        <wsid:ClaimType Uri="http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname"
-                        xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity"/>
-        <wsid:ClaimType Uri="http://schemas.microsoft.com/ws/2005/05/identity/claims/surname"
-                        xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity"/>
-        <wsid:ClaimType Uri="http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress"
-                        xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity"/>
-    </wst:Claims>
-    <wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>
-    <wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType>
-    <wsid:RequestDisplayToken xml:lang="en" xmlns:wsid="http://schemas.xmlsoap.org/ws/2005/05/identity"/>
-</wst:RequestSecurityToken>
-
-    */
 
     private Bag parseRequest(Element requestXML) throws ParsingException{
 
@@ -141,15 +127,17 @@ public class STSServlet  extends HttpServlet {
 
         Nodes cids = requestXML.query("//wsid:CardId",context);
         Element cid = (Element) cids.get(0);
-        String cardId = cid.getValue();
-        System.out.println("cardId: " + cardId);
+        String cardIdUri = cid.getValue();
+        String cardId = cardIdUri.substring("https://xmldap.org/sts/card/".length());
+        if (DEBUG) System.out.println("cardId: " + cardId);
+
         requestElements.put("cardId", cardId);
 
 
         Nodes cvs = requestXML.query("//wsid:CardVersion",context);
         Element cv = (Element) cvs.get(0);
         String cardVersion = cv.getValue();
-        System.out.println("CardVersion: " + cardVersion);
+        if (DEBUG) System.out.println("CardVersion: " + cardVersion);
         requestElements.put("cardVersion", cardVersion);
 
 
@@ -159,7 +147,7 @@ public class STSServlet  extends HttpServlet {
             Element claimElm = (Element)claims.get(i);
             Attribute uri = claimElm.getAttribute("Uri");
             String claim = uri.getValue();
-            System.out.println(claim);
+            if (DEBUG) System.out.println(claim);
             requestElements.put("claim", claim);
 
         }
@@ -167,13 +155,13 @@ public class STSServlet  extends HttpServlet {
         Nodes kts = requestXML.query("//wst:KeyType",context);
         Element kt = (Element) kts.get(0);
         String keyType = kt.getValue();
-        System.out.println("keyType: " + keyType);
+        if (DEBUG) System.out.println("keyType: " + keyType);
         requestElements.put("keyType", keyType);
 
         Nodes tts = requestXML.query("//wst:TokenType",context);
         Element tt = (Element) tts.get(0);
         String tokenType = tt.getValue();
-        System.out.println("tokenType: " + tokenType);
+        if (DEBUG) System.out.println("tokenType: " + tokenType);
         requestElements.put("tokenType", tokenType);
 
         return requestElements;
@@ -183,7 +171,7 @@ public class STSServlet  extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        System.out.println("STS got a request");
+        if (DEBUG) System.out.println("STS got a request");
         int contentLen = request.getContentLength();
 
         String requestXML = null;
@@ -194,8 +182,8 @@ public class STSServlet  extends HttpServlet {
             inStream.readFully(buf);
             requestXML = new String(buf);
 
-            System.out.println("STS Request:");
-            System.out.println(requestXML);
+            if (DEBUG) System.out.println("STS Request:");
+            if (DEBUG) System.out.println(requestXML);
 
         }
 
@@ -213,7 +201,7 @@ public class STSServlet  extends HttpServlet {
 
 
 
-        System.out.println("We have a doc");
+        if (DEBUG) System.out.println("We have a doc");
 
         XPathContext context = new XPathContext();
         context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
@@ -225,12 +213,12 @@ public class STSServlet  extends HttpServlet {
 
         Nodes tokenElm = req.query("//o:UsernameToken",context);
         Element token = (Element) tokenElm.get(0);
-        System.out.println("Token:" + token.toXML());
+        if (DEBUG) System.out.println("Token:" + token.toXML());
 
 
         Nodes rsts = req.query("//wst:RequestSecurityToken",context);
         Element rst = (Element) rsts.get(0);
-        System.out.println("RST: " + rst.toXML());
+        if (DEBUG) System.out.println("RST: " + rst.toXML());
 
 
         Bag tokenElements = null;
@@ -240,6 +228,12 @@ public class STSServlet  extends HttpServlet {
             e.printStackTrace();
             //TODO - SOAP Fault
         }
+
+
+        boolean isUser = authenticate(tokenElements);
+
+        //TODO = SOAPFaulr
+        if (!isUser) return;
 
 
         Bag requestElements = null;
@@ -252,15 +246,11 @@ public class STSServlet  extends HttpServlet {
 
 
 
-
-        //TODO - authenticate!
-
-
         String stsResponse = issue(requestElements);
 
         response.setContentType("application/soap+xml; charset=\"utf-8\"");
         response.setContentLength(stsResponse.length());
-        System.out.println("STS Response:\n " + stsResponse);
+        if (DEBUG) System.out.println("STS Response:\n " + stsResponse);
         PrintWriter out = response.getWriter();
         out.println(stsResponse);
         out.flush();
@@ -268,36 +258,22 @@ public class STSServlet  extends HttpServlet {
 
     }
 
+
+    private boolean authenticate(Bag tokenElements) {
+        String username = (String) tokenElements.get("username");
+        String password = (String) tokenElements.get("password");
+        boolean isUser = storage.authenticate(username,password);
+        System.out.println("STS Authenticated: " + username  + ":" + isUser );
+        return isUser;
+    }
+
     private String issue(Bag requestElements) throws IOException {
 
-    /*  OLD TEST ISSUE
-	String issuePath = _su.getIssueFilePathString();
 
-    if (issuePath == null) {
-	    issuePath = "/home/cmort/issue.xml";
-	}
-        InputStream in = new FileInputStream(issuePath);
+        ManagedCard card = storage.getCard((String)requestElements.get("cardId"));
+        if (card == null ) throw new IOException("Unable to read card: " + (String)requestElements.get("cardId"));
 
-        StringBuffer issueBuff = new StringBuffer();
-        DataInputStream ins = new DataInputStream(in);
-
-        while (in.available() !=0) {
-            issueBuff.append(ins.readLine());
-        }
-
-        in.close();
-        ins.close();
-
-        MessageFormat issueResponse = new MessageFormat(issueBuff.toString());
-
-        XSDDateTime now = new XSDDateTime();
-        XSDDateTime later = new XSDDateTime(10);   //one week -what's up with window's time???
-        String[] args = {messageId, now.getDateTime(), later.getDateTime()};
-
-        return issueResponse.format(args);
-
-
-    } */
+        System.out.println("STS Issuing Managed Card " + (String)requestElements.get("cardId") + " for " + card.getEmailAddress());
 
 
         Element envelope = new Element(WSConstants.SOAP_PREFIX + ":Envelope", WSConstants.SOAP12_NAMESPACE);
@@ -313,37 +289,6 @@ public class STSServlet  extends HttpServlet {
 
         envelope.appendChild(header);
         envelope.appendChild(body);
-
-
-
-        //Build headers
-
-        /*
-        Element action = new Element(WSConstants.WSA_PREFIX + ":Action", WSConstants.WSA_NAMESPACE_05_08);
-        Attribute id1 = new Attribute("wsu:Id", WSConstants.WSU_NAMESPACE, "_1");
-        action.addAttribute(id1);
-        action.appendChild("http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue");
-        header.appendChild(action);
-
-
-        Element relatesTo = new Element(WSConstants.WSA_PREFIX + ":RelatesTo", WSConstants.WSA_NAMESPACE_05_08);
-        Attribute id2 = new Attribute("wsu:Id", WSConstants.WSU_NAMESPACE, "_2");
-        relatesTo.addAttribute(id2);
-        relatesTo.appendChild(messageId);
-        header.appendChild(relatesTo);
-
-        Element to = new Element(WSConstants.WSA_PREFIX + ":To", WSConstants.WSA_NAMESPACE_05_08);
-        Attribute id3 = new Attribute("wsu:Id", WSConstants.WSU_NAMESPACE, "_3");
-        to.addAttribute(id3);
-        to.appendChild("http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous");
-        header.appendChild(to);
-
-        Element security = new Element(WSConstants.WSSE_PREFIX + ":Security", WSConstants.WSSE_NAMESPACE_OASIS_10);
-        //Attribute id3 = new Attribute("wsu:Id", WSConstants.WSU_NAMESPACE, "_3");
-        //to.addAttribute(id3);
-        header.appendChild(security);
-
-        */
 
 
 
@@ -364,10 +309,10 @@ public class STSServlet  extends HttpServlet {
 
         ManagedToken token = new ManagedToken(cert,key);
 
-        token.setGivenName("Chuck");
-        token.setSurname("Mortimore");
-        token.setEmailAddress("charliemortimore@gmail.com");
-        token.setPrivatePersonalIdentifier("1234567890");
+        token.setGivenName(card.getGivenName());
+        token.setSurname(card.getSurname());
+        token.setEmailAddress(card.getEmailAddress());
+        token.setPrivatePersonalIdentifier(card.getPrivatePersonalIdentifier());
         token.setValidityPeriod(1, 10);
 
         RandomGUID uuid = new RandomGUID();
@@ -413,7 +358,7 @@ public class STSServlet  extends HttpServlet {
         Element displayTag = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag.appendChild("Given Name");
         Element displayValue = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue.appendChild("Chuck");
+        displayValue.appendChild(card.getGivenName());
         displayClaim.appendChild(displayTag);
         displayClaim.appendChild(displayValue);
         displayToken.appendChild(displayClaim);
@@ -425,7 +370,7 @@ public class STSServlet  extends HttpServlet {
         Element displayTag1 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag1.appendChild("Last Name");
         Element displayValue1 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue1.appendChild("Mortimore");
+        displayValue1.appendChild(card.getSurname());
         displayClaim1.appendChild(displayTag1);
         displayClaim1.appendChild(displayValue1);
         displayToken.appendChild(displayClaim1);
@@ -437,7 +382,7 @@ public class STSServlet  extends HttpServlet {
         Element displayTag2 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag2.appendChild("Email");
         Element displayValue2 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue2.appendChild("charliemortimore@gmail.com");
+        displayValue2.appendChild(card.getEmailAddress());
         displayClaim2.appendChild(displayTag2);
         displayClaim2.appendChild(displayValue2);
         displayToken.appendChild(displayClaim2);
@@ -449,7 +394,7 @@ public class STSServlet  extends HttpServlet {
         Element displayTag3 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag3.appendChild("PPID");
         Element displayValue3 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue3.appendChild("1234567890");
+        displayValue3.appendChild(card.getPrivatePersonalIdentifier());
         displayClaim3.appendChild(displayTag3);
         displayClaim3.appendChild(displayValue3);
         displayToken.appendChild(displayClaim3);

@@ -8,7 +8,6 @@
 <%@ page import="java.security.PrivateKey"%>
 <%@ page import="java.security.cert.X509Certificate"%>
 <%@ page import="org.xmldap.util.ServletUtil"%>
-<%@ page import="org.xmldap.util.Base64"%>
 
 
 <%
