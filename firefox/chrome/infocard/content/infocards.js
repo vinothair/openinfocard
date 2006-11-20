@@ -30,16 +30,143 @@ var db = "cardDb.xml";
 var selectedCard;
 
 function ok(){
-    //TODO - I'm not enforcing policy - do so.
-    var policy = window.arguments[0];
-    policy["card"] = selectedCard.toString();
 
-    //TRUE of FALSE on the second param enabled debug
-    var tokenToReturn = processCard(policy,false);
-    window.arguments[1](tokenToReturn);
-    window.close();
+    var tokenToReturn;
+
+    var policy = window.arguments[0];
+
+
+    if (selectedCard.type == "selfAsserted") {
+        policy["type"] = "selfAsserted";
+        policy["card"] = selectedCard.toString();
+        //TRUE or FALSE on the second param enabled debug
+        tokenToReturn = processCard(policy,false);
+
+    } else {
+
+        var assertion = processManagedCard(selectedCard);
+        debug(assertion);
+
+        policy["type"] = "managedCard";
+        policy["assertion"] = assertion;
+        //TRUE or FALSE on the second param enabled debug
+        tokenToReturn = processCard(policy,false);
+
+
+    }
+
+    if (tokenToReturn != null) {
+
+        debug("Token: " + tokenToReturn);
+        window.arguments[1](tokenToReturn);
+        window.close();
+
+    }
 
 }
+
+
+function processManagedCard(managedCard) {
+
+    var tokenToReturn = null;
+    var mexResponse;
+
+    var messageIdInt = Math.floor(Math.random()*100000+1);
+    var messageId = "urn:uuid:" + messageIdInt;
+    var mex = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://www.w3.org/2005/08/addressing\"><s:Header><a:Action s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2004/09/transfer/Get</a:Action><a:MessageID>" +   messageId  +  "</a:MessageID><a:ReplyTo><a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address></a:ReplyTo><a:To s:mustUnderstand=\"1\">" + managedCard.carddata.managed.issuer + "</a:To></s:Header><s:Body/></s:Envelope>";
+
+
+    var req = new XMLHttpRequest();
+    req.open('POST', managedCard.carddata.managed.mex, false);
+    req.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
+    req.setRequestHeader("Cache-Control", "no-cache");
+    req.setRequestHeader("accept-language", "en-us");
+    req.setRequestHeader("User-Agent", "xmldap infocard stack");
+    req.send(mex);
+    if(req.status == 200) {
+
+        mexResponse = req.responseText;
+
+        //Start with TransportBinding support
+        var tb = mexResponse.indexOf("TransportBinding");
+        if (tb < 0) {
+           alert("The Selector currently supports only the TransportBinding");
+           return null;
+        } else {
+
+            var bodyIndex = mexResponse.indexOf("Body>");
+            bodyIndex += 5;
+            var body = mexResponse.substring(bodyIndex);
+
+            var addrIndex = body.indexOf("Address>");
+            addrIndex += 8;
+            var subStr = body.substring(addrIndex);
+
+            var endAddr = subStr.indexOf("</");
+            var address = subStr.substring(0,endAddr);
+
+
+            debug(address);
+
+            var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+            username = {value:managedCard.carddata.managed.username};
+            password = {value:""};
+            var check = {value: false};
+            okorcancel = prompts.promptUsernameAndPassword(window, 'Card Authentication', managedCard.carddata.managed.hint, username, password, null, check);
+            var uid =  username.value;
+            var pw =  password.value;
+
+
+            var rst = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:u=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"><s:Header><o:Security s:mustUnderstand=\"1\" xmlns:o=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><o:UsernameToken u:Id=\"";
+
+            var messageIdInt1 = Math.floor(Math.random()*100000+1);
+            var messageId1 = "urn:uuid:" + messageIdInt;
+
+            rst = rst + messageId1 + "\"><o:Username>";
+
+            rst = rst + uid;
+
+            rst = rst + "</o:Username><o:Password o:Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">";
+
+            rst = rst + pw;
+
+            rst = rst + "</o:Password></o:UsernameToken></o:Security></s:Header><s:Body><wst:RequestSecurityToken Context=\"ProcessRequestSecurityToken\" xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\"><wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><wsid:CardId>";
+
+            rst = rst + managedCard.id;
+
+            rst = rst + "</wsid:CardId><wsid:CardVersion>1</wsid:CardVersion></wsid:InformationCardReference><wst:Claims><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/></wst:Claims><wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType><ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>TBD_WHAT_TO_DO</PPID></ClientPseudonym><wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType><wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/></wst:RequestSecurityToken></s:Body></s:Envelope>";
+            var rstr;
+            var rstReq = new XMLHttpRequest();
+            rstReq.open('POST', address, false);
+            rstReq.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
+            rstReq.setRequestHeader("Cache-Control", "no-cache");
+            rstReq.setRequestHeader("accept-language", "en-us");
+            rstReq.setRequestHeader("User-Agent", "xmldap infocard stack");
+            rstReq.send(rst);
+            if(rstReq.status == 200) {
+
+                rstr = rstReq.responseText;
+
+                var rstIndex = rstr.indexOf("RequestedSecurityToken>");
+                rstIndex += 23;
+                var assertionStart = rstr.substring(rstIndex);
+
+                var assertionEndIndex = assertionStart.indexOf("Assertion>");
+                assertionEndIndex += 10;
+                var assertion = assertionStart.substring(0,assertionEndIndex);
+
+                tokenToReturn = assertion;
+
+            }
+
+        }
+
+    }
+
+    return tokenToReturn;
+
+}
+
 
 
 function cancel(){
@@ -66,10 +193,12 @@ function load(){
     var selectMe;
     var count = 0;
     for each (c in cardFile.infocard) {
+
         latestCard = createItem(c);
         selectMe = c;
         cardArea.appendChild(latestCard);
         count++;
+
     }
 
     if ( count != 0) {
@@ -143,28 +272,96 @@ debug("requiredClaims: " + requiredClaims);
 function setCard(card){
 
     selectedCard = card;
-    document.getElementById("cardname").value = selectedCard.name;
-    document.getElementById("givenname").value = selectedCard.carddata.selfasserted.givenname;
-    document.getElementById("surname").value = selectedCard.carddata.selfasserted.surname;
-    document.getElementById("email").value = selectedCard.carddata.selfasserted.emailaddress;
-    document.getElementById("streetAddress").value = selectedCard.carddata.selfasserted.streetaddress;
-    document.getElementById("locality").value = selectedCard.carddata.selfasserted.locality;
-    document.getElementById("stateOrProvince").value = selectedCard.carddata.selfasserted.stateorprovince;
-    document.getElementById("postalCode").value = selectedCard.carddata.selfasserted.postalcode;
-    document.getElementById("country").value = selectedCard.carddata.selfasserted.country;
-    document.getElementById("primaryPhone").value = selectedCard.carddata.selfasserted.primaryphone;
-    document.getElementById("otherPhone").value = selectedCard.carddata.selfasserted.otherphone;
-    document.getElementById("mobilePhone").value = selectedCard.carddata.selfasserted.mobilephone;
-    document.getElementById("dateOfBirth").value = selectedCard.carddata.selfasserted.dateofbirth;
-    document.getElementById("gender").value = selectedCard.carddata.selfasserted.gender;
-    document.getElementById("imgurl").value = selectedCard.carddata.selfasserted.imgurl;
 
-    indicateRequiredClaims();
+    if (selectedCard.type == "selfAsserted" )  {
 
-    var grid = document.getElementById("editgrid");
-    grid.setAttribute("hidden", "false");
-    var label = document.getElementById("notify");
-    label.setAttribute("value", "Selected Card");
+        document.getElementById("cardname").value = selectedCard.name;
+        document.getElementById("givenname").value = selectedCard.carddata.selfasserted.givenname;
+        document.getElementById("surname").value = selectedCard.carddata.selfasserted.surname;
+        document.getElementById("email").value = selectedCard.carddata.selfasserted.emailaddress;
+        document.getElementById("streetAddress").value = selectedCard.carddata.selfasserted.streetaddress;
+        document.getElementById("locality").value = selectedCard.carddata.selfasserted.locality;
+        document.getElementById("stateOrProvince").value = selectedCard.carddata.selfasserted.stateorprovince;
+        document.getElementById("postalCode").value = selectedCard.carddata.selfasserted.postalcode;
+        document.getElementById("country").value = selectedCard.carddata.selfasserted.country;
+        document.getElementById("primaryPhone").value = selectedCard.carddata.selfasserted.primaryphone;
+        document.getElementById("otherPhone").value = selectedCard.carddata.selfasserted.otherphone;
+        document.getElementById("mobilePhone").value = selectedCard.carddata.selfasserted.mobilephone;
+        document.getElementById("dateOfBirth").value = selectedCard.carddata.selfasserted.dateofbirth;
+        document.getElementById("gender").value = selectedCard.carddata.selfasserted.gender;
+        document.getElementById("imgurl").value = selectedCard.carddata.selfasserted.imgurl;
+
+
+
+        document.getElementById("cardname").disabled = false;
+        document.getElementById("givenname").disabled = false;
+        document.getElementById("surname").disabled = false;
+        document.getElementById("email").disabled = false;
+        document.getElementById("streetAddress").disabled = false;
+        document.getElementById("locality").disabled = false;
+        document.getElementById("stateOrProvince").disabled = false;
+        document.getElementById("postalCode").disabled = false;
+        document.getElementById("country").disabled = false;
+        document.getElementById("primaryPhone").disabled = false;
+        document.getElementById("otherPhone").disabled = false;
+        document.getElementById("mobilePhone").disabled = false;
+        document.getElementById("dateOfBirth").disabled = false;
+        document.getElementById("gender").disabled = false;
+        document.getElementById("imgurl").disabled = false;
+
+
+        indicateRequiredClaims();
+
+        var grid = document.getElementById("editgrid");
+        grid.setAttribute("hidden", "false");
+        var label = document.getElementById("notify");
+        label.setAttribute("value", "Self Asserted Card");
+
+    }  else  {
+
+
+        document.getElementById("cardname").value = selectedCard.name;
+        document.getElementById("givenname").disabled = true;
+        document.getElementById("givenname").value = "";
+        document.getElementById("surname").disabled = true;
+        document.getElementById("surname").value = "";
+        document.getElementById("email").disabled = true;
+        document.getElementById("email").value = "";
+        document.getElementById("streetAddress").disabled = true;
+        document.getElementById("streetAddress").value = "";
+        document.getElementById("locality").disabled = true;
+        document.getElementById("locality").value = "";
+        document.getElementById("stateOrProvince").disabled = true;
+        document.getElementById("stateOrProvince").value = "";
+        document.getElementById("postalCode").disabled = true;
+        document.getElementById("postalCode").value = "";
+        document.getElementById("country").disabled = true;
+        document.getElementById("country").value = "";
+        document.getElementById("primaryPhone").disabled = true;
+        document.getElementById("primaryPhone").value = "";
+        document.getElementById("otherPhone").disabled = true;
+        document.getElementById("otherPhone").value = "";
+        document.getElementById("mobilePhone").disabled = true;
+        document.getElementById("mobilePhone").value = "";
+        document.getElementById("dateOfBirth").disabled = true;
+        document.getElementById("dateOfBirth").value = "";
+        document.getElementById("gender").disabled = true;
+        document.getElementById("gender").value = "";
+        document.getElementById("imgurl").disabled = true;
+        document.getElementById("imgurl").value = "";
+
+
+        indicateRequiredClaims();
+
+        var grid = document.getElementById("editgrid");
+        grid.setAttribute("hidden", "false");
+        var label = document.getElementById("notify");
+        label.setAttribute("value", "Managed Card from " + selectedCard.carddata.managed.issuer);
+
+
+
+    }
+
 
 
 
@@ -199,7 +396,13 @@ function createItem(c){
     labelVersion.setAttribute("class","lblmail");
     labelVersion.setAttribute("value", "Version " + c.version);
     labelVersion.setAttribute("cardid",c.id);
-    var imgurl = c.carddata.selfasserted.imgurl;
+
+    var imgurl = "";
+    if ( c.type == "selfAsserted") {
+        imgurl = c.carddata.selfasserted.imgurl;
+    } else {
+        imgurl = c.carddata.managed.image;
+    }
      //var picture = document.createElement("html:img");
     var picturebox = document.createElement("hbox");
     picturebox.setAttribute("flex", "0");
@@ -245,112 +448,140 @@ function newCard(){
     var cardWiz = window.openDialog("chrome://infocard/content/cardWizard.xul","Card Wizard", "modal,chrome,resizable=yes,width=640,height=480",
                                     null, function (callbackData) { callback = callbackData;});
 
-    var cardName = callback.cardname;
+    var cardName = callback.cardName;
     var type = callback.type;
 
-    var card = new XML("<infocard/>");
-    card.name = cardName;
-    card.type = type;
-    var version = "1";
-    card.version = version;
-    var id = Math.floor(Math.random()*100000+1);
-    card.id = id;
-    card.privatepersonalidentifier = hex_sha1(cardName + version + id);
 
-    var count = 0;
-    var data = new XML("<selfasserted/>");
     if ( type == "selfAsserted") {
 
-        var givenName = callback.givenname;
-        if (givenName) {
-            card.supportedclaim[count] = "givenname";
-            data.givenname = givenName;
-            count++;
-        }
-        var surname = callback.surname;
-        if (surname) {
-            card.supportedclaim[count] = "surname";
-            data.surname = surname;
-            count++;
-        }
-        var emailAddress = callback.email;
-        if (emailAddress) {
-            card.supportedclaim[count] = "emailaddress";
-            data.emailaddress = emailAddress;
-            count++;
-        }
-        var streetAddress = callback.streetAddress;
-        if (streetAddress) {
-            card.supportedclaim[count] = "streetaddress";
-            data.streetaddress = streetAddress;
-            count++;
-        }
-        var locality = callback.locality;
-        if (locality) {
-            card.supportedclaim[count] = "locality";
-            data.locality = locality;
-            count++;
-        }
-        var stateOrProvince = callback.stateOrProvince;
-        if (stateOrProvince) {
-            card.supportedclaim[count] = "stateorprovince";
-            data.stateorprovince = stateOrProvince;
-            count++;
-        }
-        var postalCode = callback.postalCode;
-        if (postalCode) {
-            card.supportedclaim[count] = "postalcode";
-            data.postalcode = postalCode;
-            count++;
-        }
-        var country = callback.country;
-        if (country) {
-            card.supportedclaim[count] = "country";
-            data.country = country;
-            count++;
-        }
-        var primaryPhone = callback.primaryPhone;
-        if (primaryPhone) {
-            card.supportedclaim[count] = "primaryphone";
-            data.primaryphone = primaryPhone;
-            count++;
-        }
-        var otherPhone = callback.otherPhone;
-        if (otherPhone) {
-            card.supportedclaim[count] = "otherphone";
-            data.otherphone = otherPhone;
-            count++;
-        }
-        var mobilePhone = callback.mobilePhone;
-        if (mobilePhone) {
-            card.supportedclaim[count] = "mobilephone";
-            data.mobilephone = mobilePhone;
-            count++;
-        }
-        var dateOfBirth = callback.dateOfBirth;
-        if (dateOfBirth) {
-            card.supportedclaim[count] = "dateofbirth";
-            data.dateofbirth = dateOfBirth;
-            count++;
-        }
-        var gender = callback.gender;
-        if (gender) {
-            card.supportedclaim[count] = "gender";
-            data.gender = gender;
-            count++;
-        }
-        var imgurl = callback.imgurl;
-        if (imgurl) {
-            card.supportedclaim[count] = "imgurl";
-            data.imgurl = imgurl;
-            count++;
+        var card = new XML("<infocard/>");
+        card.name = cardName;
+        card.type = type;
+        var version = "1";
+        card.version = version;
+        var id = Math.floor(Math.random()*100000+1);
+        card.id = id;
+        card.privatepersonalidentifier = hex_sha1(cardName + version + id);
+
+        var count = 0;
+        var data = new XML("<selfasserted/>");
+        if ( type == "selfAsserted") {
+
+            var givenName = callback.givenname;
+            if (givenName) {
+                card.supportedclaim[count] = "givenname";
+                data.givenname = givenName;
+                count++;
+            }
+            var surname = callback.surname;
+            if (surname) {
+                card.supportedclaim[count] = "surname";
+                data.surname = surname;
+                count++;
+            }
+            var emailAddress = callback.email;
+            if (emailAddress) {
+                card.supportedclaim[count] = "emailaddress";
+                data.emailaddress = emailAddress;
+                count++;
+            }
+            var streetAddress = callback.streetAddress;
+            if (streetAddress) {
+                card.supportedclaim[count] = "streetaddress";
+                data.streetaddress = streetAddress;
+                count++;
+            }
+            var locality = callback.locality;
+            if (locality) {
+                card.supportedclaim[count] = "locality";
+                data.locality = locality;
+                count++;
+            }
+            var stateOrProvince = callback.stateOrProvince;
+            if (stateOrProvince) {
+                card.supportedclaim[count] = "stateorprovince";
+                data.stateorprovince = stateOrProvince;
+                count++;
+            }
+            var postalCode = callback.postalCode;
+            if (postalCode) {
+                card.supportedclaim[count] = "postalcode";
+                data.postalcode = postalCode;
+                count++;
+            }
+            var country = callback.country;
+            if (country) {
+                card.supportedclaim[count] = "country";
+                data.country = country;
+                count++;
+            }
+            var primaryPhone = callback.primaryPhone;
+            if (primaryPhone) {
+                card.supportedclaim[count] = "primaryphone";
+                data.primaryphone = primaryPhone;
+                count++;
+            }
+            var otherPhone = callback.otherPhone;
+            if (otherPhone) {
+                card.supportedclaim[count] = "otherphone";
+                data.otherphone = otherPhone;
+                count++;
+            }
+            var mobilePhone = callback.mobilePhone;
+            if (mobilePhone) {
+                card.supportedclaim[count] = "mobilephone";
+                data.mobilephone = mobilePhone;
+                count++;
+            }
+            var dateOfBirth = callback.dateOfBirth;
+            if (dateOfBirth) {
+                card.supportedclaim[count] = "dateofbirth";
+                data.dateofbirth = dateOfBirth;
+                count++;
+            }
+            var gender = callback.gender;
+            if (gender) {
+                card.supportedclaim[count] = "gender";
+                data.gender = gender;
+                count++;
+            }
+            var imgurl = callback.imgurl;
+            if (imgurl) {
+                card.supportedclaim[count] = "imgurl";
+                data.imgurl = imgurl;
+                count++;
+            }
+
+
         }
 
+        card.carddata.data = data;
+        saveCard(card);
 
     }
 
-    card.carddata.data = data;
-    saveCard(card);
+    if ( type == "managedCard") {
+
+        var card = new XML("<infocard/>");
+        card.name = "" + cardName + "";
+        card.type = type;
+        var version = "1";
+        card.version = version;
+        card.id = "" + callback.cardId + "";
+
+        var data = new XML("<managed/>");
+        data.issuer = "" + callback.issuer + "";
+        data.mex = "" + callback.mex + "";
+        data.username = "" + callback.uid + "";
+        data.hint = "" + callback.hint + "";
+        data.image = "data:image/png;base64," + callback.cardImage + "";
+
+        card.carddata.data = data;
+        saveCard(card);
+
+
+
+    }
 
 
 }
@@ -446,33 +677,6 @@ function save(fileName, fileContents) {
 		file.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 420 );
 	}
 	var outputStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance( Components.interfaces.nsIFileOutputStream );
-	/* Open flags
-	#define PR_RDONLY       0x01
-	#define PR_WRONLY       0x02
-	#define PR_RDWR         0x04
-	#define PR_CREATE_FILE  0x08
-	#define PR_APPEND      0x10
-	#define PR_TRUNCATE     0x20
-	#define PR_SYNC         0x40
-	#define PR_EXCL         0x80
-	*/
-	/*
-	** File modes ....
-	**
-	** CAVEAT: 'mode' is currently only applicable on UNIX platforms.
-	** The 'mode' argument may be ignored by PR_Open on other platforms.
-	**
-	**   00400   Read by owner.
-	**   00200   Write by owner.
-	**   00100   Execute (search if a directory) by owner.
-	**   00040   Read by group.
-	**   00020   Write by group.
-	**   00010   Execute by group.
-	**   00004   Read by others.
-	**   00002   Write by others
-	**   00001   Execute by others.
-	**
-	*/
 	outputStream.init( file, 0x04 | 0x08 | 0x20, 420, 0 );
     var result = outputStream.write( fileContents, fileContents.length );
     outputStream.close();

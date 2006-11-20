@@ -126,14 +126,16 @@ public class RelyingPartyServlet extends HttpServlet {
             }
 
 
+            //System.out.println(encryptedXML);
+
             //decrypt it.
             DecryptUtil decrypter = new DecryptUtil();
             StringBuffer decryptedXML = decrypter.decryptXML(encryptedXML, privateKey);
 
-	    if (decryptedXML == null) {
+            if (decryptedXML == null) {
                 processError("Sorry - could not decrypt your XML (perhaps the web server is using a different key than this servlet)?", request, response);
-		return;
-	    }
+                return;
+            }
 
             //let's make a doc
             Builder parser = new Builder();
@@ -148,6 +150,8 @@ public class RelyingPartyServlet extends HttpServlet {
                 return;
             }
 
+
+            //System.out.println(assertion.toXML());
 
             // no processError for the assertion contitions for now
     	    // if conditions are not met

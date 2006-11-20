@@ -43,15 +43,33 @@
     </stringbundleset>
 
   <script src="chrome://infocard/content/infocards.js"/>
- 
-  <wizardpage pageid="type" next="selfAsserted">
+
+  <wizardpage pageid="type" onpageadvanced="next();">
+
+      <script>
+
+           function next() {
+
+             var menu = document.getElementById('cardType');
+             var selectedItem = menu.selectedItem;
+             var value = selectedItem.getAttribute('value');
+
+             document.getElementById('card-window').goTo(value);
+             document.getElementById('type').advance(value);
+             return false;
+
+          }
+
+       </script>
+
     <description>
     &cardwizard.first;
     </description>
     <label value="&cardwizard.selectatypeofcard;"/>
-    <menulist>
+    <menulist id="cardType">
       <menupopup>
         <menuitem label="&cardwizard.selfasserted;" value="selfAsserted"/>
+        <menuitem label="&cardwizard.managed;" value="managedCard"/>
       </menupopup>
     </menulist>
   </wizardpage>
@@ -105,117 +123,122 @@
             </rows>
         </grid>
     </vbox>
+  </wizardpage>
 
-      <!--
-      <hbox>
-          <vbox>
-              <label value="Card Name:  "/>
-          </vbox><vbox>
-              <textbox id="cardname"/>
-          </vbox>
-      </hbox>
-      <hbox>
-          <vbox>
-              <label value="Given Name: "/>
-          </vbox><vbox>
-              <textbox id="givenname"/>
-          </vbox>
-      </hbox>
-      <hbox>
-          <vbox>
-              <label value="Surname:    "/>
-          </vbox><vbox>
-              <textbox id="surname"/>
-          </vbox>
-      </hbox>
-      <hbox>
-          <vbox>
-              <label value="Email:      "/>
-          </vbox><vbox>
-              <textbox id="email"/>
-          </vbox>
-      </hbox>
-        <hbox>
-          <vbox>
-              <label value="Address:    "/>
-          </vbox><vbox>
-              <textbox id="streetAddress"/>
-          </vbox>
-      </hbox>
-        <hbox>
-          <vbox>
-              <label value="City:       "/>
-          </vbox><vbox>
-              <textbox id="locality"/>
-          </vbox>
-      </hbox>
-        <hbox>
-          <vbox>
-              <label value="State:      "/>
-          </vbox><vbox>
-              <textbox id="stateOrProvince"/>
-          </vbox>
-      </hbox>
-        <hbox>
-          <vbox>
-              <label value="Zip Code:   "/>
-          </vbox><vbox>
-              <textbox id="postalCode"/>
-          </vbox>
-      </hbox>
-        <hbox>
-          <vbox>
-              <label value="Country:    "/>
-          </vbox><vbox>
-              <textbox id="country"/>
-          </vbox>
-      </hbox>
-        <hbox>
-          <vbox>
-              <label value="Phone:      "/>
-          </vbox><vbox>
-              <textbox id="primaryPhone"/>
-          </vbox>
-      </hbox>
-      <hbox>
-          <vbox>
-              <label value="Other Phone:"/>
-          </vbox><vbox>
-              <textbox id="otherPhone"/>
-          </vbox>
-      </hbox>
-        <hbox>
-          <vbox>
-              <label value="Mobile:     "/>
-          </vbox><vbox>
-              <textbox id="mobilePhone"/>
-          </vbox>
-      </hbox>
-      <hbox>
-          <vbox>
-              <label value="Birth Date: "/>
-          </vbox><vbox>
-              <textbox id="dateOfBirth"/>
-          </vbox>
-      </hbox>
-      <hbox>
-          <vbox>
-              <label value="Gender:     "/>
-          </vbox><vbox>
-              <textbox id="gender"/>
-          </vbox>
-      </hbox>
-      -->
+
+  <wizardpage description="&cardwizard.carddetails;" pageid="managedCard" onpageadvanced="parseCard(theData);">
+
+      <script>
+
+
+         var theCard = "";
+         var theFile;
+          var theData;
+
+         function pickFile() {
+
+          var textbox = document.getElementById("cardfile");
+            var button = document.getElementById('cardbutton');
+            textbox.thefile = null;
+
+           netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+           var nsIFilePicker = Components.interfaces.nsIFilePicker;
+           var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+           fp.init(window, "Select a File", nsIFilePicker.modeOpen);
+           fp.appendFilters( nsIFilePicker.filterAll );
+           var res = fp.show();
+           if (res == nsIFilePicker.returnOK) {
+             textbox.thefile = fp.file;
+             theData = getFile(fp.file);
+             theFile = fp.file;
+             textbox.value = textbox.thefile.path;
+           } else {
+             textbox.thefile = null;
+             textbox.value = "";
+           }
+
+          theCard = textbox.value;
+         }
+
+
+         function getFile(file) {
+
+
+             if (file != null) {
+
+                 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+                 var is = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance( Components.interfaces.nsIFileInputStream );
+                 var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+
+                 is.init( file, 0x01, 00004, null);
+                 sstream.init(is);
+                 var data = "";
+                 var count = 0;
+
+                 while (sstream.available() > 0) {
+                       count = sstream.available();
+                       if (count > 2048) {
+                         count = 2048;
+                       }
+                       data += sstream.read(count);
+                 }
+
+                 return data;
+             } else {
+                return "";
+             }
+
+          }
+
+
+          function parseCard(cardData) {
+
+             var cardxml = new XML(cardData);
+             var dsig = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
+             var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+             var wsa = new Namespace("wsa", "http://www.w3.org/2005/08/addressing");
+             var mex = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
+
+
+             var cardId = cardxml.dsig::Object.ic::InformationCard.ic::InformationCardReference.ic::CardId;
+             var cardName = cardxml.dsig::Object.ic::InformationCard.ic::CardName;
+             var cardImage = cardxml.dsig::Object.ic::InformationCard.ic::CardImage;
+             var issuer = cardxml.dsig::Object.ic::InformationCard.ic::Issuer;
+             var mex =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
+
+            var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
+            var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
+
+
+              var callbackdata = {};
+              callbackdata["type"] = "managedCard";
+              callbackdata["cardId"] = cardId;
+              callbackdata["cardName"] = cardName;
+              callbackdata["cardImage"] = cardImage;
+              callbackdata["issuer"] = issuer;
+              callbackdata["mex"] = mex;
+              callbackdata["hint"] = cardHint;
+              callbackdata["uid"] = cardUid;
+              window.arguments[1](callbackdata);
+
+
+          }
+
+
+
+
+      </script>
+
+      <label value="Please load your managed card:"/>
+
+      <textbox id="cardfile"/>
+      <button label="Select a Card..." id="cardbutton" oncommand="pickFile();"/>
+
+
 
 
   </wizardpage>
 
-  <wizardpage description="&cardwizard.carddetails;" pageid="lid">
-    <label value="LID"/>
-  </wizardpage>
 
-  <wizardpage description="&cardwizard.carddetails;" pageid="google">
-    <label value="Google"/>
-  </wizardpage>
 
 </wizard>

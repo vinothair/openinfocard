@@ -691,114 +691,153 @@ public class TokenIssuer {
 
 		// TODO - break up this rather large code block
 		JSONObject policy = null;
-		String card = null;
 		String der = null;
-		try {
-			policy = new JSONObject(serializedPolicy);
-			der = (String) policy.get("cert");
-			card = (String) policy.get("card");
-		} catch (JSONException e) {
-			throw new TokenIssuanceException(e);
-		}
+        String issuedToken = "";
+        String type = null;
 
-		Document infocard = getInfocard(card);
+        try {
 
-		Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
-		Element data = (Element) dataNodes.get(0);
+            policy = new JSONObject(serializedPolicy);
+            type = (String) policy.get("type");
+            der = (String) policy.get("cert");
 
-		// TODO - support all elements including ppi
-		String ppi = "";
+        } catch (JSONException e) {
+            throw new TokenIssuanceException(e);
+        }
 
-		X509Certificate relyingPartyCert = der2cert(der);
 
-		Nodes ppiNodes = infocard.query("/infocard/privatepersonalidentifier");
-		Element ppiElm = (Element) ppiNodes.get(0);
-		if (ppiElm != null) {
-			ppi = ppiElm.getValue();
-		} else {
-			throw new TokenIssuanceException(
-					"Error: This infocard has no privatepersonalidentifier!");
-		}
+        X509Certificate relyingPartyCert = der2cert(der);
 
-		// storeInfoCardAsCertificate(ppi, infocard);
+        if (type.equals("selfAsserted")) {
 
-		ppi = generatePpiForThisRP(ppi, relyingPartyCert
-				.getSubjectX500Principal().getName());
+            String card = null;
 
-//		System.out.println("Server Cert: "
-//				+ relyingPartyCert.getSubjectDN().toString());
+            try {
+                card = (String) policy.get("card");
+            } catch (JSONException e) {
+                throw new TokenIssuanceException(e);
+            }
 
-		String issuedToken = "";
-		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
-		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
-				signingCert, signingKey);
+            Document infocard = getInfocard(card);
 
-		token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
-		token.setValidityPeriod(-5, 10);
+            Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
+            Element data = (Element) dataNodes.get(0);
 
-		final String ALL_CLAIMS = "givenname"
-				+ " "
-				+ "emailaddress"
-				+ " "
-				+ "surname"
-				+ " "
-				+ "streetaddress"
-				+ " "
-				+ "locality"
-				+ " "
-				+ "stateorprovince"
-				+ " "
-				+ "postalcode"
-				+ " "
-				+ "country"
-				+ " "
-				+ "homephone"
-				+ " "
-				+ "otherphone"
-				+ " "
-				+ "mobilephone"
-				+ " "
-				+ "dateofbirth"
-				+ " "
-				+ "gender";
+            // TODO - support all elements including ppi
+            String ppi = "";
 
-		String requiredClaims = null;
-		String optionalClaims = null;
-		try {
-			requiredClaims = (String) policy.get("requiredClaims");
-		} catch (JSONException e) {
-			// throw new TokenIssuanceException(e); // requiredClaims not found
-		}
-		try {
-			optionalClaims = (String) policy.get("optionalClaims");
-		} catch (JSONException e) {
-			// throw new TokenIssuanceException(e); // optionalClaims not found
-		}
-		if (requiredClaims == null) {
-			if (optionalClaims != null) {
-				token = setTokenClaims(data, token, optionalClaims);
-			} else { // hm, lets throw everything we have at the RP
-				token = setTokenClaims(data, token, ALL_CLAIMS);
-			}
-		} else { // requiredClaim are present
-			token = setTokenClaims(data, token, requiredClaims);
-			if (optionalClaims != null) {
-				token = setTokenClaims(data, token, optionalClaims);
-			}
-		}
 
-		Element securityToken = null;
-		try {
-			securityToken = token.serialize();
-			encryptor.setData(securityToken.toXML());
-			issuedToken = encryptor.toXML();
+            Nodes ppiNodes = infocard.query("/infocard/privatepersonalidentifier");
+            Element ppiElm = (Element) ppiNodes.get(0);
+            if (ppiElm != null) {
+                ppi = ppiElm.getValue();
+            } else {
+                throw new TokenIssuanceException(
+                        "Error: This infocard has no privatepersonalidentifier!");
+            }
 
-		} catch (SerializationException e) {
-			throw new TokenIssuanceException(e);
-		}
+            // storeInfoCardAsCertificate(ppi, infocard);
 
-		return issuedToken;
-	}
+            ppi = generatePpiForThisRP(ppi, relyingPartyCert
+                    .getSubjectX500Principal().getName());
+
+    //		System.out.println("Server Cert: "
+    //				+ relyingPartyCert.getSubjectDN().toString());
+
+            EncryptedData encryptor = new EncryptedData(relyingPartyCert);
+            SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
+                    signingCert, signingKey);
+
+            token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
+            token.setValidityPeriod(-5, 10);
+
+            final String ALL_CLAIMS = "givenname"
+                    + " "
+                    + "emailaddress"
+                    + " "
+                    + "surname"
+                    + " "
+                    + "streetaddress"
+                    + " "
+                    + "locality"
+                    + " "
+                    + "stateorprovince"
+                    + " "
+                    + "postalcode"
+                    + " "
+                    + "country"
+                    + " "
+                    + "homephone"
+                    + " "
+                    + "otherphone"
+                    + " "
+                    + "mobilephone"
+                    + " "
+                    + "dateofbirth"
+                    + " "
+                    + "gender";
+
+            String requiredClaims = null;
+            String optionalClaims = null;
+            try {
+                requiredClaims = (String) policy.get("requiredClaims");
+            } catch (JSONException e) {
+                // throw new TokenIssuanceException(e); // requiredClaims not found
+            }
+            try {
+                optionalClaims = (String) policy.get("optionalClaims");
+            } catch (JSONException e) {
+                // throw new TokenIssuanceException(e); // optionalClaims not found
+            }
+            if (requiredClaims == null) {
+                if (optionalClaims != null) {
+                    token = setTokenClaims(data, token, optionalClaims);
+                } else { // hm, lets throw everything we have at the RP
+                    token = setTokenClaims(data, token, ALL_CLAIMS);
+                }
+            } else { // requiredClaim are present
+                token = setTokenClaims(data, token, requiredClaims);
+                if (optionalClaims != null) {
+                    token = setTokenClaims(data, token, optionalClaims);
+                }
+            }
+
+            Element securityToken = null;
+            try {
+                securityToken = token.serialize();
+                encryptor.setData(securityToken.toXML());
+                issuedToken = encryptor.toXML();
+
+            } catch (SerializationException e) {
+                throw new TokenIssuanceException(e);
+            }
+
+        } else {
+
+            String assertion = null;
+
+            try {
+                assertion = (String) policy.get("assertion");
+            } catch (JSONException e) {
+                throw new TokenIssuanceException(e);
+            }
+
+            EncryptedData encryptor = new EncryptedData(relyingPartyCert);
+
+            try {
+                
+                encryptor.setData(assertion);
+                issuedToken = encryptor.toXML();
+
+            } catch (SerializationException e) {
+                throw new TokenIssuanceException(e);
+            }
+
+        }
+
+        return issuedToken;
+
+    }
 
 	private X509Certificate der2cert(String der) throws TokenIssuanceException {
 		byte[] certBytes = Base64.decode(der);
