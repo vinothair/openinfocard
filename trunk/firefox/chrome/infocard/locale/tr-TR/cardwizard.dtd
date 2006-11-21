@@ -2,4 +2,5 @@
 <!ENTITY cardwizard.title "Yeni kart asistani" >
 <!ENTITY cardwizard.first "&#214;ncelikle &#246;nerilen su kartlardan seciniz." >
 <!ENTITY cardwizard.selfasserted "Kendi cikardiniz kart" >
+<!ENTITY cardwizard.managed "Managed Card" >
 <!ENTITY cardwizard.carddetails "Kart ayrintilari" >

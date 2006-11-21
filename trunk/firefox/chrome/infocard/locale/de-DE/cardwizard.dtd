@@ -2,4 +2,5 @@
 <!ENTITY cardwizard.title "Neue Karte Assistent" >
 <!ENTITY cardwizard.first "Zuerst w&#228;hlen Sie aus der der Auswahl der unterst&#252;tzten Karten aus." >
 <!ENTITY cardwizard.selfasserted "Selbst erstellte Karte" >
+<!ENTITY cardwizard.managed "Managed Card" >
 <!ENTITY cardwizard.carddetails "Kartendetails" >

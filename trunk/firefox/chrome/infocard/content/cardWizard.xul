@@ -60,6 +60,9 @@
 
           }
 
+
+
+
        </script>
 
     <description>
@@ -80,7 +83,7 @@
 
          var callbackdata = {};
          callbackdata["type"] = "selfAsserted";
-         callbackdata["cardname"] = document.getElementById("cardname").value;
+         callbackdata["cardName"] = document.getElementById("cardname").value;
          callbackdata["givenname"] = document.getElementById("givenname").value;
          callbackdata["surname"] = document.getElementById("surname").value;
          callbackdata["email"] = document.getElementById("email").value;
@@ -97,6 +100,9 @@
          callbackdata["imgurl"] = document.getElementById("imgurl").value;
 
          window.arguments[1](callbackdata);
+
+         document.getElementById('card-window').cancel();
+
 
      }
      </script>
@@ -208,6 +214,13 @@
 
             var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
             var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
+
+              debug(cardId);
+              debug(cardName);
+              debug(issuer);
+              debug(mex);
+              debug(cardHint);
+              debug(cardUid);
 
 
               var callbackdata = {};
