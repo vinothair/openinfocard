@@ -2,4 +2,5 @@
 <!ENTITY cardwizard.title "Nov&#253; asistent karty" >
 <!ENTITY cardwizard.first "Nejprve si vyberte z nab&#237;dky podporovan&#253;ch karet:" >
 <!ENTITY cardwizard.selfasserted "Vlastoru&#269;n&#283; vytvo&#345;en&#225; karta:" >
+<!ENTITY cardwizard.managed "Managed Card" >
 <!ENTITY cardwizard.carddetails "Detaily o kart&#283;" >
