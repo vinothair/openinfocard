@@ -1,3 +1,31 @@
+/*
+ * Copyright (c) 2006, Chuck Mortimore - xmldap.org
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the names xmldap, xmldap.org, xmldap.com nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package org.xmldap.infocard;
 
 import org.xmldap.util.Base64;
@@ -5,6 +33,8 @@ import org.xmldap.crypto.CryptoUtils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 
 import net.sourceforge.lightcrypto.SafeObject;
@@ -90,6 +120,30 @@ public class EncryptedStore {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        /*  Integrity Check is not quite working
+
+        String finalBlock = clearText.substring(clearText.length() - 16);
+        byte[] finalBytes = new byte[0];
+        try {
+            finalBytes = finalBlock.getBytes("UTF8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        byte[] sig = new byte[iv.length + integrityKey.length + finalBytes.length];
+
+        System.arraycopy(iv, 0, sig, 0, iv.length);
+        System.arraycopy(integrityKey, 0, sig, iv.length, integrityKey.length);
+        System.arraycopy(finalBytes, 0, sig, integrityKey.length, finalBytes.length);
+        digest.update(sig);
+        byte[] integrityCheck = digest.digest();
+
+
+        System.out.println("IntegrityCheck: " + Arrays.equals(integrityCode, integrityCheck));
+
+        */
+
 
         //wierd little bug - I think it's iv related.
         int start = clearText.indexOf("<RoamingStore");
