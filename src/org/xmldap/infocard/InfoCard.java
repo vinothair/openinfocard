@@ -49,8 +49,6 @@ import java.security.cert.X509Certificate;
 /**
  * InfoCard allows you to create an InfoCard, and serialize to XML.
  *
- * Almost works...
- *
  * @author charliemortimore at gmail.com
  */
 public class InfoCard {
