@@ -35,6 +35,12 @@ import org.xmldap.crypto.EncryptedStoreKeys;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.SerializationException;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.crypto.engines.AESLightEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.BufferedBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 
 import java.io.*;
 import java.util.Random;
@@ -48,9 +54,7 @@ import nu.xom.*;
 
 public class EncryptedStore {
 
-
-    private static String sample = "";
-
+    private static byte[] bom = {(byte)0xEF, (byte)0xBB, (byte)0xBF};
 
 
     public Document decryptStore(InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
@@ -71,6 +75,7 @@ public class EncryptedStore {
 
         Nodes cipherValueNodes = encryptedStore.query("//enc:CipherValue",context);
         Element cipherValueElm = (Element) cipherValueNodes.get(0);
+
 
         String roamingStoreString =  decrypt(cipherValueElm.getValue(), password, saltElm.getValue());
 
@@ -128,24 +133,116 @@ public class EncryptedStore {
 
         clearText = CryptoUtils.decryptAESCBC(new StringBuffer(Base64.encodeBytes(ivPlusData)), keyBytes);
 
-
         byte[] hashedIntegrityCode = getHashedIntegrityCode(iv, keys.getIntegrityKey(),  clearText.toString());
-
-
         boolean valid = Arrays.equals(integrityCode, hashedIntegrityCode);
         if (!valid) {
-
             throw new CryptoException("The cardstore did not pass the integrity check - it may have been tampered with");
-
         }
-
 
         //get rid of the byte order mark
         int start = clearText.indexOf("<RoamingStore");
         return clearText.substring(start);
 
+    }
+
+
+    public void encryptStore(RoamingStore roamingStore, String password, OutputStream output) throws CryptoException {
+
+
+        Element encryptedStore = new Element("EncryptedStore", WSConstants.INFOCARD_NAMESPACE);
+        Element storeSalt = new Element("StoreSalt", WSConstants.INFOCARD_NAMESPACE);
+        Random rand = new Random();
+        byte[] salt = new byte[16];
+        rand.nextBytes(salt);
+
+        storeSalt.appendChild(Base64.encodeBytes(salt));
+        encryptedStore.appendChild(storeSalt);
+        Element encryptedData = new Element("EncryptedData", WSConstants.ENC_NAMESPACE);
+        Element cipherData = new Element("CipherData", WSConstants.ENC_NAMESPACE);
+        Element cipherValue = new Element("CipherValue", WSConstants.ENC_NAMESPACE);
+
+        encryptedStore.appendChild(encryptedData);
+        encryptedData.appendChild(cipherData);
+        cipherData.appendChild(cipherValue);
+        cipherValue.appendChild(encrypt(roamingStore, password, salt));
+
+        try {
+            output.write(bom);
+            output.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>".getBytes("UTF8"));
+            output.write(encryptedStore.toXML().getBytes("UTF8"));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
+
+
+    public String encrypt(RoamingStore roamingStore, String password, byte[] salt) throws CryptoException{
+
+
+        EncryptedStoreKeys keys = new EncryptedStoreKeys(password,salt);
+
+        Random rand = new Random();
+        byte[] iv = new byte[16];
+        rand.nextBytes(iv);
+
+        String dataString = null;
+        try {
+            dataString = roamingStore.toXML();
+        } catch (SerializationException e) {
+            throw new CryptoException("Error getting RoamingStore XML", e);
+        }
+
+        byte[] integrityCode = getHashedIntegrityCode(iv, keys.getIntegrityKey(),dataString);
+
+        ByteArrayOutputStream dataBytes = new ByteArrayOutputStream();
+        try {
+            dataBytes.write(bom);
+            dataBytes.write(dataString.getBytes("UTF8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        //encrypt
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            AESLightEngine aes = new AESLightEngine();
+            CBCBlockCipher cbc = new CBCBlockCipher(aes);
+            BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(cbc);
+            KeyParameter key = new KeyParameter(keys.getEncryptionKey());
+            ParametersWithIV paramWithIV = new ParametersWithIV(key, iv);
+            byte inputBuffer[] = new byte[16];
+            byte outputBuffer[] = new byte[16];
+            int bytesProcessed = 0;
+            cipher.init(true, paramWithIV);
+            int bytesRead = 0;
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(dataBytes.toByteArray());
+            while((bytesRead = inputStream.read(inputBuffer)) > 0)  {
+                bytesProcessed = cipher.processBytes(inputBuffer, 0, bytesRead, outputBuffer, 0);
+                if(bytesProcessed > 0)  outputStream.write(outputBuffer, 0, bytesProcessed);
+            }
+            bytesProcessed = cipher.doFinal(outputBuffer, 0);
+            if(bytesProcessed > 0) outputStream.write(outputBuffer, 0, bytesProcessed);
+        } catch(Exception e) {
+            throw new CryptoException ("Error encrypting data", e);
+        }
+
+        byte[] cipherText = outputStream.toByteArray();
+
+
+        //append iv + integrityCode + cipherText
+        byte[] blob = new byte[ 48 + cipherText.length];
+        System.arraycopy(iv, 0, blob, 0, 16);
+        System.arraycopy(integrityCode, 0, blob, 16, 32);
+        System.arraycopy(cipherText, 0, blob, 48, cipherText.length);
+
+        //Base64 encode and return
+        return Base64.encodeBytesNoBreaks(blob);
+    }
+
+
 
 
     private byte[] getHashedIntegrityCode(byte[] iv, byte[] integrityKey,  String clearText) {
@@ -178,61 +275,6 @@ public class EncryptedStore {
 
     }
 
-    public String encryptStore(RoamingStore roamingStore, String password) throws CryptoException {
-
-
-        Element encryptedStore = new Element("EncryptedStore", WSConstants.INFOCARD_NAMESPACE);
-        Element storeSalt = new Element("StoreSalt", WSConstants.INFOCARD_NAMESPACE);
-        Random rand = new Random();
-        byte[] salt = new byte[16];
-        rand.nextBytes(salt);
-        storeSalt.appendChild(Base64.encodeBytes(salt));
-        encryptedStore.appendChild(storeSalt);
-        Element encryptedData = new Element("EncryptedData", WSConstants.ENC_NAMESPACE);
-        Element cipherData = new Element("CipherData", WSConstants.ENC_NAMESPACE);
-        Element cipherValue = new Element("CipherValue", WSConstants.ENC_NAMESPACE);
-
-        encryptedStore.appendChild(encryptedData);
-        encryptedData.appendChild(cipherData);
-        cipherData.appendChild(cipherValue);
-        cipherValue.appendChild(cipherValue);
-        cipherValue.appendChild(encrypt(roamingStore, password, salt));
-
-        return null;
-    }
-
-
-    public String encrypt(RoamingStore roamingStore, String password, byte[] salt) throws CryptoException{
-
-
-        EncryptedStoreKeys keys = new EncryptedStoreKeys(password,salt);
-
-        Random rand = new Random();
-        byte[] iv = new byte[16];
-        rand.nextBytes(iv);
-
-        byte[] integrityKey = new byte[32];
-
-        String dataString = null;
-        try {
-            dataString = roamingStore.toXML();
-        } catch (SerializationException e) {
-            throw new CryptoException("Error getting RoamingStore XML", e);
-        }
-
-        byte[] data = new byte[0];
-        try {
-            data = dataString.getBytes("UTF-16LE");
-        } catch (UnsupportedEncodingException e) {
-            throw new CryptoException("Error getting RoamingStore XML bytes in UTF-16LE", e);
-        }
-
-
-
-        return null;
-    }
-
-
 
     public static void main(String[] args) {
 
@@ -241,30 +283,36 @@ public class EncryptedStore {
         EncryptedStore encryptedStore = new EncryptedStore();
         Document roamingStore = null;
         try {
-            InputStream stream =  new FileInputStream("/Users/cmort/Desktop/backup.crds");
+            InputStream stream =  new FileInputStream("/Users/cmort/Desktop/CardBackups/backup.crds");
             roamingStore = encryptedStore.decryptStore(stream, password);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println(roamingStore.toXML());
+
+        RoamingStore store = new RoamingStore();
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream("/Users/cmort/Desktop/CardBackups/ManualBackup.crds");
+            encryptedStore.encryptStore(store, password, fos);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        EncryptedStore encryptedStore1 = new EncryptedStore();
+        Document roamingStore1 = null;
+        try {
+            InputStream stream =  new FileInputStream("/Users/cmort/Desktop/CardBackups/ManualBackup.crds");
+            roamingStore1 = encryptedStore1.decryptStore(stream, password);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (ParsingException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         } catch (CryptoException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-
-        Serializer serializer = null;
-        try {
-            serializer = new Serializer(System.out, "UTF8");
-            serializer.setIndent(4);
-            serializer.setMaxLength(64);
-            serializer.setPreserveBaseURI(false);
-            serializer.write(roamingStore);
-            serializer.flush();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println(roamingStore1.toXML());
 
     }
 
