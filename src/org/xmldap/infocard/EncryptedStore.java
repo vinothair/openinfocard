@@ -29,11 +29,12 @@
 package org.xmldap.infocard;
 
 import org.xmldap.util.Base64;
+import org.xmldap.util.XmlFileUtil;
 import org.xmldap.crypto.CryptoUtils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.io.IOException;
+import java.io.*;
 
 import net.sourceforge.lightcrypto.SafeObject;
 import nu.xom.*;
@@ -45,26 +46,45 @@ public class EncryptedStore {
     private static byte[] integrityKeyEntropy = {(byte)0xc4, (byte)0x01, (byte)0x7b, (byte)0xf1, (byte)0x6b, (byte)0xad, (byte)0x2f, (byte)0x42, (byte)0xaf, (byte)0xf4, (byte)0x97, (byte)0x7d, (byte)0x4, (byte)0x68, (byte)0x3, (byte)0xdb};
 
 
-    public String decrypt(String encryptedStore, String password) throws ParsingException{
+    public Document getRoamingStore(InputStream encryptedStore, String password) throws ParsingException{
 
+
+        String roamingStoreString = null;
+        try {
+            roamingStoreString = decrypt(XmlFileUtil.readXml(encryptedStore), password);
+        } catch (IOException e) {
+            throw new ParsingException("Error creating encrypted store docuement", e);
+        }
 
         //let's make a doc
         Builder parser = new Builder();
-        Document encryptedStoreDoc = null;
+        Document roamingStore = null;
         try {
-            encryptedStoreDoc = parser.build(encryptedStore, "");
+            roamingStore = parser.build(roamingStoreString, "");
+        } catch (ParsingException e) {
+            e.printStackTrace();
+
         } catch (IOException e) {
-            throw new ParsingException("Error Parsing Roaming Store", e);
+            e.printStackTrace();
         }
+
+        return roamingStore;
+
+    }
+
+
+
+    public String decrypt(Document encryptedStore, String password) throws ParsingException{
+
 
         XPathContext context = new XPathContext();
         context.addNamespace("id","http://schemas.xmlsoap.org/ws/2005/05/identity");
         context.addNamespace("enc","http://www.w3.org/2001/04/xmlenc#");
 
-        Nodes saltNodes = encryptedStoreDoc.query("//id:StoreSalt",context);
+        Nodes saltNodes = encryptedStore.query("//id:StoreSalt",context);
         Element saltElm = (Element) saltNodes.get(0);
 
-        Nodes cipherValueNodes = encryptedStoreDoc.query("//enc:CipherValue",context);
+        Nodes cipherValueNodes = encryptedStore.query("//enc:CipherValue",context);
         Element cipherValueElm = (Element) cipherValueNodes.get(0);
 
 
@@ -170,9 +190,10 @@ public class EncryptedStore {
         */
 
 
-        //wierd little bug - I think it's iv related.
+        //get rid of the byte order mark
         int start = clearText.indexOf("<RoamingStore");
         return clearText.substring(start);
+
 
     }
 
@@ -203,13 +224,29 @@ public class EncryptedStore {
 
 
         EncryptedStore encryptedStore = new EncryptedStore();
-        String clearText = null;
+        Document roamingStore = null;
         try {
-            clearText = encryptedStore.decrypt(store, password);
+            InputStream stream =  new FileInputStream("/Users/cmort/Desktop/backup.crds");
+            roamingStore = encryptedStore.getRoamingStore(stream, password);
         } catch (ParsingException e) {
             e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
-        System.out.println(clearText);
+
+        Serializer serializer = null;
+        try {
+            serializer = new Serializer(System.out, "UTF8");
+            serializer.setIndent(4);
+            serializer.setMaxLength(64);
+            serializer.setPreserveBaseURI(false);
+            serializer.write(roamingStore);
+            serializer.flush();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 

@@ -64,6 +64,12 @@
         <description>Card</description>
         <servlet-class>org.xmldap.sts.servlet.CardServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>Decrypt</servlet-name>
+        <display-name>Decrypt</display-name>
+        <description>Decrypt a Cardspace Backup</description>
+        <servlet-class>org.xmldap.sts.servlet.DecryptCardspaceBackupServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>MexServlet</servlet-name>
         <url-pattern>/mex</url-pattern>
@@ -75,5 +81,9 @@
     <servlet-mapping>
         <servlet-name>Card</servlet-name>
         <url-pattern>/card/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Decrypt</servlet-name>
+        <url-pattern>/decrypt</url-pattern>
     </servlet-mapping>
 </web-app>
