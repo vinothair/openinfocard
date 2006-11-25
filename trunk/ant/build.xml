@@ -55,6 +55,8 @@
             <fileset dir="${websrc.dir}/sts/"/>
             <lib file="${lib.dir}/xom-1.1.jar"/>            
             <lib file="${lib.dir}/derby.jar"/> 
+            <lib file="${lib.dir}/commons-fileupload-1.1.1.jar"/>
+            <lib file="${lib.dir}/commons-io-1.2.jar"/> 
             <lib file="${lib.dir}/bcprov-jdk${java.ver}-133.jar"/>
             <lib file="${lib.dir}/lightcrypto.jar"/>
             <lib file="${build.dir}/xmldap.jar"/>

@@ -102,4 +102,42 @@ public class XmlFileUtil {
 		return encryptedStoreDoc;
 	}
 
+
+
+    /**
+     * Read an XML file into a Document considering Byte Order Marks
+     *
+     * @param stream
+     *
+     * @return XML Document
+     *
+     * @throws IOException
+     * @throws ValidityException
+     * @throws ParsingException
+     */
+    public static Document readXml(InputStream stream) throws IOException, ValidityException, ParsingException
+    {
+        String encoding = getEncoding(stream);
+        System.out.println("encoding: " + encoding);
+        if (encoding == null) {
+            // read some bytes but where not able to determine BO
+            // have to reset stream
+            encoding = "utf-8";
+        }
+
+
+        int avail = stream.available();
+        byte[] encryptedStoreBytes = new byte[avail];
+        stream.read(encryptedStoreBytes);
+        stream.close();
+
+        System.out.println(new String(encryptedStoreBytes, encoding));
+
+        Builder parser = new Builder();
+        Document encryptedStoreDoc = parser.build(new String(
+                encryptedStoreBytes, encoding), "");
+        return encryptedStoreDoc;
+    }
+
+
 }
