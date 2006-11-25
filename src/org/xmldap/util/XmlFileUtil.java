@@ -29,10 +29,11 @@ public class XmlFileUtil {
 	 * @return
 	 * @throws IOException
 	 */
-	public static String getEncoding(InputStream stream)
-			throws IOException {
+	public static String getEncoding(InputStream stream) throws IOException {
 
-		byte[] b = new byte[3];
+        stream.mark(4);
+
+        byte[] b = new byte[3];
 		int count = 0;
 		int b0 = 0;
 		int b1 = 0;
@@ -41,8 +42,9 @@ public class XmlFileUtil {
 		if (count == 2) {
 			b0 = b[0] & 0xFF;
 			b1 = b[1] & 0xFF;
-			if (b0 == 0xFE && b1 == 0xFF) {
-				return "UTF-16BE";
+
+            if (b0 == 0xFE && b1 == 0xFF) {
+                return "UTF-16BE";
 			} else if (b0 == 0xFF && b1 == 0xFE) {
 				return "UTF-16LE";
 			}
@@ -50,13 +52,14 @@ public class XmlFileUtil {
 			return null;
 		}
 
-		byte[] B = new byte[1];
+        byte[] B = new byte[1];
 		count = stream.read(B, 0, 1);
 		if (count == 1) {
 			final int b2 = B[0] & 0xFF;
 			if (b0 != 0xEF || b1 != 0xBB || b2 != 0xBF) {
 				// First three bytes are not BOM, so reset.
-			} else {
+                stream.reset();
+            } else {
 				return "UTF-8";
 			}
 		}
@@ -118,7 +121,6 @@ public class XmlFileUtil {
     public static Document readXml(InputStream stream) throws IOException, ValidityException, ParsingException
     {
         String encoding = getEncoding(stream);
-        System.out.println("encoding: " + encoding);
         if (encoding == null) {
             // read some bytes but where not able to determine BO
             // have to reset stream
@@ -130,12 +132,8 @@ public class XmlFileUtil {
         byte[] encryptedStoreBytes = new byte[avail];
         stream.read(encryptedStoreBytes);
         stream.close();
-
-        System.out.println(new String(encryptedStoreBytes, encoding));
-
         Builder parser = new Builder();
-        Document encryptedStoreDoc = parser.build(new String(
-                encryptedStoreBytes, encoding), "");
+        Document encryptedStoreDoc = parser.build(new String(encryptedStoreBytes, encoding), "");
         return encryptedStoreDoc;
     }
 
