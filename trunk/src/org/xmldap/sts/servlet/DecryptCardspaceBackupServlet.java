@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Iterator;
 
 import org.xmldap.infocard.EncryptedStore;
+import org.xmldap.exceptions.CryptoException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
@@ -120,8 +121,8 @@ public class DecryptCardspaceBackupServlet extends HttpServlet {
         EncryptedStore encryptedStore = new EncryptedStore();
         Document roamingStore = null;
         try {
-            roamingStore = encryptedStore.getRoamingStore(store, password);
-        } catch (ParsingException e) {
+            roamingStore = encryptedStore.decryptStore(store, password);
+        } catch (Exception e) {
             PrintWriter out = response.getWriter();
             out.println("There was an error decrypting your backup: " + e.getMessage());
             e.printStackTrace();
@@ -129,7 +130,7 @@ public class DecryptCardspaceBackupServlet extends HttpServlet {
             out.close();
             return;
         }
-
+        
         response.setContentType("text/xml");
         OutputStream out = response.getOutputStream();
         Serializer serializer = null;

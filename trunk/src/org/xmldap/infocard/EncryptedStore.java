@@ -31,10 +31,15 @@ package org.xmldap.infocard;
 import org.xmldap.util.Base64;
 import org.xmldap.util.XmlFileUtil;
 import org.xmldap.crypto.CryptoUtils;
+import org.xmldap.crypto.EncryptedStoreKeys;
+import org.xmldap.ws.WSConstants;
+import org.xmldap.exceptions.CryptoException;
+import org.xmldap.exceptions.SerializationException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.io.*;
+import java.util.Random;
 
 import net.sourceforge.lightcrypto.SafeObject;
 import nu.xom.*;
@@ -42,19 +47,31 @@ import nu.xom.*;
 
 public class EncryptedStore {
 
-    private static byte[] encKeyEntropy =  { (byte)0xd9, (byte)0x59, (byte)0x7b, (byte)0x26, (byte)0x1e, (byte)0xd8, (byte)0xb3, (byte)0x44, (byte)0x93, (byte)0x23, (byte)0xb3, (byte)0x96, (byte)0x85, (byte)0xde, (byte)0x95, (byte)0xfc };
-    private static byte[] integrityKeyEntropy = {(byte)0xc4, (byte)0x01, (byte)0x7b, (byte)0xf1, (byte)0x6b, (byte)0xad, (byte)0x2f, (byte)0x42, (byte)0xaf, (byte)0xf4, (byte)0x97, (byte)0x7d, (byte)0x4, (byte)0x68, (byte)0x3, (byte)0xdb};
+
+    private static String sample = "";
 
 
-    public Document getRoamingStore(InputStream encryptedStore, String password) throws ParsingException{
 
+    public Document decryptStore(InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
 
-        String roamingStoreString = null;
+        Document encryptedStore = null;
         try {
-            roamingStoreString = decrypt(XmlFileUtil.readXml(encryptedStore), password);
+            encryptedStore = XmlFileUtil.readXml(encryptedStoreStream);
         } catch (IOException e) {
-            throw new ParsingException("Error creating encrypted store docuement", e);
+            throw new ParsingException("Error parsing EncryptedStore", e);
         }
+
+        XPathContext context = new XPathContext();
+        context.addNamespace("id","http://schemas.xmlsoap.org/ws/2005/05/identity");
+        context.addNamespace("enc","http://www.w3.org/2001/04/xmlenc#");
+
+        Nodes saltNodes = encryptedStore.query("//id:StoreSalt",context);
+        Element saltElm = (Element) saltNodes.get(0);
+
+        Nodes cipherValueNodes = encryptedStore.query("//enc:CipherValue",context);
+        Element cipherValueElm = (Element) cipherValueNodes.get(0);
+
+        String roamingStoreString =  decrypt(cipherValueElm.getValue(), password, saltElm.getValue());
 
         //let's make a doc
         Builder parser = new Builder();
@@ -73,62 +90,10 @@ public class EncryptedStore {
     }
 
 
-
-    public String decrypt(Document encryptedStore, String password) throws ParsingException{
-
-
-        XPathContext context = new XPathContext();
-        context.addNamespace("id","http://schemas.xmlsoap.org/ws/2005/05/identity");
-        context.addNamespace("enc","http://www.w3.org/2001/04/xmlenc#");
-
-        Nodes saltNodes = encryptedStore.query("//id:StoreSalt",context);
-        Element saltElm = (Element) saltNodes.get(0);
-
-        Nodes cipherValueNodes = encryptedStore.query("//enc:CipherValue",context);
-        Element cipherValueElm = (Element) cipherValueNodes.get(0);
+    private String decrypt(String cipherText, String password, String salt) throws CryptoException{
 
 
-        return decrypt(cipherValueElm.getValue(), password, saltElm.getValue());
-
-    }
-
-    private String decrypt(String cipherText, String password, String salt) throws ParsingException{
-
-        byte[] key = null;
-        try {
-            key = password.getBytes("UTF-16LE");
-        } catch (Exception e) {
-            throw new ParsingException("Error Parsing Roaming Store", e);
-        }
-
-        MessageDigest digest = null;
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new ParsingException("Error Parsing Roaming Store", e);
-        }
-
-        byte[] derivedKey = generateDerivedKey(digest, key, Base64.decode(salt), 1000);
-
-
-
-        digest.reset();
-
-        byte[] encKeyBytes = new byte[encKeyEntropy.length + derivedKey.length];
-        System.arraycopy(encKeyEntropy, 0, encKeyBytes, 0, encKeyEntropy.length);
-        System.arraycopy(derivedKey, 0, encKeyBytes, encKeyEntropy.length ,derivedKey.length);
-        digest.update(encKeyBytes);
-        byte[] encKey = digest.digest();
-
-
-        digest.reset();
-
-        byte[] integrityKeyBytes = new byte[integrityKeyEntropy.length + derivedKey.length];
-        System.arraycopy(integrityKeyEntropy, 0, integrityKeyBytes, 0, integrityKeyEntropy.length);
-        System.arraycopy(derivedKey, 0, integrityKeyBytes, integrityKeyEntropy.length ,derivedKey.length);
-        digest.update(integrityKeyBytes);
-        byte[] integrityKey = digest.digest();
-
+        EncryptedStoreKeys keys = new EncryptedStoreKeys(password,Base64.decode(salt));
 
         byte[] cipherBytes = Base64.decode(cipherText);
         byte[] iv = new byte[16];
@@ -152,19 +117,16 @@ public class EncryptedStore {
 
         SafeObject keyBytes = new SafeObject();
         try {
-            keyBytes.setText(encKey);
+            keyBytes.setText(keys.getEncryptionKey());
         } catch (Exception e) {
-            throw new ParsingException("Error Parsing Roaming Store", e);
+            throw new CryptoException("Error Parsing Roaming Store", e);
         }
 
 
         StringBuffer clearText = null;
 
-        try {
-            clearText = CryptoUtils.decryptAESCBC(new StringBuffer(Base64.encodeBytes(ivPlusData)), keyBytes);
-        } catch (Exception e) {
-            throw new ParsingException("Error Parsing Roaming Store", e);
-        }
+        clearText = CryptoUtils.decryptAESCBC(new StringBuffer(Base64.encodeBytes(ivPlusData)), keyBytes);
+
 
         /*  Integrity Check is not quite working
 
@@ -198,17 +160,66 @@ public class EncryptedStore {
     }
 
 
-    public byte[] generateDerivedKey(MessageDigest digest, byte[] password, byte[] salt, int iterationCount) {
+    public String encryptStore(RoamingStore roamingStore, String password) throws CryptoException {
 
-        digest.update(password);
-        digest.update(salt);
-        byte[] digestBytes = digest.digest();
-        for (int i = 1; i < iterationCount; i++) {
-            digest.update(digestBytes);
-            digestBytes = digest.digest();
-        }
-        return digestBytes;
+
+        Element encryptedStore = new Element("EncryptedStore", WSConstants.INFOCARD_NAMESPACE);
+        Element storeSalt = new Element("StoreSalt", WSConstants.INFOCARD_NAMESPACE);
+        Random rand = new Random();
+        byte[] salt = new byte[16];
+        rand.nextBytes(salt);
+        storeSalt.appendChild(Base64.encodeBytes(salt));
+        encryptedStore.appendChild(storeSalt);
+        Element encryptedData = new Element("EncryptedData", WSConstants.ENC_NAMESPACE);
+        Element cipherData = new Element("CipherData", WSConstants.ENC_NAMESPACE);
+        Element cipherValue = new Element("CipherValue", WSConstants.ENC_NAMESPACE);
+
+        encryptedStore.appendChild(encryptedData);
+        encryptedData.appendChild(cipherData);
+        cipherData.appendChild(cipherValue);
+        cipherValue.appendChild(cipherValue);
+        cipherValue.appendChild(encrypt(roamingStore, password, salt));
+
+        return null;
     }
+
+
+    public String encrypt(RoamingStore roamingStore, String password, byte[] salt) throws CryptoException{
+
+
+        EncryptedStoreKeys keys = new EncryptedStoreKeys(password,salt);
+
+        Random rand = new Random();
+        byte[] iv = new byte[16];
+        rand.nextBytes(iv);
+
+        byte[] integrityKey = new byte[32];
+
+        String dataString = null;
+        try {
+            dataString = roamingStore.toXML();
+        } catch (SerializationException e) {
+            throw new CryptoException("Error getting RoamingStore XML", e);
+        }
+
+        byte[] data = new byte[0];
+        try {
+            data = dataString.getBytes("UTF-16LE");
+        } catch (UnsupportedEncodingException e) {
+            throw new CryptoException("Error getting RoamingStore XML bytes in UTF-16LE", e);
+        }
+
+
+
+
+
+
+
+
+        return null;
+    }
+
+
 
     public static void main(String[] args) {
 
@@ -227,11 +238,13 @@ public class EncryptedStore {
         Document roamingStore = null;
         try {
             InputStream stream =  new FileInputStream("/Users/cmort/Desktop/backup.crds");
-            roamingStore = encryptedStore.getRoamingStore(stream, password);
-        } catch (ParsingException e) {
-            e.printStackTrace();
+            roamingStore = encryptedStore.decryptStore(stream, password);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        } catch (ParsingException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (CryptoException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
         Serializer serializer = null;
