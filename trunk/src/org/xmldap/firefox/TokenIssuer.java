@@ -29,7 +29,6 @@
 package org.xmldap.firefox;
 
 import nu.xom.*;
-import org.bouncycastle.asn1.x509.X509Name;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
@@ -53,10 +52,6 @@ import java.net.URLDecoder;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.*;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.util.Date;
-import java.util.Vector;
 
 public class TokenIssuer {
 
