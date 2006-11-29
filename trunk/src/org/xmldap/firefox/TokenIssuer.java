@@ -432,7 +432,12 @@ public class TokenIssuer {
         }
 
 
-        X509Certificate relyingPartyCert = org.xmldap.util.CertsAndKeys.der2cert(der);
+        X509Certificate relyingPartyCert;
+		try {
+			relyingPartyCert = org.xmldap.util.CertsAndKeys.der2cert(der);
+		} catch (CertificateException e) {
+			throw new TokenIssuanceException(e);
+		}
 
         if (type.equals("selfAsserted")) {
 
