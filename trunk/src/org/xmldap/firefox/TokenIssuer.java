@@ -225,9 +225,15 @@ public class TokenIssuer {
 				signingKey = kp.getPrivate();
 				storeCertKey(keystorePath);
 			} catch (NoSuchAlgorithmException e1) {
-				throw new TokenIssuanceException(e);
+				throw new TokenIssuanceException(e1);
 			} catch (NoSuchProviderException e1) {
-				throw new TokenIssuanceException(e);
+				throw new TokenIssuanceException(e1);
+			} catch (InvalidKeyException e1) {
+				throw new TokenIssuanceException(e1);
+			} catch (SecurityException e1) {
+				throw new TokenIssuanceException(e1);
+			} catch (SignatureException e1) {
+				throw new TokenIssuanceException(e1);
 			}
 		}
 	}

@@ -149,11 +149,14 @@ public class CertsAndKeys {
 	 * @return
 	 * @throws TokenIssuanceException
 	 * @throws UnsupportedEncodingException
+	 * @throws SignatureException 
+	 * @throws SecurityException 
+	 * @throws InvalidKeyException 
 	 */
 	public static X509Certificate generateClientCertificate(KeyPair kp,
 			X509Name issuer, X509Name subject, String gender, Date dateOfBirth,
 			String streetAddress, String telephoneNumber)
-			throws TokenIssuanceException, UnsupportedEncodingException {
+			throws TokenIssuanceException, UnsupportedEncodingException, InvalidKeyException, SecurityException, SignatureException {
 		if (Security.getProvider("BC") == null) {
 			Security.addProvider(new BouncyCastleProvider());
 		}
@@ -179,15 +182,7 @@ public class CertsAndKeys {
 					sda);
 		}
 
-		try {
-			cert = gen.generateX509Certificate(kp.getPrivate());
-		} catch (InvalidKeyException e) {
-			throw new TokenIssuanceException(e);
-		} catch (SecurityException e) {
-			throw new TokenIssuanceException(e);
-		} catch (SignatureException e) {
-			throw new TokenIssuanceException(e);
-		}
+		cert = gen.generateX509Certificate(kp.getPrivate());
 		return cert;
 	}
 
