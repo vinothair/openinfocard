@@ -242,9 +242,12 @@ public class CertsAndKeys {
 	 * @param subject
 	 * @return
 	 * @throws TokenIssuanceException
+	 * @throws SignatureException 
+	 * @throws SecurityException 
+	 * @throws InvalidKeyException 
 	 */
 	public static X509Certificate generateSSLServerCertificate(KeyPair kp,
-			X509Name issuer, X509Name subject) throws TokenIssuanceException {
+			X509Name issuer, X509Name subject) throws InvalidKeyException, SecurityException, SignatureException {
 		if (Security.getProvider("BC") == null) {
 			Security.addProvider(new BouncyCastleProvider());
 		}
@@ -264,15 +267,7 @@ public class CertsAndKeys {
 		gen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
 		gen = addSSLServerExtensions(gen);
 		gen = addLogotype(gen);
-		try {
-			cert = gen.generateX509Certificate(kp.getPrivate());
-		} catch (InvalidKeyException e) {
-			throw new TokenIssuanceException(e);
-		} catch (SecurityException e) {
-			throw new TokenIssuanceException(e);
-		} catch (SignatureException e) {
-			throw new TokenIssuanceException(e);
-		}
+		cert = gen.generateX509Certificate(kp.getPrivate());
 		return cert;
 	}
 
