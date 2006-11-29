@@ -20,6 +20,8 @@ import org.xmldap.exceptions.TokenIssuanceException;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
@@ -300,6 +302,21 @@ public class CertsAndKeys {
 		} catch (IOException e) {
 			throw new TokenIssuanceException(e);
 		}
+	}
+
+	public static X509Certificate der2cert(String der) throws TokenIssuanceException {
+		byte[] certBytes = Base64.decode(der);
+		ByteArrayInputStream is = new ByteArrayInputStream(certBytes);
+		BufferedInputStream bis = new BufferedInputStream(is);
+		CertificateFactory cf = null;
+		X509Certificate cert = null;
+		try {
+			cf = CertificateFactory.getInstance("X.509");
+			cert = (X509Certificate) cf.generateCertificate(bis);
+		} catch (CertificateException e) {
+			throw new TokenIssuanceException(e);
+		}
+		return cert;
 	}
 
 }

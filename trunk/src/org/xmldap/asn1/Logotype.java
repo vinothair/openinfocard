@@ -29,18 +29,22 @@
 package org.xmldap.asn1;
 
 import org.bouncycastle.asn1.*;
+import org.bouncycastle.x509.extension.X509ExtensionUtil;
+import org.json.JSONException;
+import org.xmldap.exceptions.TokenIssuanceException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.Vector;
 
 public class Logotype extends ASN1Encodable {
-	//	LogotypeExtn ::= SEQUENCE {
-	//		   communityLogos  [0] EXPLICIT SEQUENCE OF LogotypeInfo OPTIONAL,
-	//		   issuerLogo      [1] EXPLICIT LogotypeInfo OPTIONAL,
-	//		   subjectLogo     [2] EXPLICIT LogotypeInfo OPTIONAL,
-	//		   otherLogos      [3] EXPLICIT SEQUENCE OF OtherLogotypeInfo OPTIONAL }
+	// LogotypeExtn ::= SEQUENCE {
+	// communityLogos [0] EXPLICIT SEQUENCE OF LogotypeInfo OPTIONAL,
+	// issuerLogo [1] EXPLICIT LogotypeInfo OPTIONAL,
+	// subjectLogo [2] EXPLICIT LogotypeInfo OPTIONAL,
+	// otherLogos [3] EXPLICIT SEQUENCE OF OtherLogotypeInfo OPTIONAL }
 
 	public static final DERObjectIdentifier id_pe_logotype = new DERObjectIdentifier(
 			"1.3.6.1.5.5.7.1.12");
@@ -62,19 +66,20 @@ public class Logotype extends ASN1Encodable {
 
 	ASN1Sequence otherLogos = null;
 
-	//	public static Logotype getInstance(ASN1TaggedObject obj, boolean explicit) {
-	//		return getInstance(ASN1Sequence.getInstance(obj, explicit));
-	//	}
+	// public static Logotype getInstance(ASN1TaggedObject obj, boolean
+	// explicit) {
+	// return getInstance(ASN1Sequence.getInstance(obj, explicit));
+	// }
 	//
-	//	public static Logotype getInstance(Object obj) {
-	//		if (obj instanceof Logotype) {
-	//			return (Logotype) obj;
-	//		} else if (obj instanceof ASN1Sequence) {
-	//			return new Logotype((ASN1Sequence) obj);
-	//		}
+	// public static Logotype getInstance(Object obj) {
+	// if (obj instanceof Logotype) {
+	// return (Logotype) obj;
+	// } else if (obj instanceof ASN1Sequence) {
+	// return new Logotype((ASN1Sequence) obj);
+	// }
 	//
-	//		throw new IllegalArgumentException("unknown object in factory");
-	//	}
+	// throw new IllegalArgumentException("unknown object in factory");
+	// }
 
 	public static Logotype getInstance(ASN1Sequence seq) {
 		ASN1Sequence communityLogosSeq = null;
@@ -191,6 +196,59 @@ public class Logotype extends ASN1Encodable {
 		} else {
 			return null;
 		}
+	}
+
+	public String getIssuerLogoURL(String der) throws JSONException,
+			TokenIssuanceException, IOException {
+		String url = null;
+		X509Certificate relyingPartyCert = org.xmldap.util.CertsAndKeys.der2cert(der);
+		byte[] fromExtensionValue = relyingPartyCert
+				.getExtensionValue(Logotype.id_pe_logotype.getId());
+		if ((fromExtensionValue == null) || (fromExtensionValue.length == 0)) {
+			// certificat does not contain a logotype extension
+			return null;
+		}
+		ASN1Encodable extVal = X509ExtensionUtil
+				.fromExtensionValue(fromExtensionValue);
+		Logotype logotype = Logotype.getInstance((ASN1Sequence) extVal);
+		LogotypeInfo logotypeInfo = logotype.getIssuerLogo();
+		if (logotypeInfo == null) {
+			// logotype contains no issuer logo
+			return null;
+		}
+		if (logotypeInfo.getTagNo() == LogotypeInfo.direct) {
+			LogotypeData direct = logotypeInfo.getLogotypeData();
+			LogotypeDetails[] images = direct.getImages();
+			LogotypeDetails logotypeDetails = images[0];
+			// String mediaType = logotypeDetails.getMediaType();
+			// assertEquals("image/gif", mediaType);
+			// DigestInfo[] dis = logotypeDetails.getLogotypeHash();
+			// assertEquals(1, dis.length);
+			// DigestInfo di = dis[0];
+			// AlgorithmIdentifier algId = di.getAlgorithmId();
+			// assertEquals("1.3.14.3.2.26", algId.getObjectId().getId());
+			// byte[] digest = di.getDigest();
+			// byte[] expected = { -113, -27, -45, 26, -122, -84, -115,
+			// -114, 107, -61, -49, -128, 106, -44, 72, 24, 44, 123, 25,
+			// 46};
+			// assertEquals(expected.length , digest.length);
+			// for (int i=0; i<digest.length; i++) {
+			// assertEquals(expected[i], digest[i]);
+			// }
+			String[] uris = logotypeDetails.getLogotypeURI();
+			// assertEquals(1, uris.length);
+			url = uris[0];
+			// assertEquals("http://logo.verisign.com/vslogo.gif", uri);
+		} else if (logotypeInfo.getTagNo() == LogotypeInfo.indirect) {
+			// LogotypeReference indirect = logotypeInfo
+			// .getLogotypeReference();
+			// TODO
+			// LogotypeReference indirect =
+			// LogotypeReference.getInstance((ASN1TaggedObject)issuerLogo.toASN1Object(),
+			// false);
+			// assertNotNull(indirect);
+		}
+		return url;
 	}
 
 	public LogotypeInfo getSubjectLogo() {
