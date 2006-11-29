@@ -58,8 +58,7 @@ public class CertsAndKeys {
 	}
 
 	static public X509V3CertificateGenerator addClientExtensions(
-			X509V3CertificateGenerator gen)
-			throws UnsupportedEncodingException {
+			X509V3CertificateGenerator gen) throws UnsupportedEncodingException {
 		gen.addExtension(X509Extensions.BasicConstraints, true,
 				new BasicConstraints(false));
 		gen.addExtension(X509Extensions.KeyUsage, true, new KeyUsage(
@@ -70,7 +69,7 @@ public class CertsAndKeys {
 
 		return gen;
 	}
-	
+
 	static public X509V3CertificateGenerator addLogotype(
 			X509V3CertificateGenerator gen) {
 		String mediaType = "image/jpg";
@@ -101,7 +100,7 @@ public class CertsAndKeys {
 		byte[] logotypeBytes = obj.getDEREncoded();
 		gen.addExtension(Logotype.id_pe_logotype, false, logotypeBytes);
 		return gen;
-	}	
+	}
 
 	static public X509V3CertificateGenerator addCaExtensions(
 			X509V3CertificateGenerator gen) {
@@ -123,14 +122,15 @@ public class CertsAndKeys {
 		gen.addExtension(X509Extensions.BasicConstraints, true,
 				new BasicConstraints(false));
 		gen.addExtension(X509Extensions.KeyUsage, true, new KeyUsage(
-				KeyUsage.keyEncipherment|KeyUsage.digitalSignature));
+				KeyUsage.keyEncipherment | KeyUsage.digitalSignature));
 		Vector extendedKeyUsageV = new Vector();
 		extendedKeyUsageV.add(KeyPurposeId.id_kp_serverAuth);
 		extendedKeyUsageV.add(KeyPurposeId.id_kp_clientAuth);
 		// Netscape Server Gated Crypto
 		extendedKeyUsageV.add(new DERObjectIdentifier("2.16.840.1.113730.4.1"));
 		// Microsoft Server Gated Crypto
-		extendedKeyUsageV.add(new DERObjectIdentifier("1.3.6.1.4.1.311.10.3.3"));
+		extendedKeyUsageV
+				.add(new DERObjectIdentifier("1.3.6.1.4.1.311.10.3.3"));
 		gen.addExtension(X509Extensions.ExtendedKeyUsage, true,
 				new ExtendedKeyUsage(extendedKeyUsageV));
 		// gen.addExtension(X509Extensions.SubjectAlternativeName, false,
@@ -151,8 +151,8 @@ public class CertsAndKeys {
 	 * @throws UnsupportedEncodingException
 	 */
 	public static X509Certificate generateClientCertificate(KeyPair kp,
-			X509Name issuer, X509Name subject, String gender,
-			Date dateOfBirth, String streetAddress, String telephoneNumber)
+			X509Name issuer, X509Name subject, String gender, Date dateOfBirth,
+			String streetAddress, String telephoneNumber)
 			throws TokenIssuanceException, UnsupportedEncodingException {
 		if (Security.getProvider("BC") == null) {
 			Security.addProvider(new BouncyCastleProvider());
@@ -172,13 +172,12 @@ public class CertsAndKeys {
 		gen.setSignatureAlgorithm("MD5WithRSAEncryption");
 		gen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
 		gen = addClientExtensions(gen);
-		SubjectDirectoryAttributes sda = new SubjectDirectoryAttributes(
-				gender, dateOfBirth, streetAddress, telephoneNumber);
+		SubjectDirectoryAttributes sda = new SubjectDirectoryAttributes(gender,
+				dateOfBirth, streetAddress, telephoneNumber);
 		if (sda.size() > 0) {
 			gen.addExtension(X509Extensions.SubjectDirectoryAttributes, false,
-				sda);
+					sda);
 		}
-
 
 		try {
 			cert = gen.generateX509Certificate(kp.getPrivate());
@@ -236,7 +235,7 @@ public class CertsAndKeys {
 	}
 
 	/**
-	 * generates an X509 certificate 
+	 * generates an X509 certificate
 	 * 
 	 * @param kp
 	 * @param issuer
@@ -304,7 +303,8 @@ public class CertsAndKeys {
 		}
 	}
 
-	public static X509Certificate der2cert(String der) throws TokenIssuanceException {
+	public static X509Certificate der2cert(String der)
+			throws TokenIssuanceException {
 		byte[] certBytes = Base64.decode(der);
 		ByteArrayInputStream is = new ByteArrayInputStream(certBytes);
 		BufferedInputStream bis = new BufferedInputStream(is);
@@ -318,5 +318,127 @@ public class CertsAndKeys {
 		}
 		return cert;
 	}
+
+	// private void storeInfoCardAsCertificate(String nickname, Document
+	// infocard)
+	// throws TokenIssuanceException { // temporary hack to store infocards
+	// // as certificates
+	// try {
+	// X509Certificate cardAsCert = infocard2Certificate(infocard);
+	// // store in firefox.jks
+	// storeCardCertKeystore(nickname, cardAsCert, false);
+	// // store in <ppi>.pem
+	// storeCardCertPem(nickname, cardAsCert);
+	// // store in <ppi>.p12
+	// // storeCardCertP12(token.getPrivatePersonalIdentifier(),
+	// // cardAsCert);
+	// } catch (UnsupportedEncodingException e) {
+	// e.printStackTrace();
+	// } catch (ParseException e) {
+	// // TODO Auto-generated catch block
+	// e.printStackTrace();
+	// } catch (CertificateEncodingException e) {
+	// // TODO Auto-generated catch block
+	// e.printStackTrace();
+	// } catch (IOException e) {
+	// // TODO Auto-generated catch block
+	// e.printStackTrace();
+	// }
+	// }
+
+	// private X509Name claims2X509Name(Element data)
+	// throws TokenIssuanceException {
+	//
+	// Vector oids = new Vector();
+	// Vector values = new Vector();
+	//
+	// String value = getDataValue(data, "givenname");
+	// if ((value != null) && !value.equals("")) {
+	// oids.add(X509Name.GIVENNAME);
+	// values.add(value);
+	// }
+	// value = getDataValue(data, "surname");
+	// if ((value != null) && !value.equals("")) {
+	// oids.add(X509Name.SURNAME);
+	// values.add(value);
+	// }
+	// value = getDataValue(data, "emailaddress");
+	// if ((value != null) && !value.equals("")) {
+	// oids.add(X509Name.E);
+	// values.add(value);
+	// }
+	// // value = getDataValue(data, "streetladdress");
+	// // if ((value != null) && !value.equals("")) {
+	// // sb.append(" streetladdress=");
+	// // sb.append(value);
+	// // }
+	// value = getDataValue(data, "locality");
+	// if ((value != null) && !value.equals("")) {
+	// oids.add(X509Name.L);
+	// values.add(value);
+	// }
+	// value = getDataValue(data, "stateorprovince");
+	// if ((value != null) && !value.equals("")) {
+	// oids.add(X509Name.ST);
+	// values.add(value);
+	// }
+	// // value = getDataValue(data, "postalcode");
+	// // if ((value != null) && !value.equals("")) {
+	// // sb.append("postalcode=");
+	// // sb.append(value);
+	// // }
+	// value = getDataValue(data, "country");
+	// if ((value != null) && !value.equals("")) {
+	// oids.add(X509Name.C);
+	// values.add(value);
+	// }
+	// // value = getDataValue(data, "primaryphone");
+	// // if ((value != null) && !value.equals("")) {
+	// // sb.append(" primaryphone=");
+	// // sb.append(value);
+	// // }
+	// // value = getDataValue(data, "otherphone");
+	// // if ((value != null) && !value.equals("")) {
+	// // sb.append(" otherphone=");
+	// // sb.append(value);
+	// // }
+	// // value = getDataValue(data, "mobilephone");
+	// // if ((value != null) && !value.equals("")) {
+	// // sb.append(" mobilephone=");
+	// // sb.append(value);
+	// // }
+	// // value = getDataValue(data, "dateofbirth");
+	// // if ((value != null) && !value.equals("")) {
+	// // sb.append(" dateofbirth=");
+	// // sb.append(value);
+	// // }
+	// // value = getDataValue(data, "gender");
+	// // if ((value != null) && !value.equals("")) {
+	// // sb.append(" gender=");
+	// // sb.append(value);
+	// // }
+	//
+	// return new X509Name(oids, values);
+	// }
+
+	// public X509Certificate infocard2Certificate(Document infocard, KeyPair
+	// kp)
+	// throws UnsupportedEncodingException, ParseException {
+	// X509Certificate cert = null;
+	// // KeyPair kp = new KeyPair(signingCert.getPublicKey(), signingKey);
+	// X509Name issuer = new X509Name(
+	// "CN=firefox, OU=infocard selector, O=xmldap, L=San Francisco,
+	// ST=California, C=US");
+	// Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
+	// Element data = (Element) dataNodes.get(0);
+	// X509Name subject = claims2X509Name(data);
+	//
+	// DateFormat df = DateFormat.getDateInstance();
+	// Date dateOfBirth = df.parse(getDataValue(data, "dateofbirth"));
+	// cert = CertsAndKeys.generateClientCertificate(kp, issuer, subject,
+	// getDataValue(data, "gender"), dateOfBirth, getDataValue(data,
+	//						"streetladdress"), getDataValue(data, "primaryphone"));
+	//		return cert;
+	//	}
 
 }
