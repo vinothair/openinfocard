@@ -32,6 +32,7 @@ import nu.xom.Element;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
+import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.saml.*;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
@@ -49,337 +50,458 @@ import java.util.Vector;
  */
 public class SelfIssuedToken implements Serializable {
 
-    public static final String MS_NAMESPACE_PREFIX = "http://schemas.microsoft.com/ws/2005/05/identity/claims/";
+	public static final String MS_NAMESPACE_PREFIX = "http://schemas.microsoft.com/ws/2005/05/identity/claims/";
+
 	public static final String XS_NAMESPACE_PREFIX = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/";
 
 	private String namespacePrefix = null;
-	
-    private String givenName;
-    private String surname;
-    private String emailAddress;
-    private String streetAddress;
-    private String locality;
-    private String stateOrProvince;
-    private String postalCode;
-    private String country;
-    private String primaryPhone;
-    private String otherPhone;
-    private String mobilePhone;
-    private String dateOfBirth;
-    private String privatePersonalIdentifier;
-    private String gender;
-
-    private X509Certificate signingCert;
-    private PrivateKey signingKey;
-    private X509Certificate relyingPartyCert;
-
-
-    private int nowPlus = 10; //default to 10 minutes
-    private int nowMinus = 10; //default to 5 minutes
-    private boolean asymmetric = false; //default to symmetric key
-
-    public SelfIssuedToken(X509Certificate relyingPartyCert, X509Certificate signingCert, PrivateKey signingKey ) {
-        this.signingCert = signingCert;
-        this.signingKey = signingKey;
-        this.relyingPartyCert = relyingPartyCert;
-        namespacePrefix = XS_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
-    }
-
-
-    public void setNamespacePrefix(String namespacePrefix) {
-        this.namespacePrefix = namespacePrefix;
-    }
-
-    public String getNamespacePrefix() {
-    	return namespacePrefix;
-    }
-
-//    public int getValidityPeriod() {
-//        return nowPlus;
-//    }
-
-    public void setValidityPeriod(int nowMinus, int nowPlus) {
-        this.nowMinus = nowMinus;
-        this.nowPlus = nowPlus;
-    }
-    
-
-    public String getGivenName() {
-        return givenName;
-    }
-
-    public void setGivenName(String givenName) {
-        this.givenName = givenName;
-    }
-
-    public String getSurname() {
-        return surname;
-    }
-
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
-
-    public String getEmailAddress() {
-        return emailAddress;
-    }
-
-    public void setEmailAddress(String emailAddress) {
-        this.emailAddress = emailAddress;
-    }
-
-    public String getStreetAddress() {
-        return streetAddress;
-    }
-
-    public void setStreetAddress(String streetAddress) {
-        this.streetAddress = streetAddress;
-    }
 
-    public String getLocality() {
-        return locality;
-    }
-
-    public void setLocality(String locality) {
-        this.locality = locality;
-    }
-
-    public String getStateOrProvince() {
-        return stateOrProvince;
-    }
-
-    public void setStateOrProvince(String stateOrProvince) {
-        this.stateOrProvince = stateOrProvince;
-    }
+	private String givenName;
 
-    public String getPostalCode() {
-        return postalCode;
-    }
+	private String surname;
 
-    public void setPostalCode(String postalCode) {
-        this.postalCode = postalCode;
-    }
+	private String emailAddress;
 
-    public String getCountry() {
-        return country;
-    }
+	private String streetAddress;
 
-    public void setCountry(String country) {
-        this.country = country;
-    }
+	private String locality;
 
-    public String getPrimaryPhone() {
-        return primaryPhone;
-    }
+	private String stateOrProvince;
 
-    public void setPrimaryPhone(String primaryPhone) {
-        this.primaryPhone = primaryPhone;
-    }
+	private String postalCode;
 
-    public String getOtherPhone() {
-        return otherPhone;
-    }
+	private String country;
 
-    public void setOtherPhone(String otherPhone) {
-        this.otherPhone = otherPhone;
-    }
+	private String primaryPhone;
 
-    public String getMobilePhone() {
-        return mobilePhone;
-    }
+	private String otherPhone;
 
-    public void setMobilePhone(String mobilePhone) {
-        this.mobilePhone = mobilePhone;
-    }
+	private String mobilePhone;
 
-    public String getDateOfBirth() {
-        return dateOfBirth;
-    }
+	private String dateOfBirth;
 
-    public void setDateOfBirth(String dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
+	private String privatePersonalIdentifier;
 
-    public String getPrivatePersonalIdentifier() {
-        return privatePersonalIdentifier;
-    }
+	private String gender;
 
-    public void setPrivatePersonalIdentifier(String privatePersonalIdentifier) {
-        this.privatePersonalIdentifier = privatePersonalIdentifier;
-    }
+	private X509Certificate signingCert;
 
-    public String getGender() {
-        return gender;
-    }
+	private PrivateKey signingKey;
 
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
+	private X509Certificate relyingPartyCert;
 
-    public void useAsymmetricKey() {
+	private int nowPlus = 10; //default to 10 minutes
 
-        this.asymmetric = true;
+	private int nowMinus = 10; //default to 5 minutes
 
-    }
+	private boolean asymmetric = false; //default to symmetric key
 
+	public SelfIssuedToken(X509Certificate relyingPartyCert,
+			X509Certificate signingCert, PrivateKey signingKey) {
+		this.signingCert = signingCert;
+		this.signingKey = signingKey;
+		this.relyingPartyCert = relyingPartyCert;
+		namespacePrefix = XS_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
+	}
 
-    public Element getSelfIssuedToken() throws SerializationException {
+	public void setNamespacePrefix(String namespacePrefix) {
+		this.namespacePrefix = namespacePrefix;
+	}
 
-        Conditions conditions = new Conditions(nowMinus, nowPlus);
-        KeyInfo keyInfo = null;
-        if (asymmetric) {
+	public String getNamespacePrefix() {
+		return namespacePrefix;
+	}
 
-            if (signingCert == null) throw new SerializationException("You did not provide a certificate for use with asymetric keys");
-            keyInfo = new AsymmetricKeyInfo(signingCert);
+	//    public int getValidityPeriod() {
+	//        return nowPlus;
+	//    }
 
-        } else {
+	public void setValidityPeriod(int nowMinus, int nowPlus) {
+		this.nowMinus = nowMinus;
+		this.nowPlus = nowPlus;
+	}
 
-            byte[] secretKey;
-            try {
-                secretKey = CryptoUtils.genKey(128);
-            } catch (org.xmldap.exceptions.CryptoException e) {
-                throw new SerializationException(e);
-            }
+	public String getGivenName() {
+		return givenName;
+	}
 
-            if (relyingPartyCert != null) {
-                keyInfo = new SymmetricKeyInfo(relyingPartyCert, secretKey);
-            } else {
-                throw new SerializationException("You did not provide the relying party cert");
-            }
+	public void setGivenName(String givenName) {
+		this.givenName = givenName;
+	}
 
+	public String getSurname() {
+		return surname;
+	}
 
+	public void setSurname(String surname) {
+		this.surname = surname;
+	}
 
-        }
+	public String getEmailAddress() {
+		return emailAddress;
+	}
 
-        Subject subject = new Subject(keyInfo);
+	public void setEmailAddress(String emailAddress) {
+		this.emailAddress = emailAddress;
+	}
 
-        Vector attributes = new Vector();
+	public String getStreetAddress() {
+		return streetAddress;
+	}
 
-        if (givenName != null) {
+	public void setStreetAddress(String streetAddress) {
+		this.streetAddress = streetAddress;
+	}
 
-            Attribute attr = new Attribute("givenname", namespacePrefix+"givenname", givenName);
-            attributes.add(attr);
-        }
+	public String getLocality() {
+		return locality;
+	}
 
-        if (surname != null) {
+	public void setLocality(String locality) {
+		this.locality = locality;
+	}
 
-            Attribute attr = new Attribute("surname", namespacePrefix+"surname", surname);
-            attributes.add(attr);
-        }
+	public String getStateOrProvince() {
+		return stateOrProvince;
+	}
 
-        if (emailAddress != null) {
+	public void setStateOrProvince(String stateOrProvince) {
+		this.stateOrProvince = stateOrProvince;
+	}
 
-            Attribute attr = new Attribute("emailaddress", namespacePrefix+"emailaddress", emailAddress);
-            attributes.add(attr);
-        }
+	public String getPostalCode() {
+		return postalCode;
+	}
 
-        if (streetAddress != null) {
+	public void setPostalCode(String postalCode) {
+		this.postalCode = postalCode;
+	}
 
-            Attribute attr = new Attribute("streetaddress", namespacePrefix+"streetaddress", streetAddress);
-            attributes.add(attr);
-        }
+	public String getCountry() {
+		return country;
+	}
 
-        if (locality != null) {
+	public void setCountry(String country) {
+		this.country = country;
+	}
 
-            Attribute attr = new Attribute("locality", namespacePrefix+locality, locality);
-            attributes.add(attr);
-        }
+	public String getPrimaryPhone() {
+		return primaryPhone;
+	}
 
-        if (stateOrProvince != null) {
+	public void setPrimaryPhone(String primaryPhone) {
+		this.primaryPhone = primaryPhone;
+	}
 
-            Attribute attr = new Attribute("stateorprovince", namespacePrefix+"stateorprovince", stateOrProvince);
-            attributes.add(attr);
-        }
+	public String getOtherPhone() {
+		return otherPhone;
+	}
 
-        if (postalCode != null) {
+	public void setOtherPhone(String otherPhone) {
+		this.otherPhone = otherPhone;
+	}
 
-            Attribute attr = new Attribute("postalcode", namespacePrefix+"postalcode", postalCode);
-            attributes.add(attr);
-        }
+	public String getMobilePhone() {
+		return mobilePhone;
+	}
 
-        if (country != null) {
+	public void setMobilePhone(String mobilePhone) {
+		this.mobilePhone = mobilePhone;
+	}
 
-            Attribute attr = new Attribute("country", namespacePrefix+"country", country);
-            attributes.add(attr);
-        }
+	public String getDateOfBirth() {
+		return dateOfBirth;
+	}
 
-        if (primaryPhone != null) {
+	public void setDateOfBirth(String dateOfBirth) {
+		this.dateOfBirth = dateOfBirth;
+	}
 
-            Attribute attr = new Attribute("primaryphone", namespacePrefix+"primaryphone", primaryPhone);
-            attributes.add(attr);
-        }
+	public String getPrivatePersonalIdentifier() {
+		return privatePersonalIdentifier;
+	}
 
-        if (otherPhone != null) {
+	public void setPrivatePersonalIdentifier(String privatePersonalIdentifier) {
+		this.privatePersonalIdentifier = privatePersonalIdentifier;
+	}
 
-            Attribute attr = new Attribute("otherphone", namespacePrefix+"otherphone", otherPhone);
-            attributes.add(attr);
-        }
+	public String getGender() {
+		return gender;
+	}
 
-        if (mobilePhone != null) {
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
 
-            Attribute attr = new Attribute("mobilephone", namespacePrefix+"mobilephone", mobilePhone);
-            attributes.add(attr);
-        }
+	public void useAsymmetricKey() {
 
-        if (dateOfBirth != null) {
+		this.asymmetric = true;
 
-            Attribute attr = new Attribute("dateofbirth", namespacePrefix+"dateofbirth", dateOfBirth);
-            attributes.add(attr);
-        }
+	}
 
-        if (privatePersonalIdentifier != null) {
+	public Element getSelfIssuedToken() throws SerializationException {
 
-            Attribute attr = new Attribute("privatepersonalidentifier", namespacePrefix+"privatepersonalidentifier", privatePersonalIdentifier);
-            attributes.add(attr);
-        }
+		Conditions conditions = new Conditions(nowMinus, nowPlus);
+		KeyInfo keyInfo = null;
+		if (asymmetric) {
 
-        if (gender != null) {
+			if (signingCert == null)
+				throw new SerializationException(
+						"You did not provide a certificate for use with asymetric keys");
+			keyInfo = new AsymmetricKeyInfo(signingCert);
 
-            Attribute attr = new Attribute("gender", namespacePrefix+"gender", gender);
-            attributes.add(attr);
-        }
+		} else {
 
+			byte[] secretKey;
+			try {
+				secretKey = CryptoUtils.genKey(128);
+			} catch (org.xmldap.exceptions.CryptoException e) {
+				throw new SerializationException(e);
+			}
 
-        AttributeStatement statement = new AttributeStatement();
-        statement.setSubject(subject);
+			if (relyingPartyCert != null) {
+				keyInfo = new SymmetricKeyInfo(relyingPartyCert, secretKey);
+			} else {
+				throw new SerializationException(
+						"You did not provide the relying party cert");
+			}
 
-        Iterator iter = attributes.iterator();
-        while (iter.hasNext()) {
+		}
 
-            statement.addAttribute((Attribute) iter.next());
+		Subject subject = new Subject(keyInfo);
 
-        }
+		Vector attributes = new Vector();
 
-        SAMLAssertion assertion = new SAMLAssertion();
-        assertion.setConditions(conditions);
-        assertion.setAttributeStatement(statement);
+		if (givenName != null) {
 
-        //make this support multiple signing modes
-        EnvelopedSignature signer = new EnvelopedSignature(signingCert, signingKey);
+			Attribute attr = new Attribute("givenname", namespacePrefix
+					+ "givenname", givenName);
+			attributes.add(attr);
+		}
 
-        Element signedXML = null;
-        try {
-            signedXML = signer.sign(assertion.serialize());
-        } catch (SigningException e) {
-            throw new SerializationException("Error signing assertion", e);
-        }
+		if (surname != null) {
 
-        return signedXML;
+			Attribute attr = new Attribute("surname", namespacePrefix
+					+ "surname", surname);
+			attributes.add(attr);
+		}
 
+		if (emailAddress != null) {
 
-    }
+			Attribute attr = new Attribute("emailaddress", namespacePrefix
+					+ "emailaddress", emailAddress);
+			attributes.add(attr);
+		}
 
-    public String toXML() throws SerializationException {
+		if (streetAddress != null) {
 
-        Element sit = serialize();
-        return sit.toXML();
+			Attribute attr = new Attribute("streetaddress", namespacePrefix
+					+ "streetaddress", streetAddress);
+			attributes.add(attr);
+		}
 
-    }
+		if (locality != null) {
 
-    public Element serialize() throws SerializationException {
-        return getSelfIssuedToken();
-    }
+			Attribute attr = new Attribute("locality", namespacePrefix
+					+ locality, locality);
+			attributes.add(attr);
+		}
 
+		if (stateOrProvince != null) {
 
+			Attribute attr = new Attribute("stateorprovince", namespacePrefix
+					+ "stateorprovince", stateOrProvince);
+			attributes.add(attr);
+		}
+
+		if (postalCode != null) {
+
+			Attribute attr = new Attribute("postalcode", namespacePrefix
+					+ "postalcode", postalCode);
+			attributes.add(attr);
+		}
+
+		if (country != null) {
+
+			Attribute attr = new Attribute("country", namespacePrefix
+					+ "country", country);
+			attributes.add(attr);
+		}
+
+		if (primaryPhone != null) {
+
+			Attribute attr = new Attribute("primaryphone", namespacePrefix
+					+ "primaryphone", primaryPhone);
+			attributes.add(attr);
+		}
+
+		if (otherPhone != null) {
+
+			Attribute attr = new Attribute("otherphone", namespacePrefix
+					+ "otherphone", otherPhone);
+			attributes.add(attr);
+		}
+
+		if (mobilePhone != null) {
+
+			Attribute attr = new Attribute("mobilephone", namespacePrefix
+					+ "mobilephone", mobilePhone);
+			attributes.add(attr);
+		}
+
+		if (dateOfBirth != null) {
+
+			Attribute attr = new Attribute("dateofbirth", namespacePrefix
+					+ "dateofbirth", dateOfBirth);
+			attributes.add(attr);
+		}
+
+		if (privatePersonalIdentifier != null) {
+
+			Attribute attr = new Attribute("privatepersonalidentifier",
+					namespacePrefix + "privatepersonalidentifier",
+					privatePersonalIdentifier);
+			attributes.add(attr);
+		}
+
+		if (gender != null) {
+
+			Attribute attr = new Attribute("gender",
+					namespacePrefix + "gender", gender);
+			attributes.add(attr);
+		}
+
+		AttributeStatement statement = new AttributeStatement();
+		statement.setSubject(subject);
+
+		Iterator iter = attributes.iterator();
+		while (iter.hasNext()) {
+
+			statement.addAttribute((Attribute) iter.next());
+
+		}
+
+		SAMLAssertion assertion = new SAMLAssertion();
+		assertion.setConditions(conditions);
+		assertion.setAttributeStatement(statement);
+
+		//make this support multiple signing modes
+		EnvelopedSignature signer = new EnvelopedSignature(signingCert,
+				signingKey);
+
+		Element signedXML = null;
+		try {
+			signedXML = signer.sign(assertion.serialize());
+		} catch (SigningException e) {
+			throw new SerializationException("Error signing assertion", e);
+		}
+
+		return signedXML;
+
+	}
+
+	public String toXML() throws SerializationException {
+
+		Element sit = serialize();
+		return sit.toXML();
+
+	}
+
+	public Element serialize() throws SerializationException {
+		return getSelfIssuedToken();
+	}
+
+	public static String getDataValue(Element data, String claim)
+	{
+		Element nameElm = data.getFirstChildElement(claim);
+		if (nameElm != null)
+			return nameElm.getValue();
+		return "";
+	}
+
+	public static SelfIssuedToken setTokenClaims(Element data,
+			SelfIssuedToken token, String claims) {
+		// the argument to indexOf is a kind of shorthand...
+		// should we use the complete string?
+		if (claims.indexOf("givenname") != -1) {
+			String value = getDataValue(data, "givenname");
+			if ((value != null) && !value.equals("")) {
+				token.setGivenName(value);
+			}
+		}
+		if (claims.indexOf("surname") != -1) {
+			String value = getDataValue(data, "surname");
+			if ((value != null) && !value.equals("")) {
+				token.setSurname(value);
+			}
+		}
+		if (claims.indexOf("emailaddress") != -1) {
+			String value = getDataValue(data, "emailaddress");
+			if ((value != null) && !value.equals("")) {
+				token.setEmailAddress(value);
+			}
+		}
+		if (claims.indexOf("streetladdress") != -1) {
+			String value = getDataValue(data, "streetladdress");
+			if ((value != null) && !value.equals("")) {
+				token.setStreetAddress(value);
+			}
+		}
+		if (claims.indexOf("locality") != -1) {
+			String value = getDataValue(data, "locality");
+			if ((value != null) && !value.equals("")) {
+				token.setLocality(value);
+			}
+		}
+		if (claims.indexOf("stateorprovince") != -1) {
+			String value = getDataValue(data, "stateorprovince");
+			if ((value != null) && !value.equals("")) {
+				token.setStateOrProvince(value);
+			}
+		}
+		if (claims.indexOf("postalcode") != -1) {
+			String value = getDataValue(data, "postalcode");
+			if ((value != null) && !value.equals("")) {
+				token.setPostalCode(value);
+			}
+		}
+		if (claims.indexOf("country") != -1) {
+			String value = getDataValue(data, "country");
+			if ((value != null) && !value.equals("")) {
+				token.setCountry(value);
+			}
+		}
+		if (claims.indexOf("primaryphone") != -1) {
+			String value = getDataValue(data, "primaryphone");
+			if ((value != null) && !value.equals("")) {
+				token.setPrimaryPhone(value);
+			}
+		}
+		if (claims.indexOf("otherphone") != -1) {
+			String value = getDataValue(data, "otherphone");
+			if ((value != null) && !value.equals("")) {
+				token.setOtherPhone(value);
+			}
+		}
+		if (claims.indexOf("mobilephone") != -1) {
+			String value = getDataValue(data, "mobilephone");
+			if ((value != null) && !value.equals("")) {
+				token.setMobilePhone(value);
+			}
+		}
+		if (claims.indexOf("dateofbirth") != -1) {
+			String value = getDataValue(data, "dateofbirth");
+			if ((value != null) && !value.equals("")) {
+				token.setDateOfBirth(value);
+			}
+		}
+		if (claims.indexOf("gender") != -1) {
+			String value = getDataValue(data, "gender");
+			if ((value != null) && !value.equals("")) {
+				token.setGender(value);
+			}
+		}
+		return token;
+	}
 
 }

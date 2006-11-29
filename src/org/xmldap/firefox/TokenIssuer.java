@@ -249,174 +249,6 @@ public class TokenIssuer {
 		return infocard;
 	}
 
-	public String getDataValue(Element data, String claim)
-			throws TokenIssuanceException {
-		Element nameElm = data.getFirstChildElement(claim);
-		if (nameElm != null)
-			return nameElm.getValue();
-		return "";
-	}
-
-	private SelfIssuedToken setTokenClaims(Element data, SelfIssuedToken token,
-			String claims) throws TokenIssuanceException {
-		// the argument to indexOf is a kind of shorthand...
-		// should we use the complete string?
-		if (claims.indexOf("givenname") != -1) {
-			String value = getDataValue(data, "givenname");
-			if ((value != null) && !value.equals("")) {
-				token.setGivenName(value);
-			}
-		}
-		if (claims.indexOf("surname") != -1) {
-			String value = getDataValue(data, "surname");
-			if ((value != null) && !value.equals("")) {
-				token.setSurname(value);
-			}
-		}
-		if (claims.indexOf("emailaddress") != -1) {
-			String value = getDataValue(data, "emailaddress");
-			if ((value != null) && !value.equals("")) {
-				token.setEmailAddress(value);
-			}
-		}
-		if (claims.indexOf("streetladdress") != -1) {
-			String value = getDataValue(data, "streetladdress");
-			if ((value != null) && !value.equals("")) {
-				token.setStreetAddress(value);
-			}
-		}
-		if (claims.indexOf("locality") != -1) {
-			String value = getDataValue(data, "locality");
-			if ((value != null) && !value.equals("")) {
-				token.setLocality(value);
-			}
-		}
-		if (claims.indexOf("stateorprovince") != -1) {
-			String value = getDataValue(data, "stateorprovince");
-			if ((value != null) && !value.equals("")) {
-				token.setStateOrProvince(value);
-			}
-		}
-		if (claims.indexOf("postalcode") != -1) {
-			String value = getDataValue(data, "postalcode");
-			if ((value != null) && !value.equals("")) {
-				token.setPostalCode(value);
-			}
-		}
-		if (claims.indexOf("country") != -1) {
-			String value = getDataValue(data, "country");
-			if ((value != null) && !value.equals("")) {
-				token.setCountry(value);
-			}
-		}
-		if (claims.indexOf("primaryphone") != -1) {
-			String value = getDataValue(data, "primaryphone");
-			if ((value != null) && !value.equals("")) {
-				token.setPrimaryPhone(value);
-			}
-		}
-		if (claims.indexOf("otherphone") != -1) {
-			String value = getDataValue(data, "otherphone");
-			if ((value != null) && !value.equals("")) {
-				token.setOtherPhone(value);
-			}
-		}
-		if (claims.indexOf("mobilephone") != -1) {
-			String value = getDataValue(data, "mobilephone");
-			if ((value != null) && !value.equals("")) {
-				token.setMobilePhone(value);
-			}
-		}
-		if (claims.indexOf("dateofbirth") != -1) {
-			String value = getDataValue(data, "dateofbirth");
-			if ((value != null) && !value.equals("")) {
-				token.setDateOfBirth(value);
-			}
-		}
-		if (claims.indexOf("gender") != -1) {
-			String value = getDataValue(data, "gender");
-			if ((value != null) && !value.equals("")) {
-				token.setGender(value);
-			}
-		}
-		return token;
-	}
-
-	private X509Name claims2X509Name(Element data)
-			throws TokenIssuanceException {
-
-		Vector oids = new Vector();
-		Vector values = new Vector();
-
-		String value = getDataValue(data, "givenname");
-		if ((value != null) && !value.equals("")) {
-			oids.add(X509Name.GIVENNAME);
-			values.add(value);
-		}
-		value = getDataValue(data, "surname");
-		if ((value != null) && !value.equals("")) {
-			oids.add(X509Name.SURNAME);
-			values.add(value);
-		}
-		value = getDataValue(data, "emailaddress");
-		if ((value != null) && !value.equals("")) {
-			oids.add(X509Name.E);
-			values.add(value);
-		}
-		// value = getDataValue(data, "streetladdress");
-		// if ((value != null) && !value.equals("")) {
-		// sb.append(" streetladdress=");
-		// sb.append(value);
-		// }
-		value = getDataValue(data, "locality");
-		if ((value != null) && !value.equals("")) {
-			oids.add(X509Name.L);
-			values.add(value);
-		}
-		value = getDataValue(data, "stateorprovince");
-		if ((value != null) && !value.equals("")) {
-			oids.add(X509Name.ST);
-			values.add(value);
-		}
-		// value = getDataValue(data, "postalcode");
-		// if ((value != null) && !value.equals("")) {
-		// sb.append("postalcode=");
-		// sb.append(value);
-		// }
-		value = getDataValue(data, "country");
-		if ((value != null) && !value.equals("")) {
-			oids.add(X509Name.C);
-			values.add(value);
-		}
-		// value = getDataValue(data, "primaryphone");
-		// if ((value != null) && !value.equals("")) {
-		// sb.append(" primaryphone=");
-		// sb.append(value);
-		// }
-		// value = getDataValue(data, "otherphone");
-		// if ((value != null) && !value.equals("")) {
-		// sb.append(" otherphone=");
-		// sb.append(value);
-		// }
-		// value = getDataValue(data, "mobilephone");
-		// if ((value != null) && !value.equals("")) {
-		// sb.append(" mobilephone=");
-		// sb.append(value);
-		// }
-		// value = getDataValue(data, "dateofbirth");
-		// if ((value != null) && !value.equals("")) {
-		// sb.append(" dateofbirth=");
-		// sb.append(value);
-		// }
-		// value = getDataValue(data, "gender");
-		// if ((value != null) && !value.equals("")) {
-		// sb.append(" gender=");
-		// sb.append(value);
-		// }
-
-		return new X509Name(oids, values);
-	}
-
 	// private String claims2String(Element data) throws TokenIssuanceException
 	// {
 	// StringBuffer sb = new StringBuffer("");
@@ -489,25 +321,6 @@ public class TokenIssuer {
 	// return sb.toString();
 	// }
 
-	public X509Certificate infocard2Certificate(Document infocard)
-			throws TokenIssuanceException, UnsupportedEncodingException,
-			ParseException {
-		X509Certificate cert = null;
-		KeyPair kp = new KeyPair(signingCert.getPublicKey(), signingKey);
-		X509Name issuer = new X509Name(
-				"CN=firefox, OU=infocard selector, O=xmldap, L=San Francisco, ST=California, C=US");
-		Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
-		Element data = (Element) dataNodes.get(0);
-		X509Name subject = claims2X509Name(data);
-
-		DateFormat df = DateFormat.getDateInstance();
-		Date dateOfBirth = df.parse(getDataValue(data, "dateofbirth"));
-		cert = CertsAndKeys.generateClientCertificate(kp, issuer, subject,
-				getDataValue(data, "gender"), dateOfBirth, getDataValue(data,
-						"streetladdress"), getDataValue(data, "primaryphone"));
-		return cert;
-	}
-
 	/**
 	 * Uses the first bytes of the infoCardPpi to encrypt a String which is
 	 * fixed for the relying party using AES. Remember: The input parameter
@@ -561,32 +374,6 @@ public class TokenIssuer {
 			throw new TokenIssuanceException(e);
 		} catch (UnsupportedEncodingException e) {
 			throw new TokenIssuanceException(e);
-		}
-	}
-
-	private void storeInfoCardAsCertificate(String nickname, Document infocard)
-			throws TokenIssuanceException { // temporary hack to store infocards
-		// as certificates
-		try {
-			X509Certificate cardAsCert = infocard2Certificate(infocard);
-			// store in firefox.jks
-			storeCardCertKeystore(nickname, cardAsCert, false);
-			// store in <ppi>.pem
-			storeCardCertPem(nickname, cardAsCert);
-			// store in <ppi>.p12
-			// storeCardCertP12(token.getPrivatePersonalIdentifier(),
-			// cardAsCert);
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CertificateEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
@@ -729,14 +516,14 @@ public class TokenIssuer {
             }
             if (requiredClaims == null) {
                 if (optionalClaims != null) {
-                    token = setTokenClaims(data, token, optionalClaims);
+                    token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, optionalClaims);
                 } else { // hm, lets throw everything we have at the RP
-                    token = setTokenClaims(data, token, ALL_CLAIMS);
+                    token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, ALL_CLAIMS);
                 }
             } else { // requiredClaim are present
-                token = setTokenClaims(data, token, requiredClaims);
+                token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, requiredClaims);
                 if (optionalClaims != null) {
-                    token = setTokenClaims(data, token, optionalClaims);
+                    token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, optionalClaims);
                 }
             }
 
