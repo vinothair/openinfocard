@@ -31,15 +31,24 @@ package org.xmldap.crypto;
 import net.sourceforge.lightcrypto.Crypt;
 import net.sourceforge.lightcrypto.SafeObject;
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
+import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.encodings.OAEPEncoding;
+import org.bouncycastle.crypto.engines.AESLightEngine;
 import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.util.Base64;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
@@ -96,6 +105,42 @@ public class CryptoUtils {
         return Base64.encodeBytesNoBreaks(digest);
 
     }
+
+	/**
+	 * @param keys
+	 * @param iv
+	 * @param dataBytes
+	 * @return
+	 * @throws CryptoException
+	 */
+	public static byte[] aesCbcEncrypt(byte[] encryptionKey, byte[] iv, ByteArrayOutputStream dataBytes) throws CryptoException {
+		//encrypt
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            AESLightEngine aes = new AESLightEngine();
+            CBCBlockCipher cbc = new CBCBlockCipher(aes);
+            BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(cbc);
+            KeyParameter key = new KeyParameter(encryptionKey);
+            ParametersWithIV paramWithIV = new ParametersWithIV(key, iv);
+            byte inputBuffer[] = new byte[16];
+            byte outputBuffer[] = new byte[16];
+            int bytesProcessed = 0;
+            cipher.init(true, paramWithIV);
+            int bytesRead = 0;
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(dataBytes.toByteArray());
+            while((bytesRead = inputStream.read(inputBuffer)) > 0)  {
+                bytesProcessed = cipher.processBytes(inputBuffer, 0, bytesRead, outputBuffer, 0);
+                if(bytesProcessed > 0)  outputStream.write(outputBuffer, 0, bytesProcessed);
+            }
+            bytesProcessed = cipher.doFinal(outputBuffer, 0);
+            if(bytesProcessed > 0) outputStream.write(outputBuffer, 0, bytesProcessed);
+        } catch(Exception e) {
+            throw new CryptoException ("Error encrypting data", e);
+        }
+
+        byte[] cipherText = outputStream.toByteArray();
+		return cipherText;
+	}
 
     /**
      * Encrypts data using AES with a Chained Block Cipber.   Got rid of my own impl, and wrapped lightcrypto
