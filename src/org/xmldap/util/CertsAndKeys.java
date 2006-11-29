@@ -50,8 +50,8 @@ public class CertsAndKeys {
 		return cert;
 	}
 
-	public static X509Certificate generateCaCertificate(KeyPair kp)
-			throws TokenIssuanceException {
+	public static X509Certificate generateCaCertificate(KeyPair kp) throws InvalidKeyException, SecurityException, SignatureException
+	{
 		String issuerStr = "CN=firefox, OU=infocard selector, O=xmldap, L=San Francisco, ST=California, C=US";
 		X509Name issuer = new X509Name(issuerStr);
 		return generateCaCertificate(kp, issuer, issuer);
@@ -199,10 +199,13 @@ public class CertsAndKeys {
 	 * @param issuer
 	 * @param subject
 	 * @return
+	 * @throws SignatureException 
+	 * @throws SecurityException 
+	 * @throws InvalidKeyException 
 	 * @throws TokenIssuanceException
 	 */
 	public static X509Certificate generateCaCertificate(KeyPair kp,
-			X509Name issuer, X509Name subject) throws TokenIssuanceException {
+			X509Name issuer, X509Name subject) throws InvalidKeyException, SecurityException, SignatureException {
 		if (Security.getProvider("BC") == null) {
 			Security.addProvider(new BouncyCastleProvider());
 		}
@@ -222,15 +225,7 @@ public class CertsAndKeys {
 		gen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
 		gen = addCaExtensions(gen);
 		gen = addLogotype(gen);
-		try {
-			cert = gen.generateX509Certificate(kp.getPrivate());
-		} catch (InvalidKeyException e) {
-			throw new TokenIssuanceException(e);
-		} catch (SecurityException e) {
-			throw new TokenIssuanceException(e);
-		} catch (SignatureException e) {
-			throw new TokenIssuanceException(e);
-		}
+		cert = gen.generateX509Certificate(kp.getPrivate());
 		return cert;
 	}
 
