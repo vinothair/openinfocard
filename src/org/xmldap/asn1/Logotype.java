@@ -35,6 +35,7 @@ import org.xmldap.exceptions.TokenIssuanceException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -199,7 +200,7 @@ public class Logotype extends ASN1Encodable {
 	}
 
 	public String getIssuerLogoURL(String der) throws JSONException,
-			TokenIssuanceException, IOException {
+			IOException, CertificateException {
 		String url = null;
 		X509Certificate relyingPartyCert = org.xmldap.util.CertsAndKeys.der2cert(der);
 		byte[] fromExtensionValue = relyingPartyCert

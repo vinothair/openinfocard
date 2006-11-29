@@ -277,45 +277,30 @@ public class CertsAndKeys {
 	}
 
 	public static KeyPair bytesToKeyPair(byte[] bytes)
-			throws TokenIssuanceException {
+			throws IOException, ClassNotFoundException {
 		ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-		try {
 			ObjectInputStream ois = new ObjectInputStream(bis);
 			return (KeyPair) ois.readObject();
-		} catch (IOException e) {
-			throw new TokenIssuanceException(e);
-		} catch (ClassNotFoundException e) {
-			throw new TokenIssuanceException(e);
-		}
-
 	}
 
 	public static byte[] keyPairToBytes(KeyPair kp)
-			throws TokenIssuanceException {
+			throws IOException {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		try {
-			ObjectOutputStream oos = new ObjectOutputStream(bos);
-			oos.writeObject(kp);
-			oos.close();
-			return bos.toByteArray();
-		} catch (IOException e) {
-			throw new TokenIssuanceException(e);
-		}
+		ObjectOutputStream oos = new ObjectOutputStream(bos);
+		oos.writeObject(kp);
+		oos.close();
+		return bos.toByteArray();
 	}
 
 	public static X509Certificate der2cert(String der)
-			throws TokenIssuanceException {
+			throws CertificateException {
 		byte[] certBytes = Base64.decode(der);
 		ByteArrayInputStream is = new ByteArrayInputStream(certBytes);
 		BufferedInputStream bis = new BufferedInputStream(is);
 		CertificateFactory cf = null;
 		X509Certificate cert = null;
-		try {
-			cf = CertificateFactory.getInstance("X.509");
-			cert = (X509Certificate) cf.generateCertificate(bis);
-		} catch (CertificateException e) {
-			throw new TokenIssuanceException(e);
-		}
+		cf = CertificateFactory.getInstance("X.509");
+		cert = (X509Certificate) cf.generateCertificate(bis);
 		return cert;
 	}
 
