@@ -50,10 +50,13 @@ public class GenerateSSLServerCertificate {
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
 	 * @throws CertificateException 
+	 * @throws SignatureException 
+	 * @throws SecurityException 
+	 * @throws InvalidKeyException 
 	 */
 	public static void main(String[] args) throws NoSuchAlgorithmException,
-			NoSuchProviderException, TokenIssuanceException, KeyStoreException,
-			CertificateException, FileNotFoundException, IOException {
+			NoSuchProviderException, KeyStoreException,
+			CertificateException, FileNotFoundException, IOException, InvalidKeyException, SecurityException, SignatureException {
 		KeyPair kp = CertsAndKeys.generateKeyPair();
 		X509Name issuer = new X509Name(
 				"CN=w4de3esy0069028.gdc-bln01.t-systems.com, OU=SSC ENPS, O=T-Systems, L=Berlin, ST=Berln, C=DE");
