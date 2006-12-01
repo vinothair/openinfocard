@@ -29,7 +29,6 @@
 package org.xmldap.sts.servlet;
 
 import nu.xom.Document;
-import nu.xom.ParsingException;
 import nu.xom.Serializer;
 
 import javax.servlet.http.HttpServlet;
@@ -37,12 +36,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
 import java.io.*;
-import java.net.URLDecoder;
 import java.util.List;
 import java.util.Iterator;
 
-import org.xmldap.infocard.EncryptedStore;
-import org.xmldap.exceptions.CryptoException;
+import org.xmldap.infocard.roaming.EncryptedStore;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;

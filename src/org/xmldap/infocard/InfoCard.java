@@ -31,17 +31,13 @@ package org.xmldap.infocard;
 import nu.xom.Attribute;
 import nu.xom.Element;
 import org.xmldap.exceptions.InfoCardProcessingException;
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
-import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimList;
-import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
-import org.xmldap.util.KeystoreUtil;
-import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xmldsig.InfoCardSignature;
+import org.xmldap.xml.Serializable;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -51,9 +47,10 @@ import java.security.cert.X509Certificate;
  *
  * @author charliemortimore at gmail.com
  */
-public class InfoCard {
+public class InfoCard implements Serializable {
 
 
+    private boolean signCard = true;
     private X509Certificate cert;
     private PrivateKey privateKey;
     private String cardName;
@@ -71,6 +68,11 @@ public class InfoCard {
     private String userName;
     private boolean requireAppliesTo = false;
 
+
+    public InfoCard() {
+        this.signCard = false;
+    }
+
     public InfoCard(X509Certificate cert, PrivateKey privateKey) {
         this.cert = cert;
         this.privateKey = privateKey;
@@ -78,6 +80,14 @@ public class InfoCard {
 
     public void setRequireAppliesTo(boolean requireAppliesTo) {
         this.requireAppliesTo = requireAppliesTo;
+    }
+
+    public boolean signCard() {
+        return signCard;
+    }
+
+    public void setSignCard(boolean signCard) {
+        this.signCard = signCard;
     }
 
     public String getIssuer() {
@@ -186,7 +196,7 @@ public class InfoCard {
     }
 
 
-    public String getInfoCard() throws InfoCardProcessingException {
+    public Element serialize() throws SerializationException {
 
         Element infoCard = new Element(WSConstants.INFOCARD_PREFIX + ":InformationCard", WSConstants.INFOCARD_NAMESPACE);
         Attribute lang = new Attribute("xml:lang", "http://www.w3.org/XML/1998/namespace", "en-us");
@@ -239,18 +249,11 @@ public class InfoCard {
         timeExpiresElm.appendChild("9999-12-31T23:59:59.9999999Z");
         infoCard.appendChild(timeExpiresElm);
 
+        infoCard.appendChild(tokenServiceReference.serialize());
+        infoCard.appendChild(tokenList.serialize());
+        infoCard.appendChild(claimList.serialize());
 
-
-        try {
-            infoCard.appendChild(tokenServiceReference.serialize());
-            infoCard.appendChild(tokenList.serialize());
-            infoCard.appendChild(claimList.serialize());
-        } catch (SerializationException e) {
-            throw new InfoCardProcessingException(e);
-        }
-        //TODO - RC1 change
         Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNotice", WSConstants.INFOCARD_NAMESPACE);
-        //Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNoticeAt", WSConstants.INFOCARD_NAMESPACE);
         ppElm.appendChild(privacyPolicy);
         infoCard.appendChild(ppElm);
 
@@ -261,20 +264,24 @@ public class InfoCard {
 
         }
 
-        //Get the signing util
-        InfoCardSignature signer = new InfoCardSignature(cert,privateKey);
+        if (signCard()) {
+            System.out.println("SigningCArd");
+            //Get the signing util
+            InfoCardSignature signer = new InfoCardSignature(cert,privateKey);
 
-        String signedCardXML = null;
+            Element signedCard = null;
 
-        try {
+            try {
 
-            Element signedCard = signer.sign(infoCard);
-            signedCardXML = signedCard.toXML();
-        } catch (SigningException e) {
-            throw new InfoCardProcessingException(e);
+                signedCard = signer.sign(infoCard);
+            } catch (SigningException e) {
+                throw new SerializationException(e);
+            }
+
+            return signedCard;
+
         }
-
-        return signedCardXML;
+        return infoCard;
 
     }
 
@@ -349,7 +356,7 @@ public class InfoCard {
         card.setPrivacyPolicy("https://xmldap.org/PrivacyPolicy.xml");
 
         try {
-            System.out.println(card.getInfoCard());
+            System.out.println(card.toXML());
         } catch (InfoCardProcessingException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
@@ -360,4 +367,10 @@ public class InfoCard {
     }
     */
 
+    public String toXML() throws SerializationException {
+
+        Element card = serialize();
+        return card.toXML();
+
+    }
 }

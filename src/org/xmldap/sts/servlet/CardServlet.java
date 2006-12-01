@@ -31,6 +31,7 @@ package org.xmldap.sts.servlet;
 
 import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.TokenServiceReference;
 import org.xmldap.infocard.policy.SupportedClaim;
@@ -162,8 +163,8 @@ public class CardServlet extends HttpServlet {
         response.setContentType("application/soap+xml; charset=utf-8");
 
         try {
-            out.println(card.getInfoCard());
-        } catch (InfoCardProcessingException e) {
+            out.println(card.toXML());
+        } catch (SerializationException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
