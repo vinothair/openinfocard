@@ -31,6 +31,8 @@
  */
 
 function do_infocard(e) {
+
+
     var doc = e.originalTarget;
     var icIter = document.evaluate("//object", doc, null, XPathResult.ANY_TYPE, null);
     var ic = icIter.iterateNext();
@@ -39,6 +41,8 @@ function do_infocard(e) {
         var type = ic.getAttribute("type");
 
         if ((type == "application/x-informationcard") || (type == "application/x-informationCard") || (type == "application/infocard")) {
+
+            hideMissingPlugin();
 
             var form = ic;
             while (form.tagName != "FORM") {
@@ -80,6 +84,15 @@ function do_infocard(e) {
         ic = icIter.iterateNext();
 
     }
+}
+
+function hideMissingPlugin(){
+
+    var browserObject = document.getElementById("content");
+    var notificationBox = browserObject.getNotificationBox();
+    notificationBox.notificationsHidden = true;
+
+
 }
 
 
