@@ -69,6 +69,34 @@ function ok(){
 }
 
 
+function openid(){
+
+
+
+    var req = new XMLHttpRequest();
+    req.open('GET', document.getElementById('openidurl').value, false);
+    req.setRequestHeader("User-Agent", "xmldap openid stack");
+    req.send(null);
+    if(req.status == 200) {
+
+        var resp = req.responseText;
+        var serverIndex = resp.indexOf("openid.server");
+        var next = resp.substring(serverIndex);
+        var hrefIndex = next.indexOf("href=");
+        hrefIndex += 6;
+        var subStr = next.substring(hrefIndex);
+        var endAddr = subStr.indexOf('"');
+        var address = subStr.substring(0,endAddr);
+        debug("Openid: " + address);
+
+
+    }
+
+
+
+}
+
+
 function processManagedCard(managedCard) {
 
     var tokenToReturn = null;
