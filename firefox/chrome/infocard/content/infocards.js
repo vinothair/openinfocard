@@ -31,6 +31,9 @@ var selectedCard;
 
 function ok(){
 
+
+    var select = document.getElementById('selectcontrol');
+    select.setAttribute("src", "chrome://infocard/content/img/selected.png");
     var tokenToReturn;
 
     var policy = window.arguments[0];
@@ -185,10 +188,25 @@ function getCard(cardid){
 
 
 function load(){
+
+    var select = document.getElementById('selectcontrol');
+    select.addEventListener("click", ok, false);
+
+
+    var newCardElm = document.getElementById('newCard');
+    newCardElm.addEventListener("click", newCard, false);
+
+    var deleteCard = document.getElementById('deleteCard');
+    //deleteCard.addEventListener("click", alert('Sorry - delete is not yet implemented'), false);
+
+    var cancelselector = document.getElementById('cancelselector');
+    cancelselector.addEventListener("click", cancel, false);
+
+
     var stringsBundle = document.getElementById("string-bundle");
 
     var cardFile = read(db);
-    var cardArea = document.getElementById("listarea");
+    var cardArea = document.getElementById("cardselection");
     var latestCard;
     var selectMe;
     var count = 0;
@@ -216,14 +234,14 @@ function load(){
 	{
 		var policy = window.arguments[0];
 		var cert = policy["cert"];
-		var issuerLogoURL = TokenIssuer.getIssuerLogoURL(cert);
-		if (issuerLogoURL != undefined) {
-			var issuerlogo = document.getElementById("issuerlogo");
-			issuerlogo.src = issuerLogoURL;
-			issuerlogo.hidden = false;
-			var issuerlogo_label = document.getElementById("issuerlogo_label");
-                        issuerlogo_label.hidden = false;
-		}
+		//var issuerLogoURL = TokenIssuer.getIssuerLogoURL(cert);
+		//if (issuerLogoURL != undefined) {
+		//	var issuerlogo = document.getElementById("issuerlogo");
+		//	issuerlogo.src = issuerLogoURL;
+		//	issuerlogo.hidden = false;
+		//	var issuerlogo_label = document.getElementById("issuerlogo_label");
+        //                issuerlogo_label.hidden = false;
+		//}
 	}
 }
 
@@ -271,7 +289,15 @@ debug("requiredClaims: " + requiredClaims);
 
 function setCard(card){
 
+
+    var select = document.getElementById('selectcontrol');
+    select.setAttribute('hidden', 'false');
+    
+
     selectedCard = card;
+
+    debug("TYPE: " + selectedCard.type);
+    debug(selectedCard);
 
     if (selectedCard.type == "selfAsserted" )  {
 
@@ -314,6 +340,11 @@ function setCard(card){
 
         var grid = document.getElementById("editgrid");
         grid.setAttribute("hidden", "false");
+
+
+        var grid1 = document.getElementById("editgrid1");
+        grid1.setAttribute("hidden", "false");
+
         var label = document.getElementById("notify");
         label.setAttribute("value", "Self Asserted Card");
 
@@ -355,6 +386,11 @@ function setCard(card){
 
         var grid = document.getElementById("editgrid");
         grid.setAttribute("hidden", "false");
+
+
+        var grid1 = document.getElementById("editgrid1");
+        grid1.setAttribute("hidden", "false");
+
         var label = document.getElementById("notify");
         label.setAttribute("value", "Managed Card from " + selectedCard.carddata.managed.issuer);
 
@@ -407,23 +443,23 @@ function createItem(c){
     var picturebox = document.createElement("hbox");
     picturebox.setAttribute("flex", "0");
     picturebox.setAttribute("align", "center");
-     var picture = document.createElement("image");
-debug(c.name + " " + imgurl);
-    if (imgurl != undefined) {
-debug(c.name + ":" + imgurl);
-     //picture.setAttribute("src", "chrome://infocard/content/xmldap.png");
-     picture.setAttribute("src", imgurl);
-     //picture.setAttribute("width", "32");
-     //picture.setAttribute("height", "32");
-     picture.setAttribute("cardid", c.id);
-     //vbox.appendChild(picture);
-     picturebox.appendChild(picture);
+    var picture = document.createElement("image");
+
+    if ( (imgurl == "") || (imgurl == undefined)) {
+        picture.setAttribute("src", "chrome://infocard/content/img/card.png");
+    } else {
+        picture.setAttribute("src", imgurl);
     }
+
+    picture.setAttribute("cardid", c.id);
+    picture.setAttribute("class", "cardClass");
+    picturebox.appendChild(picture);
     vbox.appendChild(picturebox);
     vbox.appendChild(labelName);
     vbox.appendChild(labelVersion);
     hbox.appendChild(vbox);
     hbox.addEventListener("click", handleCardChoice, false);
+    debug ("Setting cardid " + hbox.getAttribute("cardid"));
     return hbox;
 
 }
@@ -434,7 +470,7 @@ function saveCard(card){
     var cardFile = read(db);
     cardFile.infocard += card;
     save(db,cardFile.toString());
-    var cardArea = document.getElementById("listarea");
+    var cardArea = document.getElementById("cardselection");
     cardArea.appendChild(createItem(card));
     setCard(card);
     return true;

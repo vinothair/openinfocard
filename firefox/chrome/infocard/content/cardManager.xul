@@ -51,52 +51,74 @@
     <script>
         TokenIssuer.initialize();
     </script>
+        <hbox id="mainbar">
+            <vbox>
+                <label id="mainlabel" value="&cardmanager.daylabel;"/>
+            </vbox>
+            <vbox flex="10">
+                <spacer></spacer>
+            </vbox>
+            <vbox align="center" id="selectcontrol" hidden="true">
+                <image src="chrome://infocard/content/img/select.png" width="38" height="38" onClick="debug('test');"/>
+                <label id="select" value="Select Card"/>
+            </vbox>
+        </hbox>
 
-    <hbox id="mainbar">
-        <spacer flex="1"/>
-        <label id="daylabel" value="&cardmanager.daylabel;"/>
-    </hbox>
 
-    <hbox id="mainarea" flex="1" >
-        <vbox id="listarea">
 
-            <!--
-            <hbox class="contact" onselect="alert();">
-                <box class="photobox"><image src="xmldap.png" onclick="alert(0);"/></box>
-                <vbox class="databox" flex="1">
-                    <label class="lblname" value="Britney Spears"/>
-                    <label class="lblmail" value="britneyspears@gmail.com"/>
-                </vbox>
-            </hbox>
-            -->
+        <hbox id="listarea">
+            <arrowscrollbox orient="horizontal" flex="1" id="cardselection">
 
-        </vbox>
-        <splitter/>
-        <vbox>
-            <hbox>
-                <spacer height="480"/>
+            </arrowscrollbox>
 
-                <vbox id="editarea" flex="1">
-                    <spacer height="15"/>
-                    <label class="lblTitle" id="notify" value=""/>
-                    <spacer height="15"/>
-                    <hbox id="issuer_hbox" flex="0">
-                    	<label class="lblTitle" id="issuerlogo_label" value="issuer logo: (hash value not verified)" hidden="true" />
-	                    <image id="issuerlogo" src="chrome://infocard/content/xmldap.png" hidden="true" />
-	                </hbox>
-                    <spacer height="15"/>
+        </hbox>
+
+
+        <hbox id="instructarea">
+            <label class="lblTitle" id="notify" value=""/>
+        </hbox>
+
+
+
+            <hbox id="editarea" flex="1">
+
+
+               <vbox>
+
+                <hbox id="issuer_hbox" flex="0">
+                    <label class="lblTitle" id="issuerlogo_label" value="issuer logo: (hash value not verified)" hidden="true" />
+                    <image id="issuerlogo" src="chrome://infocard/content/xmldap.png" hidden="true" />
+                </hbox>
+
+
+
+                <hbox>
+                    <label class="lblTitle" id="cardname" value=""/>
+                </hbox>
+                <hbox>
+                    <vbox>
+                        <spacer height="5"/>
+
                     <grid id="editgrid" hidden="true">
                         <columns><column id="colText"/><column id="colData"/></columns>
                         <rows>
-                            <row><label/><label class="lblTitle" id="cardname" value=""/></row>
                             <row><label id="_givenname" class="lblText" value="&cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
                             <row><label id="_surname" class="lblText" value="&cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
-                            <row><label id="_email" class="lblText" value="&cardmanager.email;"  /><textbox id="email"   value=""/></row>
                             <row><label id="_streetAddress" class="lblText" value="&cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
                             <row><label id="_locality" class="lblText" value="&cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
                             <row><label id="_stateOrProvince" class="lblText" value="&cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
                             <row><label id="_postalCode" class="lblText" value="&cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
                             <row><label id="_country" class="lblText" value="&cardmanager.country;"  /><textbox id="country"   value=""/></row>
+                        </rows>
+                    </grid>
+
+                    </vbox>
+                    <vbox>
+                        <spacer height="5"/>
+                    <grid id="editgrid1" hidden="true">
+                        <columns><column id="colText"/><column id="colData"/></columns>
+                        <rows>
+                            <row><label id="_email" class="lblText" value="&cardmanager.email;"  /><textbox id="email"   value=""/></row>
                             <row><label id="_primaryPhone" class="lblText" value="&cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
                             <row><label id="_mobilePhone" class="lblText" value="&cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
                             <row><label id="_otherPhone" class="lblText" value="&cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
@@ -106,24 +128,34 @@
                         </rows>
                     </grid>
 
+                    </vbox>
+                </hbox>
+
                 </vbox>
             </hbox>
-        <vbox>
-            <hbox>
-               <button id="newCard" class="normal"
-                       label="&cardmanager.newcard;" oncommand="newCard();"/>
-               <button id="deleteCard" class="normal"
-                       label="&cardmanager.deletecard;" oncommand="alert('Delete Card not yet implemented');"/>
-               <button id="saveCard" class="normal"
-                       label="&cardmanager.updatecard;" oncommand="alert('Update Card not yet implemented');"/>
-               <button id="cancel" class="normal"
-                       label="&cardmanager.cancel;" oncommand="cancel();"/>
-               <button id="select" class="normal"
-                       label="&cardmanager.selectcard;" oncommand="ok();"/>
+
+            <hbox id="controlarea">
+
+                <vbox flex="1">
+                    <spacer></spacer>
+                </vbox>
+                <hbox id="controls">
+                    <vbox id="newCard">
+                        <label value="&cardmanager.newcard;" class="cardcontrols"/>
+                    </vbox>
+                    <vbox>
+                        <spacer height="5" width="25"/>
+                    </vbox>
+                    <vbox id="deleteCard">
+                        <label value="&cardmanager.deletecard;" class="cardcontrols"/>
+                    </vbox>
+
+                    <vbox>
+                        <spacer height="5" width="25"/>
+                    </vbox>
+                    <vbox id="cancelselector">
+                        <label value="&cardmanager.cancel;" class="cardcontrols"/>
+                    </vbox>
+                </hbox>
             </hbox>
-        </vbox>
-        </vbox>
-
-
-    </hbox>
 </window>

@@ -71,12 +71,14 @@ function do_infocard(e) {
             body.appendChild(formElm);
 
 
-            //TODO - make this work with forms so it's less variable
-            //form.addEventListener("submit", handle, false);
-            //form.addAttribute("onSubmit", "return debug('works');");
+
+            debug('init selector');
+            initSelector(body);
+
 
             var img = parent.getElementsByTagName("img")[0];
-            img.addEventListener("click", handle, false);
+            //img.addEventListener("click", handle, false);
+            img.addEventListener("click", invokeSelector, false);
             img.setAttribute("onclick","");
 
         }
@@ -96,80 +98,58 @@ function hideMissingPlugin(){
 }
 
 
-function authenticate() {
-
-    var pk11tokendb = Components.classes["@mozilla.org/security/pk11tokendb;1"].createInstance(Components.interfaces.nsIPK11TokenDB);
-    var pk11token = pk11tokendb.getInternalKeyToken();
-    if ( ! pk11token.isLoggedIn() ) {
-
-        if (pk11token.checkPassword(""))  window.openDialog("chrome://mozapps/content/preferences/changemp.xul","","modal,chrome",null);
-
-        try {
-            pk11token.login(true);
-        } catch (e) {
-            return false;
-        }
-
-    }
-    return pk11token.isLoggedIn();
-}
 
 function handle(aEvent){
 
-    var authenticated = authenticate();
+    var callback;
+    var img = aEvent.originalTarget;
+    var form = img.parentNode;
+    while (form.tagName != "FORM") {
 
-    if (authenticated) {
-
-        var callback;
-
-        var img = aEvent.originalTarget;
-        var form = img.parentNode;
-        while (form.tagName != "FORM") {
-
-            form = form.parentNode;
-
-        }
-        var policy = parseCard(form);
-
-        var certificate = processCert();
-        var cert = getDer(certificate);
-
-        policy["cert"] = cert;
-        policy["cn"] = certificate.commonName;
-
-        var cardManager = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome",
-                            policy, function (callbackData) { callback = callbackData;});
-
-
-        //modal,,resizable=yes
-        if ( callback == null ) return;
-
-
-        var object = form.getElementsByTagName("object")[0];
-
-        var body = form.parentNode;
-        while (body.tagName != "BODY") {
-
-            body = body.parentNode;
-
-        }
-
-        var infocardForm;
-        var forms = body.getElementsByTagName("FORM");
-        for (var i = 0; i < forms.length; i++) {
-            var id = forms[i].getAttribute("id");
-            if ( id == "firefox_infocard_form") {
-                infocardForm = forms[i];
-            }
-        }
-
-        var inputIter = infocardForm.getElementsByTagName("input");
-        var input = inputIter[0];
-        input.setAttribute("value",callback);
-
-        infocardForm.submit();
+        form = form.parentNode;
 
     }
+    var policy = parseCard(form);
+
+    var certificate = processCert();
+    var cert = getDer(certificate);
+
+    policy["cert"] = cert;
+    policy["cn"] = certificate.commonName;
+
+
+    var cardManager = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome", policy, function (callbackData) { callback = callbackData;});
+
+
+    //modal,,resizable=yes
+    if ( callback == null ) return;
+
+
+    var object = form.getElementsByTagName("object")[0];
+
+    var body = form.parentNode;
+    while (body.tagName != "BODY") {
+
+        body = body.parentNode;
+
+    }
+
+    var infocardForm;
+    var forms = body.getElementsByTagName("FORM");
+    for (var i = 0; i < forms.length; i++) {
+        var id = forms[i].getAttribute("id");
+        if ( id == "firefox_infocard_form") {
+            infocardForm = forms[i];
+        }
+    }
+
+    var inputIter = infocardForm.getElementsByTagName("input");
+    var input = inputIter[0];
+    input.setAttribute("value",callback);
+
+    infocardForm.submit();
+
+
 
 }
 
@@ -201,6 +181,7 @@ function parseCard(infocard) {
 
 function processCert(){
 
+
     var browser = document.getElementById("content");
     var secureUi = browser.securityUI;
     var sslStatusProvider = secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
@@ -212,110 +193,116 @@ function processCert(){
 
 function getDer(cert){
 
+
     var length = {};
     var derArray = cert.getRawDER(length);
     var certBytes = '';
     for (var i = 0; i < derArray.length; i++) {
         certBytes = certBytes + String.fromCharCode(derArray[i]);
     }
-    return encode64(certBytes);
+    return btoa(certBytes);
 
 }
 
 
 
-var keyStr = "ABCDEFGHIJKLMNOP" +
-             "QRSTUVWXYZabcdef" +
-             "ghijklmnopqrstuv" +
-             "wxyz0123456789+/" +
-             "=";
 
-//Base 64 from aardwulf.com
-function encode64(input) {
-   var output = "";
-   var chr1, chr2, chr3 = "";
-   var enc1, enc2, enc3, enc4 = "";
-   var i = 0;
+function invokeSelector(aEvent){
 
-   do {
-      chr1 = input.charCodeAt(i++);
-      chr2 = input.charCodeAt(i++);
-      chr3 = input.charCodeAt(i++);
+    debug('start selector');
 
-      enc1 = chr1 >> 2;
-      enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-      enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-      enc4 = chr3 & 63;
+    var callback;
+    var img = aEvent.originalTarget;
+    var form = img.parentNode;
+    while (form.tagName != "FORM") {
+        form = form.parentNode;
+    }
+    var policy = parseCard(form);
+    var certificate = processCert();
+    var cert = getDer(certificate);
 
-      if (isNaN(chr2)) {
-         enc3 = enc4 = 64;
-      } else if (isNaN(chr3)) {
-         enc4 = 64;
-      }
+    policy["cert"] = cert;
+    policy["cn"] = certificate.commonName;
 
-      output = output +
-         keyStr.charAt(enc1) +
-         keyStr.charAt(enc2) +
-         keyStr.charAt(enc3) +
-         keyStr.charAt(enc4);
-      chr1 = chr2 = chr3 = "";
-      enc1 = enc2 = enc3 = enc4 = "";
-   } while (i < input.length);
+    var doc = form.ownerDocument;
+    var overlay = doc.getElementById('overlay');
+    overlay.style.visibility = 'visible';
 
-   return output;
+
+    var cardManager = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome", policy, function (callbackData) { callback = callbackData;});
+
+
+    overlay.style.visibility = 'hidden';
+
+    //modal,,resizable=yes
+    if ( callback == null ) return;
+
+
+    var object = form.getElementsByTagName("object")[0];
+
+    var body = form.parentNode;
+    while (body.tagName != "BODY") {
+
+        body = body.parentNode;
+
+    }
+
+    var infocardForm;
+    var forms = body.getElementsByTagName("FORM");
+    for (var i = 0; i < forms.length; i++) {
+        var id = forms[i].getAttribute("id");
+        if ( id == "firefox_infocard_form") {
+            infocardForm = forms[i];
+        }
+    }
+
+    var inputIter = infocardForm.getElementsByTagName("input");
+    var input = inputIter[0];
+    input.setAttribute("value",callback);
+
+    infocardForm.submit();
+
+
+
+
+
+
+
+
 }
 
 
-//Base 64 from aardwulf.com
-function decode64(input) {
-  var output = "";
-  var chr1, chr2, chr3 = "";
-  var enc1, enc2, enc3, enc4 = "";
-  var i = 0;
+function initSelector(body){
 
-  // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
-  var base64test = /[^A-Za-z0-9\+\/\=]/g;
-  if (base64test.exec(input)) {
-     alert("There were invalid base64 characters in the input text.\n" +
-           "Valid base64 characters are A-Z, a-z, 0-9, '+', '/', and '='\n" +
-           "Expect errors in decoding.");
-  }
-  input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+    var w = document.width;
+    var offset = (w - 640) / 2;
 
-  do {
-     enc1 = keyStr.indexOf(input.charAt(i++));
-     enc2 = keyStr.indexOf(input.charAt(i++));
-     enc3 = keyStr.indexOf(input.charAt(i++));
-     enc4 = keyStr.indexOf(input.charAt(i++));
+    var objOverlay = document.createElement("div");
+    objOverlay.setAttribute('id','overlay');
+    objOverlay.setAttribute('style','z-index: 90;');
+    objOverlay.style.visibility = 'hidden';
+    objOverlay.style.position = 'absolute';
+    objOverlay.style.top = '0';
+    objOverlay.style.left = '0';
+    objOverlay.style.background = '#000000';
+    objOverlay.style.height = document.height + 'px';
+    objOverlay.style.width = document.width + 'px';
+    objOverlay.style.opacity = '0.6';
+    body.appendChild(objOverlay);
 
-     chr1 = (enc1 << 2) | (enc2 >> 4);
-     chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-     chr3 = ((enc3 & 3) << 6) | enc4;
 
-     output = output + String.fromCharCode(chr1);
-
-     if (enc3 != 64) {
-        output = output + String.fromCharCode(chr2);
-     }
-     if (enc4 != 64) {
-        output = output + String.fromCharCode(chr3);
-     }
-
-     chr1 = chr2 = chr3 = "";
-     enc1 = enc2 = enc3 = enc4 = "";
-
-  } while (i < input.length);
-
-  return output;
 }
 
 
+function closeSelector(){
+
+	var selector = document.getElementById('selector');
+	selector.style.visibility = 'hidden';
+
+	var overlay = document.getElementById('overlay');
+    overlay.style.visibility = 'hidden';
 
 
-
-function debug(msg) {
-  var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
-  debug.logStringMessage("infocard: " + msg);
 }
 
 
@@ -328,3 +315,4 @@ window.addEventListener("load", function() {
         }
     }
 }, false);
+

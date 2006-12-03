@@ -1,34 +1,26 @@
-#mainarea{border:1px solid gray; background-color:#FFFFFF; min-width:320px;}
-#mainbar{-moz-box-align:center;height:32px; background:url(img/back.gif) repeat-x;}
-#listarea{width:300px;border-right:1px solid gray;overflow:auto;background-color:#DDE6F0;}
-#editarea{border-top:1px solid gray;border-bottom:1px solid gray;background-color:#F5F5F5;-moz-box-pack:center;-moz-box-align:center;}
-#logo{margin:6px;height:24px;width:24px;-moz-box-pack:center;}
+#mainbar{background-color:#333333; min-height:72px; max-height:72px; min-width:800px; max-width:800px; border: 5px solid white;}
 
-splitter{background-color:white;width:0px;}
+
+#listarea{width:800px;background-color:#a6a6a6; min-height: 155px; max-height: 155px;  border-left: 5px solid white;border-right: 5px solid white;}
+#instructarea{border-top:5px solid white;background-color:#333333; min-height: 40px; max-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
+#editarea{padding:10px;background-color:#333333;min-height: 250px;  max-height: 250px;  border-left: 5px solid white;border-right: 5px solid white;}
+#controlarea{ padding: 5px; border-bottom:5px solid white;background-color:#333333; min-height: 40px; max-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
+#controls{ min-width: 340px; max-width: 380px;}
+#selectcontrol{padding: 5px;}
+
+.cardClass{background-color:#FFFFFF; min-height:110px; max-height:110px; min-width:215px; max-width:215px; border: 1px solid #333333;}
 
 .contact{padding:8px;border-bottom:1px dashed lightblue;}
-.contact:hover{background:none;background-color:#F5F5F5;}
-.photobox:hover{cursor:pointer;}
-.lblname{font-family:verdana,helvetica;font-weight:bold;font-size:1.2em;}
-.lblmail{font-family:verdana,helvetica;font-size:1em;color:blue;cursor:pointer;}
+.contact:hover{background:none;background-color:#b7b7b7;}
 
-.lblTitle{font-family:verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:right;}
+#mainlabel{padding:5px;font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:3.6em;;text-align:left; color: white;}
+#select{font-family:trebuchet ms,verdana,helvetica;font-size:1.0em; color: white;}
+.lblTitle{padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: white;}
+.lblText{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:right; color: white;}
+.cardcontrols{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
 
 #colText{width:100px;}
-#colData{width:240px;}
-.lblText{text-align:right;}
+#colData{width:260px;}
 
-#daylabel{font-weight:bold; font-size:1.8em;}
-#daybar{border-bottom:1px solid white; background:url(img/back.gif) repeat-x;}
-.daybox{-moz-box-pack:center;border-right:1px solid white;}
-.daybox:hover label{cursor:pointer;}
-.daybox:hover{color:#FFFFFF;background-color:#A0A0F0;}
 
-.hourbox1{height:64px; width:64px; -moz-box-pack:center; border-top:1px solid  gray; border-right:2px solid gray; background:url(img/back.gif);}
-.hourbox2{height:64px; width:64px; -moz-box-pack:center; border-top:1px dashed gray; border-right:2px solid gray; background:url(img/back.gif);}
-.line1{height:16px; border-top:1px solid gray;}
-.line2{height:16px; border-top:1px dashed gainsboro;}
-.line1:hover{background-color:#FFFFCC;}
-.line2:hover{background-color:#FFFFCC;}
 
-#taskbox{height:64px; width:64px; -moz-box-pack:center; border-right:2px solid gray; background:url(img/back.gif);}
