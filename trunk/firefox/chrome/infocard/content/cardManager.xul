@@ -136,10 +136,17 @@
 
             <hbox id="controlarea">
 
+                <vbox id="openid">
+                    <hbox>
+                        <textbox id="openidurl" value="http://cmort.myopenid.com/"/>
+                        <button label="openid" oncommand="openid();"/>
+                    </hbox>
+                </vbox>
                 <vbox flex="1">
                     <spacer></spacer>
                 </vbox>
                 <hbox id="controls">
+
                     <vbox id="newCard">
                         <label value="&cardmanager.newcard;" class="cardcontrols"/>
                     </vbox>
