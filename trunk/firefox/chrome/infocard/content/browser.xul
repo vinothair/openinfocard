@@ -31,6 +31,7 @@
  -->
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="infocard-overlay">
 
-    <script src="chrome://infocard/content/processInfocardObjects.js"/>
+     <script src="chrome://infocard/content/debug.js"/>
+     <script src="chrome://infocard/content/processInfocardObjects.js"/>
 
 </overlay>
