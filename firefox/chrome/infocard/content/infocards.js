@@ -196,8 +196,8 @@ function load(){
     var newCardElm = document.getElementById('newCard');
     newCardElm.addEventListener("click", newCard, false);
 
-    var deleteCard = document.getElementById('deleteCard');
-    //deleteCard.addEventListener("click", alert('Sorry - delete is not yet implemented'), false);
+    var deleteCardElm = document.getElementById('deleteCard');
+    deleteCardElm.addEventListener("click", deleteCard, false);
 
     var cancelselector = document.getElementById('cancelselector');
     cancelselector.addEventListener("click", cancel, false);
@@ -292,7 +292,7 @@ function setCard(card){
 
     var select = document.getElementById('selectcontrol');
     select.setAttribute('hidden', 'false');
-    
+
 
     selectedCard = card;
 
@@ -421,6 +421,7 @@ function createItem(c){
     var hbox = document.createElement("hbox");
     hbox.setAttribute("class","contact");
     hbox.setAttribute("cardid",c.id);
+    hbox.setAttribute("id",c.id);
     var vbox = document.createElement("vbox");
     vbox.setAttribute("class","databox");
     vbox.setAttribute("flex","1");
@@ -629,13 +630,57 @@ function deleteCard(){
     var cardFile = read(db);
     var selectedCardId = selectedCard.id;
 
+    debug("Delete Card : " + selectedCardId);
+
     var count = 0;
     for each (c in cardFile.infocard) {
-        var latestCard = createItem(c);
-        var latestId = latestCard.id;
-        if (latestId == selectedCardId) cardFile.infocard[count] = null;
+        var latestId = c.id;
+        if (latestId == selectedCardId) delete cardFile.infocard[count];
         count++;
     }
+
+    save(db,cardFile.toString());
+
+    //debug(cardFile.toString());
+
+    var cardArea = document.getElementById("cardselection");
+    while (cardArea.hasChildNodes())
+	{
+	  cardArea.removeChild(cardArea.firstChild);
+	}
+
+
+    var grid = document.getElementById("editgrid");
+    grid.setAttribute("hidden", "true");
+
+    var grid1 = document.getElementById("editgrid1");
+    grid1.setAttribute("hidden", "true");
+
+    var label = document.getElementById("notify");
+    label.setAttribute("value", "Please select another card");
+
+    var select = document.getElementById('selectcontrol');
+    select.setAttribute('hidden', 'true');
+
+    document.getElementById("cardname").value = "";
+
+    selectedCard = null;
+
+    load();
+
+
+
+
+
+    //var cardToRemove = document.getElementById(selectedCardId);
+
+    //debug("Removing " + cardToRemove);
+    //cardArea.removeChild(cardToRemove);
+
+
+
+
+
 
 }
 
