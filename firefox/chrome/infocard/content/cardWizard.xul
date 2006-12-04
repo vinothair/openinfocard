@@ -73,6 +73,7 @@
       <menupopup>
         <menuitem label="&cardwizard.selfasserted;" value="selfAsserted"/>
         <menuitem label="&cardwizard.managed;" value="managedCard"/>
+        <menuitem label="OpenID" value="openid"/>
       </menupopup>
     </menulist>
   </wizardpage>
@@ -234,6 +235,8 @@
               callbackdata["uid"] = cardUid;
               window.arguments[1](callbackdata);
 
+               document.getElementById('card-window').cancel();
+
 
           }
 
@@ -251,6 +254,32 @@
 
 
   </wizardpage>
+
+
+    <wizardpage description="&cardwizard.carddetails;" pageid="openid" onpageadvanced="openidCallback();">
+       <script>
+       function openidCallback() {
+
+           var callbackdata = {};
+           callbackdata["type"] = "openid";
+           callbackdata["openid_url"] = document.getElementById("openid_url").value;
+           callbackdata["cardName"] = document.getElementById("openid_url").value;
+           callbackdata["cardId"] = document.getElementById("openid_url").value;
+           window.arguments[1](callbackdata);
+
+           document.getElementById('card-window').cancel();
+
+       }
+       </script>
+        <vbox id="editarea" flex="1">
+          <grid>
+              <columns><column id="colText"/><column id="colData"/></columns>
+              <rows>
+                  <row><label class="lblText" value="OpenID URL:"   /><textbox id="openid_url"  value=""/></row>
+              </rows>
+          </grid>
+      </vbox>
+    </wizardpage>
 
 
 
