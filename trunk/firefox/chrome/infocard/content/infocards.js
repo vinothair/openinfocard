@@ -31,11 +31,7 @@ var selectedCard;
 
 function ok(){
 
-
-    var select = document.getElementById('selectcontrol');
-    select.setAttribute("src", "chrome://infocard/content/img/selected.png");
     var tokenToReturn;
-
     var policy = window.arguments[0];
 
 
@@ -44,8 +40,9 @@ function ok(){
         policy["card"] = selectedCard.toString();
         //TRUE or FALSE on the second param enabled debug
         tokenToReturn = processCard(policy,false);
+        finish(tokenToReturn);
 
-    } else {
+    } else if (selectedCard.type == "managedCard"){
 
         var assertion = processManagedCard(selectedCard);
         debug(assertion);
@@ -54,9 +51,63 @@ function ok(){
         policy["assertion"] = assertion;
         //TRUE or FALSE on the second param enabled debug
         tokenToReturn = processCard(policy,false);
+        finish(tokenToReturn);
 
+
+    } else if (selectedCard.type == "openid"){
+
+        openid(selectedCard.id);
 
     }
+
+}
+
+
+function finalizeOpenId() {
+
+
+    debug('1');
+
+
+    var tokenToReturn;
+    var policy = window.arguments[0];
+
+
+    policy["type"] = "selfAsserted";
+    selectedCard.privatepersonalidentifier = hex_sha1(selectedCard.cardName + selectedCard.version + selectedCard.id);
+
+    var count = 0;
+    var data = new XML("<selfasserted/>");
+
+    selectedCard.supportedclaim[count] = "givenname";
+    data.givenname = openid_nickname;
+    count++;
+
+    selectedCard.supportedclaim[count] = "surname";
+    data.surname = openid_fullname;
+    count++;
+
+    selectedCard.supportedclaim[count] = "emailaddress";
+    data.emailaddress = openid_email;
+    count++;
+
+    selectedCard.carddata.data = data;
+    policy["card"] = selectedCard.toString();
+
+
+    tokenToReturn = processCard(policy,false);
+
+    debug('2');
+
+
+    finish(tokenToReturn);
+
+}
+
+
+function finish(tokenToReturn) {
+
+    stopServer();
 
     if (tokenToReturn != null) {
 
@@ -68,33 +119,6 @@ function ok(){
 
 }
 
-
-function openid(){
-
-
-
-    var req = new XMLHttpRequest();
-    req.open('GET', document.getElementById('openidurl').value, false);
-    req.setRequestHeader("User-Agent", "xmldap openid stack");
-    req.send(null);
-    if(req.status == 200) {
-
-        var resp = req.responseText;
-        var serverIndex = resp.indexOf("openid.server");
-        var next = resp.substring(serverIndex);
-        var hrefIndex = next.indexOf("href=");
-        hrefIndex += 6;
-        var subStr = next.substring(hrefIndex);
-        var endAddr = subStr.indexOf('"');
-        var address = subStr.substring(0,endAddr);
-        debug("Openid: " + address);
-
-
-    }
-
-
-
-}
 
 
 function processManagedCard(managedCard) {
@@ -201,6 +225,8 @@ function processManagedCard(managedCard) {
 
 
 function cancel(){
+
+    stopServer();
     window.arguments[1](null);
     window.close();
 }
@@ -347,21 +373,21 @@ function setCard(card){
 
 
 
-        document.getElementById("cardname").disabled = false;
-        document.getElementById("givenname").disabled = false;
-        document.getElementById("surname").disabled = false;
-        document.getElementById("email").disabled = false;
-        document.getElementById("streetAddress").disabled = false;
-        document.getElementById("locality").disabled = false;
-        document.getElementById("stateOrProvince").disabled = false;
-        document.getElementById("postalCode").disabled = false;
-        document.getElementById("country").disabled = false;
-        document.getElementById("primaryPhone").disabled = false;
-        document.getElementById("otherPhone").disabled = false;
-        document.getElementById("mobilePhone").disabled = false;
-        document.getElementById("dateOfBirth").disabled = false;
-        document.getElementById("gender").disabled = false;
-        document.getElementById("imgurl").disabled = false;
+        document.getElementById("cardname").visibility = 'visible';
+        document.getElementById("givenname").visibility = 'visible';
+        document.getElementById("surname").visibility = 'visible';
+        document.getElementById("email").visibility = 'visible';
+        document.getElementById("streetAddress").visibility = 'visible';
+        document.getElementById("locality").visibility = 'visible';
+        document.getElementById("stateOrProvince").visibility = 'visible';
+        document.getElementById("postalCode").visibility = 'visible';
+        document.getElementById("country").visibility = 'visible';
+        document.getElementById("primaryPhone").visibility = 'visible';
+        document.getElementById("otherPhone").visibility = 'visible';
+        document.getElementById("mobilePhone").visibility = 'visible';
+        document.getElementById("dateOfBirth").visibility = 'visible';
+        document.getElementById("gender").visibility = 'visible';
+        document.getElementById("imgurl").visibility = 'visible';
 
 
         indicateRequiredClaims();
@@ -376,37 +402,37 @@ function setCard(card){
         var label = document.getElementById("notify");
         label.setAttribute("value", "Self Asserted Card");
 
-    }  else  {
+    }  else if (selectedCard.type == "managedCard" )   {
 
 
         document.getElementById("cardname").value = selectedCard.name;
-        document.getElementById("givenname").disabled = true;
+        document.getElementById("givenname").visibility = 'hidden';
         document.getElementById("givenname").value = "";
-        document.getElementById("surname").disabled = true;
+        document.getElementById("surname").visibility = 'hidden';
         document.getElementById("surname").value = "";
-        document.getElementById("email").disabled = true;
+        document.getElementById("email").visibility = 'hidden';
         document.getElementById("email").value = "";
-        document.getElementById("streetAddress").disabled = true;
+        document.getElementById("streetAddress").visibility = 'hidden';
         document.getElementById("streetAddress").value = "";
-        document.getElementById("locality").disabled = true;
+        document.getElementById("locality").visibility = 'hidden';
         document.getElementById("locality").value = "";
-        document.getElementById("stateOrProvince").disabled = true;
+        document.getElementById("stateOrProvince").visibility = 'hidden';
         document.getElementById("stateOrProvince").value = "";
-        document.getElementById("postalCode").disabled = true;
+        document.getElementById("postalCode").visibility = 'hidden';
         document.getElementById("postalCode").value = "";
-        document.getElementById("country").disabled = true;
+        document.getElementById("country").visibility = 'hidden';
         document.getElementById("country").value = "";
-        document.getElementById("primaryPhone").disabled = true;
+        document.getElementById("primaryPhone").visibility = 'hidden';
         document.getElementById("primaryPhone").value = "";
-        document.getElementById("otherPhone").disabled = true;
+        document.getElementById("otherPhone").visibility = 'hidden';
         document.getElementById("otherPhone").value = "";
-        document.getElementById("mobilePhone").disabled = true;
+        document.getElementById("mobilePhone").visibility = 'hidden';
         document.getElementById("mobilePhone").value = "";
-        document.getElementById("dateOfBirth").disabled = true;
+        document.getElementById("dateOfBirth").visibility = 'hidden';
         document.getElementById("dateOfBirth").value = "";
-        document.getElementById("gender").disabled = true;
+        document.getElementById("gender").visibility = 'hidden';
         document.getElementById("gender").value = "";
-        document.getElementById("imgurl").disabled = true;
+        document.getElementById("imgurl").visibility = 'hidden';
         document.getElementById("imgurl").value = "";
 
 
@@ -422,6 +448,13 @@ function setCard(card){
         var label = document.getElementById("notify");
         label.setAttribute("value", "Managed Card from " + selectedCard.carddata.managed.issuer);
 
+
+
+    } else if (selectedCard.type == "openid" )  {
+
+
+        var label = document.getElementById("notify");
+        label.setAttribute("value", "Use OpenID with Identity URL: " + selectedCard.id);
 
 
     }
@@ -465,7 +498,7 @@ function createItem(c){
     var imgurl = "";
     if ( c.type == "selfAsserted") {
         imgurl = c.carddata.selfasserted.imgurl;
-    } else {
+    } else if ( c.type == "managedCard") {
         imgurl = c.carddata.managed.image;
     }
      //var picture = document.createElement("html:img");
@@ -475,7 +508,12 @@ function createItem(c){
     var picture = document.createElement("image");
 
     if ( (imgurl == "") || (imgurl == undefined)) {
-        picture.setAttribute("src", "chrome://infocard/content/img/card.png");
+
+        if (c.type == "selfAsserted") {
+            picture.setAttribute("src", "chrome://infocard/content/img/card.png");
+        } else if (c.type == "openid") {
+            picture.setAttribute("src", "chrome://infocard/content/img/openid.png");
+        }
     } else {
         picture.setAttribute("src", imgurl);
     }
@@ -645,6 +683,19 @@ function newCard(){
         saveCard(card);
 
 
+
+    }
+
+
+    if ( type == "openid") {
+
+        var card = new XML("<infocard/>");
+        card.name = "" + cardName + "";
+        card.type = type;
+        var version = "1";
+        card.version = version;
+        card.id = "" + callback.cardId + "";
+        saveCard(card);
 
     }
 

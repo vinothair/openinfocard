@@ -45,6 +45,7 @@
 
     <script src="chrome://infocard/content/sha1.js"/>
     <script src="chrome://infocard/content/json.js"/>
+    <script src="chrome://infocard/content/openid.js"/>
     <script src="chrome://infocard/content/infocards.js"/>
     <script src="chrome://infocard/content/tokenissuer.js"/>
 
@@ -58,19 +59,17 @@
             <vbox flex="10">
                 <spacer></spacer>
             </vbox>
-            <vbox align="center" id="selectcontrol" hidden="true">
-                <image src="chrome://infocard/content/img/select.png" width="38" height="38" onClick="debug('test');"/>
-                <label id="select" value="Select Card"/>
-            </vbox>
+
         </hbox>
 
 
 
         <hbox id="listarea">
-            <arrowscrollbox orient="horizontal" flex="1" id="cardselection">
-
-            </arrowscrollbox>
-
+            <hbox id="openID"></hbox>
+            <hbox>
+                <arrowscrollbox orient="horizontal" flex="1" id="cardselection">
+                </arrowscrollbox>
+            </hbox>
         </hbox>
 
 
@@ -82,6 +81,7 @@
 
             <hbox id="editarea" flex="1">
 
+                <iframe src="" flex="2" id="openid_iframe" name="openid_iframe" style="visibility: hidden; width: 100%; height:100px;"/>
 
                <vbox>
 
@@ -136,12 +136,14 @@
 
             <hbox id="controlarea">
 
-                <vbox id="openid">
+                    
+                <vbox align="center" id="selectcontrol" hidden="true">
                     <hbox>
-                        <textbox id="openidurl" value="http://cmort.myopenid.com/"/>
-                        <button label="openid" oncommand="openid();"/>
+                        <image src="chrome://infocard/content/img/select.png" width="19" height="19"/>
+                        <label id="select" value="Use this Card"/>
                     </hbox>
                 </vbox>
+
                 <vbox flex="1">
                     <spacer></spacer>
                 </vbox>

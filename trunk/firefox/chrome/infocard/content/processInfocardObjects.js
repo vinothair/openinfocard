@@ -290,8 +290,6 @@ function promptIntroduction(body,target) {
     intro.style.top = ( position[1] - 20 ) + 'px';
     intro.style.opacity = '0.8';
     intro.addEventListener("click", showIntroduction, false);
-
-
     body.appendChild(intro);
 
 }
