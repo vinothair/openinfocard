@@ -72,22 +72,41 @@ function do_infocard(e) {
 
 
 
-
-
-
             debug('init selector');
             initSelector(body);
 
-
             var img = parent.getElementsByTagName("img")[0];
-            //img.addEventListener("click", handle, false);
-            img.addEventListener("click", invokeSelector, false);
-            img.setAttribute("onclick","");
+            var inputs = parent.getElementsByTagName("input");
+            var button;
+            for (i = 0; i < inputs.length; i++) {
 
+                if ( inputs[i].getAttribute("type") == "button" ) {
+
+                    button = inputs[i];
+
+                }
+
+            }
+            form.addEventListener("click", invokeSelector, false);
 
             if (!hideIntro) {
 
-                promptIntroduction(body,img);
+                if ( img != null ) {
+
+                    img.setAttribute("onclick","");
+                    promptIntroduction(body,img);
+
+                } else if ( button != null ) {
+                    button.setAttribute("onclick","");
+                    promptIntroduction(body,button);
+
+
+                } else {
+
+                    form.setAttribute("onclick","");
+                    promptIntroduction(body,form);
+
+                }
 
             }
 
@@ -282,13 +301,13 @@ function hideIntroduction(doc, shouldHide) {
 
 
 function promptIntroduction(body,target) {
-	var position = findPos(target);
+    var position = findPos(target);
+    debug('adding at pos ' + position);
     var intro = document.createElement("div");
     intro.setAttribute("id","introPrompt");
-    intro.setAttribute("style","background-image: url('chrome://infocard/content/img/introduction.png'); min-width:130px; min-height: 31px; position: absolute;visibility: visible; cursor:help");
+    intro.setAttribute("style","z-index:89;background-image: url('chrome://infocard/content/img/introduction.png'); min-width:130px; min-height: 31px; position: absolute;visibility: visible; cursor:help");
 	intro.style.left = ( position[0] + target.clientWidth )+ 'px';
     intro.style.top = ( position[1] - 20 ) + 'px';
-    intro.style.opacity = '0.8';
     intro.addEventListener("click", showIntroduction, false);
     body.appendChild(intro);
 

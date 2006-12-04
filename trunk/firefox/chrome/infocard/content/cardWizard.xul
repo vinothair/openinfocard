@@ -213,8 +213,8 @@
              var issuer = cardxml.dsig::Object.ic::InformationCard.ic::Issuer;
              var mex =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
 
-            var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
-            var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
+             var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
+             var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
 
               debug(cardId);
               debug(cardName);
