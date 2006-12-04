@@ -72,6 +72,9 @@ function do_infocard(e) {
 
 
 
+
+
+
             debug('init selector');
             initSelector(body);
 
@@ -80,6 +83,13 @@ function do_infocard(e) {
             //img.addEventListener("click", handle, false);
             img.addEventListener("click", invokeSelector, false);
             img.setAttribute("onclick","");
+
+
+            if (!hideIntro) {
+
+                promptIntroduction(body,img);
+
+            }
 
         }
 
@@ -97,61 +107,6 @@ function hideMissingPlugin(){
 
 }
 
-
-
-function handle(aEvent){
-
-    var callback;
-    var img = aEvent.originalTarget;
-    var form = img.parentNode;
-    while (form.tagName != "FORM") {
-
-        form = form.parentNode;
-
-    }
-    var policy = parseCard(form);
-
-    var certificate = processCert();
-    var cert = getDer(certificate);
-
-    policy["cert"] = cert;
-    policy["cn"] = certificate.commonName;
-
-
-    var cardManager = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome", policy, function (callbackData) { callback = callbackData;});
-
-
-    //modal,,resizable=yes
-    if ( callback == null ) return;
-
-
-    var object = form.getElementsByTagName("object")[0];
-
-    var body = form.parentNode;
-    while (body.tagName != "BODY") {
-
-        body = body.parentNode;
-
-    }
-
-    var infocardForm;
-    var forms = body.getElementsByTagName("FORM");
-    for (var i = 0; i < forms.length; i++) {
-        var id = forms[i].getAttribute("id");
-        if ( id == "firefox_infocard_form") {
-            infocardForm = forms[i];
-        }
-    }
-
-    var inputIter = infocardForm.getElementsByTagName("input");
-    var input = inputIter[0];
-    input.setAttribute("value",callback);
-
-    infocardForm.submit();
-
-
-
-}
 
 
 
@@ -264,18 +219,104 @@ function invokeSelector(aEvent){
 
 
 
+}
 
 
+var hideIntro = false;
 
+
+function showIntroduction(e) {
+
+    var prompt = e.originalTarget;
+    var doc = prompt.ownerDocument;
+
+    var overlay = doc.getElementById('overlay');
+    overlay.style.visibility = 'visible';
+
+    var intro = doc.getElementById('intro');
+    intro.style.visibility = 'visible';
 
 
 }
 
 
+function hideIntroductionShow(e) {
+
+
+    var prompt = e.originalTarget;
+    var doc = prompt.ownerDocument;
+    hideIntroduction(doc,false);
+
+}
+
+function hideIntroductionDontShow(e) {
+
+    var prompt = e.originalTarget;
+    var doc = prompt.ownerDocument;
+    hideIntroduction(doc,true);
+
+}
+
+
+function hideIntroduction(doc, shouldHide) {
+
+    hideIntro = shouldHide;
+
+    if (hideIntro) {
+
+        var prompt = doc.getElementById("introPrompt");
+        prompt.style.visibility = 'hidden';
+
+    }
+
+    var intro = doc.getElementById('intro');
+	intro.style.visibility = 'hidden';
+
+
+    var overlay = doc.getElementById('overlay');
+    overlay.style.visibility = 'hidden';
+
+
+}
+
+
+
+function promptIntroduction(body,target) {
+	var position = findPos(target);
+    var intro = document.createElement("div");
+    intro.setAttribute("id","introPrompt");
+    intro.setAttribute("style","background-image: url('chrome://infocard/content/img/introduction.png'); min-width:130px; min-height: 31px; position: absolute;visibility: visible; cursor:help");
+	intro.style.left = ( position[0] + target.clientWidth )+ 'px';
+    intro.style.top = ( position[1] - 20 ) + 'px';
+    intro.style.opacity = '0.8';
+    intro.addEventListener("click", showIntroduction, false);
+
+
+    body.appendChild(intro);
+
+}
+
+
+function findPos(obj)
+{
+	var curleft = curtop = 0;
+	if (obj.offsetParent) {
+		curleft = obj.offsetLeft
+		curtop = obj.offsetTop
+		while (obj = obj.offsetParent) {
+			curleft += obj.offsetLeft
+			curtop += obj.offsetTop
+		}
+	}
+	return [curleft,curtop];
+}
+
+
+
 function initSelector(body){
 
     var w = document.width;
-    var offset = (w - 640) / 2;
+    var offset = (w - 660) / 2;
 
     var objOverlay = document.createElement("div");
     objOverlay.setAttribute('id','overlay');
@@ -289,6 +330,52 @@ function initSelector(body){
     objOverlay.style.width = document.width + 'px';
     objOverlay.style.opacity = '0.6';
     body.appendChild(objOverlay);
+
+
+    var introOverlay = document.createElement("div");
+    introOverlay.setAttribute('id','intro');
+    introOverlay.setAttribute('style','z-index: 100;border: 1px solid grey; padding: 20px;font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.4em;');
+    introOverlay.style.visibility = 'hidden';
+    introOverlay.style.position = 'absolute';
+    introOverlay.style.top = '40pt';
+    introOverlay.style.left = offset + 'pt';
+    introOverlay.style.background = '#FFFFFF';
+    introOverlay.style.height = '480px';
+    introOverlay.style.width = '640px';
+
+    var p = document.createElement("p");
+    p.setAttribute('style','min-width: 600px; max-width: 600px;');
+    //p.textContent = 'Welcome to authentication with InfoCard.   When a InfoCard-enabled application or website wishes to obtain personal information about you, the site will prompt you to login with an InfoCard. Your Identity Selector will then appear, taking over the display of the browser and displaying the stored identities as virtual information cards. You may then select a card to use and the software contacts the issuer of the identity to obtain a digitally signed XML token that contains the requested information.   This is then securely sent to the requesting website.';
+    p.textContent = 'Provide an introduction to InfoCard here!';
+    introOverlay.appendChild(p);
+
+
+    var p1 = document.createElement("p");
+    p1.textContent = "    ";
+    introOverlay.appendChild(p1);
+
+    var closeAndShow = document.createElement("a");
+    closeAndShow.setAttribute("href","");
+    closeAndShow.textContent = "Thanks...please keep pointing out InfoCards!";
+    closeAndShow.addEventListener("click", hideIntroductionShow, false);
+    introOverlay.appendChild(closeAndShow);
+
+
+    var p2 = document.createElement("p");
+    p2.textContent = "    ";
+    introOverlay.appendChild(p1);
+
+
+    var closeAndDontShow = document.createElement("a");
+    closeAndShow.setAttribute("href","");
+    closeAndDontShow.textContent = "I get it...don't bother pointing out InfoCards anymore.";
+    closeAndDontShow.addEventListener("click", hideIntroductionDontShow, false);
+    introOverlay.appendChild(closeAndDontShow);
+
+
+    body.appendChild(introOverlay);
+
+
 
 
 }
