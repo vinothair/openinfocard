@@ -1,0 +1,69 @@
+
+prerequisites
+ java and probably JAVA_HOME set
+ ant and probably ANT_HOME set
+ 
+ Firefox Identity Selector
+ Firefox (tested with 2.0)
+
+ Relyingparte and STS
+ tomcat or jboss or...
+
+Installation procedure
+ Firefox Identity Selector
+
+  cd ant && ant
+  // currently 5 warnings
+
+  cd ../build
+  open xmldap.xpi with Firefox and restart Firefox
+  navigate Firefox to https://xmldap.org/relyingparty/ to test
+
+  If something does not work...
+   Look at the Firefox javascript console!
+
+ STS and Relyingparty
+  Install your application server (AS)
+  Edit server.xml to enable SSL/TLS
+  Create a self-signed cert and test your AS with https.
+
+
+  Now your application server is ready to serve https. Good.
+
+  Edit mex.xml, rp-web.xml and sts-web.xml and 
+  - replace xmldap.org by your AS domainname and port
+    e.g.: xmldap.org -> w4de3esy0069028.gdc-bln01.t-systems.com:8443
+  - change the name of the keystore, alias, keystorepass and keypass
+    to appropriate values for your environment
+  Copy build/sts.war and build/relyingparty.war to the 
+   deploy directory e.g. $JBOSS_HOME/server/default/deploy
+  Start your AS. $JBOSS_HOME/bin/run.bat (or run.sh)
+
+  Navigate Firefox to your https://domainname:port/sts/ and 
+  create a managed card.
+  Navigate Firefox to your https://domainname:port/relyingparty/
+   Click "New Card", choose "managed card" and import the created card.
+
+  Now everything should work. Add a comment at http://xmldap.blogspot.com/
+   how cool this all is.
+
+
+  If something does not work...
+
+
+  Look at the AS logs!
+   If its something with "keystore not found" or the like, then check
+   rp-web.xml and sts-web.xml
+
+   If the AS complains about "/Users/cmort/..." not found, then check
+   rp-web.xml and sts-web.xml again. If these are clean, edit ServletUtil.java
+   and insert your keystore, password etc. Sorry. Somebody should fix this...
+
+- Axel Nennker
+
+If you are using SUN One Application Server... 
+Configure it to use JKS as the keystore type. 
+DO NOT USE NSS!!! You can not access the private key with NSS api, but
+you need it to decrypt the xmlToken.
+Repeat: DO NOT USE NSS!!!
+Gather some friends to chant it for added fun.
