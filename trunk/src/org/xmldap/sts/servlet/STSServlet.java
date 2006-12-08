@@ -112,7 +112,7 @@ public class STSServlet  extends HttpServlet {
 
 
 
-    private Bag parseRequest(Element requestXML) throws ParsingException{
+    private Bag parseRequest(Element requestXML) throws ParsingException {
 
         Bag requestElements = new Bag();
 
@@ -128,7 +128,15 @@ public class STSServlet  extends HttpServlet {
         Nodes cids = requestXML.query("//wsid:CardId",context);
         Element cid = (Element) cids.get(0);
         String cardIdUri = cid.getValue();
-        String cardId = cardIdUri.substring("https://xmldap.org/sts/card/".length());
+        
+        String domainname = _su.getDomainName();
+        String prefix = "https://" + domainname + "/sts/card/";
+        String cardId = null;
+        if (cardIdUri.startsWith(prefix)) {
+        	cardId = cardIdUri.substring(prefix.length());
+        } else {
+        	throw new ParsingException("Expected:"+prefix+", but found:"+cardIdUri);
+        }
         if (DEBUG) System.out.println("cardId: " + cardId);
 
         requestElements.put("cardId", cardId);
@@ -314,7 +322,9 @@ public class STSServlet  extends HttpServlet {
         token.setEmailAddress(card.getEmailAddress());
         token.setPrivatePersonalIdentifier(card.getPrivatePersonalIdentifier());
         token.setValidityPeriod(1, 10);
-
+        String domainname = _su.getDomainName();
+        token.setIssuer("https://" + domainname + "/sts/tokenservice");
+        
         RandomGUID uuid = new RandomGUID();
 
         try {
