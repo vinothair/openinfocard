@@ -117,14 +117,13 @@ public class CardServlet extends HttpServlet {
         try {
 	    pKey = _su.getPrivateKey();
         } catch (KeyStoreException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-	    return;
+            throw new ServletException(e);
         }
 
 	    String domainname = _su.getDomainName();
 
         InfoCard card = new InfoCard(cert, pKey);
-        card.setCardId("https://xmldap.org/sts/card/" + managedCard.getCardId() );
+        card.setCardId("https://" + domainname + "/sts/card/" + managedCard.getCardId() );
         card.setCardName(managedCard.getCardName());
         card.setCardVersion(1);
         card.setIssuerName(domainname);
@@ -165,7 +164,7 @@ public class CardServlet extends HttpServlet {
         try {
             out.println(card.toXML());
         } catch (SerializationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        	throw new ServletException(e);
         }
 
         out.flush();

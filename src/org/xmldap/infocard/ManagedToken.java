@@ -64,6 +64,7 @@ public class ManagedToken implements Serializable {
     private String dateOfBirth;
     private String privatePersonalIdentifier;
     private String gender;
+    private String issuer;
 
     private X509Certificate signingCert;
     private PrivateKey signingKey;
@@ -78,7 +79,14 @@ public class ManagedToken implements Serializable {
         namespacePrefix = XS_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
     }
 
-
+    public void setIssuer(String issuer) {
+    	this.issuer = issuer;
+    }
+    
+    public String getIssuer() {
+    	return issuer;
+    }
+    
     public void setNamespacePrefix(String namespacePrefix) {
         this.namespacePrefix = namespacePrefix;
     }
@@ -319,7 +327,7 @@ public class ManagedToken implements Serializable {
         }
 
         SAMLAssertion assertion = new SAMLAssertion(uuid);
-        assertion.setIssuer("https://xmldap.org/sts/tokenservice");
+        assertion.setIssuer(issuer);
         assertion.setConditions(conditions);
         assertion.setAttributeStatement(statement);
 
