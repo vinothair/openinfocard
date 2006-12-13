@@ -253,10 +253,6 @@ public class InfoCard implements Serializable {
         infoCard.appendChild(tokenList.serialize());
         infoCard.appendChild(claimList.serialize());
 
-        Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNotice", WSConstants.INFOCARD_NAMESPACE);
-        ppElm.appendChild(privacyPolicy);
-        infoCard.appendChild(ppElm);
-
         if (requireAppliesTo) {
 
             Element requireAppliesToElm = new Element(WSConstants.INFOCARD_PREFIX + ":RequireAppliesTo", WSConstants.INFOCARD_NAMESPACE);
@@ -265,6 +261,11 @@ public class InfoCard implements Serializable {
             infoCard.appendChild(requireAppliesToElm);
 
         }
+
+        Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNotice", WSConstants.INFOCARD_NAMESPACE);
+        ppElm.appendChild(privacyPolicy);
+        infoCard.appendChild(ppElm);
+
 
         if (signCard()) {
             System.out.println("SigningCArd");
