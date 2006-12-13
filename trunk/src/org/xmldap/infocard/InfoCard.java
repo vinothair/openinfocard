@@ -260,6 +260,8 @@ public class InfoCard implements Serializable {
         if (requireAppliesTo) {
 
             Element requireAppliesToElm = new Element(WSConstants.INFOCARD_PREFIX + ":RequireAppliesTo", WSConstants.INFOCARD_NAMESPACE);
+            Attribute required = new Attribute("Optional", "true");
+            requireAppliesToElm.addAttribute(required);
             infoCard.appendChild(requireAppliesToElm);
 
         }
