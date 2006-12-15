@@ -114,17 +114,21 @@ public class TokenServiceReference implements Serializable {
         IdentityEnabledEndpointReference iepr = new IdentityEnabledEndpointReference(address, mexAddress, cert);
         tokenService.appendChild(iepr.serialize());
 
-        Element userCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UserCredential", WSConstants.INFOCARD_NAMESPACE);
-        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-        displayCredentialHint.appendChild("Enter your username and password");
-        userCredential.appendChild(displayCredentialHint);
-
-        Element usernamePasswordCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UsernamePasswordCredential", WSConstants.INFOCARD_NAMESPACE);
-        Element username = new Element(WSConstants.INFOCARD_PREFIX + ":Username", WSConstants.INFOCARD_NAMESPACE);
-        username.appendChild(userName);
-        usernamePasswordCredential.appendChild(username);
-        userCredential.appendChild(usernamePasswordCredential);
-
+        Element userCredential = null;
+        if (USERNAME.equals(authType)) {
+	        userCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UserCredential", WSConstants.INFOCARD_NAMESPACE);
+	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
+	        displayCredentialHint.appendChild("Enter your username and password");
+	        userCredential.appendChild(displayCredentialHint);
+	
+	        Element usernamePasswordCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UsernamePasswordCredential", WSConstants.INFOCARD_NAMESPACE);
+	        Element username = new Element(WSConstants.INFOCARD_PREFIX + ":Username", WSConstants.INFOCARD_NAMESPACE);
+	        username.appendChild(userName);
+	        usernamePasswordCredential.appendChild(username);
+	        userCredential.appendChild(usernamePasswordCredential);
+        } else {
+        	throw new SerializationException("unsupported authentication type:" + authType);
+        }
         tokenService.appendChild(userCredential);
         tokenServiceList.appendChild(tokenService);
         return tokenServiceList;
