@@ -31,6 +31,7 @@ package org.xmldap.xmldsig;
 import nu.xom.Element;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.Base64;
+import org.xmldap.ws.WSConstants;
 
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -41,16 +42,18 @@ public class InfocardKeyInfo implements KeyInfo {
     X509Certificate cert = null;
 
     public InfocardKeyInfo(X509Certificate cert) {
+    	if (cert == null) {
+    		throw new IllegalArgumentException("parameter 'X509certificate must not be null");
+    	}
         this.cert = cert;
     }
 
     private Element getKeyInfo() throws SerializationException {
 
-        //TODO - extract constants!
-        Element keyInfo = new Element("ds:KeyInfo", "http://www.w3.org/2000/09/xmldsig#");
+        Element keyInfo = new Element(WSConstants.DSIG_PREFIX + ":KeyInfo", WSConstants.DSIG_NAMESPACE);
 
-        Element x509Data = new Element("ds:X509Data", "http://www.w3.org/2000/09/xmldsig#");
-        Element x509Certificate = new Element("ds:X509Certificate", "http://www.w3.org/2000/09/xmldsig#");
+        Element x509Data = new Element(WSConstants.DSIG_PREFIX + ":X509Data", WSConstants.DSIG_NAMESPACE);
+        Element x509Certificate = new Element(WSConstants.DSIG_PREFIX + ":X509Certificate", WSConstants.DSIG_NAMESPACE);
 
         try {
             x509Certificate.appendChild(Base64.encodeBytesNoBreaks(cert.getEncoded()));
