@@ -28,6 +28,7 @@
 
 package org.xmldap.infocard;
 
+import nu.xom.Attribute;
 import nu.xom.Element;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
@@ -48,7 +49,12 @@ public class TokenServiceReference implements Serializable {
     private String authType = USERNAME;
     private String address;
     private String mexAddress;
-    private String userName;
+    
+    private String userName = null;
+    private String ppi = null;
+    private String x509Hash = null;
+    private String kerberosServicePrincipalName = null;
+    
     private X509Certificate cert;
 
     public TokenServiceReference() {
@@ -89,6 +95,30 @@ public class TokenServiceReference implements Serializable {
         this.address = address;
     }
 
+    public String getPPI() {
+        return ppi;
+    }
+
+    public void setPPI(String ppi) {
+        this.ppi = ppi;
+    }
+
+    public String getKerberosServicePrincipalName() {
+        return kerberosServicePrincipalName;
+    }
+
+    public void setKerberosServicePrincipalName(String kerberosServicePrincipalName) {
+        this.kerberosServicePrincipalName = kerberosServicePrincipalName;
+    }
+
+    public String getX509Hash() {
+        return x509Hash;
+    }
+
+    public void setX509Hash(String x509Hash) {
+        this.x509Hash = x509Hash;
+    }
+
     public String getUserName() {
         return userName;
     }
@@ -114,18 +144,73 @@ public class TokenServiceReference implements Serializable {
         IdentityEnabledEndpointReference iepr = new IdentityEnabledEndpointReference(address, mexAddress, cert);
         tokenService.appendChild(iepr.serialize());
 
-        Element userCredential = null;
+        Element userCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UserCredential", WSConstants.INFOCARD_NAMESPACE);
         if (USERNAME.equals(authType)) {
-	        userCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UserCredential", WSConstants.INFOCARD_NAMESPACE);
 	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
 	        displayCredentialHint.appendChild("Enter your username and password");
 	        userCredential.appendChild(displayCredentialHint);
 	
-	        Element usernamePasswordCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UsernamePasswordCredential", WSConstants.INFOCARD_NAMESPACE);
+	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":UsernamePasswordCredential", WSConstants.INFOCARD_NAMESPACE);
 	        Element username = new Element(WSConstants.INFOCARD_PREFIX + ":Username", WSConstants.INFOCARD_NAMESPACE);
 	        username.appendChild(userName);
-	        usernamePasswordCredential.appendChild(username);
-	        userCredential.appendChild(usernamePasswordCredential);
+	        credential.appendChild(username);
+	        userCredential.appendChild(credential);
+        } else if (KERB.equals(authType)) {
+	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
+	        displayCredentialHint.appendChild("Enter your kerberos credentials");
+	        userCredential.appendChild(displayCredentialHint);
+	        // <ic:KerberosV5Credential />
+	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":KerberosV5Credential", WSConstants.INFOCARD_NAMESPACE);
+	        userCredential.appendChild(credential);
+	        /* To enable the service requester to obtain a Kerberos v5 service ticket for the IP/STS, the endpoint reference of the IP/STS 
+	         * in the information card or in the metadata retrieved from it must include a “service principal name” identity claim under 
+	         * the wsid:Identity tag as defined in [Addressing-Ext]. http://www.w3.org/TR/2005/CR-ws-addr-core-20050817/
+	         */
+        } else if (SELF_ISSUED.equals(authType)) {
+	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
+	        displayCredentialHint.appendChild("Choose a self-asserted card");
+	        userCredential.appendChild(displayCredentialHint);
+        	/*
+	        	  <ic:SelfIssuedCredential>
+	        	    <ic:PrivatePersonalIdentifier>
+	        	      xs:base64Binary 
+	        	    </ic:PrivatePersonalIdentifier>
+	        	  </ic:SelfIssuedCredential>
+        	 */
+	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":SelfIssuedCredential", WSConstants.INFOCARD_NAMESPACE);
+	        Element credentialValue = new Element(WSConstants.INFOCARD_PREFIX + ":PrivatePersonalIdentifier", WSConstants.INFOCARD_NAMESPACE);
+	        credentialValue.appendChild(ppi);
+	        credential.appendChild(credentialValue);
+	        userCredential.appendChild(credential);
+        } else if (X509.equals(authType)) {
+        	/*
+  				  <ic:DisplayCredentialHint> xs:string </ic:DisplayCredentialHint>
+  				  <ic:X509V3Credential>
+				    <ds:X509Data>
+				      <wsse:KeyIdentifier
+				        ValueType="http://docs.oasis-open.org/wss/2004/xx/oasis-2004xx-wss-soap-message-security-1.1#ThumbprintSHA1"
+				        EncodingType="http://docs.oasis-open.org/wss/2004/xx/oasis-2004xx-wss-soap-message-security-1.1#Base64Binary">
+				        xs:base64binary
+				      </wsse:KeyIdentifier>
+				    </ds:X509Data>
+				  </ic:X509V3Credential>
+        	 */
+	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
+	        displayCredentialHint.appendChild("Choose a certificate");
+	        userCredential.appendChild(displayCredentialHint);
+	
+	        // <ic:KerberosV5Credential />
+	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":X509V3Credential", WSConstants.INFOCARD_NAMESPACE);
+	        Element x509Data = new Element(WSConstants.DSIG_PREFIX + ":X509Data", WSConstants.DSIG_NAMESPACE);
+	        Element keyIdentifier = new Element(WSConstants.WSSE_PREFIX + ":KeyIdentifier", WSConstants.WSSE_NAMESPACE_OASIS_11);
+	        Attribute valueType = new Attribute("ValueType", WSConstants.WSSE_OASIS_XX_THUMBPRINTSHA1);
+	        Attribute encodingType = new Attribute("EncodingType", WSConstants.WSSE_OASIS_XX_BASE64BINARY);
+	        keyIdentifier.addAttribute(valueType);
+	        keyIdentifier.addAttribute(encodingType);
+	        keyIdentifier.appendChild(x509Hash);
+	        x509Data.appendChild(keyIdentifier);
+	        credential.appendChild(x509Data);
+	        userCredential.appendChild(credential);
         } else {
         	throw new SerializationException("unsupported authentication type:" + authType);
         }
