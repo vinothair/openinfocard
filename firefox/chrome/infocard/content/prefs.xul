@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<overlay id="identityselector_preferences_overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+    <!-- Merge with the BrowserPreferences Window -->
+    <prefwindow id="BrowserPreferences"
+                title="IdentitySelector">
+
+        <!-- Create a new pane. -->
+          <prefpane id="identitySelectorPane"
+                    label="IdentitySelector"
+                    image="chrome://infocard/content/img/icon.png">
+
+              <!-- Intermediary between GUI and preferences system -->
+              <preferences>
+                  <preference id="identityselector"
+                              name="identityselector.contractid"
+                              type="string" />
+
+              </preferences>
+
+
+              <vbox id="selectorHeader">
+                <label>Identity Selector Preferences</label>
+              </vbox>
+
+              <separator id="selectorSeparator"/>
+
+              <vbox>
+                    <label value="Choose a Selector: "/>
+                    <menulist id="selector" preference="identityselector">
+                        <menupopup>
+                            <menuitem label="Microsoft CardSpace" value="@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1"/>
+                            <menuitem label="xmldap.org Identity Selector" value="@xmldap.org/identityselector;1"/>
+                        </menupopup>
+                    </menulist>
+              </vbox>
+
+              <separator id="selectorSeparator1"/>
+
+
+          </prefpane>
+
+
+
+    </prefwindow>
+</overlay>

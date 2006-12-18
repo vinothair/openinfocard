@@ -43,7 +43,7 @@
      <stringbundle id="string-bundle" src="chrome://infocard/locale/infocards.properties"/>
     </stringbundleset>
 
-    <script src="chrome://infocard/content/sha1.js"/>
+    <script src="chrome://infocard/content/crypto/hash.js"/>
     <script src="chrome://infocard/content/json.js"/>
     <script src="chrome://infocard/content/openid.js"/>
     <script src="chrome://infocard/content/infocards.js"/>
