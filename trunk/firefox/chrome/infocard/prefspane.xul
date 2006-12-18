@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<overlay id="identityselector_preferences_overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<!-- Create a new pane. -->
+  <prefpane id="identitySelectorPane"
+            label="IdentitySelector"
+            image="chrome://infocard/content/img/icon.png">
+
+      <!-- Intermediary between GUI and preferences system -->
+      <preferences>
+          <preference id="identityselector"
+                      name="identityselector.contractid"
+                      type="string" />
+
+      </preferences>
+
+
+      <vbox id="linksOpenInBox">
+        <label>Identity Selector Preferences</label>
+      </vbox>
+      <separator id="tabsSeparator"/>
+
+      <vbox>
+          <label value="Current Selector: "/>
+          <textbox preference="identityselector" id="identityselectorField" />
+      </vbox>
+
+  </prefpane>
+</overlay>

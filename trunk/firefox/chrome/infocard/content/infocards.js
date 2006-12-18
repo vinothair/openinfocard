@@ -777,17 +777,22 @@ function processCard(policy, enableDebug){
     }
 
     var token;
-    if ( policy.issuer !== undefined ) { // if it is defined then it has to be "self"
-     if ( policy.issuer == "http://schemas.microsoft.com/ws/2005/05/identity/issuer/self") {
-        var serializedPolicy = JSON.stringify(policy);
-        token = TokenIssuer.getToken(serializedPolicy);
-     } else {
-      debug("Unsupported issuer: " + policy.issuer);
-     }
+    /* it's not clear what this code does...Axel?  I'm commenting out for now.
+    if ( policy.issuer != undefined ) { // if it is defined then it has to be "self"
+        if (( policy.issuer == "http://schemas.microsoft.com/ws/2005/05/identity/issuer/self") ||  (policy.issuer == "http://schemas.xmlsoap.org/ws/2005/05/identity/issuer/self"))  {
+            var serializedPolicy = JSON.stringify(policy);
+            token = TokenIssuer.getToken(serializedPolicy);
+        } else {
+            debug("Unsupported issuer: " + policy.issuer);
+        }
     } else { // if it is undefined, just use the cards I have
         var serializedPolicy = JSON.stringify(policy);
         token = TokenIssuer.getToken(serializedPolicy);
     }
+    */
+    
+    var serializedPolicy = JSON.stringify(policy);
+    token = TokenIssuer.getToken(serializedPolicy);
 
     return token;
 
