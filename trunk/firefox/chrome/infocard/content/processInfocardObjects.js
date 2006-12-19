@@ -123,7 +123,6 @@ function hideMissingPlugin(){
     var notificationBox = browserObject.getNotificationBox();
     notificationBox.notificationsHidden = true;
 
-
 }
 
 
@@ -199,14 +198,17 @@ function invokeSelector(aEvent){
     policy["cn"] = certificate.commonName;
 
     var doc = form.ownerDocument;
-    var overlay = doc.getElementById('overlay');
-    overlay.style.visibility = 'visible';
+    var win = doc.defaultView;
 
+    var callEvent = doc.createEvent("Events");
+    callEvent.initEvent("CallIdentitySelector", true, true);
+    win.dispatchEvent(callEvent);
 
     var cardManager = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome", policy, function (callbackData) { callback = callbackData;});
 
-
-    overlay.style.visibility = 'hidden';
+    var closeEvent = doc.createEvent("Events");
+    closeEvent.initEvent("CloseIdentitySelector", true, true);
+    win.dispatchEvent(closeEvent);
 
     //modal,,resizable=yes
     if ( callback == null ) return;
@@ -248,9 +250,11 @@ function showIntroduction(e) {
 
     var prompt = e.originalTarget;
     var doc = prompt.ownerDocument;
+    var win = doc.defaultView;
+    var callEvent = doc.createEvent("Events");
+    callEvent.initEvent("CallIdentitySelector", true, true);
+    win.dispatchEvent(callEvent);
 
-    var overlay = doc.getElementById('overlay');
-    overlay.style.visibility = 'visible';
 
     var intro = doc.getElementById('intro');
     intro.style.visibility = 'visible';
@@ -279,6 +283,12 @@ function hideIntroductionDontShow(e) {
 
 function hideIntroduction(doc, shouldHide) {
 
+
+    var win = doc.defaultView;
+    var closeEvent = doc.createEvent("Events");
+    closeEvent.initEvent("CloseIdentitySelector", true, true);
+    win.dispatchEvent(closeEvent);
+
     hideIntro = shouldHide;
 
     if (hideIntro) {
@@ -290,10 +300,6 @@ function hideIntroduction(doc, shouldHide) {
 
     var intro = doc.getElementById('intro');
 	intro.style.visibility = 'hidden';
-
-
-    var overlay = doc.getElementById('overlay');
-    overlay.style.visibility = 'hidden';
 
 
 }
@@ -334,20 +340,6 @@ function initSelector(body){
 
     var w = document.width;
     var offset = (w - 660) / 2;
-
-    var objOverlay = document.createElement("div");
-    objOverlay.setAttribute('id','overlay');
-    objOverlay.setAttribute('style','z-index: 90;');
-    objOverlay.style.visibility = 'hidden';
-    objOverlay.style.position = 'absolute';
-    objOverlay.style.top = '0';
-    objOverlay.style.left = '0';
-    objOverlay.style.background = '#000000';
-    objOverlay.style.height = document.height + 'px';
-    objOverlay.style.width = document.width + 'px';
-    objOverlay.style.opacity = '0.6';
-    body.appendChild(objOverlay);
-
 
     var introOverlay = document.createElement("div");
     introOverlay.setAttribute('id','intro');
@@ -393,18 +385,6 @@ function initSelector(body){
     body.appendChild(introOverlay);
 
 
-
-
-}
-
-
-function closeSelector(){
-
-	var selector = document.getElementById('selector');
-	selector.style.visibility = 'hidden';
-
-	var overlay = document.getElementById('overlay');
-    overlay.style.visibility = 'hidden';
 
 
 }

@@ -226,6 +226,11 @@ function processManagedCard(managedCard) {
 
 function cancel(){
 
+    var doc = window.document;
+    var event = doc.createEvent("Events");
+    event.initEvent("CancelIdentitySelector", true, true);
+    window.dispatchEvent(event);
+
     stopServer();
     window.arguments[1](null);
     window.close();
