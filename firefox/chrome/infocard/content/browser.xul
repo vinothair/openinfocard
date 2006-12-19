@@ -32,6 +32,39 @@
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="infocard-overlay">
 
      <script src="chrome://infocard/content/debug.js"/>
+
+     <script>
+
+        var bod;
+        var overlaid;
+
+        function showOverlay(event){
+
+            var win = event.originalTarget;
+            var doc = win.document;
+            var body = doc.getElementsByTagName("BODY")[0];
+            bod = body;
+            var overlay = win.document.createElement("div");
+            overlaid = overlay;
+            overlay.setAttribute('id','xmldapOverlay');
+            overlay.setAttribute('style', 'position: absolute;top: 0;left: 0;z-index: 90;width: ' + ( doc.width + 20 ) + 'px;height: ' + ( doc.height + 30 ) + 'px;background-color: #000;-moz-opacity: 0.6;');
+            overlay.style.visibility = 'visible';
+            body.appendChild(overlay);
+
+        }
+
+        function hideOverlay(event){
+
+            bod.removeChild(overlaid);
+
+        }
+
+        addEventListener("CallIdentitySelector",showOverlay,false,true);
+        addEventListener("CloseIdentitySelector",hideOverlay,false,true);
+
+
+     </script>
+
      <script src="chrome://infocard/content/processInfocardObjects.js"/>
 
 </overlay>

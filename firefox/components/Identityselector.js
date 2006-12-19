@@ -71,6 +71,11 @@ Xmldapidentityselector.prototype = {
 
         var cardManager = win.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome", policy, function (callbackData) { callback = callbackData;});
 
+        var doc = win.document;
+        var event = doc.createEvent("Events");
+        event.initEvent("CloseIdentitySelector", true, true);
+        win.dispatchEvent(event);
+
         debug('Token: ' + callback);
 
         return callback;
@@ -86,7 +91,6 @@ Xmldapidentityselector.prototype = {
     }
 
 }
-
 
 
 function getDer(cert,win){

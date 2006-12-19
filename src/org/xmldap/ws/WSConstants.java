@@ -90,5 +90,4 @@ public interface WSConstants {
     public final static String WSA_ID_06_02 = "http://schemas.xmlsoap.org/ws/2006/02/addressingidentity";
     public final static String WSA_ID_PREFIX = "wsid";
 
-
 }
