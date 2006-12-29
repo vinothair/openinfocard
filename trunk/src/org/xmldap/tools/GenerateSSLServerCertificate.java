@@ -24,7 +24,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
- */package org.xmldap.tools;
+ */
+package org.xmldap.tools;
 
 import org.bouncycastle.asn1.x509.X509Name;
 import org.xmldap.exceptions.TokenIssuanceException;

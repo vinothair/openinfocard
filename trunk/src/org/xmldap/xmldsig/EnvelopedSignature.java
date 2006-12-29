@@ -271,8 +271,7 @@ public class EnvelopedSignature {
 		// Element, and the Signature Element
 		byte[] signedInfoCanonicalBytes;
 		try {
-			signedInfoCanonicalBytes = 
-				EnvelopedSignature.getSignedInfoCanonicalBytes(xmlDoc);
+			signedInfoCanonicalBytes = EnvelopedSignature.getSignedInfoCanonicalBytes(xmlDoc);
 		} catch (IOException e) {
 			throw new CryptoException(e);
 		}
@@ -381,17 +380,14 @@ public class EnvelopedSignature {
 	}
 
 	public static byte[] getSignedInfoCanonicalBytes(Document xmlDoc) throws IOException {
-//		Nodes signedInfoVals = assertion.query(
-//				"/saml:Assertion/dsig:Signature/dsig:SignedInfo", thisContext);
+//		Nodes signedInfoVals = assertion.query("//dsig:Signature/dsig:SignedInfo", thisContext);
 //		Element signedInfo = (Element) signedInfoVals.get(0);
 		// Axel Nennker: removed the dependency to saml:Assertion
 		// The following lines get the "SignedInfo". 
 		// This way the ValidationUtils can be used to validate other signed XML too.
 		Element root = xmlDoc.getRootElement();
-		Element signature = root.getFirstChildElement("Signature",
-				WSConstants.DSIG_NAMESPACE);
-		Element signedInfo = signature.getFirstChildElement("SignedInfo",
-				WSConstants.DSIG_NAMESPACE);
+		Element signature = root.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
+		Element signedInfo = signature.getFirstChildElement("SignedInfo", WSConstants.DSIG_NAMESPACE);
 
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		Canonicalizer outputter = new Canonicalizer(stream,

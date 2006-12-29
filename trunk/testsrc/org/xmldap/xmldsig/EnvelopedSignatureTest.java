@@ -3,7 +3,6 @@ package org.xmldap.xmldsig;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 
-import org.xmldap.rp.util.ValidationUtil;
 import org.xmldap.ws.WSConstants;
 
 import nu.xom.Attribute;
