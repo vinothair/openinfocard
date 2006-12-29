@@ -26,13 +26,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.xmldap.rp.util;
+package org.xmldap.rp;
 
 import net.sourceforge.lightcrypto.SafeObject;
 import nu.xom.*;
 import org.xmldap.crypto.CryptoUtils;
-import org.xmldap.util.Base64;
 import org.xmldap.ws.WSConstants;
+import org.xmldap.exceptions.CryptoException;
 
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -40,39 +40,22 @@ import java.security.PrivateKey;
 
 public class DecryptUtil {
 
-
-    private Document parse(String xml) {
+    public String decryptToken(String encryptedXML, PrivateKey key) throws CryptoException {
 
         Builder parser = new Builder();
-        Document doc = null;
+        Document xml = null;
         try {
-            doc = parser.build(xml, "");
-
-            //TODO - improve error handling
+            xml = parser.build(encryptedXML, "");
         } catch (ParsingException e) {
-            e.printStackTrace();
+            throw new CryptoException("Error buidling a XOM Document out of encrypted token", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new CryptoException("Error buidling a XOM Document out of encrypted token", e);
         }
-        return doc;
-
-    }
-
-
-    public StringBuffer decryptXML(String encryptedXML, PrivateKey key) {
-
-        Document xml = parse(encryptedXML);
 
         XPathContext context = new XPathContext();
         context.addNamespace("enc", WSConstants.ENC_NAMESPACE);
         context.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
         context.addNamespace("wsse", WSConstants.WSSE_NAMESPACE_OASIS_10);
-
-        Nodes fingerprints = xml.query("//wsse:KeyIdentifier", context);
-        Element fingerprintElm = (Element) fingerprints.get(0);
-        String fingerprint = fingerprintElm.getValue();
-        byte[] fingerPrintBytes = Base64.decode(fingerprint);
-
 
         Nodes keys = xml.query("/enc:EncryptedData/dsig:KeyInfo/enc:EncryptedKey/enc:CipherData/enc:CipherValue", context);
         Element cipherValue = (Element) keys.get(0);
@@ -82,24 +65,20 @@ public class DecryptUtil {
         Nodes dataNodes = xml.query("/enc:EncryptedData/enc:CipherData/enc:CipherValue", context);
         Element dataCipherValue = (Element) dataNodes.get(0);
         String dataCipherText = dataCipherValue.getValue();
-        //System.out.println("Data Cipher Text: " + dataCipherText);
 
 
         byte[] clearTextKey = null;
         try {
             clearTextKey = CryptoUtils.decryptRSAOAEP(keyCipherText, key);
         } catch (org.xmldap.exceptions.CryptoException e) {
-            e.printStackTrace();
-	    return null;
+            throw new CryptoException("Error using RSA to decrypt the AES Encryption Key", e);
         }
-
 
         SafeObject keyBytes = new SafeObject();
         try {
             keyBytes.setText(clearTextKey);
         } catch (Exception e) {
-            e.printStackTrace();
-	    return null;
+            throw new CryptoException("Error Generating SafeObject for AES decryption of token", e);
         }
         StringBuffer clearTextBuffer = new StringBuffer(dataCipherText);
 
@@ -107,9 +86,10 @@ public class DecryptUtil {
         try {
             clearText = CryptoUtils.decryptAESCBC(clearTextBuffer, keyBytes);
         } catch (org.xmldap.exceptions.CryptoException e) {
-            e.printStackTrace();
+            throw new CryptoException("Error performing AES decryption of token", e);
         }
-        return clearText;
+
+        return clearText.toString();
 
     }
 

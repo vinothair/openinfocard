@@ -2,78 +2,6 @@
 <head>
 	<title>Java Based Relying Party</title>
 
-<%
-
-    String mayClaims = "<PARAM Name=\"issuer\" Value=\"urn:schemas-microsoft-com:ws:2005:05:identity:issuer:self\"><PARAM Name=\"requiredClaims\" Value=\"http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname, http://schemas.microsoft.com/ws/2005/05/identity/claims/surname, http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress\">";
-
-	String septemberClaims = "<PARAM Name=\"requiredClaims\" Value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\">";
-		//+ "<PARAM Name=\"optionalClaims\" value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/webpage\">";
-
-    String julyClaims = "<PARAM Name=\"issuer\" Value=\"urn:schemas-microsoft-com:ws:2005:05:identity:issuer:self\"><PARAM Name=\"requiredClaims\" Value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\">";
-
-    String objectClaims = septemberClaims;
-
-
-    // ONLY GOING TO ALLOW SEPTEMBER OR LATER
-
-    String optionalObjectClaims = "";
-
-    String namespacedOptionalObjectClaims = "<PARAM Name=\"optionalClaims\"\n" +
-            "Value=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender\">";
-
-
-    
-    String userAgent = request.getHeader("User-Agent");
-%>
-<!-- <%= userAgent %> -->
-<%
-    if (userAgent == null) {
-
-        objectClaims = septemberClaims;
-        optionalObjectClaims = namespacedOptionalObjectClaims;
-
-    } else {
-
-        int index = userAgent.indexOf(".NET CLR 3");
-        if (index == -1) {
-
-            objectClaims = septemberClaims;
-            optionalObjectClaims = namespacedOptionalObjectClaims;
-
-
-        } else {
-
-            String agentString = userAgent.substring(index+10,userAgent.length());
-
-            %>
-
-            <%
-
-            if (agentString.compareTo(".0.04308)") > 0){
-
-                objectClaims = septemberClaims;
-                optionalObjectClaims = namespacedOptionalObjectClaims;
-
-
-            } else if (agentString.equals(".04307.00)")){
-
-                objectClaims = julyClaims;
-
-            } else {
-
-                if (agentString.compareTo(".0.04226.00)") >= 0){
-
-                    objectClaims = julyClaims;
-
-                } else {
-
-                    objectClaims = mayClaims;
-
-               }
-            }
-        }
-    }
-%>
 
     <style>
     BODY {background: #FFF url(./img/banner.png) repeat-x;
@@ -156,11 +84,12 @@
      onMouseOut="this.src='img/click_me_card.png';"
      onClick="infocard.submit()"/>
 
-<OBJECT type="application/x-informationCard" name="xmlToken">
-          <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
-          <%= objectClaims %>
-          <%= optionalObjectClaims%>
-</OBJECT>
+    <OBJECT type="application/x-informationCard" name="xmlToken">
+                  <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
+                  <PARAM Name="requiredClaims" Value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress">
+                  <PARAM Name="optionalClaims"
+            Value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender">
+            </OBJECT>
 </form>
                     <br>Click on the image above to login with and Infocard.<br>
                     <br><a href="/sts/cardmanager/">Click here to create a managed card.</a>
