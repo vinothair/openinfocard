@@ -79,9 +79,9 @@
  if (request.isSecure()) {
 %>
 <form name='infocard' method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
-<img src="img/click_me_card.png"
-     onMouseOver="this.src='img/card.png';"
-     onMouseOut="this.src='img/click_me_card.png';"
+<img src="./img/card_off.png"
+     onMouseOver="this.src='./img/card_on.png';"
+     onMouseOut="this.src='./img/card_off.png';"
      onClick="infocard.submit()"/>
 
     <OBJECT type="application/x-informationCard" name="xmlToken">
