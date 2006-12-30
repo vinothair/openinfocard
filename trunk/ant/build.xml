@@ -40,8 +40,8 @@
              basedir="${build.classes.dir}"/>
     </target>
 
-    <target name="distRP" depends="init">
-        <war destfile="${build.dir}/relyingparty.war" webxml="${confsrc.dir}/rp-web.xml">
+    <target name="dist_XMLDAP_RP" depends="init">
+        <war destfile="${build.dir}/relyingparty.war" webxml="${confsrc.dir}/rp-web.xml" includesfile="${confsrc.dir}/rp.properties">
             <fileset dir="${websrc.dir}/relyingparty/"/>
             <lib file="${lib.dir}/bcprov-jdk${java.ver}-133.jar"/>
             <lib file="${lib.dir}/lightcrypto.jar"/>
@@ -50,7 +50,7 @@
         </war>
     </target>
 
-    <target name="distSTS" depends="init">
+    <target name="dist_XMLDAP_STS" depends="init">
         <war destfile="${build.dir}/sts.war" webxml="${confsrc.dir}/sts-web.xml">
             <fileset dir="${websrc.dir}/sts/"/>
             <lib file="${lib.dir}/xom-1.1.jar"/>            
