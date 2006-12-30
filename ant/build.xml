@@ -22,8 +22,25 @@
     </target>
 
 
+    <target name="prepjars" depends="init">
+
+        <unzip src="${lib.dir}/lightcrypto.jar"
+               dest="${build.jars.dir}"/>
+
+
+        <unzip src="${lib.dir}/xom-1.1.jar"
+               dest="${build.jars.dir}"/>
+
+
+        <unzip src="${lib.dir}/bcprov-jdk${java.ver}-133.jar"
+               dest="${build.jars.dir}"/>
+
+        <delete dir="${build.jars.dir}/META-INF"/>
+
+    </target>
+
     <target name="build"
-            depends="init">
+            depends="init, prepjars">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${build.classes.dir}"/>
         <javac srcdir="${src.dir}"
@@ -36,31 +53,75 @@
                 <path refid="ext.classpath.path"/>
             </classpath>
         </javac>
-        <jar destfile="${build.dir}/xmldap.jar"
-             basedir="${build.classes.dir}"/>
+
+        <mkdir dir="${build.dist.dir}"/>
+
+        <jar destfile="${build.dist.dir}/${component.name}-${component.version}.jar">
+            <fileset dir="${build.classes.dir}"
+                     includes="org/xmldap/rp/**"
+                     excludes="org/xmldap/rp/servlet/**"/>
+            <fileset dir="${build.jars.dir}"/>
+        </jar>
+
+    </target>
+
+
+
+    <target name="doc">
+
+        <mkdir dir="${build.doc.dir}"/>
+        <mkdir dir="${build.doc.api.dir}"/>
+
+        <javadoc
+                 destdir="${build.doc.api.dir}"
+                 author="true"
+                 version="true"
+                 use="true"
+                 windowtitle="${component.name}-${component.version}">
+
+            <packageset dir="${src.dir}" defaultexcludes="yes">
+                <include name="org/xmldap/rp/**"/>
+                <exclude name="org/xmldap/rp/servlet/**"/>
+            </packageset>
+
+            <doctitle><![CDATA[<h1>xmldap</h1>]]></doctitle>
+            <bottom><![CDATA[<i>Copyright &#169; 2006 Chuck Mortimore. All Rights Reserved.</i>]]></bottom>
+
+        </javadoc>
+
+
+
     </target>
 
     <target name="dist_XMLDAP_RP" depends="init">
-        <war destfile="${build.dir}/relyingparty.war" webxml="${confsrc.dir}/rp-web.xml" includesfile="${confsrc.dir}/rp.properties">
-            <fileset dir="${websrc.dir}/relyingparty/"/>
-            <lib file="${lib.dir}/bcprov-jdk${java.ver}-133.jar"/>
-            <lib file="${lib.dir}/lightcrypto.jar"/>
-            <lib file="${lib.dir}/xom-1.1.jar"/>
-            <classes dir="${build.classes.dir}"/>
-        </war>
+
+        <mkdir dir="${build.dir}/xmldap.org/"/>
+        <copy todir="${build.dir}/xmldap_rp/">
+          <fileset dir="${websrc.dir}/xmldap_rp/"/>
+        </copy>
+        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap_rp/WEB-INF/lib/"/>
+        <jar destfile="${build.dir}/xmldap.org/relyingparty.war">
+            <fileset dir="${build.dir}/xmldap_rp/"/>
+        </jar>
+
     </target>
 
     <target name="dist_XMLDAP_STS" depends="init">
-        <war destfile="${build.dir}/sts.war" webxml="${confsrc.dir}/sts-web.xml">
-            <fileset dir="${websrc.dir}/sts/"/>
-            <lib file="${lib.dir}/xom-1.1.jar"/>            
-            <lib file="${lib.dir}/derby.jar"/> 
-            <lib file="${lib.dir}/commons-fileupload-1.1.1.jar"/>
-            <lib file="${lib.dir}/commons-io-1.2.jar"/> 
-            <lib file="${lib.dir}/bcprov-jdk${java.ver}-133.jar"/>
-            <lib file="${lib.dir}/lightcrypto.jar"/>
-            <lib file="${build.dir}/xmldap.jar"/>
-        </war>
+
+
+        <mkdir dir="${build.dir}/xmldap.org/"/>
+        <copy todir="${build.dir}/xmldap_sts/">
+          <fileset dir="${websrc.dir}/xmldap_sts/"/>
+        </copy>
+        <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/xmldap_sts/WEB-INF/lib/"/>
+        <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/xmldap_sts/WEB-INF/lib/"/>
+        <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/xmldap_sts/WEB-INF/lib/"/>
+        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap_sts/WEB-INF/lib/"/>
+        <jar destfile="${build.dir}/xmldap.org/sts.war">
+            <fileset dir="${build.dir}/xmldap_sts/"/>
+            <fileset dir="${build.dir}/xmldap_sts/"/>
+        </jar>
+
     </target>
 
 
@@ -150,10 +211,11 @@
     </target>
 
 
-    <target name="test" depends="clean, build, unitTest"/>
+    <target name="test" depends="clean, prepjars, build, unitTest"/>
 
-    <target name="buildRP" depends="clean, build, distRP"/>
+    <target name="build_xmldap.org" depends="clean, prepjars, build, doc, dist_XMLDAP_RP, dist_XMLDAP_STS"/>
+    <target name="build_firefox" depends="clean, prepjars, build, distFireFox"/>
 
-    <target name="buildall" depends="clean, build, distRP,distSTS,distFireFox"/>
+    <target name="build_all" depends="clean, prepjars, build, doc, dist_XMLDAP_RP,dist_XMLDAP_STS,distFireFox"/>
 
 </project>
