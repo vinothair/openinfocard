@@ -185,10 +185,7 @@ TokenComponent.prototype.initialize = function (java, trace) {
         var libPath = extensionPath + "components/lib/";
 
         var jarFilenames = [
-            "xmldap.jar",
-            "xom-1.1.jar",
-            "lightcrypto.jar",
-            "bcprov-133.jar"
+            "xmldap.jar"
         ];
         
         var jarFilepaths = [];
