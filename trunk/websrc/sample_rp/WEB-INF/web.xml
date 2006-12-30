@@ -6,7 +6,7 @@
         <servlet-name>RelyingPartyServlet</servlet-name>
         <display-name>RP Servlet</display-name>
         <description>Processes Infocard Posts</description>
-        <servlet-class>org.xmldap.rp.servlet.RelyingPartyServlet</servlet-class>
+        <servlet-class>org.xmldap.samples.rp.RelyingPartyServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>RelyingPartyServlet</servlet-name>
