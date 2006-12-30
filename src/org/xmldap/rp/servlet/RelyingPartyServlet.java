@@ -32,20 +32,20 @@ import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.rp.Token;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.PropertiesManager;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 
@@ -56,16 +56,16 @@ public class RelyingPartyServlet extends HttpServlet {
 
     public void init(ServletConfig config) throws ServletException {
 
-        try {
+        super.init(config);
 
-            Properties rpProperties = new Properties();
-            FileInputStream fis = new FileInputStream("/Users/cmort/build/opensource/openinfocard/api/sample/rp/WEB-INF/classes/rp.properties");
-            rpProperties.load(fis);
-            String keystorePath = rpProperties.getProperty("keystore");
-            String keystorePassword = rpProperties.getProperty("keystore-password");
-            String key = rpProperties.getProperty("key");
-            String keyPassword = rpProperties.getProperty("key-password");
-            fis.close();
+        try {
+            
+            PropertiesManager properties = new PropertiesManager(PropertiesManager.RELYING_PARTY, config.getServletContext());
+            String keystorePath = properties.getProperty("keystore");
+            String keystorePassword = properties.getProperty("keystore-password");
+            String key = properties.getProperty("key");
+            String keyPassword = properties.getProperty("key-password");
+
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             privateKey = keystore.getPrivateKey(key,keyPassword);
             cert = keystore.getCertificate(key);
@@ -128,7 +128,7 @@ public class RelyingPartyServlet extends HttpServlet {
 
             } catch (InfoCardProcessingException e) {
 
-               out.println("<h2>Valid Certificate: " + e.getMessage() + "</h2>"); 
+               out.println("<h2>Valid Certificate: " + e.getMessage() + "</h2>");
 
             }
             Map claims = token.getClaims();
