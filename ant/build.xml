@@ -24,6 +24,10 @@
 
     <target name="prepjars" depends="init">
 
+
+        <unzip src="${lib.dir}/json.jar"
+               dest="${build.jars.dir}"/>
+
         <unzip src="${lib.dir}/lightcrypto.jar"
                dest="${build.jars.dir}"/>
 
