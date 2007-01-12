@@ -26,6 +26,10 @@ Installation procedure
   Install your application server (AS)
   Edit server.xml to enable SSL/TLS
   Create a self-signed cert and test your AS with https.
+  keytool -genkey -alias xmldap -keypass password -keystore keystore.jks -storepass password -keyalg rsa -validity 1000 -sigalg SHA1withRSA
+
+  Please note: the default keyalg for keytool is DSA. DSA is not supported by CardSpace and not by this relyingparty.
+  The default sigalg for RSA is MD5withRSA. This is not supported by CardSpace and not by this relyingparty.
 
 
   Now your application server is ready to serve https. Good.
