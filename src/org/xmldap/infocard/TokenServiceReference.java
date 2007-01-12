@@ -163,7 +163,7 @@ public class TokenServiceReference implements Serializable {
 	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":KerberosV5Credential", WSConstants.INFOCARD_NAMESPACE);
 	        userCredential.appendChild(credential);
 	        /* To enable the service requester to obtain a Kerberos v5 service ticket for the IP/STS, the endpoint reference of the IP/STS 
-	         * in the information card or in the metadata retrieved from it must include a “service principal name” identity claim under 
+	         * in the information card or in the metadata retrieved from it must include a 'service principal name' identity claim under 
 	         * the wsid:Identity tag as defined in [Addressing-Ext]. http://www.w3.org/TR/2005/CR-ws-addr-core-20050817/
 	         */
         } else if (SELF_ISSUED.equals(authType)) {
