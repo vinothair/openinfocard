@@ -226,7 +226,7 @@
     </target>
 
 
-    <target name="test" depends="clean, prepjars, build, unitTest"/>
+    <target name="test" depends="clean, prepjars, build, unitTest" description="runs a clean build and runs unit tests"/>
 
     <target name="build_core" depends="clean, prepjars, build, doc, dist_samples"/>
     <target name="build_xmldap.org" depends="build_core, dist_XMLDAP_RP, dist_XMLDAP_STS"/>
