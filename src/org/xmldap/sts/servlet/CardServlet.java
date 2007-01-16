@@ -47,6 +47,7 @@ import org.xmldap.util.XSDDateTime;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -55,6 +56,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Enumeration;
 
 
 public class CardServlet extends HttpServlet {
@@ -62,10 +64,13 @@ public class CardServlet extends HttpServlet {
     private static ServletUtil _su;
     private static CardStorage storage = new CardStorageEmbeddedDBImpl();
 
-    public void init() throws ServletException {
-         _su = new ServletUtil(getServletConfig());
+    public void init(ServletConfig servletConfig) throws ServletException {
+        super.init(servletConfig);
+        _su = new ServletUtil(servletConfig);
         storage.startup();
     }
+
+
 
 
 
@@ -77,7 +82,7 @@ public class CardServlet extends HttpServlet {
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("/cardmanager/");
             dispatcher.forward(request,response);
-	    return;
+        return;
         }
 
 
@@ -99,10 +104,10 @@ public class CardServlet extends HttpServlet {
         //Get my keystore
         KeystoreUtil keystore = null;
         try {
-	    keystore = _su.getKeystore();
+        keystore = _su.getKeystore();
         } catch (KeyStoreException e) {
             e.printStackTrace();
-	    return;
+        return;
         }
 
         X509Certificate cert = null;
@@ -110,17 +115,17 @@ public class CardServlet extends HttpServlet {
             cert = _su.getCertificate();
         } catch (KeyStoreException e) {
             e.printStackTrace();
-	    return;
+        return;
         }
 
         PrivateKey pKey = null;
         try {
-	    pKey = _su.getPrivateKey();
+        pKey = _su.getPrivateKey();
         } catch (KeyStoreException e) {
             throw new ServletException(e);
         }
 
-	    String domainname = _su.getDomainName();
+        String domainname = _su.getDomainName();
 
         InfoCard card = new InfoCard(cert, pKey);
         card.setCardId("https://" + domainname + "/sts/card/" + managedCard.getCardId() );
@@ -164,7 +169,7 @@ public class CardServlet extends HttpServlet {
         try {
             out.println(card.toXML());
         } catch (SerializationException e) {
-        	throw new ServletException(e);
+            throw new ServletException(e);
         }
 
         out.flush();
