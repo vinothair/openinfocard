@@ -150,10 +150,10 @@ public class CardServlet extends HttpServlet {
         card.setTokenList(tokenList);
 
         SupportedClaimList claimList = new SupportedClaimList();
-        SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname");
-        SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname");
-        SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
-        SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier");
+        SupportedClaim given = new SupportedClaim("GivenName", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
+        SupportedClaim sur = new SupportedClaim("Surname", org.xmldap.infocard.Constants.IC_NS_SURNAME);
+        SupportedClaim email = new SupportedClaim("EmailAddress", org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS);
+        SupportedClaim ppid = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
         claimList.addSupportedClaim(given);
         claimList.addSupportedClaim(sur);
         claimList.addSupportedClaim(email);

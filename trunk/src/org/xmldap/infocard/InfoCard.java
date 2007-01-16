@@ -30,7 +30,6 @@ package org.xmldap.infocard;
 
 import nu.xom.Attribute;
 import nu.xom.Element;
-import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 import org.xmldap.infocard.policy.SupportedClaimList;

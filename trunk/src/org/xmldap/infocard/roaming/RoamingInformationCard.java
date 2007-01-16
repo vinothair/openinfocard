@@ -67,7 +67,7 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
         informationCardPrivateData.appendChild(claimValueList);
 
         Element givenNameCV = new Element("ClaimValue", WSConstants.INFOCARD_NAMESPACE);
-        Attribute givenNameUri = new Attribute("Uri", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname");
+        Attribute givenNameUri = new Attribute("Uri", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
         givenNameCV.addAttribute(givenNameUri);
         Element givenNameValue = new Element("Value", WSConstants.INFOCARD_NAMESPACE);
         givenNameCV.appendChild(givenNameValue);
@@ -76,7 +76,7 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
 
 
         Element surNameCV = new Element("ClaimValue", WSConstants.INFOCARD_NAMESPACE);
-        Attribute surNameUri = new Attribute("Uri", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname");
+        Attribute surNameUri = new Attribute("Uri", org.xmldap.infocard.Constants.IC_NS_SURNAME);
         surNameCV.addAttribute(surNameUri);
         Element surNameValue = new Element("Value", WSConstants.INFOCARD_NAMESPACE);
         surNameCV.appendChild(surNameValue);
@@ -85,7 +85,7 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
 
 
         Element emailCV = new Element("ClaimValue", WSConstants.INFOCARD_NAMESPACE);
-        Attribute emailUri = new Attribute("Uri", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+        Attribute emailUri = new Attribute("Uri", org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS);
         emailCV.addAttribute(emailUri);
         Element emailValue = new Element("Value", WSConstants.INFOCARD_NAMESPACE);
         emailCV.appendChild(emailValue);

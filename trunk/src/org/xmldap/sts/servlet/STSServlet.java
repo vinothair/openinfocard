@@ -33,7 +33,6 @@ import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.ManagedToken;
 import org.xmldap.util.Bag;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.RandomGUID;
 import org.xmldap.util.ServletUtil;
 import org.xmldap.ws.WSConstants;
@@ -67,7 +66,6 @@ public class STSServlet  extends HttpServlet {
        try {
 
 	   _su = new ServletUtil(getServletConfig());
-	   KeystoreUtil keystore = _su.getKeystore();
 
            key = (RSAPrivateKey) _su.getPrivateKey();
            cert = _su.getCertificate();
@@ -363,7 +361,7 @@ public class STSServlet  extends HttpServlet {
         requestedDisplayToken.appendChild(displayToken);
 
         Element displayClaim = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri = new Attribute("URI","http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname");
+        Attribute uri = new Attribute("URI",org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
         displayClaim.addAttribute(uri);
         Element displayTag = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag.appendChild("Given Name");
@@ -375,7 +373,7 @@ public class STSServlet  extends HttpServlet {
 
 
         Element displayClaim1 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri1 = new Attribute("URI","http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname");
+        Attribute uri1 = new Attribute("URI",org.xmldap.infocard.Constants.IC_NS_SURNAME);
         displayClaim1.addAttribute(uri1);
         Element displayTag1 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag1.appendChild("Last Name");
@@ -387,7 +385,7 @@ public class STSServlet  extends HttpServlet {
 
 
         Element displayClaim2 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri2 = new Attribute("URI","http://schemas.xmlsoap.org/ws/2005/05/identity/claims/email");
+        Attribute uri2 = new Attribute("URI",org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS);
         displayClaim2.addAttribute(uri2);
         Element displayTag2 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag2.appendChild("Email");
@@ -399,7 +397,7 @@ public class STSServlet  extends HttpServlet {
 
 
         Element displayClaim3 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri3 = new Attribute("URI","http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier");
+        Attribute uri3 = new Attribute("URI",org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
         displayClaim3.addAttribute(uri3);
         Element displayTag3 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag3.appendChild("PPID");
