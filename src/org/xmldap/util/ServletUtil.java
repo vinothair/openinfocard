@@ -108,8 +108,6 @@ public class ServletUtil {
     public synchronized KeystoreUtil getKeystore() throws KeyStoreException {
         if (_keystore == null) {
             String path = props.get(PARAM_KEYSTORE);
-            //_config.getInitParameter(PARAM_KEYSTORE);
-            System.out.println("path = " + path);
             if (path == null) path = VAL_KEYSTORE_DEFAULT;
 
             String pass = props.get(PARAM_KEYSTORE_PASSWORD);
