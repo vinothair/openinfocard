@@ -32,8 +32,12 @@ package org.xmldap.util;
 import org.xmldap.exceptions.KeyStoreException;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Map;
+import java.util.Enumeration;
+import java.util.HashMap;
 
 
 /**
@@ -57,20 +61,58 @@ public class ServletUtil {
     public static final String VAL_KEY_PASSWORD_DEFAULT = "password";
     public static final String VAL_KEYNAME_DEFAULT = "xmldap";
     public static final String VAL_DOMAIN_DEFAULT = "xmldap.org";
-    
-    private ServletConfig _config;
+
     private KeystoreUtil _keystore;
+    private Map<String, String> props = new HashMap<String, String>();
+
+
+    public ServletUtil (ServletContext servletContext) {
+        if (servletContext != null) initProperties(servletContext);
+    }
 
     public ServletUtil (ServletConfig config) {
-        _config = config;
+        if (config != null) initProperties(config);
     }
-    
+
+
+    /**
+     * Init parameters from servlet context.
+     *
+     * @param servletContext
+     */
+    private void initProperties(ServletContext servletContext) {
+        Enumeration enumerationOfParameternames = servletContext.getInitParameterNames();
+        while (enumerationOfParameternames.hasMoreElements()) {
+            String parameterName = (String) enumerationOfParameternames.nextElement();
+            props.put(parameterName, servletContext.getInitParameter(parameterName));
+        }
+    }
+
+
+    /**
+     * Init parameters from servlet config.
+     *
+     * @param servletConfig
+     */
+    private void initProperties(ServletConfig servletConfig) {
+        Enumeration enumerationOfParameternames = servletConfig.getInitParameterNames();
+        while (enumerationOfParameternames.hasMoreElements()) {
+            String parameterName = (String) enumerationOfParameternames.nextElement();
+            props.put(parameterName, servletConfig.getInitParameter(parameterName));
+        }
+    }
+
+
+
+
     public synchronized KeystoreUtil getKeystore() throws KeyStoreException {
         if (_keystore == null) {
-            String path = _config.getInitParameter(PARAM_KEYSTORE);
+            String path = props.get(PARAM_KEYSTORE);
+            //_config.getInitParameter(PARAM_KEYSTORE);
+            System.out.println("path = " + path);
             if (path == null) path = VAL_KEYSTORE_DEFAULT;
 
-            String pass = _config.getInitParameter(PARAM_KEYSTORE_PASSWORD);
+            String pass = props.get(PARAM_KEYSTORE_PASSWORD);
             if (pass == null) pass = VAL_KEYSTORE_PASSWORD_DEFAULT;
 
 
@@ -85,9 +127,9 @@ public class ServletUtil {
             if (getKeystore() == null) return null;
         }
 
-        String keyname = _config.getInitParameter(PARAM_KEYNAME);
+        String keyname = props.get(PARAM_KEYNAME);
         if (keyname == null) keyname = VAL_KEYNAME_DEFAULT;
-        String pass = _config.getInitParameter(PARAM_KEY_PASSWORD);
+        String pass = props.get(PARAM_KEY_PASSWORD);
         if (pass == null) pass = VAL_KEY_PASSWORD_DEFAULT;
 
         return _keystore.getPrivateKey(keyname,pass);
@@ -97,28 +139,28 @@ public class ServletUtil {
         if (_keystore == null) {
             if (getKeystore() == null) return null;
         }
-	
-	    String keyname = _config.getInitParameter(PARAM_KEYNAME);
-	    if (keyname == null) keyname = VAL_KEYNAME_DEFAULT;
+
+        String keyname = props.get(PARAM_KEYNAME);
+        if (keyname == null) keyname = VAL_KEYNAME_DEFAULT;
         return _keystore.getCertificate(keyname);
     }
 
     public String getDomainName() {
-        String dn = _config.getInitParameter(PARAM_DOMAIN);
+        String dn = props.get(PARAM_DOMAIN);
         if (dn == null) dn = VAL_DOMAIN_DEFAULT;
         return dn;
     }
 
     public String getManagedCardPathString() {
-	    return _config.getInitParameter(PARAM_CARDSTORE);
+        return props.get(PARAM_CARDSTORE);
     }
 
     public String getIssueFilePathString() {
-	    return _config.getInitParameter(PARAM_ISSUE_FILE);
+        return props.get(PARAM_ISSUE_FILE);
     }
 
     public String getMexFilePathString() {
-	    String mex =  _config.getInitParameter(PARAM_MEX_FILE);
+        String mex =  props.get(PARAM_MEX_FILE);
         if (mex == null) mex = VAL_MEX_DEFAULT;
         return mex;
     }
