@@ -2,7 +2,7 @@
 #labels sts,keytool
 
 = Setting up the environment =
-Let's assume you have a web application server with a 1.5 runtime (i.e. Tomcat 5.5.x). For this article, let's assume you have Tomcat isntalled at _ /usr/local/apache-tomcat-5.5.20 _ 
+Let's assume you have a web application server with a 1.5 runtime (i.e. Tomcat 5.5.x). For this article, let's assume you have Tomcat isntalled at _/usr/local/apache-tomcat-5.5.20_ 
 ==Keystore Setup== 
- # Choose a path and location for the keystore: ( _i.e. /opt/myXmldapInfocardKeystore.jks)
+ # Choose a path and location for the keystore: ( _i.e. /opt/myXmldapInfocardKeystore.jks_ )
  # generate a key using _keytool_ : _> keytool -genkey -keyalg rsa -keystore /opt/myXmldapInfocardKeystore.jks_
