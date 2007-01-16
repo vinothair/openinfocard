@@ -45,9 +45,6 @@ import java.util.Vector;
 
 public class ManagedToken implements Serializable {
 
-    public static final String MS_NAMESPACE_PREFIX = "http://schemas.microsoft.com/ws/2005/05/identity/claims/";
-	public static final String XS_NAMESPACE_PREFIX = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/";
-
 	private String namespacePrefix = null;
 
     private String givenName;
@@ -76,7 +73,7 @@ public class ManagedToken implements Serializable {
     public ManagedToken( X509Certificate signingCert, PrivateKey signingKey ) {
         this.signingCert = signingCert;
         this.signingKey = signingKey;
-        namespacePrefix = XS_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
+        namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
     }
 
     public void setIssuer(String issuer) {

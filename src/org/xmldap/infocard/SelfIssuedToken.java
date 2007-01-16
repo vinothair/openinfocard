@@ -32,7 +32,6 @@ import nu.xom.Element;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
-import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.saml.*;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
@@ -49,10 +48,6 @@ import java.util.Vector;
  * SelfIssuedToken allows you to create Self issued tokens for passing to an RP
  */
 public class SelfIssuedToken implements Serializable {
-
-	public static final String MS_NAMESPACE_PREFIX = "http://schemas.microsoft.com/ws/2005/05/identity/claims/";
-
-	public static final String XS_NAMESPACE_PREFIX = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/";
 
 	private String namespacePrefix = null;
 
@@ -101,7 +96,7 @@ public class SelfIssuedToken implements Serializable {
 		this.signingCert = signingCert;
 		this.signingKey = signingKey;
 		this.relyingPartyCert = relyingPartyCert;
-		namespacePrefix = XS_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
+		namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
 	}
 
 	public void setNamespacePrefix(String namespacePrefix) {
@@ -239,6 +234,13 @@ public class SelfIssuedToken implements Serializable {
 
 	}
 
+	private void addAttribute(Vector attributes, String name, String uri, String value) {
+		if (value != null) {
+			Attribute attr = new Attribute(name, uri, value);
+			attributes.add(attr);
+		}
+	}
+	
 	public Element getSelfIssuedToken() throws SerializationException {
 
 		Conditions conditions = new Conditions(nowMinus, nowPlus);
@@ -272,104 +274,33 @@ public class SelfIssuedToken implements Serializable {
 
 		Vector attributes = new Vector();
 
-		if (givenName != null) {
-
-			Attribute attr = new Attribute("givenname", namespacePrefix
-					+ "givenname", givenName);
-			attributes.add(attr);
-		}
-
-		if (surname != null) {
-
-			Attribute attr = new Attribute("surname", namespacePrefix
-					+ "surname", surname);
-			attributes.add(attr);
-		}
-
-		if (emailAddress != null) {
-
-			Attribute attr = new Attribute("emailaddress", namespacePrefix
-					+ "emailaddress", emailAddress);
-			attributes.add(attr);
-		}
-
-		if (streetAddress != null) {
-
-			Attribute attr = new Attribute("streetaddress", namespacePrefix
-					+ "streetaddress", streetAddress);
-			attributes.add(attr);
-		}
-
-		if (locality != null) {
-
-			Attribute attr = new Attribute("locality", namespacePrefix
-					+ locality, locality);
-			attributes.add(attr);
-		}
-
-		if (stateOrProvince != null) {
-
-			Attribute attr = new Attribute("stateorprovince", namespacePrefix
-					+ "stateorprovince", stateOrProvince);
-			attributes.add(attr);
-		}
-
-		if (postalCode != null) {
-
-			Attribute attr = new Attribute("postalcode", namespacePrefix
-					+ "postalcode", postalCode);
-			attributes.add(attr);
-		}
-
-		if (country != null) {
-
-			Attribute attr = new Attribute("country", namespacePrefix
-					+ "country", country);
-			attributes.add(attr);
-		}
-
-		if (primaryPhone != null) {
-
-			Attribute attr = new Attribute("primaryphone", namespacePrefix
-					+ "primaryphone", primaryPhone);
-			attributes.add(attr);
-		}
-
-		if (otherPhone != null) {
-
-			Attribute attr = new Attribute("otherphone", namespacePrefix
-					+ "otherphone", otherPhone);
-			attributes.add(attr);
-		}
-
-		if (mobilePhone != null) {
-
-			Attribute attr = new Attribute("mobilephone", namespacePrefix
-					+ "mobilephone", mobilePhone);
-			attributes.add(attr);
-		}
-
-		if (dateOfBirth != null) {
-
-			Attribute attr = new Attribute("dateofbirth", namespacePrefix
-					+ "dateofbirth", dateOfBirth);
-			attributes.add(attr);
-		}
-
-		if (privatePersonalIdentifier != null) {
-
-			Attribute attr = new Attribute("privatepersonalidentifier",
-					namespacePrefix + "privatepersonalidentifier",
-					privatePersonalIdentifier);
-			attributes.add(attr);
-		}
-
-		if (gender != null) {
-
-			Attribute attr = new Attribute("gender",
-					namespacePrefix + "gender", gender);
-			attributes.add(attr);
-		}
+		addAttribute(attributes, "givenname", namespacePrefix + "givenname",
+				givenName);
+		addAttribute(attributes, "surname", namespacePrefix + "surname",
+				surname);
+		addAttribute(attributes, "emailaddress", namespacePrefix
+				+ "emailaddress", emailAddress);
+		addAttribute(attributes, "streetaddress", namespacePrefix
+				+ "streetaddress", streetAddress);
+		addAttribute(attributes, "locality", namespacePrefix + locality,
+				locality);
+		addAttribute(attributes, "stateorprovince", namespacePrefix
+				+ "stateorprovince", stateOrProvince);
+		addAttribute(attributes, "postalcode", namespacePrefix + "postalcode",
+				postalCode);
+		addAttribute(attributes, "country", namespacePrefix + "country",
+				country);
+		addAttribute(attributes, "primaryphone", namespacePrefix
+				+ "primaryphone", primaryPhone);
+		addAttribute(attributes, "otherphone", namespacePrefix + "otherphone",
+				otherPhone);
+		addAttribute(attributes, "mobilephone",
+				namespacePrefix + "mobilephone", mobilePhone);
+		addAttribute(attributes, "dateofbirth",
+				namespacePrefix + "dateofbirth", dateOfBirth);
+		addAttribute(attributes, "privatepersonalidentifier", namespacePrefix
+				+ "privatepersonalidentifier", privatePersonalIdentifier);
+		addAttribute(attributes, "gender", namespacePrefix + "gender", gender);
 
 		AttributeStatement statement = new AttributeStatement();
 		statement.setSubject(subject);

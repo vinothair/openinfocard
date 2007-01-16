@@ -2,11 +2,9 @@ package org.xmldap.sts.db.impl;
 
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.ManagedCard;
-import org.xmldap.util.XSDDateTime;
 import org.xmldap.exceptions.StorageException;
 
 import java.sql.*;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
