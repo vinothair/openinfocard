@@ -5,5 +5,12 @@
 Let's assume you have a web application server with a 1.5 runtime (i.e. Tomcat 5.5.x). For this article, let's assume you have Tomcat isntalled at _/usr/local/apache-tomcat-5.5.20_ 
 ==Keystore Setup== 
  # Choose a path and location for the keystore: ( _i.e. /opt/myXmldapInfocardKeystore.jks_ )
- # generate a key using _keytool_ : _> keytool -genkey -keyalg rsa -keystore /opt/myXmldapInfocardKeystore.jks_
- ## Enter a password: (Assuming you have not already created this keystore, choose a password for the keystore)
+ # generate a key using _keytool_ : ` keytool -genkey -keyalg rsa - keyname mytestKey -keystore /opt/myXmldapInfocardKeystore.jks`
+  # Enter a password: (Assuming you have not already created this keystore, choose a password for the keystore)
+  # Enter a first and last name (CN): (This can be any arbitrary name, though it will be displayed as the CN of the signing cert's subject DN)
+  # Enter an organizational unit (OU): (Again ,this can be any arbitrary name, though it will be dispalyed as the OU part of the signing cert's subject DN)
+  # Enter an organization name (O): (Again ,this can be any arbitrary name, though it will be dispalyed as the O part of the signing cert's subject DN)
+  # Enter a city (L): (Again ,this can be any arbitrary name, though it will be dispalyed as the L (for "Locality") part of the signing cert's subject DN)
+  # Enter a state name or abbreviation (ST): (Again ,this can be any arbitrary string, though it will be dispalyed as the ST part of the signing cert's subject DN)
+  # Enter a country code (C): (Again ,this can be any arbitrary 2-letter string, though it will be dispalyed as the C part of the signing cert's subject DN)
+  
