@@ -4,5 +4,5 @@
 = Setting up the environment =
 Let's assume you have a web application server with a 1.5 runtime (i.e. Tomcat 5.5.x). For this article, let's assume you have Tomcat isntalled at _/usr/local/apache-tomcat-5.5.20/_
 ==Keystore Setup==
- # Choose a path and location for the keystore: ( _i.e. /opt/xmldap/myKeystore.jks_ )
-
+ # Choose a path and location for the keystore: ( _i.e. /opt/myXmldapInfocardKeystore.jks)
+ # generate a key using _keytool_: > keytool -genkey -keyalg rsa -keystore /opt/myXmldapInfocardKeystore.jks
