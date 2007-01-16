@@ -120,6 +120,17 @@
         <copy todir="${build.dir}/xmldap.org/sts/">
           <fileset dir="${websrc.dir}/xmldap_sts/"/>
         </copy>
+        <property file="sts.properties"/>
+
+        <replace  file="${build.dir}/xmldap.org/sts/WEB-INF/web.xml">
+         <replacefilter token="@keystore@" value="${keystore}"/>
+            <replacefilter token="@key@" value="${key.name}"/>
+            <replacefilter token="@keystore-password@" value="${keystore.password}"/>
+            <replacefilter token="@key-password@" value="${key.password}"/>
+            <replacefilter token="@domain@" value="${domain}"/>
+            <replacefilter token="@mex-file@" value="${mex.file}"/>
+        </replace>
+
         <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>
         <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>
         <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>

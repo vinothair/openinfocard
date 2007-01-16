@@ -9,27 +9,23 @@
         <servlet-class>org.xmldap.sts.servlet.MexServlet</servlet-class>
         <init-param>
             <param-name>keystore</param-name>
-            <param-value>/Users/cmort/xmldap_files/xmldap_org.jks</param-value>
+            <param-value>@keystore@</param-value>
         </init-param>
         <init-param>
             <param-name>keystore-password</param-name>
-            <param-value>password</param-value>
+            <param-value>@keystore-password@</param-value>
         </init-param>
         <init-param>
             <param-name>key</param-name>
-            <param-value>xmldap</param-value>
-        </init-param>
-        <init-param>
-            <param-name>key</param-name>
-            <param-value>xmldap</param-value>
+            <param-value>@key@</param-value>
         </init-param>
         <init-param>
             <param-name>key-password</param-name>
-            <param-value>password</param-value>
+            <param-value>@key-password@</param-value>
         </init-param>
         <init-param>
             <param-name>mex-file</param-name>
-            <param-value>/Users/cmort/xmldap_files/mex.xml</param-value>
+            <param-value>@mex-file@</param-value>
         </init-param>
     </servlet>
     <servlet>
@@ -39,23 +35,19 @@
         <servlet-class>org.xmldap.sts.servlet.STSServlet</servlet-class>
         <init-param>
             <param-name>keystore</param-name>
-            <param-value>/Users/cmort/xmldap_files/xmldap_org.jks</param-value>
+            <param-value>@keystore@</param-value>
         </init-param>
         <init-param>
             <param-name>keystore-password</param-name>
-            <param-value>password</param-value>
+            <param-value>@keystore-password@</param-value>
         </init-param>
         <init-param>
             <param-name>key</param-name>
-            <param-value>xmldap</param-value>
-        </init-param>
-        <init-param>
-            <param-name>key</param-name>
-            <param-value>xmldap</param-value>
+            <param-value>@key@</param-value>
         </init-param>
         <init-param>
             <param-name>key-password</param-name>
-            <param-value>password</param-value>
+            <param-value>@key-password@</param-value>
         </init-param>
     </servlet>
     <servlet>
@@ -63,6 +55,26 @@
         <display-name>Card</display-name>
         <description>Card</description>
         <servlet-class>org.xmldap.sts.servlet.CardServlet</servlet-class>
+        <init-param>
+            <param-name>keystore</param-name>
+            <param-value>@keystore@</param-value>
+        </init-param>
+        <init-param>
+            <param-name>keystore-password</param-name>
+            <param-value>@keystore-password@</param-value>
+        </init-param>
+        <init-param>
+            <param-name>key</param-name>
+            <param-value>@key@</param-value>
+        </init-param>
+        <init-param>
+            <param-name>key-password</param-name>
+            <param-value>@key-password@</param-value>
+        </init-param>
+        <init-param>
+            <param-name>domain</param-name>
+            <param-value>@domain@</param-value>
+        </init-param>
     </servlet>
     <servlet>
         <servlet-name>Decrypt</servlet-name>
