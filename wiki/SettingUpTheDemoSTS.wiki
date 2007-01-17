@@ -22,3 +22,6 @@ Let's assume you have a web application server with a 1.5 runtime (i.e. Tomcat 5
   * `svn checkout http://openinfocard.googlecode.com/svn/trunk/ openinfocard`
  # Edit STS properties file
   * set _keystore_ to the value you chose in step 1 (i.e.  _/opt/myXmldapInfocardKeystore.jks_ )
+  * set _keystore.password_ to the value you chose in step 2.1
+  * set _key.name_ to the argument you passed in for the _-alias_  argument in step 2 (i.e. _mytestKey_ )
+  * set _key.password_ to the value you entered in step 9
