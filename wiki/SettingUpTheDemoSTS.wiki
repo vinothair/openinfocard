@@ -13,5 +13,6 @@ Let's assume you have a web application server with a 1.5 runtime (i.e. Tomcat 5
   # Enter a city (L): (Again ,this can be any arbitrary name, though it will be dispalyed as the L (for "Locality") part of the signing cert's subject DN)
   # Enter a state name or abbreviation (ST): (Again ,this can be any arbitrary string, though it will be displayed as the ST part of the signing cert's subject DN)
   # Enter a country code (C): (Again ,this can be any arbitrary 2-letter string, though it will be displayed as the C part of the signing cert's subject DN)
+  # _keytool_ will display the DN you have created for this key: (it should look something like: _CN=MyApplication, OU=Engineering, O=XMLDAP, L=San Francisco, ST=CA, C=US_ )
   # Enter a password for <mytestKey>: (enter as password for the newly created key)
   
