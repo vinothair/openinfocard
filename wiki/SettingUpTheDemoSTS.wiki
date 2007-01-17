@@ -18,3 +18,7 @@ Let's assume you have a web application server with a 1.5 runtime (i.e. Tomcat 5
   # OK, now there should be a file at /opt/myXmldapInfocardKeystore.jks This is the Java keystore containing the key (mytestKey) that we created in the preceding steps
 
 ==Building and configuring the STS WAR file==
+ # Check out the code from SVN:
+  * `svn checkout http://openinfocard.googlecode.com/svn/trunk/ openinfocard`
+ # Edit STS properties file
+  *  
