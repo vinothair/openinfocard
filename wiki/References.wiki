@@ -1,0 +1,5 @@
+#summary References
+
+ * References on the MSDN site related to CardSpace (or InfoCard) http://msdn2.microsoft.com/en-us/netframework/aa663320.aspx
+
+
