@@ -44,6 +44,7 @@ import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.ServletUtil;
 import org.xmldap.util.XSDDateTime;
+import org.xmldap.util.Base64;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -54,6 +55,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
@@ -63,33 +65,29 @@ public class CardServlet extends HttpServlet {
 
     private static ServletUtil _su;
     private static CardStorage storage = new CardStorageEmbeddedDBImpl();
+    private String base64ImageFile = null;
 
     public void init(ServletConfig servletConfig) throws ServletException {
         super.init(servletConfig);
         _su = new ServletUtil(servletConfig);
         storage.startup();
+        base64ImageFile = getImageFileEncodedAsBase64(_su);
     }
-
-
-
 
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         HttpSession session = request.getSession(true);
-        String username = (String)session.getAttribute("username");
+        String username = getUsername(session);
         if (username == null) {
-
-            RequestDispatcher dispatcher = request.getRequestDispatcher("/cardmanager/");
-            dispatcher.forward(request,response);
-        return;
+            dispatchUnauthenticatedRequest(request, response); // no username means invalid state . . .
+            return;
         }
 
 
-        String url = request.getRequestURL().toString();
-        int index = url.lastIndexOf("/");
-        index++;
-        String cardID = url.substring(index, url.length() - 4);
+        String cardID = extractCardIdFromRequest(request);
+
+
         System.out.println(cardID);
         ManagedCard managedCard = storage.getCard(cardID);
         if (managedCard == null) {
@@ -104,10 +102,10 @@ public class CardServlet extends HttpServlet {
         //Get my keystore
         KeystoreUtil keystore = null;
         try {
-        keystore = _su.getKeystore();
+            keystore = _su.getKeystore();
         } catch (KeyStoreException e) {
             e.printStackTrace();
-        return;
+            return;
         }
 
         X509Certificate cert = null;
@@ -115,31 +113,42 @@ public class CardServlet extends HttpServlet {
             cert = _su.getCertificate();
         } catch (KeyStoreException e) {
             e.printStackTrace();
-        return;
+            return;
         }
 
         PrivateKey pKey = null;
         try {
-        pKey = _su.getPrivateKey();
+            pKey = _su.getPrivateKey();
         } catch (KeyStoreException e) {
             throw new ServletException(e);
         }
 
         String domainname = _su.getDomainName();
+        String tokenServiceEndpoint = "https://" + domainname + "/sts/tokenservice";
+        String mexEndpoint = "https://" + domainname + "/sts/mex";
+
 
         InfoCard card = new InfoCard(cert, pKey);
-        card.setCardId("https://" + domainname + "/sts/card/" + managedCard.getCardId() );
+        card.setCardId("https://" + domainname + "/sts/card/" + managedCard.getCardId());
         card.setCardName(managedCard.getCardName());
         card.setCardVersion(1);
         card.setIssuerName(domainname);
-        card.setIssuer("https://" + domainname + "/sts/tokenservice");
+        card.setIssuer(tokenServiceEndpoint);
+
+        // set card logo/image if available . . . if not available it will default to Milo :-)
+        if (base64ImageFile != null) {
+            card.setBase64BinaryCardImage(base64ImageFile);
+        }
+
+
         XSDDateTime issued = new XSDDateTime();
         XSDDateTime expires = new XSDDateTime(525600);
 
         card.setTimeIssued(issued.getDateTime());
         card.setTimeExpires(expires.getDateTime());
 
-        TokenServiceReference tsr = new TokenServiceReference("https://" + domainname + "/sts/tokenservice", "https://" + domainname + "/sts/mex", cert);
+
+        TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
         tsr.setUserName(username);
         card.setTokenServiceReference(tsr);
 
@@ -149,15 +158,7 @@ public class CardServlet extends HttpServlet {
         tokenList.addSupportedToken(token);
         card.setTokenList(tokenList);
 
-        SupportedClaimList claimList = new SupportedClaimList();
-        SupportedClaim given = new SupportedClaim("GivenName", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
-        SupportedClaim sur = new SupportedClaim("Surname", org.xmldap.infocard.Constants.IC_NS_SURNAME);
-        SupportedClaim email = new SupportedClaim("EmailAddress", org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS);
-        SupportedClaim ppid = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
-        claimList.addSupportedClaim(given);
-        claimList.addSupportedClaim(sur);
-        claimList.addSupportedClaim(email);
-        claimList.addSupportedClaim(ppid);
+        SupportedClaimList claimList = getSupportedClaimList();
         card.setClaimList(claimList);
 
         card.setPrivacyPolicy("https://" + domainname + "/PrivacyPolicy.xml");
@@ -179,5 +180,71 @@ public class CardServlet extends HttpServlet {
 
     }
 
+    protected SupportedClaimList getSupportedClaimList() {
+        SupportedClaimList claimList = new SupportedClaimList();
+        SupportedClaim given = new SupportedClaim("GivenName", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
+        SupportedClaim sur = new SupportedClaim("Surname", org.xmldap.infocard.Constants.IC_NS_SURNAME);
+        SupportedClaim email = new SupportedClaim("EmailAddress", org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS);
+        SupportedClaim ppid = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
+        claimList.addSupportedClaim(given);
+        claimList.addSupportedClaim(sur);
+        claimList.addSupportedClaim(email);
+        claimList.addSupportedClaim(ppid);
+        return claimList;
+    }
 
+    protected void dispatchUnauthenticatedRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/cardmanager/");
+        dispatcher.forward(request, response);
+    }
+
+    protected String getUsername(HttpSession session) {
+        String username = (String) session.getAttribute("username");
+        return username;
+    }
+
+    /**
+     * Get the card identifier from the GET request URL (i.e. http://sts.xmldap.org/card/<b>MY-CARD-IDENTIFIER</b>.crd
+     *
+     * @param request
+     * @return a card identifier that can be used to retrieve the actual card object from the card store
+     */
+    protected static String extractCardIdFromRequest(HttpServletRequest request) {
+        String url = request.getRequestURL().toString();
+        return extractCardIdFromUrl(url);
+    }
+
+    /**
+     * Get the card identifier from the GET request URL (i.e. http://sts.xmldap.org/card/<b>MY-CARD-IDENTIFIER</b>.crd
+     *
+     * @param url
+     * @return a card identifier that can be used to retrieve the actual card object from the card store
+     */
+
+    protected static String extractCardIdFromUrl(String url) {
+        int index = url.lastIndexOf("/");
+        index++;
+        String cardID = url.substring(index, url.length() - 4);
+        return cardID;
+    }
+
+    /**
+     * Gets the file referenced in servlet config and returns it's data as a Base64 string.
+     * @param servletUtil
+     * @return Base64 encoded image data (usaully a PNG)
+     */
+    protected String getImageFileEncodedAsBase64(ServletUtil servletUtil) {
+        return getImageFileEncodedAsBase64(servletUtil.getImageFilePathString());
+    }
+
+    /**
+     * Gets the file referenced by path and returns it's data as a Base64 string.
+     * @param imageFilePathString path to the file
+     * @return Base64 encoded image data (usaully a PNG)
+     */
+    protected String getImageFileEncodedAsBase64(String imageFilePathString) {
+        String encodedFile;
+        encodedFile = Base64.encodeFromFile(imageFilePathString);
+        return encodedFile;
+    }
 }

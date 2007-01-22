@@ -52,6 +52,8 @@ public class ServletUtil {
     public static final String PARAM_CARDSTORE = "cards-file";
     public static final String PARAM_ISSUE_FILE = "issue-file";
     public static final String PARAM_MEX_FILE = "mex-file";
+    public static final String PARAM_IMAGE_FILE = "image-file";
+
 
 
     //Changing defaults to be for the xmldap.org RP
@@ -163,4 +165,8 @@ public class ServletUtil {
         return mex;
     }
 
+     public String getImageFilePathString() {
+        String mex =  props.get(PARAM_IMAGE_FILE);
+        return mex;
+    }
 }
