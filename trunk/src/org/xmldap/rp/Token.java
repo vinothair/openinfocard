@@ -82,7 +82,7 @@ public class Token {
         try {
            decryptedToken = decryptUtil.decryptToken(encryptedToken, privateKey);
         } catch (CryptoException e) {
-           throw new InfoCardProcessingException("Eror Decrypting encrypted token", e);
+           throw new InfoCardProcessingException("Error decrypting encrypted token", e);
         }
 
         if (decryptedToken == null) {
