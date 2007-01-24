@@ -11,7 +11,7 @@
 <!ENTITY cardmanager.country "Staat:">
 <!ENTITY cardmanager.primaryphone "Telefonnummer:">
 <!ENTITY cardmanager.mobilephone "Handynummer:">
-<!ENTITY cardmanager.otherphone "Andere Telefonnummer:">
+<!ENTITY cardmanager.otherphone "Andere Telefonnr:">
 <!ENTITY cardmanager.dateofbirth "Geburtsdatum:">
 <!ENTITY cardmanager.gender "Geschlecht:">
 <!ENTITY cardmanager.imgurl "Bild URL:"> 
