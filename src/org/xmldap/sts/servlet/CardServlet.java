@@ -234,7 +234,18 @@ public class CardServlet extends HttpServlet {
      * @return Base64 encoded image data (usaully a PNG)
      */
     protected String getImageFileEncodedAsBase64(ServletUtil servletUtil) {
-        return getImageFileEncodedAsBase64(servletUtil.getImageFilePathString());
+    	String imageFilePathString = servletUtil.getImageFilePathString();
+    	if (imageFilePathString != null) {
+    		try {
+    			return getImageFileEncodedAsBase64(imageFilePathString);
+    		} catch (Exception e) {
+    			System.err.println("CardServelet::getImageFileEncodedAsBase64: " + e.getMessage());
+    			// use the standard image, if an error occurs
+    			return null;
+    		}
+    	} else {
+    		return null;
+    	}
     }
 
     /**
