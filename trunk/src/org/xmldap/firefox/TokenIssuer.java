@@ -29,6 +29,8 @@
 package org.xmldap.firefox;
 
 import nu.xom.*;
+
+import org.bouncycastle.asn1.x509.X509Name;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
@@ -47,11 +49,14 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
+import javax.security.auth.x500.X500Principal;
+
 import java.io.*;
 import java.net.URLDecoder;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.*;
+import java.util.Vector;
 
 public class TokenIssuer {
 
@@ -322,6 +327,154 @@ public class TokenIssuer {
 	// return sb.toString();
 	// }
 
+	public boolean isExtendedEvaluationCert(X509Certificate relyingpartyCert) {
+		return false;
+	}
+	
+	public byte[] rpIdentifier(
+			X509Certificate relyingpartyCert, 
+			X509Certificate[] chain)
+	throws TokenIssuanceException {
+		if (isExtendedEvaluationCert(relyingpartyCert)) {
+			return rpIdentifierEV(relyingpartyCert);
+		} else {
+			return rpIdentifierNonEV(relyingpartyCert, chain);
+		}
+	}
+	
+	private String orgIdString(X509Certificate relyingpartyCert)
+	throws TokenIssuanceException {
+		X500Principal principal = relyingpartyCert.getSubjectX500Principal();
+		String dn = principal.getName();
+		if (dn == null) {
+			PublicKey publicKey = relyingpartyCert.getPublicKey();
+			return new String(publicKey.getEncoded());
+		}
+		X509Name x509Name = new X509Name(dn);
+		Vector oids = x509Name.getOIDs();
+		Vector values = x509Name.getValues();
+		int index = 0;
+		StringBuffer orgIdStringBuffer = new StringBuffer("|"); 
+		for (Object oid : oids) {
+			if ("O".equals(oid)) {
+				String value = (String)values.get(index);
+				if (value==null) {
+					orgIdStringBuffer.append("O=\"\"|");
+				} else {
+					orgIdStringBuffer.append("O=\"" + value + "\"|");
+				}
+			} else if ("L".equals(oid)) {
+				String value = (String)values.get(index);
+				if (value==null) {
+					orgIdStringBuffer.append("L=\"\"|");
+				} else {
+					orgIdStringBuffer.append("L=\"" + value + "\"|");
+				}
+			} else if ("S".equals(oid)) {
+				String value = (String)values.get(index);
+				if (value==null) {
+					orgIdStringBuffer.append("S=\"\"|");
+				} else {
+					orgIdStringBuffer.append("S=\"" + value + "\"|");
+				}
+			} else if ("C".equals(oid)) {
+				String value = (String)values.get(index);
+				if (value==null) {
+					orgIdStringBuffer.append("C=\"\"|");
+				} else {
+					orgIdStringBuffer.append("C=\"" + value + "\"|");
+				}
+			} else {
+				System.out.println("unused oid (" + oid + "). Value=" + (String)values.get(index));
+			}
+			index += 1;
+		}
+		if (orgIdStringBuffer.length() == 1) { // none of OLSC were found
+			PublicKey publicKey = relyingpartyCert.getPublicKey();
+			return new String(publicKey.getEncoded());
+		}
+		return orgIdStringBuffer.toString();
+	}
+	
+	public byte[] rpIdentifierNonEV(
+			X509Certificate relyingpartyCert,
+			X509Certificate[] chain)
+	throws TokenIssuanceException {
+		String orgIdString = orgIdString(relyingpartyCert);
+		
+		String qualifiedOrgIdString = qualifiedOrgIdString(chain, orgIdString);
+		try {
+			byte[] qualifiedOrgIdBytes = qualifiedOrgIdString.getBytes("UTF-8");
+			byte[] rpIdentifier = sha256(qualifiedOrgIdBytes);
+			return rpIdentifier;
+		} catch (UnsupportedEncodingException e) {
+			throw new TokenIssuanceException(e);
+		}
+	}
+
+	/**
+	 * @param chain
+	 * @param orgIdString
+	 */
+	public String qualifiedOrgIdString(X509Certificate[] chain, String orgIdString) {
+		StringBuffer qualifiedOrgIdString = new StringBuffer();
+		for (int i=chain.length; i<0; i++) {
+			X509Certificate parent = chain[i];
+			X500Principal parentPrincipal = parent.getSubjectX500Principal();
+			String subjectDN = parentPrincipal.getName(X500Principal.RFC2253);
+			// append CertPathString
+			qualifiedOrgIdString.append("|ChainElement=\"");
+			qualifiedOrgIdString.append(subjectDN);
+			qualifiedOrgIdString.append("\"");
+		}
+		qualifiedOrgIdString.append(orgIdString);
+		return qualifiedOrgIdString.toString();
+	}
+	
+	public byte[] rpIdentifierEV(X509Certificate relyingpartyCert)
+	throws TokenIssuanceException {
+		String rpIdentifier = null;
+		String orgIdString = orgIdString(relyingpartyCert);
+		
+		byte[] digest;
+		try {
+			digest = sha256(orgIdString.getBytes("UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			throw new TokenIssuanceException(e);
+		}
+		return digest;
+	}
+	
+	private byte[] sha256(byte[] bytes) throws TokenIssuanceException {
+		MessageDigest mdAlgorithm;
+		try {
+			mdAlgorithm = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			throw new TokenIssuanceException(e); 
+		}
+		mdAlgorithm.update(bytes);
+		byte[] digest = mdAlgorithm.digest();
+		return digest;
+	}
+	
+	private String generateRPPPID(
+			String infoCardPpi, 
+			X509Certificate relyingPartyCert,
+			X509Certificate[] chain)
+		throws TokenIssuanceException {
+		try {
+			byte[] rpIdentifierBytes = sha256(rpIdentifier(relyingPartyCert, chain));
+			byte[] canonicalCardIdBytes = sha256(infoCardPpi.getBytes("UTF-8"));
+			byte[] bytes = new byte[rpIdentifierBytes.length+canonicalCardIdBytes.length];
+			System.arraycopy(rpIdentifierBytes, 0, bytes, 0, rpIdentifierBytes.length);
+			System.arraycopy(canonicalCardIdBytes, 0, bytes, rpIdentifierBytes.length, canonicalCardIdBytes.length);
+			byte[] ppidBytes = sha256(bytes);
+			return Base64.encodeBytes(ppidBytes);
+		} catch (UnsupportedEncodingException e) {
+			throw new TokenIssuanceException(e);
+		}
+	}
+
 	/**
 	 * Uses the first bytes of the infoCardPpi to encrypt a String which is
 	 * fixed for the relying party using AES. Remember: The input parameter
@@ -440,108 +593,50 @@ public class TokenIssuer {
 			throw new TokenIssuanceException(e);
 		}
 
+		int chainLength = 0;
+		try {
+			String chainLengthStr = (String) policy.get("chainLength");
+			chainLength = Integer.parseInt(chainLengthStr);
+		} catch (JSONException e) {
+			throw new TokenIssuanceException(e);
+		}
+		
+		X509Certificate[] chain = new X509Certificate[chainLength];
+		for (int i=0; i<chainLength; i++) {
+			try {
+				String chainDer = (String) policy.get("certChain"+i);
+				X509Certificate chainCert = org.xmldap.util.CertsAndKeys.der2cert(chainDer);
+				chain[i] = chainCert;
+			} catch (JSONException e) {
+				throw new TokenIssuanceException(e);
+			} catch (CertificateException e) {
+				throw new TokenIssuanceException(e);
+			}
+		}
+		
         if (type.equals("selfAsserted")) {
+    		String requiredClaims = null;
+    		String optionalClaims = null;
+    		try {
+    		    requiredClaims = (String) policy.get("requiredClaims");
+    		} catch (JSONException e) {
+    		    // throw new TokenIssuanceException(e); // requiredClaims not found
+    		}
+    		try {
+    		    optionalClaims = (String) policy.get("optionalClaims");
+    		} catch (JSONException e) {
+    		    // throw new TokenIssuanceException(e); // optionalClaims not found
+    		}
 
-            String card = null;
+    		String card = null;
+    		try {
+    		    card = (String) policy.get("card");
+    		} catch (JSONException e) {
+    		    throw new TokenIssuanceException(e);
+    		}
 
-            try {
-                card = (String) policy.get("card");
-            } catch (JSONException e) {
-                throw new TokenIssuanceException(e);
-            }
-
-            Document infocard = getInfocard(card);
-
-            Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
-            Element data = (Element) dataNodes.get(0);
-
-            String ppi = "";
-
-
-            Nodes ppiNodes = infocard.query("/infocard/privatepersonalidentifier");
-            Element ppiElm = (Element) ppiNodes.get(0);
-            if (ppiElm != null) {
-                ppi = ppiElm.getValue();
-            } else {
-                throw new TokenIssuanceException(
-                        "Error: This infocard has no privatepersonalidentifier!");
-            }
-
-            // storeInfoCardAsCertificate(ppi, infocard);
-
-            ppi = generatePpiForThisRP(ppi, relyingPartyCert
-                    .getSubjectX500Principal().getName());
-
-    //		System.out.println("Server Cert: "
-    //				+ relyingPartyCert.getSubjectDN().toString());
-
-            EncryptedData encryptor = new EncryptedData(relyingPartyCert);
-            SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
-                    signingCert, signingKey);
-
-            token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
-            token.setValidityPeriod(-5, 10);
-
-            final String ALL_CLAIMS = "givenname"
-                    + " "
-                    + "emailaddress"
-                    + " "
-                    + "surname"
-                    + " "
-                    + "streetaddress"
-                    + " "
-                    + "locality"
-                    + " "
-                    + "stateorprovince"
-                    + " "
-                    + "postalcode"
-                    + " "
-                    + "country"
-                    + " "
-                    + "homephone"
-                    + " "
-                    + "otherphone"
-                    + " "
-                    + "mobilephone"
-                    + " "
-                    + "dateofbirth"
-                    + " "
-                    + "gender";
-
-            String requiredClaims = null;
-            String optionalClaims = null;
-            try {
-                requiredClaims = (String) policy.get("requiredClaims");
-            } catch (JSONException e) {
-                // throw new TokenIssuanceException(e); // requiredClaims not found
-            }
-            try {
-                optionalClaims = (String) policy.get("optionalClaims");
-            } catch (JSONException e) {
-                // throw new TokenIssuanceException(e); // optionalClaims not found
-            }
-            if (requiredClaims == null) {
-                if (optionalClaims != null) {
-                    token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, optionalClaims);
-                } else { // hm, lets throw everything we have at the RP
-                    token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, ALL_CLAIMS);
-                }
-            } else { // requiredClaim are present
-                token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, requiredClaims);
-                if (optionalClaims != null) {
-                    token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, optionalClaims);
-                }
-            }
-
-            Element securityToken = null;
-            try {
-                securityToken = token.serialize();
-                encryptor.setData(securityToken.toXML());
-                issuedToken = encryptor.toXML();
-
-            } catch (SerializationException e) {
-                throw new TokenIssuanceException(e);
-            }
+            issuedToken = getSelfAssertedToken(
+            		card, relyingPartyCert, chain, requiredClaims, optionalClaims);
 
         } else {
 
@@ -569,5 +664,103 @@ public class TokenIssuer {
         return issuedToken;
 
     }
+
+	/**
+	 * @param policy
+	 * @param issuedToken
+	 * @param relyingPartyCert
+	 * @return
+	 * @throws TokenIssuanceException
+	 */
+	private String getSelfAssertedToken(
+			String card, 
+			X509Certificate relyingPartyCert,
+			X509Certificate[] chain,
+			String requiredClaims, String 
+			optionalClaims) throws TokenIssuanceException {
+		String issuedToken = null;
+
+		Document infocard = getInfocard(card);
+
+		Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
+		Element data = (Element) dataNodes.get(0);
+
+		String ppi = "";
+
+
+		Nodes ppiNodes = infocard.query("/infocard/privatepersonalidentifier");
+		Element ppiElm = (Element) ppiNodes.get(0);
+		if (ppiElm != null) {
+		    ppi = ppiElm.getValue();
+		} else {
+		    throw new TokenIssuanceException(
+		            "Error: This infocard has no privatepersonalidentifier!");
+		}
+
+		// storeInfoCardAsCertificate(ppi, infocard);
+		ppi = generateRPPPID(ppi, relyingPartyCert, chain);
+//		ppi = generatePpiForThisRP(ppi, relyingPartyCert
+//		        .getSubjectX500Principal().getName());
+
+   //		System.out.println("Server Cert: "
+   //				+ relyingPartyCert.getSubjectDN().toString());
+
+		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
+		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
+		        signingCert, signingKey);
+
+		token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
+		token.setValidityPeriod(-5, 10);
+
+		final String ALL_CLAIMS = "givenname"
+		        + " "
+		        + "emailaddress"
+		        + " "
+		        + "surname"
+		        + " "
+		        + "streetaddress"
+		        + " "
+		        + "locality"
+		        + " "
+		        + "stateorprovince"
+		        + " "
+		        + "postalcode"
+		        + " "
+		        + "country"
+		        + " "
+		        + "homephone"
+		        + " "
+		        + "otherphone"
+		        + " "
+		        + "mobilephone"
+		        + " "
+		        + "dateofbirth"
+		        + " "
+		        + "gender";
+
+		if (requiredClaims == null) {
+		    if (optionalClaims != null) {
+		        token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, optionalClaims);
+		    } else { // hm, lets throw everything we have at the RP
+		        token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, ALL_CLAIMS);
+		    }
+		} else { // requiredClaim are present
+		    token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, requiredClaims);
+		    if (optionalClaims != null) {
+		        token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, optionalClaims);
+		    }
+		}
+
+		Element securityToken = null;
+		try {
+		    securityToken = token.serialize();
+		    encryptor.setData(securityToken.toXML());
+		    issuedToken = encryptor.toXML();
+
+		} catch (SerializationException e) {
+		    throw new TokenIssuanceException(e);
+		}
+		return issuedToken;
+	}
 
 }
