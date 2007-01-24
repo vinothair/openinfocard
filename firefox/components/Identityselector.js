@@ -37,6 +37,7 @@ const CLASS_ID = Components.ID("72e894fd-0d6c-484d-abe8-5903b5f8bf3b");
 const CLASS_NAME = "The xmldap.org identity selector";
 const CONTRACT_ID = "@xmldap.org/identityselector;1";
 
+const nsIX509Cert = Components.interfaces.nsIX509Cert;
 
 function Xmldapidentityselector() {}
 
@@ -68,6 +69,17 @@ Xmldapidentityselector.prototype = {
 
         policy["cert"] = getDer(serverCert,win);
         policy["cn"] = serverCert.commonName;
+
+	    var chain = serverCert.getChain();
+		debug('chain: ' + chain);
+		debug('chainLength: ' + chain.length);
+		debug('chain[0]: ' + chain.queryElementAt(0, nsIX509Cert));
+		
+		policy["chainLength"] = ""+chain.length;
+		for (var i = 0; i < chain.length; ++i) {
+		  var currCert = chain.queryElementAt(i, nsIX509Cert);
+		  policy["certChain"+i] = getDer(currCert,win);
+		}
 
         var cardManager = win.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome", policy, function (callbackData) { callback = callbackData;});
 
