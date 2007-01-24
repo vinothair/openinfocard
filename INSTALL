@@ -34,7 +34,9 @@ Installation procedure
 
   Now your application server is ready to serve https. Good.
 
-  Edit sts.properties, mex.xml, relyingparty web.xml and rp.properties and sts web.xml and 
+  Move sts.properties.tmpl to sts.properties
+  Move rp.properties.tmpl to rp.properties
+  Edit sts.properties and rp.properties and
   - replace xmldap.org by your AS domainname and port
     e.g.: xmldap.org -> w4de3esy0069028.gdc-bln01.t-systems.com:8443
   - change the name of the keystore, alias, keystorepass and keypass
