@@ -19,6 +19,124 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
 
     private boolean initialized = false;
 
+        private class DbDisplayTag {
+    	public String language;
+    	public String displayTag;
+    	DbDisplayTag(String language, String displayTag){
+    		this.language = language;
+    		this.displayTag = displayTag;
+    	}
+    }
+    private class DbSupportedClaims {
+    	public String uri;
+    	public String columnName;
+    	public String columnType;
+    	public DbDisplayTag[] displayTags = null;
+    	
+    	DbSupportedClaims(String uri, String columnName, String columnType,  DbDisplayTag[] displayTags) {
+    		this.uri = uri;
+    		this.columnName = columnName;
+    		this.columnType = columnType;
+    		this.displayTags = displayTags;
+    	}
+    }
+    
+    public final DbDisplayTag[] givenNameDisplayTagsOA = {new DbDisplayTag("en-us","Given Name"), new DbDisplayTag("de-DE","Vorname")};
+    public final DbSupportedClaims givenNameO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/givenname", "givenName", "varChar(50)", givenNameDisplayTagsOA);
+    
+    public final DbDisplayTag[] surnammeDisplayTagsOA = {new DbDisplayTag("en-us","Surname"), new DbDisplayTag("de-DE","Nachname")};
+    public final DbSupportedClaims surnammeO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname", "surname", "varChar(50)", surnammeDisplayTagsOA);
+    
+    public final DbDisplayTag[] emailaddressDisplayTagsOA = {new DbDisplayTag("en-us","Email"), new DbDisplayTag("de-DE","Email")};
+    public final DbSupportedClaims emailAddressO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", "emailAddress", "varChar(150)", emailaddressDisplayTagsOA);
+    
+    public final DbDisplayTag[] streetAddressDisplayTagsOA = {new DbDisplayTag("en-us","Street"), new DbDisplayTag("de-DE","Straße")};
+    public final DbSupportedClaims streetAddressO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress", "streetAddress", "varChar(50)", streetAddressDisplayTagsOA);
+    
+    public final DbDisplayTag[] localityDisplayTagsOA = {new DbDisplayTag("en-us","City"), new DbDisplayTag("de-DE","Ort")};
+    public final DbSupportedClaims localityNameO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality", "locality", "varChar(50)", localityDisplayTagsOA);
+    
+    public final DbDisplayTag[] stateOrProvinceDisplayTagsOA = {new DbDisplayTag("en-us","State"), new DbDisplayTag("de-DE","Bundesland")};
+    public final DbSupportedClaims stateOrProvinceO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince", "stateOrProvince", "varChar(50)", stateOrProvinceDisplayTagsOA);
+    
+    public final  DbDisplayTag[] postalCodeDisplayTagsOA = {new DbDisplayTag("en-us","Postalcode"), new DbDisplayTag("de-DE","Postleitzahl")};
+    public final DbSupportedClaims postalCodeO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode", "postalCode", "varChar(10)", postalCodeDisplayTagsOA);
+    
+    public final DbDisplayTag[] countryDisplayTagsOA = {new DbDisplayTag("en-us","Country"), new DbDisplayTag("de-DE","Staat")};
+    public final DbSupportedClaims countryO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country", "country", "varChar(50)", countryDisplayTagsOA);
+    
+    public final DbDisplayTag[] primaryPhoneDisplayTagsOA = {new DbDisplayTag("en-us","Telephone"), new DbDisplayTag("de-DE","Telefon")};
+    public final DbSupportedClaims primaryPhoneO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone", "primaryPhone", "varChar(50)", primaryPhoneDisplayTagsOA);
+    
+    public final DbDisplayTag[] dateOfBirthDisplayTagsOA = {new DbDisplayTag("en-us","Date of Birth"), new DbDisplayTag("de-DE","Geburtsdatum")};
+    public final DbSupportedClaims dateOfBirthO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth", "dateOfBirth", "varChar(50)", dateOfBirthDisplayTagsOA);
+    
+    public final DbDisplayTag[] genderDisplayTagsOA = {new DbDisplayTag("en-us","Gender"), new DbDisplayTag("de-DE","Geschlecht")};
+    public final DbSupportedClaims genderO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender", "gender", "varChar(10)", genderDisplayTagsOA);
+    
+    public DbSupportedClaims[] dbSupportedClaims = {
+    		givenNameO,
+    		surnammeO,
+    		emailAddressO,
+    		streetAddressO,
+    		localityNameO,
+    		stateOrProvinceO,
+    		postalCodeO,
+    		countryO,
+    		primaryPhoneO,
+    		dateOfBirthO,
+    		genderO
+    		};
+    
+    private String claimsDefinition() {
+    	if (dbSupportedClaims.length > 0) {
+	    	StringBuffer claimsDefinition = new StringBuffer();
+    		claimsDefinition.append(",");
+	    	for (int i=0; i<dbSupportedClaims.length-1; i++) {
+	    		claimsDefinition.append(" ");
+	    		DbSupportedClaims claim =  dbSupportedClaims[i];
+	    		claimsDefinition.append(claim.columnName);
+	    		claimsDefinition.append(" ");
+	    		claimsDefinition.append(claim.columnType);
+	    		claimsDefinition.append(",");
+	    	}
+			claimsDefinition.append(" ");
+			claimsDefinition.append(dbSupportedClaims[dbSupportedClaims.length-1].columnName);
+			claimsDefinition.append(" ");
+			claimsDefinition.append(dbSupportedClaims[dbSupportedClaims.length-1].columnType);
+	    	return claimsDefinition.toString();
+    	} else {
+    		System.out.println("STS supported claims list is empty!!!");
+    		return "";
+    	}
+    }
+    
+    private void createTableCards(Statement s) throws SQLException {
+		String claimsDefinition = claimsDefinition();
+//			" givenName varChar(50)," + 
+//			" surname varChar(50)," + 
+//			" emailAddress varChar(150)," + 
+//			" streetAddress varChar(50)," + 
+//			" locality varChar(50)," + 
+//			" stateOrProvince varChar(50)," + 
+//			" postalCode varChar(10)," + 
+//			" country varChar(50)," + 
+//			" primaryPhone varChar(50)," + 
+//			" dateOfBirth varChar(50)," + 
+//			" gender  varChar(10))";
+
+		String query = "create table cards(" + 
+		"cardid varchar(255) NOT NULL CONSTRAINT CARD_PK PRIMARY KEY," + 
+		" cardName varchar(48)," + 
+		" cardVersion int," + 
+		" timeIssued varChar(50)," + 
+		" timeExpires varChar(50)" + 
+		claimsDefinition + ")";
+		System.out.println(query);
+        s.execute(query);
+        System.out.println("Created table cards");
+    }
+    
     public void startup(){
 
         try {
@@ -50,8 +168,7 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
                 s.execute("create table accounts(username varchar(48) NOT NULL CONSTRAINT ACCOUNT_PK PRIMARY KEY, password varchar(48))");
                 System.out.println("Created table accounts");
 
-                s.execute("create table cards(cardid varchar(255) NOT NULL CONSTRAINT CARD_PK PRIMARY KEY, cardName varchar(48), cardVersion int, timeIssued varChar(50), timeExpires varChar(50), givenName varChar(50), surname varChar(50), emailAddress varChar(150), streetAddress varChar(50), locality varChar(50), stateOrProvince varChar(50), postalCode varChar(10), country varChar(50), primaryPhone varChar(50),  dateOfBirth varChar(50), gender  varChar(10))");
-                System.out.println("Created table cards");
+                createTableCards(s);
 
                 s.execute("create table account_cards(username varchar(48), cardid varchar(255))");
                 //TODO - figure out the foreign key constraints
@@ -87,6 +204,9 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
     }
 
     public void addAccount(String username, String password) throws StorageException{
+    	if (conn == null) {
+    		startup();
+    	}
 
         Statement s = null;
         try {
@@ -121,6 +241,9 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
     }
 
     public boolean authenticate(String uid, String password){
+    	if (conn == null) {
+    		startup();
+    	}
 
         boolean authenticated = false;
 
@@ -159,6 +282,9 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
     }
 
     public void addCard(String username, ManagedCard card){
+    	if (conn == null) {
+    		startup();
+    	}
 
        Statement s = null;
        try {
@@ -198,7 +324,9 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
     }
 
     public List getCards(String username){
-
+    	if (conn == null) {
+    		startup();
+    	}
         Vector cardIds = new Vector();
         Statement s = null;
         try {
@@ -236,6 +364,9 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
     }
 
     public ManagedCard getCard(String cardid){
+    	if (conn == null) {
+    		startup();
+    	}
 
         ManagedCard card = null;
         Statement s = null;
@@ -288,7 +419,8 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
     }
 
     public void shutdown() {
-
+    	if (conn == null) return;
+    	
         try {
             conn.close();
             System.out.println("Embedded CardDB shutdown");
