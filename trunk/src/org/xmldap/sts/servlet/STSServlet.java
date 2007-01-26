@@ -37,6 +37,8 @@ import org.xmldap.util.RandomGUID;
 import org.xmldap.util.ServletUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.sts.db.CardStorage;
+import org.xmldap.sts.db.DbSupportedClaim;
+import org.xmldap.sts.db.DbSupportedClaims;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
 
@@ -49,6 +51,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.Locale;
 import java.util.Set;
 
 
@@ -252,8 +255,8 @@ public class STSServlet  extends HttpServlet {
         }
 
 
-
-        String stsResponse = issue(requestElements);
+        Locale clientLocale = request.getLocale();
+        String stsResponse = issue(requestElements, clientLocale);
 
         response.setContentType("application/soap+xml; charset=\"utf-8\"");
         response.setContentLength(stsResponse.length());
@@ -274,7 +277,7 @@ public class STSServlet  extends HttpServlet {
         return isUser;
     }
 
-    private String issue(Bag requestElements) throws IOException {
+    private String issue(Bag requestElements,  Locale clientLocale) throws IOException {
 
 
         ManagedCard card = storage.getCard((String)requestElements.get("cardId"));
@@ -316,8 +319,8 @@ public class STSServlet  extends HttpServlet {
 
         ManagedToken token = new ManagedToken(cert,key);
 
-        Set<String> claims = card.getClaims();
-        for (String claim : claims) {
+        Set<String> cardClaims = card.getClaims();
+        for (String claim : cardClaims) {
         	token.setClaim(claim, card.getClaim(claim));
         }
         
@@ -363,53 +366,18 @@ public class STSServlet  extends HttpServlet {
         displayToken.addAttribute(lang);
         requestedDisplayToken.appendChild(displayToken);
 
-        Element displayClaim = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri = new Attribute("URI",org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
-        displayClaim.addAttribute(uri);
-        Element displayTag = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
-        displayTag.appendChild("Given Name");
-        Element displayValue = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue.appendChild(card.getClaim(org.xmldap.infocard.Constants.IC_NS_GIVENNAME));
-        displayClaim.appendChild(displayTag);
-        displayClaim.appendChild(displayValue);
-        displayToken.appendChild(displayClaim);
+        for (String uri : cardClaims) {
+        	String value = card.getClaim(uri);
+        	DbSupportedClaim dbClaim = DbSupportedClaims.getClaimByUri(uri);
+        	String displayTag = dbClaim.getDisplayTag(clientLocale);
+            addDisplayClaim(
+            		displayToken, 
+            		uri, 
+            		displayTag, 
+            		value);
+        }
 
-
-        Element displayClaim1 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri1 = new Attribute("URI",org.xmldap.infocard.Constants.IC_NS_SURNAME);
-        displayClaim1.addAttribute(uri1);
-        Element displayTag1 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
-        displayTag1.appendChild("Last Name");
-        Element displayValue1 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue1.appendChild(card.getClaim(org.xmldap.infocard.Constants.IC_NS_SURNAME));
-        displayClaim1.appendChild(displayTag1);
-        displayClaim1.appendChild(displayValue1);
-        displayToken.appendChild(displayClaim1);
-
-
-        Element displayClaim2 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri2 = new Attribute("URI",org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS);
-        displayClaim2.addAttribute(uri2);
-        Element displayTag2 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
-        displayTag2.appendChild("Email");
-        Element displayValue2 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue2.appendChild(card.getClaim(org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS));
-        displayClaim2.appendChild(displayTag2);
-        displayClaim2.appendChild(displayValue2);
-        displayToken.appendChild(displayClaim2);
-
-
-        Element displayClaim3 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri3 = new Attribute("URI",org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
-        displayClaim3.addAttribute(uri3);
-        Element displayTag3 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
-        displayTag3.appendChild("PPID");
-        Element displayValue3 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue3.appendChild(card.getPrivatePersonalIdentifier());
-        displayClaim3.appendChild(displayTag3);
-        displayClaim3.appendChild(displayValue3);
-        displayToken.appendChild(displayClaim3);
-
+        addDisplayClaim(displayToken, org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "PPID", card.getPrivatePersonalIdentifier());
 
         rstr.appendChild(requestedDisplayToken);
 
@@ -417,6 +385,25 @@ public class STSServlet  extends HttpServlet {
 
         return envelope.toXML();
     }
+
+
+
+	/**
+	 * @param card
+	 * @param displayToken
+	 */
+	private void addDisplayClaim(Element displayToken, String claimUri, String claimName, String claimValue) {
+		Element displayClaim = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
+        Attribute uri = new Attribute("URI", claimUri);
+        displayClaim.addAttribute(uri);
+        Element displayTag = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
+        displayTag.appendChild(claimName);
+        Element displayValue = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
+        displayValue.appendChild(claimValue);
+        displayClaim.appendChild(displayTag);
+        displayClaim.appendChild(displayValue);
+        displayToken.appendChild(displayClaim);
+	}
 
 
 }
