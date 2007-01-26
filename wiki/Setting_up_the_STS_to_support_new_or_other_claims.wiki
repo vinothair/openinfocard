@@ -13,17 +13,21 @@ Now the claims are defined in one file: src/org/xmldap/sts/db/DbSupportedClaims.
 To define a claim you have to edit src/org/xmldap/sts/db/DbSupportedClaims.java.
 
 First define the displayTag as an array. Each entry is for a different language:
+{{{
     public final static DbDisplayTag[] dateOfBirthDisplayTagsOA = 
-{new DbDisplayTag("en-us","Date of Birth"), new DbDisplayTag("de-DE","Geburtsdatum")};
+     {new DbDisplayTag("en_US","Date of Birth"), 
+      new DbDisplayTag("de_DE","Geburtsdatum")};
+}}}
 
 Then define the supported claim:
+{{{
     public final static DbSupportedClaim dateOfBirthO = 
-new DbSupportedClaim(
- "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth", 
- "dateOfBirth",
- "varChar(50)", 
- dateOfBirthDisplayTagsOA);
-
+     new DbSupportedClaim(
+      "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth", 
+      "dateOfBirth",
+      "varChar(50)", 
+      dateOfBirthDisplayTagsOA);
+}}}
 The first parameter of the constructor is the URI of the claim.
 The second parameter is the name of column in the database.
 The third parameter is the type of the column in the database.
