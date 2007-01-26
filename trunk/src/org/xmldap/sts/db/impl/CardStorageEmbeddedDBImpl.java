@@ -1,10 +1,16 @@
 package org.xmldap.sts.db.impl;
 
 import org.xmldap.sts.db.CardStorage;
+import org.xmldap.sts.db.DbDisplayTag;
+import org.xmldap.sts.db.DbSupportedClaim;
+import org.xmldap.sts.db.DbSupportedClaims;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.exceptions.StorageException;
 
 import java.sql.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
@@ -18,92 +24,25 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
     private Connection conn = null;
 
     private boolean initialized = false;
-
-        private class DbDisplayTag {
-    	public String language;
-    	public String displayTag;
-    	DbDisplayTag(String language, String displayTag){
-    		this.language = language;
-    		this.displayTag = displayTag;
-    	}
-    }
-    private class DbSupportedClaims {
-    	public String uri;
-    	public String columnName;
-    	public String columnType;
-    	public DbDisplayTag[] displayTags = null;
-    	
-    	DbSupportedClaims(String uri, String columnName, String columnType,  DbDisplayTag[] displayTags) {
-    		this.uri = uri;
-    		this.columnName = columnName;
-    		this.columnType = columnType;
-    		this.displayTags = displayTags;
-    	}
-    }
     
-    public final DbDisplayTag[] givenNameDisplayTagsOA = {new DbDisplayTag("en-us","Given Name"), new DbDisplayTag("de-DE","Vorname")};
-    public final DbSupportedClaims givenNameO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/givenname", "givenName", "varChar(50)", givenNameDisplayTagsOA);
-    
-    public final DbDisplayTag[] surnammeDisplayTagsOA = {new DbDisplayTag("en-us","Surname"), new DbDisplayTag("de-DE","Nachname")};
-    public final DbSupportedClaims surnammeO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname", "surname", "varChar(50)", surnammeDisplayTagsOA);
-    
-    public final DbDisplayTag[] emailaddressDisplayTagsOA = {new DbDisplayTag("en-us","Email"), new DbDisplayTag("de-DE","Email")};
-    public final DbSupportedClaims emailAddressO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", "emailAddress", "varChar(150)", emailaddressDisplayTagsOA);
-    
-    public final DbDisplayTag[] streetAddressDisplayTagsOA = {new DbDisplayTag("en-us","Street"), new DbDisplayTag("de-DE","Straße")};
-    public final DbSupportedClaims streetAddressO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress", "streetAddress", "varChar(50)", streetAddressDisplayTagsOA);
-    
-    public final DbDisplayTag[] localityDisplayTagsOA = {new DbDisplayTag("en-us","City"), new DbDisplayTag("de-DE","Ort")};
-    public final DbSupportedClaims localityNameO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality", "locality", "varChar(50)", localityDisplayTagsOA);
-    
-    public final DbDisplayTag[] stateOrProvinceDisplayTagsOA = {new DbDisplayTag("en-us","State"), new DbDisplayTag("de-DE","Bundesland")};
-    public final DbSupportedClaims stateOrProvinceO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince", "stateOrProvince", "varChar(50)", stateOrProvinceDisplayTagsOA);
-    
-    public final  DbDisplayTag[] postalCodeDisplayTagsOA = {new DbDisplayTag("en-us","Postalcode"), new DbDisplayTag("de-DE","Postleitzahl")};
-    public final DbSupportedClaims postalCodeO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode", "postalCode", "varChar(10)", postalCodeDisplayTagsOA);
-    
-    public final DbDisplayTag[] countryDisplayTagsOA = {new DbDisplayTag("en-us","Country"), new DbDisplayTag("de-DE","Staat")};
-    public final DbSupportedClaims countryO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country", "country", "varChar(50)", countryDisplayTagsOA);
-    
-    public final DbDisplayTag[] primaryPhoneDisplayTagsOA = {new DbDisplayTag("en-us","Telephone"), new DbDisplayTag("de-DE","Telefon")};
-    public final DbSupportedClaims primaryPhoneO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone", "primaryPhone", "varChar(50)", primaryPhoneDisplayTagsOA);
-    
-    public final DbDisplayTag[] dateOfBirthDisplayTagsOA = {new DbDisplayTag("en-us","Date of Birth"), new DbDisplayTag("de-DE","Geburtsdatum")};
-    public final DbSupportedClaims dateOfBirthO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth", "dateOfBirth", "varChar(50)", dateOfBirthDisplayTagsOA);
-    
-    public final DbDisplayTag[] genderDisplayTagsOA = {new DbDisplayTag("en-us","Gender"), new DbDisplayTag("de-DE","Geschlecht")};
-    public final DbSupportedClaims genderO = new DbSupportedClaims("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender", "gender", "varChar(10)", genderDisplayTagsOA);
-    
-    public DbSupportedClaims[] dbSupportedClaims = {
-    		givenNameO,
-    		surnammeO,
-    		emailAddressO,
-    		streetAddressO,
-    		localityNameO,
-    		stateOrProvinceO,
-    		postalCodeO,
-    		countryO,
-    		primaryPhoneO,
-    		dateOfBirthO,
-    		genderO
-    		};
     
     private String claimsDefinition() {
-    	if (dbSupportedClaims.length > 0) {
+    	List<DbSupportedClaim>dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+    	if (dbSupportedClaims.size() > 0) {
 	    	StringBuffer claimsDefinition = new StringBuffer();
     		claimsDefinition.append(",");
-	    	for (int i=0; i<dbSupportedClaims.length-1; i++) {
+	    	for (int i=0; i<dbSupportedClaims.size()-1; i++) {
 	    		claimsDefinition.append(" ");
-	    		DbSupportedClaims claim =  dbSupportedClaims[i];
+	    		DbSupportedClaim claim =  dbSupportedClaims.get(i);
 	    		claimsDefinition.append(claim.columnName);
 	    		claimsDefinition.append(" ");
 	    		claimsDefinition.append(claim.columnType);
 	    		claimsDefinition.append(",");
 	    	}
 			claimsDefinition.append(" ");
-			claimsDefinition.append(dbSupportedClaims[dbSupportedClaims.length-1].columnName);
+			claimsDefinition.append(dbSupportedClaims.get(dbSupportedClaims.size()-1).columnName);
 			claimsDefinition.append(" ");
-			claimsDefinition.append(dbSupportedClaims[dbSupportedClaims.length-1].columnType);
+			claimsDefinition.append(dbSupportedClaims.get(dbSupportedClaims.size()-1).columnType);
 	    	return claimsDefinition.toString();
     	} else {
     		System.out.println("STS supported claims list is empty!!!");
@@ -297,7 +236,31 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
 
 
                //System.out.println("insert into cards values ('" + card.getPrivatePersonalIdentifier() +  "', '" + card.getCardName() +  "', " + card.getCardVersion() + ", '" + card.getTimeIssued() + "', '" + card.getTimeExpires() + "', '" + card.getGivenName() + "', '" + card.getSurname() + "', '" + card.getEmailAddress() + "', '" + card.getStreetAddress() + "', '" + card.getLocality() + "', '" + card.getStateOrProvince() + "', '" + card.getPostalCode() + "', '" + card.getCountry() + "', '" + card.getPrimaryPhone()  + "', '" + card.getDateOfBirth()  + "', '"  + card.getGender() + "')");
-               s.execute("insert into cards values ('" + card.getPrivatePersonalIdentifier() +  "', '" + card.getCardName() +  "', " + card.getCardVersion() + ", '" + card.getTimeIssued() + "', '" + card.getTimeExpires() + "', '" + card.getGivenName() + "', '" + card.getSurname() + "', '" + card.getEmailAddress() + "', '" + card.getStreetAddress() + "', '" + card.getLocality() + "', '" + card.getStateOrProvince() + "', '" + card.getPostalCode() + "', '" + card.getCountry() + "', '" + card.getPrimaryPhone()  + "', '" + card.getDateOfBirth()  + "', '" + card.getGender() + "')");
+        	   StringBuffer insert = new StringBuffer("insert into cards values ('"); 
+        	   insert.append(card.getPrivatePersonalIdentifier());
+        	   insert.append("', '"); 
+        	   insert.append(card.getCardName());
+        	   insert.append("', "); 
+           	   insert.append(card.getCardVersion()); 
+        	   insert.append(", '"); 
+           	   insert.append(card.getTimeIssued());
+        	   insert.append("', '"); 
+        	   insert.append(card.getTimeExpires());
+        	   insert.append("'");
+        	   
+        	   List<DbSupportedClaim> dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+        	   for (int i=0; i<dbSupportedClaims.size(); i++) {
+        		   DbSupportedClaim claim = dbSupportedClaims.get(i);
+        		   boolean isString = (claim.columnType.indexOf("varChar") > -1);
+        		   insert.append(", ");
+        		   if (isString) insert.append("'");
+        		   insert.append(card.getClaim(claim.uri));
+        		   if (isString) insert.append("'");
+        	   }
+
+        	   insert.append(")");
+        	   System.out.println(insert.toString());
+               s.execute(insert.toString());
                //System.out.println("insert into account_cards values ('" + username + "', '" + card.getCardId()  +"')");
                s.execute("insert into account_cards values ('" + username + "', '" + card.getCardId()  +"')");
                s.close();
@@ -382,18 +345,15 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
                     card.setCardVersion(rs.getInt(3));
                     card.setTimeIssued(rs.getString(4));
                     card.setTimeExpires(rs.getString(5));
-                    card.setGivenName(rs.getString(6));
-                    card.setSurname(rs.getString(7));
-                    card.setEmailAddress(rs.getString(8));
-                    card.setStreetAddress(rs.getString(9));
-                    card.setLocality(rs.getString(10));
-                    card.setStateOrProvince(rs.getString(11));
-                    card.setPostalCode(rs.getString(12));
-                    card.setCountry(rs.getString(13));
-                    card.setPrimaryPhone(rs.getString(14));
-                    card.setDateOfBirth(rs.getString(15));
-                    card.setGender(rs.getString(16));
-
+                    
+                    List<DbSupportedClaim> dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+                    for (int i=0; i<dbSupportedClaims.size(); i++) {
+                    	String value = rs.getString(i+6);
+                    	if ((value != null) && (!"".equals(value)) && (!"null".equals(value))) {
+                    		System.out.println("cardId:"+cardid+" claim:"+value);
+                    		card.setClaim(dbSupportedClaims.get(i).uri, value);
+                    	}
+                    }
                 }
                 rs.close();
                 s.close();

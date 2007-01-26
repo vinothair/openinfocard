@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.Set;
 
 
 public class STSServlet  extends HttpServlet {
@@ -279,7 +280,7 @@ public class STSServlet  extends HttpServlet {
         ManagedCard card = storage.getCard((String)requestElements.get("cardId"));
         if (card == null ) throw new IOException("Unable to read card: " + (String)requestElements.get("cardId"));
 
-        System.out.println("STS Issuing Managed Card " + (String)requestElements.get("cardId") + " for " + card.getEmailAddress());
+        System.out.println("STS Issuing Managed Card " + (String)requestElements.get("cardId") + " for " + card.getClaim(org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS));
 
 
         Element envelope = new Element(WSConstants.SOAP_PREFIX + ":Envelope", WSConstants.SOAP12_NAMESPACE);
@@ -315,9 +316,11 @@ public class STSServlet  extends HttpServlet {
 
         ManagedToken token = new ManagedToken(cert,key);
 
-        token.setGivenName(card.getGivenName());
-        token.setSurname(card.getSurname());
-        token.setEmailAddress(card.getEmailAddress());
+        Set<String> claims = card.getClaims();
+        for (String claim : claims) {
+        	token.setClaim(claim, card.getClaim(claim));
+        }
+        
         token.setPrivatePersonalIdentifier(card.getPrivatePersonalIdentifier());
         token.setValidityPeriod(1, 10);
         String domainname = _su.getDomainName();
@@ -366,7 +369,7 @@ public class STSServlet  extends HttpServlet {
         Element displayTag = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag.appendChild("Given Name");
         Element displayValue = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue.appendChild(card.getGivenName());
+        displayValue.appendChild(card.getClaim(org.xmldap.infocard.Constants.IC_NS_GIVENNAME));
         displayClaim.appendChild(displayTag);
         displayClaim.appendChild(displayValue);
         displayToken.appendChild(displayClaim);
@@ -378,7 +381,7 @@ public class STSServlet  extends HttpServlet {
         Element displayTag1 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag1.appendChild("Last Name");
         Element displayValue1 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue1.appendChild(card.getSurname());
+        displayValue1.appendChild(card.getClaim(org.xmldap.infocard.Constants.IC_NS_SURNAME));
         displayClaim1.appendChild(displayTag1);
         displayClaim1.appendChild(displayValue1);
         displayToken.appendChild(displayClaim1);
@@ -390,7 +393,7 @@ public class STSServlet  extends HttpServlet {
         Element displayTag2 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag2.appendChild("Email");
         Element displayValue2 = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue2.appendChild(card.getEmailAddress());
+        displayValue2.appendChild(card.getClaim(org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS));
         displayClaim2.appendChild(displayTag2);
         displayClaim2.appendChild(displayValue2);
         displayToken.appendChild(displayClaim2);

@@ -39,30 +39,34 @@ import org.xmldap.xmldsig.EnvelopedSignature;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 
 
 public class ManagedToken implements Serializable {
 
 	private String namespacePrefix = null;
-
-    private String givenName;
-    private String surname;
-    private String emailAddress;
-    private String streetAddress;
-    private String locality;
-    private String stateOrProvince;
-    private String postalCode;
-    private String country;
-    private String primaryPhone;
-    private String otherPhone;
-    private String mobilePhone;
-    private String dateOfBirth;
     private String privatePersonalIdentifier;
-    private String gender;
     private String issuer;
 
+//    private String givenName;
+//    private String surname;
+//    private String emailAddress;
+//    private String streetAddress;
+//    private String locality;
+//    private String stateOrProvince;
+//    private String postalCode;
+//    private String country;
+//    private String primaryPhone;
+//    private String otherPhone;
+//    private String mobilePhone;
+//    private String dateOfBirth;
+//    private String gender;
+
+    private Map<String,String> supportedClaims = new HashMap<String,String>();
+    
     private X509Certificate signingCert;
     private PrivateKey signingKey;
 
@@ -92,6 +96,14 @@ public class ManagedToken implements Serializable {
     	return namespacePrefix;
     }
 
+    public String getClaim(String uri) {
+    	return supportedClaims.get(uri);
+    }
+    
+    public void setClaim(String uri, String value) {
+    	supportedClaims.put(uri, value);
+    }
+
 //    public int getValidityPeriod() {
 //        return nowPlus;
 //    }
@@ -102,101 +114,108 @@ public class ManagedToken implements Serializable {
     }
 
 
-    public String getGivenName() {
-        return givenName;
-    }
-
-    public void setGivenName(String givenName) {
-        this.givenName = givenName;
-    }
-
-    public String getSurname() {
-        return surname;
-    }
-
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
-
-    public String getEmailAddress() {
-        return emailAddress;
-    }
-
-    public void setEmailAddress(String emailAddress) {
-        this.emailAddress = emailAddress;
-    }
-
-    public String getStreetAddress() {
-        return streetAddress;
-    }
-
-    public void setStreetAddress(String streetAddress) {
-        this.streetAddress = streetAddress;
-    }
-
-    public String getLocality() {
-        return locality;
-    }
-
-    public void setLocality(String locality) {
-        this.locality = locality;
-    }
-
-    public String getStateOrProvince() {
-        return stateOrProvince;
-    }
-
-    public void setStateOrProvince(String stateOrProvince) {
-        this.stateOrProvince = stateOrProvince;
-    }
-
-    public String getPostalCode() {
-        return postalCode;
-    }
-
-    public void setPostalCode(String postalCode) {
-        this.postalCode = postalCode;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public String getPrimaryPhone() {
-        return primaryPhone;
-    }
-
-    public void setPrimaryPhone(String primaryPhone) {
-        this.primaryPhone = primaryPhone;
-    }
-
-    public String getOtherPhone() {
-        return otherPhone;
-    }
-
-    public void setOtherPhone(String otherPhone) {
-        this.otherPhone = otherPhone;
-    }
-
-    public String getMobilePhone() {
-        return mobilePhone;
-    }
-
-    public void setMobilePhone(String mobilePhone) {
-        this.mobilePhone = mobilePhone;
-    }
-
-    public String getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(String dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
+//    public String getGivenName() {
+//        return givenName;
+//    }
+//
+//    public void setGivenName(String givenName) {
+//        this.givenName = givenName;
+//    }
+//
+//    public String getSurname() {
+//        return surname;
+//    }
+//
+//    public void setSurname(String surname) {
+//        this.surname = surname;
+//    }
+//
+//    public String getEmailAddress() {
+//        return emailAddress;
+//    }
+//
+//    public void setEmailAddress(String emailAddress) {
+//        this.emailAddress = emailAddress;
+//    }
+//
+//    public String getStreetAddress() {
+//        return streetAddress;
+//    }
+//
+//    public void setStreetAddress(String streetAddress) {
+//        this.streetAddress = streetAddress;
+//    }
+//
+//    public String getLocality() {
+//        return locality;
+//    }
+//
+//    public void setLocality(String locality) {
+//        this.locality = locality;
+//    }
+//
+//    public String getStateOrProvince() {
+//        return stateOrProvince;
+//    }
+//
+//    public void setStateOrProvince(String stateOrProvince) {
+//        this.stateOrProvince = stateOrProvince;
+//    }
+//
+//    public String getPostalCode() {
+//        return postalCode;
+//    }
+//
+//    public void setPostalCode(String postalCode) {
+//        this.postalCode = postalCode;
+//    }
+//
+//    public String getCountry() {
+//        return country;
+//    }
+//
+//    public void setCountry(String country) {
+//        this.country = country;
+//    }
+//
+//    public String getPrimaryPhone() {
+//        return primaryPhone;
+//    }
+//
+//    public void setPrimaryPhone(String primaryPhone) {
+//        this.primaryPhone = primaryPhone;
+//    }
+//
+//    public String getOtherPhone() {
+//        return otherPhone;
+//    }
+//
+//    public void setOtherPhone(String otherPhone) {
+//        this.otherPhone = otherPhone;
+//    }
+//
+//    public String getMobilePhone() {
+//        return mobilePhone;
+//    }
+//
+//    public void setMobilePhone(String mobilePhone) {
+//        this.mobilePhone = mobilePhone;
+//    }
+//
+//    public String getDateOfBirth() {
+//        return dateOfBirth;
+//    }
+//
+//    public void setDateOfBirth(String dateOfBirth) {
+//        this.dateOfBirth = dateOfBirth;
+//    }
+//  public String getGender() {
+//  return gender;
+//}
+//
+//public void setGender(String gender) {
+//  this.gender = gender;
+//}
 
     public String getPrivatePersonalIdentifier() {
         return privatePersonalIdentifier;
@@ -206,13 +225,6 @@ public class ManagedToken implements Serializable {
         this.privatePersonalIdentifier = privatePersonalIdentifier;
     }
 
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
 
 
 
@@ -228,90 +240,26 @@ public class ManagedToken implements Serializable {
 
         Vector attributes = new Vector();
 
-        if (givenName != null) {
-
-            Attribute attr = new Attribute("givenname", namespacePrefix+"givenname", givenName);
-            attributes.add(attr);
+        for (String uri : supportedClaims.keySet()) {
+        	String value = supportedClaims.get(uri);
+        	if ((value != null) && (!"".equals(value))) {
+        		String name;
+        		int lastSlash = uri.lastIndexOf('/');
+        		if (lastSlash > -1) {
+        			name = uri.substring(lastSlash+1);
+        			if (name.length() == 0) {
+        				name = uri;
+        			}
+        			if (lastSlash > 0) {
+        				uri = uri.substring(0, lastSlash-1);
+        			}
+        		} else {
+        			name = uri;
+        		}
+                Attribute attr = new Attribute(name, uri, value);
+                attributes.add(attr);
+        	}
         }
-
-        if (surname != null) {
-
-            Attribute attr = new Attribute("surname", namespacePrefix+"surname", surname);
-            attributes.add(attr);
-        }
-
-        if (emailAddress != null) {
-
-            Attribute attr = new Attribute("emailaddress", namespacePrefix+"emailaddress", emailAddress);
-            attributes.add(attr);
-        }
-
-        if (streetAddress != null) {
-
-            Attribute attr = new Attribute("streetaddress", namespacePrefix+"streetaddress", streetAddress);
-            attributes.add(attr);
-        }
-
-        if (locality != null) {
-
-            Attribute attr = new Attribute("locality", namespacePrefix+locality, locality);
-            attributes.add(attr);
-        }
-
-        if (stateOrProvince != null) {
-
-            Attribute attr = new Attribute("stateorprovince", namespacePrefix+"stateorprovince", stateOrProvince);
-            attributes.add(attr);
-        }
-
-        if (postalCode != null) {
-
-            Attribute attr = new Attribute("postalcode", namespacePrefix+"postalcode", postalCode);
-            attributes.add(attr);
-        }
-
-        if (country != null) {
-
-            Attribute attr = new Attribute("country", namespacePrefix+"country", country);
-            attributes.add(attr);
-        }
-
-        if (primaryPhone != null) {
-
-            Attribute attr = new Attribute("primaryphone", namespacePrefix+"primaryphone", primaryPhone);
-            attributes.add(attr);
-        }
-
-        if (otherPhone != null) {
-
-            Attribute attr = new Attribute("otherphone", namespacePrefix+"otherphone", otherPhone);
-            attributes.add(attr);
-        }
-
-        if (mobilePhone != null) {
-
-            Attribute attr = new Attribute("mobilephone", namespacePrefix+"mobilephone", mobilePhone);
-            attributes.add(attr);
-        }
-
-        if (dateOfBirth != null) {
-
-            Attribute attr = new Attribute("dateofbirth", namespacePrefix+"dateofbirth", dateOfBirth);
-            attributes.add(attr);
-        }
-
-        if (privatePersonalIdentifier != null) {
-
-            Attribute attr = new Attribute("privatepersonalidentifier", namespacePrefix+"privatepersonalidentifier", privatePersonalIdentifier);
-            attributes.add(attr);
-        }
-
-        if (gender != null) {
-
-            Attribute attr = new Attribute("gender", namespacePrefix+"gender", gender);
-            attributes.add(attr);
-        }
-
 
         AttributeStatement statement = new AttributeStatement();
         statement.setSubject(subject);

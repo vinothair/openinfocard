@@ -1,7 +1,10 @@
 <%@ page import="java.util.Collection"%>
 <%@ page import="java.util.Iterator"%>
+<%@ page import="java.util.List"%>
 <%@ page import="org.xmldap.sts.db.ManagedCard"%>
 <%@ page import="org.xmldap.sts.db.CardStorage"%>
+<%@ page import="org.xmldap.sts.db.DbSupportedClaim"%>
+<%@ page import="org.xmldap.sts.db.DbSupportedClaims"%>
 <%@ page import="org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl"%>
 <%!
 
@@ -97,20 +100,15 @@
     <input type="hidden" name="action" value="createcard">
     <table>
     <tr><td>Card Name:</td><td><input type="text" name="cardName" class="forminput"></td></tr>
-    <tr><td>Given Name:</td><td><input type="text" name="givenName" class="forminput"></td></tr>
-    <tr><td>Last Name:</td><td><input type="text" name="surName" class="forminput"></td></tr>
-    <tr><td>Email:</td><td><input type="text" name="email" class="forminput"></td></tr>
-    <!--
-    <tr><td>Address:</td><td><input type="text" name="address" class="forminput"></td></tr>
-    <tr><td>City:</td><td><input type="text" name="city" class="forminput"></td></tr>
-    <tr><td>State:</td><td><input type="text" name="state" class="forminput"></td></tr>
-    <tr><td>Zip:</td><td><input type="text" name="zip" class="forminput"></td></tr>
-    <tr><td>Country:</td><td><input type="text" name="country" class="forminput"></td></tr>
-    <tr><td>Phone:</td><td><input type="text" name="phone" class="forminput"></td></tr>
-    <tr><td>BirthDay:</td><td><input type="text" name="birthday" class="forminput"></td></tr>
-    <tr><td>Gender:</td><td><input type="text" name="gender" class="forminput"></td></tr>
-    -->
-
+<%
+		List dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+		for (int i=0; i<dbSupportedClaims.size(); i++) {
+		 DbSupportedClaim claim = (DbSupportedClaim)dbSupportedClaims.get(i);
+		 String key = claim.columnName;
+		 String displayTag = claim.displayTags[0].displayTag;
+		 out.println("<tr><td>" + displayTag + ":</td><td><input type=\"text\" name=\"" + key + "\" class=\"forminput\"></td></tr>");
+		}
+%>
     <tr><td colspan=2><br><input type="submit" value="Create a new card"></td></tr>
     </table>
 </form>
@@ -124,14 +122,18 @@
         String cardName = request.getParameter("cardName");
         if (cardName != null ) card.setCardName(cardName);
 
-        String givenName = request.getParameter("givenName");
-        if (givenName != null ) card.setGivenName(givenName);
-
-        String surName = request.getParameter("surName");
-        if (surName != null ) card.setSurname(surName);
-
-        String email = request.getParameter("email");
-        if (email != null ) card.setEmailAddress(email);
+        List dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+	    for (int i=0; i<dbSupportedClaims.size(); i++) {
+	    	DbSupportedClaim claim = (DbSupportedClaim)dbSupportedClaims.get(i);
+	    	String key = claim.columnName;
+	    	String value = request.getParameter(key);
+	    	System.out.println("key:"+key+" uri:"+claim.uri+" value:"+value);
+	    	if (value != null) {
+	    		if (!"".equals(value)) {
+		    		card.setClaim(claim.uri, value);
+	    		}
+	    	}
+	    }
 
         storage.addCard(username, card);
 
