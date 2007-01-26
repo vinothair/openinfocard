@@ -1,6 +1,7 @@
 <%@ page import="java.util.Collection"%>
 <%@ page import="java.util.Iterator"%>
 <%@ page import="java.util.List"%>
+<%@ page import="java.util.Locale"%>
 <%@ page import="org.xmldap.sts.db.ManagedCard"%>
 <%@ page import="org.xmldap.sts.db.CardStorage"%>
 <%@ page import="org.xmldap.sts.db.DbSupportedClaim"%>
@@ -9,7 +10,7 @@
 <%!
 
     CardStorage storage = new CardStorageEmbeddedDBImpl();
-
+	
 %>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -101,11 +102,12 @@
     <table>
     <tr><td>Card Name:</td><td><input type="text" name="cardName" class="forminput"></td></tr>
 <%
+		Locale clientLocale = request.getLocale();
 		List dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
 		for (int i=0; i<dbSupportedClaims.size(); i++) {
 		 DbSupportedClaim claim = (DbSupportedClaim)dbSupportedClaims.get(i);
 		 String key = claim.columnName;
-		 String displayTag = claim.displayTags[0].displayTag;
+		 String displayTag = claim.getDisplayTag(clientLocale);
 		 out.println("<tr><td>" + displayTag + ":</td><td><input type=\"text\" name=\"" + key + "\" class=\"forminput\"></td></tr>");
 		}
 %>
