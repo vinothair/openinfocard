@@ -29,7 +29,6 @@
 
 package org.xmldap.sts.servlet;
 
-import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.InfoCard;
@@ -55,10 +54,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.Enumeration;
 
 
 public class CardServlet extends HttpServlet {
@@ -85,11 +82,11 @@ public class CardServlet extends HttpServlet {
         }
 
 
-        String cardID = extractCardIdFromRequest(request);
+        String cardId = extractCardIdFromRequest(request);
 
 
-        System.out.println(cardID);
-        ManagedCard managedCard = storage.getCard(cardID);
+        System.out.println(cardId);
+        ManagedCard managedCard = storage.getCard(cardId);
         if (managedCard == null) {
             /* log */
             return;
@@ -148,8 +145,7 @@ public class CardServlet extends HttpServlet {
         card.setTimeExpires(expires.getDateTime());
 
 
-        TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
-        tsr.setUserName(username);
+        TokenServiceReference tsr = getTokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert, username);
         card.setTokenServiceReference(tsr);
 
 
@@ -161,7 +157,7 @@ public class CardServlet extends HttpServlet {
         SupportedClaimList claimList = getSupportedClaimList();
         card.setClaimList(claimList);
 
-        card.setPrivacyPolicy("https://" + domainname + "/PrivacyPolicy.xml");
+        card.setPrivacyPolicy(getPrivacyPolicyReference(domainname));
 
 
         PrintWriter out = response.getWriter();
@@ -178,6 +174,16 @@ public class CardServlet extends HttpServlet {
         return;
 
 
+    }
+
+    protected String getPrivacyPolicyReference(String domainname) {
+        return "https://" + domainname + "/PrivacyPolicy.xml";
+    }
+
+    protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert, String username) {
+        TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
+        tsr.setUserName(username);
+        return tsr;
     }
 
     protected SupportedClaimList getSupportedClaimList() {
@@ -234,18 +240,18 @@ public class CardServlet extends HttpServlet {
      * @return Base64 encoded image data (usaully a PNG)
      */
     protected String getImageFileEncodedAsBase64(ServletUtil servletUtil) {
-    	String imageFilePathString = servletUtil.getImageFilePathString();
-    	if (imageFilePathString != null) {
-    		try {
-    			return getImageFileEncodedAsBase64(imageFilePathString);
-    		} catch (Exception e) {
-    			System.err.println("CardServelet::getImageFileEncodedAsBase64: " + e.getMessage());
-    			// use the standard image, if an error occurs
-    			return null;
-    		}
-    	} else {
-    		return null;
-    	}
+        String imageFilePathString = servletUtil.getImageFilePathString();
+        if (imageFilePathString != null) {
+            try {
+                return getImageFileEncodedAsBase64(imageFilePathString);
+            } catch (Exception e) {
+                System.err.println("CardServelet::getImageFileEncodedAsBase64: " + e.getMessage());
+                // use the standard image, if an error occurs
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 
     /**
