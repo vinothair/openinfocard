@@ -82,6 +82,9 @@
                  version="true"
                  use="true"
                  windowtitle="${component.name}-${component.version}">
+            <classpath>
+                <path refid="ext.classpath.path"/>
+            </classpath>
 
             <packageset dir="${src.dir}" defaultexcludes="yes">
                 <include name="org/xmldap/rp/**"/>
