@@ -58,7 +58,7 @@ import java.util.Set;
 public class STSServlet  extends HttpServlet {
 
 
-    private boolean DEBUG = false;
+    private boolean DEBUG = true;
     RSAPrivateKey key;
     X509Certificate cert;
     private ServletUtil _su;
@@ -272,10 +272,15 @@ public class STSServlet  extends HttpServlet {
     private boolean authenticate(Bag tokenElements) {
         String username = (String) tokenElements.get("username");
         String password = (String) tokenElements.get("password");
+        return authenticate(username, password);
+    }
+
+    protected boolean authenticate(String username, String password) {
         boolean isUser = storage.authenticate(username,password);
         System.out.println("STS Authenticated: " + username  + ":" + isUser );
         return isUser;
     }
+
 
     private String issue(Bag requestElements,  Locale clientLocale) throws IOException {
 
