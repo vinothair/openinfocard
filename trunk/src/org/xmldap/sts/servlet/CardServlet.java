@@ -194,6 +194,7 @@ public class CardServlet extends HttpServlet {
     	List<DbSupportedClaim> supportedClaims = DbSupportedClaims.dbSupportedClaims();
         SupportedClaimList claimList = new SupportedClaimList();
         SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
+        claimList.addSupportedClaim(supportedClaim);
     	for (DbSupportedClaim claim : supportedClaims) {
     		supportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri);
     		claimList.addSupportedClaim(supportedClaim);
