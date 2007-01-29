@@ -212,10 +212,14 @@ function processManagedCard(managedCard) {
 
                 tokenToReturn = assertion;
 
+            } else {
+            	alert("token request (" + address + ") failed." + rstReq.status);
             }
 
         }
 
+    } else {
+    	alert("mex requeste (" + managedCard.carddata.managed.mex + ") failed: " + req.status);
     }
 
     return tokenToReturn;
