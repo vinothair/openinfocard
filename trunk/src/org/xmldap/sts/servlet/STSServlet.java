@@ -405,7 +405,7 @@ public class STSServlet  extends HttpServlet {
 	 */
 	private void addDisplayClaim(Element displayToken, String claimUri, String claimName, String claimValue) {
 		Element displayClaim = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri = new Attribute("URI", claimUri);
+        Attribute uri = new Attribute("Uri", claimUri);
         displayClaim.addAttribute(uri);
         Element displayTag = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
         displayTag.appendChild(claimName);
