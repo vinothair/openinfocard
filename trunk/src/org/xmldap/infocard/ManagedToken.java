@@ -250,9 +250,9 @@ public class ManagedToken implements Serializable {
         			if (name.length() == 0) {
         				name = uri;
         			}
-        			if (lastSlash > 0) {
-        				uri = uri.substring(0, lastSlash-1);
-        			}
+//        			if (lastSlash > 0) {
+//        				uri = uri.substring(0, lastSlash-1);
+//        			}
         		} else {
         			name = uri;
         		}
