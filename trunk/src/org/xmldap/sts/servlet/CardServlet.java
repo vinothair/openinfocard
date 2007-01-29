@@ -37,6 +37,8 @@ import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
+import org.xmldap.sts.db.DbSupportedClaim;
+import org.xmldap.sts.db.DbSupportedClaims;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
@@ -56,6 +58,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 
 public class CardServlet extends HttpServlet {
@@ -89,6 +92,7 @@ public class CardServlet extends HttpServlet {
         ManagedCard managedCard = storage.getCard(cardId);
         if (managedCard == null) {
             /* log */
+        	System.out.println("CardServlet: could not find card:" + cardId);
             return;
         }
 
@@ -187,15 +191,22 @@ public class CardServlet extends HttpServlet {
     }
 
     protected SupportedClaimList getSupportedClaimList() {
+    	List<DbSupportedClaim> supportedClaims = DbSupportedClaims.dbSupportedClaims();
         SupportedClaimList claimList = new SupportedClaimList();
-        SupportedClaim given = new SupportedClaim("GivenName", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
-        SupportedClaim sur = new SupportedClaim("Surname", org.xmldap.infocard.Constants.IC_NS_SURNAME);
-        SupportedClaim email = new SupportedClaim("EmailAddress", org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS);
-        SupportedClaim ppid = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
-        claimList.addSupportedClaim(given);
-        claimList.addSupportedClaim(sur);
-        claimList.addSupportedClaim(email);
-        claimList.addSupportedClaim(ppid);
+        SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
+    	for (DbSupportedClaim claim : supportedClaims) {
+    		supportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri);
+    		claimList.addSupportedClaim(supportedClaim);
+    	}
+//        SupportedClaimList claimList = new SupportedClaimList();
+//        SupportedClaim given = new SupportedClaim("GivenName", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
+//        SupportedClaim sur = new SupportedClaim("Surname", org.xmldap.infocard.Constants.IC_NS_SURNAME);
+//        SupportedClaim email = new SupportedClaim("EmailAddress", org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS);
+//        SupportedClaim ppid = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
+//        claimList.addSupportedClaim(given);
+//        claimList.addSupportedClaim(sur);
+//        claimList.addSupportedClaim(email);
+//        claimList.addSupportedClaim(ppid);
         return claimList;
     }
 
