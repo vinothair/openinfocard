@@ -46,6 +46,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -181,6 +183,10 @@ public class STSServlet  extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+    	HttpSession session = request.getSession();
+    	session.getServletContext().log("STS Servlet got a request");
+    	System.out.println("Boink"); System.out.flush();
+    	
         if (DEBUG) System.out.println("STS got a request");
         int contentLen = request.getContentLength();
 
@@ -330,7 +336,7 @@ public class STSServlet  extends HttpServlet {
         }
         
         token.setPrivatePersonalIdentifier(card.getPrivatePersonalIdentifier());
-        token.setValidityPeriod(1, 10);
+        token.setValidityPeriod(-3, 10);
         String domainname = _su.getDomainName();
         token.setIssuer("https://" + domainname + "/sts/tokenservice");
         
