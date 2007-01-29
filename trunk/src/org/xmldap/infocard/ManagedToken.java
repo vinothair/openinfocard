@@ -47,7 +47,7 @@ import java.util.Vector;
 
 public class ManagedToken implements Serializable {
 
-	private String namespacePrefix = null;
+	//private String namespacePrefix = null;
     private String privatePersonalIdentifier;
     private String issuer;
 
@@ -77,7 +77,7 @@ public class ManagedToken implements Serializable {
     public ManagedToken( X509Certificate signingCert, PrivateKey signingKey ) {
         this.signingCert = signingCert;
         this.signingKey = signingKey;
-        namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
+//        namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
     }
 
     public void setIssuer(String issuer) {
@@ -88,13 +88,13 @@ public class ManagedToken implements Serializable {
     	return issuer;
     }
     
-    public void setNamespacePrefix(String namespacePrefix) {
-        this.namespacePrefix = namespacePrefix;
-    }
-
-    public String getNamespacePrefix() {
-    	return namespacePrefix;
-    }
+//    public void setNamespacePrefix(String namespacePrefix) {
+//        this.namespacePrefix = namespacePrefix;
+//    }
+//
+//    public String getNamespacePrefix() {
+//    	return namespacePrefix;
+//    }
 
     public String getClaim(String uri) {
     	return supportedClaims.get(uri);
@@ -134,8 +134,11 @@ public class ManagedToken implements Serializable {
 
         Subject subject = new Subject(keyInfo);
 
-        Vector attributes = new Vector();
+        Vector<Attribute> attributes = new Vector<Attribute>();
 
+        Attribute ppidAttribute = new Attribute(org.xmldap.infocard.Constants.IC_PRIVATEPERSONALIDENTIFIER, org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, privatePersonalIdentifier);
+        attributes.add(ppidAttribute);
+        
         for (String uri : supportedClaims.keySet()) {
         	String value = supportedClaims.get(uri);
         	if ((value != null) && (!"".equals(value))) {
