@@ -328,9 +328,9 @@
 					</wsdl:binding>
 					<wsdl:service name="STS">
 						<wsdl:port name="CustomBinding_IWSTrustContract" binding="tns:CustomBinding_IWSTrustContract">
-							<soap12:address location="https://xmldap.org/sts/tokenservice"/>
+							<soap12:address location="https://@domain@/sts/tokenservice"/>
 							<wsa10:EndpointReference>
-								<wsa10:Address>https://xmldap.org/sts/tokenservice</wsa10:Address>
+								<wsa10:Address>https://@domain@/sts/tokenservice</wsa10:Address>
 								<Identity xmlns="http://schemas.xmlsoap.org/ws/2006/02/addressingidentity">
 									<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
 										<X509Data>

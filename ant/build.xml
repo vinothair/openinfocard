@@ -134,6 +134,10 @@
             <replacefilter token="@mex-file@" value="${mex.file}"/>
         </replace>
 
+        <replace  file="${build.dir}/xmldap.org/sts/mex.xml">
+            <replacefilter token="@domain@" value="${domain}"/>
+        </replace>
+
         <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>
         <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>
         <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>
