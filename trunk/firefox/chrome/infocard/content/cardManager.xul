@@ -75,6 +75,10 @@
 
         <hbox id="instructarea">
             <label class="lblTitle" id="notify" value=""/>
+            <hbox flex="1">
+             <spacer width="10"></spacer>
+            </hbox>
+            
         </hbox>
 
 
@@ -95,13 +99,13 @@
                 <hbox>
                     <label class="lblTitle" id="cardname" value=""/>
                 </hbox>
-                <hbox>
+                <hbox id="selfassertedClaims" hidden="true">
                     <vbox>
                         <spacer height="5"/>
 
                     <grid id="editgrid" hidden="true">
                         <columns><column id="colText"/><column id="colData"/></columns>
-                        <rows>
+                        <rows id="rows0">
                             <row><label id="_givenname" class="lblText" value="&cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
                             <row><label id="_surname" class="lblText" value="&cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
                             <row><label id="_streetAddress" class="lblText" value="&cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
@@ -117,7 +121,7 @@
                         <spacer height="5"/>
                     <grid id="editgrid1" hidden="true">
                         <columns><column id="colText"/><column id="colData"/></columns>
-                        <rows>
+                        <rows id="rows1">
                             <row><label id="_email" class="lblText" value="&cardmanager.email;"  /><textbox id="email"   value=""/></row>
                             <row><label id="_primaryPhone" class="lblText" value="&cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
                             <row><label id="_mobilePhone" class="lblText" value="&cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
@@ -131,22 +135,44 @@
                     </vbox>
                 </hbox>
 
+                <hbox id="managedClaims" hidden="true">
+                    <vbox>
+                        <spacer height="5"/>
+
+                    <grid id="editgrid2" hidden="true">
+                        <columns><column id="colText"/><column id="colData"/></columns>
+                        <rows id="managedRows0">
+                        </rows>
+                    </grid>
+
+                    </vbox>
+                    <vbox>
+                        <spacer height="5"/>
+                    <grid id="editgrid3" hidden="true">
+                        <columns><column id="colText"/><column id="colData"/></columns>
+                        <rows id="managedRows1">
+                        </rows>
+                    </grid>
+
+                    </vbox>
+                </hbox>
+
                 </vbox>
             </hbox>
 
             <hbox id="controlarea">
 
                     
-                <vbox align="center" id="selectcontrol" hidden="true">
+                <hbox align="center" id="selectcontrol" hidden="true">
                     <hbox>
                         <image src="chrome://infocard/content/img/select.png" width="19" height="19"/>
                         <label id="select" value="Use this Card"/>
                     </hbox>
-                </vbox>
+                </hbox>
 
-                <vbox flex="1">
+                <hbox flex="1">
                     <spacer></spacer>
-                </vbox>
+                </hbox>
                 <hbox id="controls">
 
                     <vbox id="newCard">
@@ -165,6 +191,9 @@
                     <vbox id="cancelselector">
                         <label value="&cardmanager.cancel;" class="cardcontrols"/>
                     </vbox>
+                </hbox>
+                <hbox flex="0">
+                    <spacer width="10"></spacer>
                 </hbox>
             </hbox>
 </window>
