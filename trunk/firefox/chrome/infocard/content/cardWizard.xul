@@ -233,6 +233,9 @@
               callbackdata["mex"] = mex;
               callbackdata["hint"] = cardHint;
               callbackdata["uid"] = cardUid;
+              
+              callbackdata["supportedClaims"] = cardxml.dsig::Object.ic::InformationCard.ic::SupportedClaimTypeList.toXMLString();
+              
               window.arguments[1](callbackdata);
 
                document.getElementById('card-window').cancel();
