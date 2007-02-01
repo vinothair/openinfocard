@@ -128,7 +128,17 @@ function processManagedCard(managedCard) {
 
     var messageIdInt = Math.floor(Math.random()*100000+1);
     var messageId = "urn:uuid:" + messageIdInt;
-    var mex = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://www.w3.org/2005/08/addressing\"><s:Header><a:Action s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2004/09/transfer/Get</a:Action><a:MessageID>" +   messageId  +  "</a:MessageID><a:ReplyTo><a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address></a:ReplyTo><a:To s:mustUnderstand=\"1\">" + managedCard.carddata.managed.issuer + "</a:To></s:Header><s:Body/></s:Envelope>";
+    var mex = "<s:Envelope " + 
+    	"xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" " + 
+    	"xmlns:a=\"http://www.w3.org/2005/08/addressing\">" + 
+    	"<s:Header>" + 
+    	 "<a:Action s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2004/09/transfer/Get</a:Action>" + 
+    	 "<a:MessageID>" +   messageId  +  "</a:MessageID>" + 
+    	 "<a:ReplyTo>" + 
+    	  "<a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address>" + 
+    	 "</a:ReplyTo>" + 
+    	 "<a:To s:mustUnderstand=\"1\">" + managedCard.carddata.managed.issuer + "</a:To>" + 
+    	"</s:Header><s:Body/></s:Envelope>";
 
 
     var req = new XMLHttpRequest();
@@ -171,13 +181,16 @@ function processManagedCard(managedCard) {
             var uid =  username.value;
             var pw =  password.value;
 
-
-            var rst = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:u=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"><s:Header><o:Security s:mustUnderstand=\"1\" xmlns:o=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><o:UsernameToken u:Id=\"";
-
             var messageIdInt1 = Math.floor(Math.random()*100000+1);
             var messageId1 = "urn:uuid:" + messageIdInt;
 
-            rst = rst + messageId1 + "\"><o:Username>";
+            var rst = "<s:Envelope " + 
+    			"xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" " + 
+    			"xmlns:u=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">" + 
+    			"<s:Header>" + 
+    			 "<o:Security s:mustUnderstand=\"1\" xmlns:o=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">"; 
+
+            rst = rst + "<o:UsernameToken u:Id=\"" + messageId1 + "\"><o:Username>";
 
             rst = rst + uid;
 
@@ -287,6 +300,7 @@ function load(){
         var label = document.getElementById("notify");
 		var site = policy["cn"];
         var please = stringsBundle.getFormattedString('pleaseselectacard', [site]);
+        label.setAttribute("crop", "end");
         label.setAttribute("value", please);
     } else {
         var label = document.getElementById("notify");
@@ -362,7 +376,12 @@ function setCard(card){
     debug("TYPE: " + selectedCard.type);
     debug(selectedCard);
 
+    var selfassertedClaims = document.getElementById('selfassertedClaims');
+    var managedClaims = document.getElementById('managedClaims');
+
     if (selectedCard.type == "selfAsserted" )  {
+        selfassertedClaims.setAttribute("hidden", "false");
+        managedClaims.setAttribute("hidden", "true");
 
         document.getElementById("cardname").value = selectedCard.name;
         document.getElementById("givenname").value = selectedCard.carddata.selfasserted.givenname;
@@ -408,54 +427,82 @@ function setCard(card){
         var grid1 = document.getElementById("editgrid1");
         grid1.setAttribute("hidden", "false");
 
+		var stringsBundle = document.getElementById("string-bundle");
+		var selfassertedcard = stringsBundle.getString('selfassertedcard');
         var label = document.getElementById("notify");
-        label.setAttribute("value", "Self Asserted Card");
+        label.setAttribute("value", selfassertedcard);
 
     }  else if (selectedCard.type == "managedCard" )   {
-
+        selfassertedClaims.setAttribute("hidden", "true");
+        managedClaims.setAttribute("hidden", "false");
 
         document.getElementById("cardname").value = selectedCard.name;
-        document.getElementById("givenname").visibility = 'hidden';
-        document.getElementById("givenname").value = "";
-        document.getElementById("surname").visibility = 'hidden';
-        document.getElementById("surname").value = "";
-        document.getElementById("email").visibility = 'hidden';
-        document.getElementById("email").value = "";
-        document.getElementById("streetAddress").visibility = 'hidden';
-        document.getElementById("streetAddress").value = "";
-        document.getElementById("locality").visibility = 'hidden';
-        document.getElementById("locality").value = "";
-        document.getElementById("stateOrProvince").visibility = 'hidden';
-        document.getElementById("stateOrProvince").value = "";
-        document.getElementById("postalCode").visibility = 'hidden';
-        document.getElementById("postalCode").value = "";
-        document.getElementById("country").visibility = 'hidden';
-        document.getElementById("country").value = "";
-        document.getElementById("primaryPhone").visibility = 'hidden';
-        document.getElementById("primaryPhone").value = "";
-        document.getElementById("otherPhone").visibility = 'hidden';
-        document.getElementById("otherPhone").value = "";
-        document.getElementById("mobilePhone").visibility = 'hidden';
-        document.getElementById("mobilePhone").value = "";
-        document.getElementById("dateOfBirth").visibility = 'hidden';
-        document.getElementById("dateOfBirth").value = "";
-        document.getElementById("gender").visibility = 'hidden';
-        document.getElementById("gender").value = "";
-        document.getElementById("imgurl").visibility = 'hidden';
-        document.getElementById("imgurl").value = "";
 
+		var managedRows = document.getElementById("managedRows0");
+		
+		// remove child rows before appending new ones
+		while (managedRows.hasChildNodes()) { 
+  		 managedRows.removeChild(managedRows.childNodes[0]);
+		}
+		
+		var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+		var list = selectedCard.carddata.managed.ic::SupportedClaimTypeList.ic::SupportedClaimType;
+		//alert("root type:" + typeof(selectedCard));
+		//alert("list type:" + typeof(list));
+		//alert("list[0] type:" + typeof(list[0]));
+		//alert(list[0]);
+		//alert("length:" + list.length());
+		var half = list.length() / 2;
+		for (var index = 0; index<half; index++) {
+		 var supportedClaim = list[index];
+		 var uri = supportedClaim.@Uri;
+  		 var row = document.createElement("row");
+		 var label = document.createElement("label");
+		 label.setAttribute("value", supportedClaim.ic::DisplayTag);
+		 label.setAttribute("class", "lblText");
+		 var textbox = document.createElement("textbox");
+		 textbox.setAttribute("id", "");
+		 textbox.setAttribute("value", "");
+		 textbox.setAttribute("readonly", "true");
+		 row.appendChild(label);
+		 row.appendChild(textbox);
+		 managedRows.appendChild(row);
+		}
+		managedRows = document.getElementById("managedRows1");
+		
+		// remove child rows before appending new ones
+		while (managedRows.hasChildNodes()) { 
+  		 managedRows.removeChild(managedRows.childNodes[0]);
+		}
+		for (var index = half; index<list.length(); index++) {
+		 var supportedClaim = list[index];
+		 var uri = supportedClaim.@Uri;
+  		 var row = document.createElement("row");
+		 var label = document.createElement("label");
+		 label.setAttribute("value", supportedClaim.ic::DisplayTag);
+		 label.setAttribute("class", "lblText");
+		 var textbox = document.createElement("textbox");
+		 textbox.setAttribute("id", "");
+		 textbox.setAttribute("value", "");
+		 textbox.setAttribute("readonly", "true");
+		 row.appendChild(label);
+		 row.appendChild(textbox);
+		 managedRows.appendChild(row);
+		}
+		
+        //indicateRequiredClaims();
 
-        indicateRequiredClaims();
-
-        var grid = document.getElementById("editgrid");
+        var grid = document.getElementById("editgrid2");
         grid.setAttribute("hidden", "false");
 
 
-        var grid1 = document.getElementById("editgrid1");
+        var grid1 = document.getElementById("editgrid3");
         grid1.setAttribute("hidden", "false");
 
+		var stringsBundle = document.getElementById("string-bundle");
+		var managedcardfromissuer = stringsBundle.getFormattedString('managedcardfromissuer', [selectedCard.carddata.managed.issuer]);
         var label = document.getElementById("notify");
-        label.setAttribute("value", "Managed Card from " + selectedCard.carddata.managed.issuer);
+        label.setAttribute("value", managedcardfromissuer );
 
 
 
@@ -673,7 +720,7 @@ function newCard(){
     }
 
     if ( type == "managedCard") {
-
+debug(JSON.stringify(callback));
         var card = new XML("<infocard/>");
         card.name = "" + cardName + "";
         card.type = type;
@@ -687,6 +734,8 @@ function newCard(){
         data.username = "" + callback.uid + "";
         data.hint = "" + callback.hint + "";
         data.image = "data:image/png;base64," + callback.cardImage + "";
+        var supportedClaims = new XML(callback.supportedClaims);
+        data.supportedClaims = supportedClaims;
 
         card.carddata.data = data;
         saveCard(card);
