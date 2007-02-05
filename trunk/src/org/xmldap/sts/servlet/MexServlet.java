@@ -120,7 +120,7 @@ public class MexServlet extends HttpServlet {
 
 
         StringBuffer mexBuff = new StringBuffer();
-        DataInputStream ins = new DataInputStream(in);
+        BufferedReader ins = new BufferedReader(new InputStreamReader(in));
         try {
 
             while (in.available() !=0) {
