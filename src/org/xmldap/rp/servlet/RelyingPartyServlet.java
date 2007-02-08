@@ -123,8 +123,12 @@ public class RelyingPartyServlet extends HttpServlet {
             out.println("<h2>Valid Signature: " + token.isSignatureValid() + "</h2>");
             out.println("<h2>Valid Conditions: " + token.isConditionsValid() + "</h2>");
             try {
-
-                out.println("<h2>Valid Certificate: " + token.isCertificateValid() + "</h2>");
+            	X509Certificate cert = token.getCertificateOrNull();
+            	if (cert != null) {
+            		out.println("<h2>Valid Certificate: " + token.isCertificateValid() + "</h2>");
+            	} else {
+            		out.println("<h2>No Certificate in Token</h2>");
+            	}
 
             } catch (InfoCardProcessingException e) {
 

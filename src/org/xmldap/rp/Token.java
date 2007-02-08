@@ -36,12 +36,14 @@ import java.util.HashMap;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateException;
 
+import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.xmldsig.EnvelopedSignature;
@@ -152,7 +154,12 @@ public class Token {
         if (! haveValidatedCertificate ) {
 
             try {
-                getCertificate().checkValidity();
+            	certificate = getCertificate();
+            	if (certificate != null) {
+            		certificate.checkValidity();
+            	} else {
+            		throw new InfoCardProcessingException("This token does not have a certificate");
+            	}
             } catch (CertificateExpiredException e) {
                 System.out.println("Certificate expired");
                 certificateValid = false;
@@ -220,30 +227,69 @@ public class Token {
 
     }
 
-    private void parseCertificate() throws InfoCardProcessingException {
-        XPathContext thisContext = new XPathContext();
-        thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
-        thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
-        Nodes nodes = getDoc().query("//dsig:X509Data/dsig:X509Certificate", thisContext);
-        if ((nodes != null) && (nodes.size() > 0)) {
-            String element = nodes.get(0).getValue();
-            StringBuffer sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
-            sb.append(element);
-            sb.append("\n-----END CERTIFICATE-----\n");
-
-            ByteArrayInputStream bis = new ByteArrayInputStream(sb.toString().getBytes());
-            CertificateFactory cf;
-            try {
-                cf = CertificateFactory.getInstance("X509");
-                certificate = (X509Certificate)cf.generateCertificate(bis);
-            } catch (CertificateException e) {
-                throw new InfoCardProcessingException("Error creating X509Certificate from Token");
-            }
-
-        } else {
-            throw new InfoCardProcessingException("No X509Certificate provided in Token");
-        }
+    public String getClientDigest() throws InfoCardProcessingException, CryptoException {
+    	X509Certificate cert = getCertificateOrNull();
+    	if (cert != null) {
+    		certificate = cert;
+    		PublicKey publicKey = certificate.getPublicKey();
+    		String sha1 = CryptoUtils.digest(publicKey.getEncoded());
+    		return sha1;
+    	} else {
+    		String modulus = getModulusOrNull();
+    		if (modulus != null) {
+    			String sha1 = CryptoUtils.digest(modulus.getBytes());
+    			return sha1;
+    		} else {
+    			throw new InfoCardProcessingException("could not find neither certificate nor modulus");
+    		}
+    	}
     }
+
+	private String getModulusOrNull() throws InfoCardProcessingException {
+	    XPathContext thisContext = new XPathContext();
+	    thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
+	    thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
+	    Nodes nodes = getDoc().query("//dsig:KeyValue/dsig:RSAKeyValue/dsig:Modulus", thisContext);
+	    if ((nodes != null) && (nodes.size() > 0)) {
+	        String element = nodes.get(0).getValue();
+	        return element;
+	    } 
+	    return null;
+	}
+
+	public X509Certificate getCertificateOrNull() throws InfoCardProcessingException {
+		X509Certificate certificate = null;
+	    XPathContext thisContext = new XPathContext();
+	    thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
+	    thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
+	    Nodes nodes = getDoc().query("//dsig:X509Data/dsig:X509Certificate", thisContext);
+	    if ((nodes != null) && (nodes.size() > 0)) {
+	        String element = nodes.get(0).getValue();
+	        StringBuffer sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
+	        sb.append(element);
+	        sb.append("\n-----END CERTIFICATE-----\n");
+	
+	        ByteArrayInputStream bis = new ByteArrayInputStream(sb.toString().getBytes());
+	        CertificateFactory cf;
+	        try {
+	            cf = CertificateFactory.getInstance("X509");
+	            certificate = (X509Certificate)cf.generateCertificate(bis);
+	            return certificate;
+	        } catch (CertificateException e) {
+	            throw new InfoCardProcessingException("Error creating X509Certificate from Token", e);
+	        }
+	
+	    } 
+	    return null;
+	}
+
+	private void parseCertificate() throws InfoCardProcessingException {
+		certificate = getCertificateOrNull();
+	    if (certificate == null) {
+	    } else {
+	        throw new InfoCardProcessingException("No X509Certificate provided in Token");
+	    }
+	}
 
 
     //TODO - improve claims
