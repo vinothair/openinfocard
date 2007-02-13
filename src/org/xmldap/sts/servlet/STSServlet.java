@@ -116,7 +116,7 @@ public class STSServlet  extends HttpServlet {
 
 
 
-    private Bag parseRequest(Element requestXML) throws ParsingException {
+    private Bag parseRequest(Element requestXML, String requestURL) throws ParsingException {
 
         Bag requestElements = new Bag();
 
@@ -133,13 +133,13 @@ public class STSServlet  extends HttpServlet {
         Element cid = (Element) cids.get(0);
         String cardIdUri = cid.getValue();
         
-        String domainname = _su.getDomainName();
-        String prefix = "https://" + domainname + "/sts/card/";
+//        String domainname = _su.getDomainName();
+//        String prefix = "https://" + domainname + "/sts/card/";
         String cardId = null;
-        if (cardIdUri.startsWith(prefix)) {
-        	cardId = cardIdUri.substring(prefix.length());
+        if (cardIdUri.startsWith(requestURL+"/card/")) {
+        	cardId = cardIdUri.substring(requestURL.length()+6);
         } else {
-        	throw new ParsingException("Expected:"+prefix+", but found:"+cardIdUri);
+        	throw new ParsingException("Expected:"+requestURL.toString()+", but found:"+cardIdUri);
         }
         if (DEBUG) System.out.println("cardId: " + cardId);
 
@@ -251,10 +251,13 @@ public class STSServlet  extends HttpServlet {
         //TODO = SOAPFaulr
         if (!isUser) return;
 
-
+        String requestURL = request.getRequestURL().toString();
+        String servletPath = request.getServletPath();
+        int i = requestURL.indexOf(servletPath);
+        String prefix = requestURL.substring(0, i);
         Bag requestElements = null;
         try {
-            requestElements = parseRequest(rst);
+            requestElements = parseRequest(rst, prefix);
         } catch (ParsingException e) {
             e.printStackTrace();
             //TODO - SOAP Fault
