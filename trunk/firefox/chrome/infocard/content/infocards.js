@@ -140,6 +140,7 @@ function processManagedCard(managedCard) {
     	 "<a:To s:mustUnderstand=\"1\">" + managedCard.carddata.managed.issuer + "</a:To>" + 
     	"</s:Header><s:Body/></s:Envelope>";
 
+debug("processManagedCard: mex request: " + mex);
 
     var req = new XMLHttpRequest();
     req.open('POST', managedCard.carddata.managed.mex, false);
@@ -148,7 +149,9 @@ function processManagedCard(managedCard) {
     req.setRequestHeader("accept-language", "en-us");
     req.setRequestHeader("User-Agent", "xmldap infocard stack");
     req.send(mex);
+debug("processManagedCard: mex request status="+req.status);
     if(req.status == 200) {
+debug("processManagedCard: mex request status 200");
 
         mexResponse = req.responseText;
 
@@ -203,6 +206,8 @@ function processManagedCard(managedCard) {
             rst = rst + managedCard.id;
 
             rst = rst + "</wsid:CardId><wsid:CardVersion>1</wsid:CardVersion></wsid:InformationCardReference><wst:Claims><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/></wst:Claims><wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType><ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>TBD_WHAT_TO_DO</PPID></ClientPseudonym><wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType><wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/></wst:RequestSecurityToken></s:Body></s:Envelope>";
+
+debug("processManagedCard: request: " + rst);
             var rstr;
             var rstReq = new XMLHttpRequest();
             rstReq.open('POST', address, false);
@@ -212,6 +217,7 @@ function processManagedCard(managedCard) {
             rstReq.setRequestHeader("User-Agent", "xmldap infocard stack");
             rstReq.send(rst);
             if(rstReq.status == 200) {
+debug("processManagedCard: request status 200");
 
                 rstr = rstReq.responseText;
 

@@ -81,7 +81,7 @@ public class MexServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        System.out.println("MEX got a request");
+        System.out.println("MEX got a request: " + request.getRequestURL());
 
 
         int contentLen = request.getContentLength();
@@ -122,6 +122,7 @@ public class MexServlet extends HttpServlet {
         StringBuffer mexBuff = new StringBuffer();
         BufferedReader ins = new BufferedReader(new InputStreamReader(in));
         try {
+            System.out.println("MEX reading file: " + mexFile);
 
             while (in.available() !=0) {
                 mexBuff.append(ins.readLine());
@@ -145,6 +146,7 @@ public class MexServlet extends HttpServlet {
         out.flush();
         out.close();
         System.out.println("MEX replied");
+        System.out.println(resp);
 
 
     }
