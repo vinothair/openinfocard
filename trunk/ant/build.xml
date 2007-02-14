@@ -123,7 +123,7 @@
         <copy todir="${build.dir}/xmldap.org/sts/">
           <fileset dir="${websrc.dir}/xmldap_sts/"/>
         </copy>
-        <property file="sts.properties"/>
+        <property file="${websrc.dir}/xmldap_sts/WEB-INF/sts.properties"/>
 
         <replace  file="${build.dir}/xmldap.org/sts/WEB-INF/web.xml">
          <replacefilter token="@keystore@" value="${keystore}"/>
