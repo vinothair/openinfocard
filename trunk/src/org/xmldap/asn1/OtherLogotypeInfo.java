@@ -53,7 +53,7 @@ public class OtherLogotypeInfo extends ASN1Encodable {
 	
 	@Override
 	public DERObject toASN1Object() {
-		DEREncodableVector v = new DEREncodableVector();
+		ASN1EncodableVector v = new ASN1EncodableVector();
 		v.add(logotypeType);
 		v.add(logotypeInfo);
 		return new DERSequence(v);

@@ -51,7 +51,7 @@ public class LogotypeAudio extends ASN1Encodable {
 
 	@Override
 	public DERObject toASN1Object() {
-		DEREncodableVector v = new DEREncodableVector();
+		ASN1EncodableVector v = new ASN1EncodableVector();
 		v.add(audioDetails);
 		v.add(audioInfo);
 		return new DERSequence(v);

@@ -32,11 +32,13 @@ import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.xmldap.util.CertsAndKeys;
 
 import java.io.ByteArrayInputStream;
 import java.security.KeyPair;
+import java.security.Provider;
 import java.security.cert.X509Certificate;
 
 public class LogotypeTest extends TestCase {
@@ -83,11 +85,16 @@ public class LogotypeTest extends TestCase {
 	}
 	
 	public void testLogotypeCert()  throws Exception {
-		KeyPair kp = CertsAndKeys.generateKeyPair();
+		Provider provider = new BouncyCastleProvider();
+		KeyPair kp = CertsAndKeys.generateKeyPair(provider);
+		KeyPair caKeyPair = CertsAndKeys.generateKeyPair(provider);
 		X509Name issuer = new X509Name(
 				"CN=w4de3esy0069028.gdc-bln01.t-systems.com, OU=SSC ENPS, O=T-Systems, L=Berlin, ST=Berln, C=DE");
 		X509Name subject = issuer;
-		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate(kp,
+		X509Certificate caCert = CertsAndKeys.generateCaCertificate("BC", kp, issuer);
+		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate(
+				"BC", 
+				caKeyPair, caCert, kp,
 				issuer, subject);
 		byte[] fromExtensionValue = cert.getExtensionValue(Logotype.id_pe_logotype.getId());
 		ASN1Encodable extVal = X509ExtensionUtil.fromExtensionValue(fromExtensionValue);
