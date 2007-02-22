@@ -111,7 +111,7 @@ public class LogotypeData extends ASN1Encodable {
 //	public LogotypeData(LogotypeImage[] image, LogotypeAudio[] audio) {
 	public LogotypeData(LogotypeDetails[] image, LogotypeAudio[] audio) {
 		if (image != null) {
-			DEREncodableVector v = new DEREncodableVector();
+			ASN1EncodableVector v = new ASN1EncodableVector();
 			for (int i=0; i<image.length; i++) {
 				v.add(image[i].toASN1Object());
 			}
@@ -120,7 +120,7 @@ public class LogotypeData extends ASN1Encodable {
 			this.image = null;
 		}
 		if (audio != null) {
-			DEREncodableVector v = new DEREncodableVector();
+			ASN1EncodableVector v = new ASN1EncodableVector();
 			for (int i=0; i<audio.length; i++) {
 				v.add(audio[i].toASN1Object());
 			}

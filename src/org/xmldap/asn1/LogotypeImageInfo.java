@@ -86,7 +86,7 @@ public class LogotypeImageInfo extends ASN1Encodable {
 
 	@Override
 	public DERObject toASN1Object() {
-		DEREncodableVector v = new DEREncodableVector();
+		ASN1EncodableVector v = new ASN1EncodableVector();
 		DERTaggedObject t = new DERTaggedObject(0, type);
 		v.add(t);
 		v.add(fileSize);
