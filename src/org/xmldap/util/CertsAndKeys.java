@@ -9,23 +9,47 @@
 
 package org.xmldap.util;
 
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1Set;
+import org.bouncycastle.asn1.DERBMPString;
+import org.bouncycastle.asn1.DERBitString;
+import org.bouncycastle.asn1.DERConstructedSet;
+import org.bouncycastle.asn1.DERIA5String;
+import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.jce.PKCS10CertificationRequest;
+import org.bouncycastle.jce.PrincipalUtil;
+import org.bouncycastle.jce.interfaces.PKCS12BagAttributeCarrier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
+import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
+import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
 import org.xmldap.asn1.*;
 import org.xmldap.exceptions.TokenIssuanceException;
 
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 import java.util.Vector;
+
+import javax.security.auth.x500.X500Principal;
 
 /**
  * 
@@ -33,13 +57,22 @@ import java.util.Vector;
  */
 public class CertsAndKeys {
 
+	public final static DERObjectIdentifier netscapeCertType = new DERObjectIdentifier(
+			"2.16.840.1.113730.1.1");
+
 	/** Creates a new instance of XmldapCertsAndKeys */
 	private CertsAndKeys() {
 	}
 
 	public static KeyPair generateKeyPair() throws NoSuchAlgorithmException,
 			NoSuchProviderException {
-		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+		Provider provider = new BouncyCastleProvider();
+		return generateKeyPair(provider);
+	}
+
+	public static KeyPair generateKeyPair(Provider provider)
+			throws NoSuchAlgorithmException, NoSuchProviderException {
+		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", provider);
 		keyGen.initialize(1024, new SecureRandom());
 		return keyGen.generateKeyPair();
 	}
@@ -50,14 +83,27 @@ public class CertsAndKeys {
 		return cert;
 	}
 
-	public static X509Certificate generateCaCertificate(KeyPair kp) throws InvalidKeyException, SecurityException, SignatureException
-	{
-		String issuerStr = "CN=firefox, OU=infocard selector, O=xmldap, L=San Francisco, ST=California, C=US";
-		X509Name issuer = new X509Name(issuerStr);
-		return generateCaCertificate(kp, issuer, issuer);
+	public static X509Certificate generateCaCertificate(
+			Provider provider, String friendlyName,
+			KeyPair kp, X509Name issuer) throws InvalidKeyException,
+			SecurityException, SignatureException, IOException, IllegalStateException,
+			NoSuchProviderException, NoSuchAlgorithmException, CertificateException {
+		return generateCaCertificate(provider, friendlyName, kp, issuer, issuer);
 	}
 
-	static public X509V3CertificateGenerator addClientExtensions(
+	public static X509Certificate generateCaCertificate(
+			Provider provider, String friendlyName,
+			KeyPair kp) throws InvalidKeyException, SecurityException,
+			SignatureException, IOException,
+			IllegalStateException,
+			NoSuchProviderException, NoSuchAlgorithmException, CertificateException {
+		String issuerStr = "CN=firefox, OU=infocard selector, O=xmldap, L=San Francisco, ST=California, C=US";
+		X509Name issuer = new X509Name(issuerStr);
+		
+		return generateCaCertificate(provider, friendlyName, kp, issuer, issuer);
+	}
+
+	static private X509V3CertificateGenerator addClientExtensions(
 			X509V3CertificateGenerator gen) throws UnsupportedEncodingException {
 		gen.addExtension(X509Extensions.BasicConstraints, true,
 				new BasicConstraints(false));
@@ -70,7 +116,7 @@ public class CertsAndKeys {
 		return gen;
 	}
 
-	static public X509V3CertificateGenerator addLogotype(
+	static private X509V3CertificateGenerator addLogotype(
 			X509V3CertificateGenerator gen) {
 		String mediaType = "image/jpg";
 		AlgorithmIdentifier algId = new AlgorithmIdentifier("1.3.14.3.2.26");
@@ -102,40 +148,121 @@ public class CertsAndKeys {
 		return gen;
 	}
 
-	static public X509V3CertificateGenerator addCaExtensions(
-			X509V3CertificateGenerator gen) {
+	static private X509V3CertificateGenerator addCertificationPracticeStatementPointer(
+			X509V3CertificateGenerator gen, String certificatePracticeStatement) {
+		//		2.16.840.1.113733.1.7.23.3 / 6
+		//		Certification Practice Statement pointer
+		DERObjectIdentifier policyQualifierCpsOidStr = new DERObjectIdentifier(
+				"1.3.6.1.5.5.7.2.1");
+		ASN1EncodableVector v = new ASN1EncodableVector();
+		v.add(policyQualifierCpsOidStr);
+		v.add(new DERIA5String(certificatePracticeStatement));
+		gen.addExtension(new DERObjectIdentifier("2.16.840.1.113733.1.7.23.3"),
+				false, new DERSequence(v));
+		return gen;
+	}
+
+	static private X509V3CertificateGenerator addOCSP(
+			X509V3CertificateGenerator gen, DERIA5String ocsp) {
+		//		id-pkix OBJECT IDENTIFIER ::=
+		//		  {iso(1) identified-organization(3) dod(6) internet(1) security(5)
+		//		   mechanisms(5) pkix(7)}
+		//		id-ad OBJECT IDENTIFIER ::= { id-pkix 48 }
+		//		id-ad-ocsp OBJECT IDENTIFIER ::= { id-ad 1 }
+		gen.addExtension(new DERObjectIdentifier("1.3.6.1.5.5.7.48.1"), false,
+				ocsp);
+		return gen;
+	}
+
+	static private X509V3CertificateGenerator addCaExtensions(
+			X509V3CertificateGenerator gen, PublicKey pubKey)
+			throws IOException {
 		gen.addExtension(X509Extensions.BasicConstraints, true,
 				new BasicConstraints(true));
 		gen.addExtension(X509Extensions.KeyUsage, true, new KeyUsage(
 				KeyUsage.digitalSignature | KeyUsage.keyEncipherment
-						| KeyUsage.dataEncipherment | KeyUsage.keyCertSign));
+						| KeyUsage.dataEncipherment | KeyUsage.keyCertSign
+						| KeyUsage.cRLSign));
 		gen.addExtension(X509Extensions.ExtendedKeyUsage, true,
-				new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
+				new ExtendedKeyUsage(KeyPurposeId.id_kp_serverAuth));
 		// gen.addExtension(X509Extensions.SubjectAlternativeName, false,
 		// new GeneralNames(new GeneralName(GeneralName.rfc822Name,
 		// "test@test.test")));
+
+		// netscape-cert-type "2.16.840.1.113730.1.1"
+		// * bit-0 SSL client			- 128
+		// * bit-1 SSL server			- 64
+		// * bit-2 S/MIME				- 32
+		// * bit-3 Object Signing		- 16
+		// * bit-4 Reserved 			- 8
+		// * bit-5 SSL CA				- 4
+		// * bit-6 S/MIME CA			- 2
+		// * bit-7 Object Signing CA	- 1
+		gen.addExtension(netscapeCertType, false, new DERBitString(
+				new byte[] { 4 }));
+
+		addSubjectKeyIdentifier(gen, pubKey);
+		addAuthorityKeyIdentifier(gen, pubKey);
 		return gen;
 	}
 
-	static public X509V3CertificateGenerator addSSLServerExtensions(
+	/**
+	 * @param gen
+	 * @param pubKey
+	 * @throws IOException
+	 */
+	private static void addAuthorityKeyIdentifier(X509V3CertificateGenerator gen, PublicKey pubKey) throws IOException {
+		{
+			SubjectPublicKeyInfo apki = new SubjectPublicKeyInfo(
+					(ASN1Sequence) new ASN1InputStream(
+							new ByteArrayInputStream(pubKey.getEncoded()))
+							.readObject());
+			AuthorityKeyIdentifier aki = new AuthorityKeyIdentifier(apki);
+
+			gen.addExtension(X509Extensions.AuthorityKeyIdentifier.getId(),
+					false, aki);
+		}
+	}
+
+	/**
+	 * @param gen
+	 * @param pubKey
+	 * @throws IOException
+	 */
+	private static void addSubjectKeyIdentifier(X509V3CertificateGenerator gen, PublicKey pubKey) throws IOException {
+		{
+			SubjectPublicKeyInfo spki = new SubjectPublicKeyInfo(
+					(ASN1Sequence) new ASN1InputStream(
+							new ByteArrayInputStream(pubKey.getEncoded()))
+							.readObject());
+			SubjectKeyIdentifier ski = new SubjectKeyIdentifier(spki);
+			gen.addExtension(X509Extensions.SubjectKeyIdentifier.getId(),
+					false, ski);
+		}
+	}
+
+	static private X509V3CertificateGenerator addSSLServerExtensions(
 			X509V3CertificateGenerator gen) {
 		gen.addExtension(X509Extensions.BasicConstraints, true,
 				new BasicConstraints(false));
-		gen.addExtension(X509Extensions.KeyUsage, true, new KeyUsage(
+		gen.addExtension(X509Extensions.KeyUsage, false, new KeyUsage(
 				KeyUsage.keyEncipherment | KeyUsage.digitalSignature));
-		Vector extendedKeyUsageV = new Vector();
+		Vector<DERObjectIdentifier> extendedKeyUsageV = new Vector<DERObjectIdentifier>();
 		extendedKeyUsageV.add(KeyPurposeId.id_kp_serverAuth);
 		extendedKeyUsageV.add(KeyPurposeId.id_kp_clientAuth);
 		// Netscape Server Gated Crypto
-		extendedKeyUsageV.add(new DERObjectIdentifier("2.16.840.1.113730.4.1"));
+		// extendedKeyUsageV.add(new DERObjectIdentifier("2.16.840.1.113730.4.1"));
 		// Microsoft Server Gated Crypto
-		extendedKeyUsageV
-				.add(new DERObjectIdentifier("1.3.6.1.4.1.311.10.3.3"));
-		gen.addExtension(X509Extensions.ExtendedKeyUsage, true,
+//		extendedKeyUsageV
+//				.add(new DERObjectIdentifier("1.3.6.1.4.1.311.10.3.3"));
+		gen.addExtension(X509Extensions.ExtendedKeyUsage, false,
 				new ExtendedKeyUsage(extendedKeyUsageV));
 		// gen.addExtension(X509Extensions.SubjectAlternativeName, false,
 		// new GeneralNames(new GeneralName(GeneralName.rfc822Name,
 		// "test@test.test")));
+//		gen.addExtension(netscapeCertType, false, new DERBitString(
+//				new byte[] { 64 }));
+
 		return gen;
 	}
 
@@ -152,27 +279,31 @@ public class CertsAndKeys {
 	 * @throws SignatureException 
 	 * @throws SecurityException 
 	 * @throws InvalidKeyException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws NoSuchProviderException 
+	 * @throws IllegalStateException 
+	 * @throws CertificateEncodingException 
 	 */
-	public static X509Certificate generateClientCertificate(KeyPair kp,
-			X509Name issuer, X509Name subject, String gender, Date dateOfBirth,
-			String streetAddress, String telephoneNumber)
-			throws TokenIssuanceException, UnsupportedEncodingException, InvalidKeyException, SecurityException, SignatureException {
-		if (Security.getProvider("BC") == null) {
-			Security.addProvider(new BouncyCastleProvider());
-		}
+	public static X509Certificate generateClientCertificate(String provider,
+			KeyPair kp, X509Name issuer, X509Name subject, String gender,
+			Date dateOfBirth, String streetAddress, String telephoneNumber)
+			throws TokenIssuanceException, UnsupportedEncodingException,
+			InvalidKeyException, SecurityException, SignatureException,
+			CertificateEncodingException, IllegalStateException,
+			NoSuchProviderException, NoSuchAlgorithmException {
 
 		X509Certificate cert = null;
 
 		X509V3CertificateGenerator gen = new X509V3CertificateGenerator();
 		gen.setIssuerDN(issuer);
 		Calendar rightNow = Calendar.getInstance();
-		rightNow.add(Calendar.MINUTE, -2); // 2 minutes
+		rightNow.add(Calendar.HOUR, -2); 
 		gen.setNotBefore(rightNow.getTime());
 		rightNow.add(Calendar.YEAR, 5);
 		gen.setNotAfter(rightNow.getTime());
 		gen.setSubjectDN(subject);
 		gen.setPublicKey(kp.getPublic());
-		gen.setSignatureAlgorithm("MD5WithRSAEncryption");
+		gen.setSignatureAlgorithm("SHA1WithRSAEncryption");
 		gen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
 		gen = addClientExtensions(gen);
 		SubjectDirectoryAttributes sda = new SubjectDirectoryAttributes(gender,
@@ -182,7 +313,7 @@ public class CertsAndKeys {
 					sda);
 		}
 
-		cert = gen.generateX509Certificate(kp.getPrivate());
+		cert = gen.generate(kp.getPrivate(), provider);
 		return cert;
 	}
 
@@ -197,79 +328,156 @@ public class CertsAndKeys {
 	 * @throws SignatureException 
 	 * @throws SecurityException 
 	 * @throws InvalidKeyException 
+	 * @throws IOException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws NoSuchProviderException 
+	 * @throws IllegalStateException 
+	 * @throws CertificateException 
 	 * @throws TokenIssuanceException
 	 */
-	public static X509Certificate generateCaCertificate(KeyPair kp,
-			X509Name issuer, X509Name subject) throws InvalidKeyException, SecurityException, SignatureException {
-		if (Security.getProvider("BC") == null) {
-			Security.addProvider(new BouncyCastleProvider());
-		}
+	public static X509Certificate generateCaCertificate(
+			Provider provider, String friendlyName,
+			KeyPair kp, X509Name issuer, X509Name subject)
+			throws InvalidKeyException, SecurityException, SignatureException,
+			IOException,
+			IllegalStateException,
+			NoSuchProviderException, NoSuchAlgorithmException, CertificateException {
 
 		X509Certificate cert = null;
 
 		X509V3CertificateGenerator gen = new X509V3CertificateGenerator();
 		gen.setIssuerDN(issuer);
 		Calendar rightNow = Calendar.getInstance();
-		rightNow.add(Calendar.MINUTE, -2); // 2 minutes
+		rightNow.add(Calendar.HOUR, -2);
 		gen.setNotBefore(rightNow.getTime());
 		rightNow.add(Calendar.YEAR, 5);
 		gen.setNotAfter(rightNow.getTime());
 		gen.setSubjectDN(subject);
 		gen.setPublicKey(kp.getPublic());
-		gen.setSignatureAlgorithm("MD5WithRSAEncryption");
+		gen.setSignatureAlgorithm("SHA1WithRSAEncryption");
 		gen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
-		gen = addCaExtensions(gen);
+		gen = addCaExtensions(gen, kp.getPublic());
 		gen = addLogotype(gen);
-		cert = gen.generateX509Certificate(kp.getPrivate());
+		// gen.addExtension(X509Extensions.SubjectKeyIdentifier, false,
+		// new SubjectKeyIdentifierStructure(kp.getPublic()));
+		cert = gen.generate(kp.getPrivate(), provider.getName());
+		
+		cert.checkValidity();
+		cert.verify(kp.getPublic(), provider.getName());
+		
+        PKCS12BagAttributeCarrier   bagAttr = (PKCS12BagAttributeCarrier)cert;
+        bagAttr.setBagAttribute(
+            PKCSObjectIdentifiers.pkcs_9_at_friendlyName,
+            new DERBMPString(friendlyName));
+
 		return cert;
 	}
 
+	public static PKCS10CertificationRequest generateCertificateRequest(
+			X509Certificate cert,
+			PrivateKey signingKey) throws InvalidKeyException,
+			NoSuchAlgorithmException, NoSuchProviderException,
+			SignatureException, IOException {
+		ASN1EncodableVector attributes = new ASN1EncodableVector();
+		
+		Set<String> nonCriticalExtensionOIDs = cert.getNonCriticalExtensionOIDs();
+		for (String nceoid : nonCriticalExtensionOIDs) {
+			byte[] derBytes = cert.getExtensionValue(nceoid);
+			ByteArrayInputStream bis = new ByteArrayInputStream(derBytes);
+			ASN1InputStream dis = new ASN1InputStream(bis);
+			DERObject derObject = dis.readObject();
+			DERSet value = new DERSet(derObject);
+			Attribute attr = new Attribute(new DERObjectIdentifier(nceoid), value);
+			attributes.add(attr);
+		}
+		PKCS10CertificationRequest certificationRequest = new PKCS10CertificationRequest(
+				"SHA1WithRSAEncryption", cert.getSubjectX500Principal(), cert.getPublicKey(), new DERSet(attributes), signingKey);
+		return certificationRequest;
+	}
+	
 	/**
-	 * generates an X509 certificate
-	 * 
+	 * @param provider
+	 * @param friendlyName
+	 * @param caKeyPair
+	 * @param caCert
 	 * @param kp
 	 * @param issuer
 	 * @param subject
 	 * @return
-	 * @throws TokenIssuanceException
-	 * @throws SignatureException 
-	 * @throws SecurityException 
-	 * @throws InvalidKeyException 
+	 * @throws InvalidKeyException
+	 * @throws SecurityException
+	 * @throws SignatureException
+	 * @throws IllegalStateException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchProviderException
+	 * @throws CertificateException
+	 * @throws IOException 
 	 */
-	public static X509Certificate generateSSLServerCertificate(KeyPair kp,
-			X509Name issuer, X509Name subject) throws InvalidKeyException, SecurityException, SignatureException {
-		if (Security.getProvider("BC") == null) {
-			Security.addProvider(new BouncyCastleProvider());
-		}
+	public static X509Certificate generateSSLServerCertificate(
+			String provider, String friendlyName,
+			KeyPair caKeyPair, X509Certificate caCert, KeyPair kp,
+			X509Name issuer, X509Name subject) throws InvalidKeyException,
+			SecurityException, SignatureException, IllegalStateException,
+			NoSuchAlgorithmException, NoSuchProviderException, CertificateException, IOException {
 
 		X509Certificate cert = null;
 
 		X509V3CertificateGenerator gen = new X509V3CertificateGenerator();
-		gen.setIssuerDN(issuer);
+		gen.setIssuerDN(PrincipalUtil.getSubjectX509Principal(caCert));
+//		gen.setIssuerDN(issuer);
+		
 		Calendar rightNow = Calendar.getInstance();
-		rightNow.add(Calendar.MINUTE, -2); // 2 minutes
+		rightNow.add(Calendar.HOUR, -2); // 2 minutes
 		gen.setNotBefore(rightNow.getTime());
-		rightNow.add(Calendar.YEAR, 5);
+
+		// set notAfter to one minute before the caCert expires
+		// some browsers are said to complain if the cert lives longer than the caCert
+		rightNow.setTime(caCert.getNotAfter());
+		rightNow.add(Calendar.MINUTE, -1);
 		gen.setNotAfter(rightNow.getTime());
+		
 		gen.setSubjectDN(subject);
 		gen.setPublicKey(kp.getPublic());
-		gen.setSignatureAlgorithm("MD5WithRSAEncryption");
+		gen.setSignatureAlgorithm("SHA1WithRSAEncryption");
 		gen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
 		gen = addSSLServerExtensions(gen);
 		gen = addLogotype(gen);
-		cert = gen.generateX509Certificate(kp.getPrivate());
+		gen = addCertificationPracticeStatementPointer(gen,
+				"http://xmldap.org/cps");
+		gen = addOCSP(gen, new DERIA5String("http://ocsp.xmldap.org"));
+		if (caKeyPair != null) {
+			addAuthorityKeyIdentifier(gen, caKeyPair.getPublic());
+		}
+		addSubjectKeyIdentifier(gen, kp.getPublic());
+
+		if (caKeyPair != null) {
+			cert = gen.generate(caKeyPair.getPrivate(), provider);
+		} else {
+			cert = gen.generate(kp.getPrivate(), provider);
+		}
+		
+		cert.checkValidity();
+		if (caKeyPair != null) {
+			cert.verify(caKeyPair.getPublic(), provider);
+		} else {
+			cert.verify(kp.getPublic(), provider);
+		}
+
+		PKCS12BagAttributeCarrier   bagAttr = (PKCS12BagAttributeCarrier)cert;
+        bagAttr.setBagAttribute(
+            PKCSObjectIdentifiers.pkcs_9_at_friendlyName,
+            new DERBMPString(friendlyName));
 		return cert;
 	}
 
-	public static KeyPair bytesToKeyPair(byte[] bytes)
-			throws IOException, ClassNotFoundException {
+	public static KeyPair bytesToKeyPair(byte[] bytes) throws IOException,
+			ClassNotFoundException {
 		ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-			ObjectInputStream ois = new ObjectInputStream(bis);
-			return (KeyPair) ois.readObject();
+		ObjectInputStream ois = new ObjectInputStream(bis);
+		return (KeyPair) ois.readObject();
 	}
 
-	public static byte[] keyPairToBytes(KeyPair kp)
-			throws IOException {
+	public static byte[] keyPairToBytes(KeyPair kp) throws IOException {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(bos);
 		oos.writeObject(kp);
@@ -411,4 +619,41 @@ public class CertsAndKeys {
 	//		return cert;
 	//	}
 
+	static public void printCert(X509Certificate cert) throws CertificateParsingException
+	{
+		HashMap<String, String> oidNames = new HashMap<String,String>();
+		oidNames.put("1.3.6.1.5.5.7.1.12", "Logotype");
+		oidNames.put("1.3.6.1.5.5.7.3.1", "id_kp_serverAuth");
+		oidNames.put("1.3.6.1.5.5.7.3.2", "id_kp_clientAuth");
+		oidNames.put("1.3.6.1.5.5.7.48.1", "OCSP");
+		oidNames.put("2.5.29.14", "Subject Key Identifier");
+		oidNames.put("2.5.29.15", "id-ce-keyUsage");
+		oidNames.put("2.5.29.35", "Authority Key Identifier");
+		oidNames.put("2.5.29.37", "Extended key usage");
+		oidNames.put("2.16.840.1.113733.1.7.23.3", "Class 3 CP");
+//		oidNames.put("", "");
+
+		String certType = cert.getType();
+		System.out.println("certType: " + certType);
+		int version = cert.getVersion();
+		System.out.println("version: " + version);
+		System.out.println("BasicConstraints: " + cert.getBasicConstraints());
+		List<String> extendedKeyUsageSet = cert.getExtendedKeyUsage();
+		for (String eku : extendedKeyUsageSet) {
+			System.out.println("extendedKeyUsage: " + oidNames.get(eku));
+		}
+		boolean[] keyUsage = cert.getKeyUsage();
+		System.out.print("keyUsage: ");
+		for (boolean bool : keyUsage) {
+			System.out.println("keyUsage: " + bool);
+		}
+		X500Principal principal = cert.getIssuerX500Principal();
+		System.out.println("issuer: " + principal.getName());
+		X500Principal subjectPrincipal = cert.getSubjectX500Principal();
+		System.out.println("subject: " + subjectPrincipal.getName());
+		Set<String> nonCriticalExtensionOIDs = cert.getNonCriticalExtensionOIDs();
+		for (String nceo : nonCriticalExtensionOIDs) {
+			System.out.println("nonCriticalExtensionOIDs: " + oidNames.get(nceo));
+		}
+	}
 }

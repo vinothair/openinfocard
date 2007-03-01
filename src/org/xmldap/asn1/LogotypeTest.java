@@ -91,9 +91,9 @@ public class LogotypeTest extends TestCase {
 		X509Name issuer = new X509Name(
 				"CN=w4de3esy0069028.gdc-bln01.t-systems.com, OU=SSC ENPS, O=T-Systems, L=Berlin, ST=Berln, C=DE");
 		X509Name subject = issuer;
-		X509Certificate caCert = CertsAndKeys.generateCaCertificate("BC", kp, issuer);
+		X509Certificate caCert = CertsAndKeys.generateCaCertificate(provider, "caCert", kp, issuer);
 		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate(
-				"BC", 
+				"BC", "SSL server cert",
 				caKeyPair, caCert, kp,
 				issuer, subject);
 		byte[] fromExtensionValue = cert.getExtensionValue(Logotype.id_pe_logotype.getId());
