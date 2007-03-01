@@ -31,6 +31,7 @@ package org.xmldap.firefox;
 import nu.xom.*;
 
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
@@ -221,7 +222,8 @@ public class TokenIssuer {
 			KeyPair kp = null;
 			try {
 				kp = CertsAndKeys.generateKeyPair();
-				signingCert = CertsAndKeys.generateCaCertificate(kp);
+				Provider provider = new BouncyCastleProvider();
+				signingCert = CertsAndKeys.generateCaCertificate(provider, nickname, kp);
 				signingKey = kp.getPrivate();
 				storeCertKey(keystorePath);
 			} catch (NoSuchAlgorithmException e1) {
@@ -233,6 +235,16 @@ public class TokenIssuer {
 			} catch (SecurityException e1) {
 				throw new TokenIssuanceException(e1);
 			} catch (SignatureException e1) {
+				throw new TokenIssuanceException(e1);
+			} catch (CertificateParsingException e1) {
+				throw new TokenIssuanceException(e1);
+			} catch (IOException e1) {
+				throw new TokenIssuanceException(e1);
+			} catch (CertificateEncodingException e1) {
+				throw new TokenIssuanceException(e1);
+			} catch (IllegalStateException e1) {
+				throw new TokenIssuanceException(e1);
+			} catch (CertificateException e1) {
 				throw new TokenIssuanceException(e1);
 			}
 		}
@@ -529,42 +541,6 @@ public class TokenIssuer {
 		} catch (UnsupportedEncodingException e) {
 			throw new TokenIssuanceException(e);
 		}
-	}
-
-	public String getAllCards(String dirName, String password)
-			throws TokenIssuanceException {
-		Crds crdStore = Crds.getInstance();
-		String cardXml = crdStore.getAllCards(dirName, password);
-		return cardXml;
-//		System.out.println(cardXml);
-//		try {
-//			JSONObject json = XML.toJSONObject(cardXml);
-//			return json.toString();
-//		} catch (JSONException e) {
-//			throw new TokenIssuanceException(e);
-//		}
-	}
-
-	public String getCard(String dirName, String password, String cardId)
-			throws TokenIssuanceException {
-		Crds crdStore = Crds.getInstance();
-		String cardXml = crdStore.getCard(dirName, password, cardId);
-		JSONObject json;
-		try {
-			json = XML.toJSONObject(cardXml);
-		} catch (JSONException e) {
-			throw new TokenIssuanceException(e);
-		}
-		return json.toString();
-	}
-
-	public String newCard(String dirName, String password, String card)
-			throws TokenIssuanceException {
-
-		Document infocard = getInfocard(card);
-
-		Crds crdStore = Crds.getInstance();
-		return crdStore.newCard(dirName, password, infocard);
 	}
 
 	public String getToken(String serializedPolicy)
