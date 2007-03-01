@@ -34,14 +34,12 @@ import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.XML;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.infocard.SelfIssuedToken;
 import org.xmldap.util.Base64;
 import org.xmldap.util.CertsAndKeys;
-import org.xmldap.util.Crds;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.xmlenc.EncryptedData;
 
@@ -223,6 +221,9 @@ public class TokenIssuer {
 			try {
 				kp = CertsAndKeys.generateKeyPair();
 				Provider provider = new BouncyCastleProvider();
+				if (null == Security.getProvider(provider.getName())) {
+					Security.addProvider(provider);
+				}
 				signingCert = CertsAndKeys.generateCaCertificate(provider, nickname, kp);
 				signingKey = kp.getPrivate();
 				storeCertKey(keystorePath);

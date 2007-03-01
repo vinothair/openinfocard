@@ -93,7 +93,7 @@ public class LogotypeTest extends TestCase {
 		X509Name subject = issuer;
 		X509Certificate caCert = CertsAndKeys.generateCaCertificate(provider, "caCert", kp, issuer);
 		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate(
-				"BC", "SSL server cert",
+				provider, "SSL server cert",
 				caKeyPair, caCert, kp,
 				issuer, subject);
 		byte[] fromExtensionValue = cert.getExtensionValue(Logotype.id_pe_logotype.getId());

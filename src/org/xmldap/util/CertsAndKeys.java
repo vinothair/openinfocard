@@ -414,7 +414,7 @@ public class CertsAndKeys {
 	 * @throws IOException 
 	 */
 	public static X509Certificate generateSSLServerCertificate(
-			String provider, String friendlyName,
+			Provider provider, String friendlyName,
 			KeyPair caKeyPair, X509Certificate caCert, KeyPair kp,
 			X509Name issuer, X509Name subject) throws InvalidKeyException,
 			SecurityException, SignatureException, IllegalStateException,
@@ -426,15 +426,23 @@ public class CertsAndKeys {
 		gen.setIssuerDN(PrincipalUtil.getSubjectX509Principal(caCert));
 //		gen.setIssuerDN(issuer);
 		
-		Calendar rightNow = Calendar.getInstance();
-		rightNow.add(Calendar.HOUR, -2); // 2 minutes
-		gen.setNotBefore(rightNow.getTime());
+		Calendar calender = Calendar.getInstance();
+		calender.add(Calendar.HOUR, -2);
+		Date notBefore = calender.getTime();
+		gen.setNotBefore(notBefore);
 
 		// set notAfter to one minute before the caCert expires
 		// some browsers are said to complain if the cert lives longer than the caCert
-		rightNow.setTime(caCert.getNotAfter());
-		rightNow.add(Calendar.MINUTE, -1);
-		gen.setNotAfter(rightNow.getTime());
+		// EV certificates must not live longer than 27 month
+		calender.add(Calendar.MONTH, 27);
+		Date max = calender.getTime();
+		Date notAfter = caCert.getNotAfter();
+		if (notAfter.after(max)) {
+			notAfter = max;
+		}
+		calender.setTime(notAfter);
+		calender.add(Calendar.MINUTE, -1);
+		gen.setNotAfter(calender.getTime());
 		
 		gen.setSubjectDN(subject);
 		gen.setPublicKey(kp.getPublic());
@@ -451,16 +459,16 @@ public class CertsAndKeys {
 		addSubjectKeyIdentifier(gen, kp.getPublic());
 
 		if (caKeyPair != null) {
-			cert = gen.generate(caKeyPair.getPrivate(), provider);
+			cert = gen.generate(caKeyPair.getPrivate(), provider.getName());
 		} else {
-			cert = gen.generate(kp.getPrivate(), provider);
+			cert = gen.generate(kp.getPrivate(), provider.getName());
 		}
 		
 		cert.checkValidity();
 		if (caKeyPair != null) {
-			cert.verify(caKeyPair.getPublic(), provider);
+			cert.verify(caKeyPair.getPublic(), provider.getName());
 		} else {
-			cert.verify(kp.getPublic(), provider);
+			cert.verify(kp.getPublic(), provider.getName());
 		}
 
 		PKCS12BagAttributeCarrier   bagAttr = (PKCS12BagAttributeCarrier)cert;
