@@ -27,7 +27,13 @@
  */
 package org.xmldap.tools;
 
+import org.bouncycastle.asn1.DERBMPString;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.jce.PKCS10CertificationRequest;
+import org.bouncycastle.jce.interfaces.PKCS12BagAttributeCarrier;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.util.CertsAndKeys;
 
@@ -56,39 +62,168 @@ public class GenerateSSLServerCertificate {
 	 * @throws InvalidKeyException 
 	 */
 	public static void main(String[] args) throws NoSuchAlgorithmException,
-			NoSuchProviderException, KeyStoreException,
-			CertificateException, FileNotFoundException, IOException, InvalidKeyException, SecurityException, SignatureException {
-		KeyPair kp = CertsAndKeys.generateKeyPair();
-		X509Name issuer = new X509Name(
-				"CN=w4de3esy0069028.gdc-bln01.t-systems.com, OU=SSC ENPS, O=T-Systems, L=Berlin, ST=Berln, C=DE");
-		X509Name subject = issuer;
-		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate(kp,
-				issuer, subject);
+			NoSuchProviderException, KeyStoreException, CertificateException,
+			FileNotFoundException, IOException, InvalidKeyException,
+			SecurityException, SignatureException {
 
-		String keystorePath = "";
-        String tmpdir = 
-            System.getProperty("java.io.tmpdir");
-        if (tmpdir != null) {
-        	keystorePath = tmpdir + "keystore.jks";
-        } else {
-        	File[] roots = File.listRoots();
-        	keystorePath = roots[0].getPath() + "keystore.jks";
-        }
 		String storePassword = "changeit";
-		String cardCertNickname = "tomcat";
+		String sslServerCertNickname = "tomcat";
 		String keyPassword = "changeit";
+		String caCertNickname = "caCert";
+		
+		Provider provider = new BouncyCastleProvider();
+		if (Security.getProvider("BC") == null) {
+			Security.addProvider(provider);
+		}
+
+		String issuerStr = "CN=xmldap Class 3 Extended Validation SSL CA, O=xmldap, L=San Francisco, ST=California, C=US";
+		X509Name issuer = new X509Name(issuerStr);
+
+		KeyPair caKeyPair = CertsAndKeys.generateKeyPair(provider);
+		{
+			PKCS12BagAttributeCarrier bagAttr = (PKCS12BagAttributeCarrier) caKeyPair
+					.getPrivate();
+			bagAttr.setBagAttribute(
+					PKCSObjectIdentifiers.pkcs_9_at_friendlyName,
+					new DERBMPString(caCertNickname));
+			bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_localKeyId,
+					new SubjectKeyIdentifierStructure(caKeyPair.getPublic()));
+		}
+		X509Certificate caCert = CertsAndKeys.generateCaCertificate(provider,
+				"xmldap Class 3 Extended Validation SSL CA", caKeyPair, issuer);
+
+		KeyPair kp = CertsAndKeys.generateKeyPair(provider);
+		{
+			PKCS12BagAttributeCarrier bagAttr = (PKCS12BagAttributeCarrier) kp
+					.getPrivate();
+			bagAttr.setBagAttribute(
+					PKCSObjectIdentifiers.pkcs_9_at_friendlyName,
+					new DERBMPString(sslServerCertNickname));
+			bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_localKeyId,
+					new SubjectKeyIdentifierStructure(kp.getPublic()));
+		}
+
+		String domain = "w4de3esy0069028.gdc-bln01.t-systems.com";
+
+		String jurisdictionOfIncorporationCountryNameOidStr = "1.3.6.1.4.1.311.60.2.1.3"; // DE
+		String jurisdictionOfIncorporationStateOrProvinceNameOidStr = "1.3.6.1.4.1.311.60.2.1.2"; // Hessen
+		String jurisdictionOfIncorporationLocalityNameOidStr = "1.3.6.1.4.1.311.60.2.1.1"; // Frankfurt
+		String registrationNumberOidStr = "2.5.4.5"; // required
+		String postalCodeOidStr = "2.5.4.17";
+		String streetOidStr = "2.5.4.9";
+
+		X509Name subject = new X509Name(postalCodeOidStr + "=10589" + ","
+				+ streetOidStr + "=Goslarer Ufer 35" + ","
+				+ registrationNumberOidStr
+				+ "=Handelsregister Amtsgericht Frankfurt am Main HRB 55933"
+				+ "," + jurisdictionOfIncorporationCountryNameOidStr + "=DE"
+				+ "," + jurisdictionOfIncorporationStateOrProvinceNameOidStr
+				+ "=Hessen" + ","
+				+ jurisdictionOfIncorporationLocalityNameOidStr
+				+ "=Frankfurt am Main" + ",CN=" + domain + "" + ",OU=PD"
+				+ ",O=T-Systems" + ",L=Berlin" + ",ST=Berln" + ",C=DE");
+		//		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate(
+		//				null, null, 
+		//				kp,
+		//				issuer, issuer);
+		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate("BC",
+				sslServerCertNickname,
+				caKeyPair, caCert, kp, issuer, subject);
+		try {
+			cert.verify(caKeyPair.getPublic(), "BC");
+			System.out.println("verified cert");
+		} catch (Exception e) {
+			System.out.println("could not verify cert");
+		}
+
+//		PKCS10CertificationRequest certRequest = CertsAndKeys.generateCertificateRequest(cert, kp.getPrivate());
+		
+//		CertsAndKeys.printCert(cert);
+//		System.out.println(cert.toString());
+		
+		String keystorePath = "";
+		String caCertPath = "";
+		String serverCertPath = "";
+		String caCertKeyPath = "";
+		String serverCertKeyPath = "";
+		String certRequestPath = "";
+		
+		String tmpdir = System.getProperty("java.io.tmpdir");
+		if (tmpdir != null) {
+			keystorePath = tmpdir + "keystore.jks";
+			caCertPath = tmpdir + "caCert.der";
+			caCertKeyPath = tmpdir + "caCert-key.der";
+			serverCertPath = tmpdir + domain + ".der";
+			serverCertKeyPath = tmpdir + domain + "-key.der";
+			certRequestPath = tmpdir + domain + ".csr";
+		} else {
+			File[] roots = File.listRoots();
+			keystorePath = roots[0].getPath() + "keystore.jks";
+			caCertPath = roots[0].getPath() + "caCert.der";
+			caCertKeyPath = roots[0].getPath() + "caCert-key.der";
+			serverCertPath = roots[0].getPath() + domain + ".der";
+			serverCertKeyPath = roots[0].getPath() + domain + "-key.der";
+			certRequestPath = roots[0].getPath() + domain + ".csr";
+		}
+
 		KeyStore ks = KeyStore.getInstance("JKS");
 		ks.load(null, storePassword.toCharArray());
-		Certificate[] chain = { cert };
-		ks.setKeyEntry(cardCertNickname, kp.getPrivate(), keyPassword
+
+//		Certificate[] caChain = { caCert };
+//		ks.setKeyEntry(caCertNickname, caKeyPair.getPrivate(), keyPassword
+//				.toCharArray(), caChain);
+		ks.setCertificateEntry(caCertNickname, caCert);
+		
+		Certificate[] chain = { cert, caCert };
+		ks.setKeyEntry(sslServerCertNickname, kp.getPrivate(), keyPassword
 				.toCharArray(), chain);
 		File file = new File(keystorePath);
 		file.createNewFile();
 		FileOutputStream fos = new java.io.FileOutputStream(file);
 		ks.store(fos, storePassword.toCharArray());
 		fos.close();
-		
+
 		System.out.println("saved keystore to: " + keystorePath);
+
+//		file = new File(certRequestPath);
+//		file.createNewFile();
+//		fos = new java.io.FileOutputStream(file);
+//		fos.write(certRequest.getEncoded());
+//		fos.close();
+//		System.out.println("saved certificate request to: " + certRequestPath);
+
+		file = new File(caCertPath);
+		file.createNewFile();
+		fos = new java.io.FileOutputStream(file);
+		fos.write(caCert.getEncoded());
+		fos.close();
+		System.out.println("saved caCert to: " + caCertPath);
+
+		file = new File(caCertKeyPath);
+		file.createNewFile();
+		fos = new java.io.FileOutputStream(file);
+		fos.write(caKeyPair.getPrivate().getEncoded());
+		fos.close();
+		System.out.println("saved caCert private key to: " + caCertKeyPath);
+
+		file = new File(serverCertKeyPath);
+		file.createNewFile();
+		fos = new java.io.FileOutputStream(file);
+		fos.write(kp.getPrivate().getEncoded());
+		fos.close();
+		System.out.println("saved server private key to: " + serverCertKeyPath);
+
+		file = new File(serverCertPath);
+		file.createNewFile();
+		fos = new java.io.FileOutputStream(file);
+		fos.write(cert.getEncoded());
+		fos.close();
+		System.out.println("saved server certificate to: " + serverCertPath);
+
+//		String dump = ASN1Dump.dumpAsString(cert);
+//		System.out.println("ASN1Dump:");
+//		System.out.println(dump);
+
 	}
 
 }
