@@ -108,25 +108,29 @@ public class GenerateSSLServerCertificate {
 		String jurisdictionOfIncorporationCountryNameOidStr = "1.3.6.1.4.1.311.60.2.1.3"; // DE
 		String jurisdictionOfIncorporationStateOrProvinceNameOidStr = "1.3.6.1.4.1.311.60.2.1.2"; // Hessen
 		String jurisdictionOfIncorporationLocalityNameOidStr = "1.3.6.1.4.1.311.60.2.1.1"; // Frankfurt
-		String registrationNumberOidStr = "2.5.4.5"; // required
-		String postalCodeOidStr = "2.5.4.17";
-		String streetOidStr = "2.5.4.9";
 
-		X509Name subject = new X509Name(postalCodeOidStr + "=10589" + ","
-				+ streetOidStr + "=Goslarer Ufer 35" + ","
-				+ registrationNumberOidStr
-				+ "=Handelsregister Amtsgericht Frankfurt am Main HRB 55933"
+//        Subject: serialNumber=2871352/1.3.6.1.4.1.311.60.2.1.3=US/1.3.6.1.4.1.31
+//        1.60.2.1.2=Delaware, C=US/postalCode=95125, ST=California, L=San Jose/streetAddr
+//        ess=2145 Hamilton Ave, O=eBay Inc., OU=Site_Operations, CN=signin.ebay.com
+		X509Name subject = new X509Name(
+				  "CN=" + domain
+				+ ",OU=PD"
+				+ ",O=T-Systems" 
+				+ ",L=Berlin" 
+				+ ",street=Goslarer Ufer 35" 
+				+ ",ST=Berlin" 
+				+ ",postalCode=10589" 
+				+ ",C=DE"
+				+ "," + jurisdictionOfIncorporationStateOrProvinceNameOidStr + "=Hessen" 
 				+ "," + jurisdictionOfIncorporationCountryNameOidStr + "=DE"
-				+ "," + jurisdictionOfIncorporationStateOrProvinceNameOidStr
-				+ "=Hessen" + ","
-				+ jurisdictionOfIncorporationLocalityNameOidStr
-				+ "=Frankfurt am Main" + ",CN=" + domain + "" + ",OU=PD"
-				+ ",O=T-Systems" + ",L=Berlin" + ",ST=Berln" + ",C=DE");
+				+ ",SN=Handelsregister Amtsgericht Frankfurt am Main HRB 55933"
+				+ "," + jurisdictionOfIncorporationLocalityNameOidStr + "=Frankfurt am Main" 
+				);
 		//		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate(
 		//				null, null, 
 		//				kp,
 		//				issuer, issuer);
-		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate("BC",
+		X509Certificate cert = CertsAndKeys.generateSSLServerCertificate(provider,
 				sslServerCertNickname,
 				caKeyPair, caCert, kp, issuer, subject);
 		try {
