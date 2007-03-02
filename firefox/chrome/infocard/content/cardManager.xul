@@ -47,6 +47,7 @@
     <script src="chrome://infocard/content/json.js"/>
     <script src="chrome://infocard/content/openid.js"/>
     <script src="chrome://infocard/content/infocards.js"/>
+    <script src="chrome://infocard/content/cardstore.js"/>
     <script src="chrome://infocard/content/tokenissuer.js"/>
 
     <script>
