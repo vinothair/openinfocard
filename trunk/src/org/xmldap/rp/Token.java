@@ -48,6 +48,7 @@ import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.xmldsig.EnvelopedSignature;
 import org.xmldap.ws.WSConstants;
+import org.xmldap.saml.Conditions;
 import org.xmldap.util.XSDDateTime;
 
 
@@ -60,8 +61,7 @@ public class Token {
 
     private boolean haveValidatedConditions = false;
     private boolean conditionsValid = false;
-    private Calendar startValidityPeriod = null;
-    private Calendar endValidityPeriod = null;
+    private Conditions conditions = null;
 
     private boolean haveValidatedCertificate = false;
     private boolean certificateValid = true;
@@ -98,9 +98,8 @@ public class Token {
 
         if (doc == null ) {
 
-            Builder parser = new Builder();
             try {
-                doc = parser.build(decryptedToken, "");
+                doc = org.xmldap.xml.XmlUtils.parse(decryptedToken);
             } catch (ParsingException e) {
                 throw new InfoCardProcessingException("Unable to parse decrypted token into a XOM document", e);
             } catch (IOException e) {
@@ -128,12 +127,12 @@ public class Token {
 
     public Calendar getStartValidityPeriod() throws InfoCardProcessingException {
         if ( ! haveValidatedConditions ) validateConditions();
-        return startValidityPeriod;
+        return conditions.getNotBefore();
     }
 
     public Calendar getEndValidityPeriod() throws InfoCardProcessingException {
         if ( ! haveValidatedConditions ) validateConditions();
-        return endValidityPeriod;
+        return conditions.getNotOnOrAfter();
     }
 
     public X509Certificate getCertificate() throws InfoCardProcessingException {
@@ -203,8 +202,7 @@ public class Token {
     }
 
 
-    private void validateConditions() throws InfoCardProcessingException {
-
+    private void parseConditions() throws InfoCardProcessingException {
         //Get the conditions
         XPathContext thisContext = new XPathContext();
         thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
@@ -214,13 +212,20 @@ public class Token {
         //Get the values
         String notBeforeVal = element.getAttribute("NotBefore").getValue();
         String notOnOrAfterVal = element.getAttribute("NotOnOrAfter").getValue();
+
+        conditions = new Conditions(
+        		XSDDateTime.parse(notBeforeVal), XSDDateTime.parse(notOnOrAfterVal));
+    }
+
+
+    private void validateConditions() throws InfoCardProcessingException {
+
         Calendar now = XSDDateTime.parse(new XSDDateTime().getDateTime());
 
-        startValidityPeriod = XSDDateTime.parse(notBeforeVal);
-        endValidityPeriod = XSDDateTime.parse(notOnOrAfterVal);
-
+        parseConditions();
+        
         //inbetween - we could handle on, but since this is milli percision, it seems like a useless edge case.
-        if ((startValidityPeriod.before(now)) && (endValidityPeriod.after(now))) conditionsValid = true;
+        conditionsValid = conditions.validate(now);
 
         //tell the class not to do this work again
         haveValidatedConditions = true;

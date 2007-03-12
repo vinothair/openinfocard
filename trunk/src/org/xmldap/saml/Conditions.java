@@ -28,12 +28,20 @@
 
 package org.xmldap.saml;
 
+import java.io.IOException;
+import java.util.Calendar;
+
 import nu.xom.Attribute;
+import nu.xom.Document;
 import nu.xom.Element;
+import nu.xom.ParsingException;
+import nu.xom.ValidityException;
+
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
+import org.xmldap.xml.XmlUtils;
 
 
 public class Conditions implements Serializable {
@@ -41,6 +49,48 @@ public class Conditions implements Serializable {
     private String notBefore;
     private String notOnOrAfter;
 
+    private void init(Element element) {
+        //Get the values
+        String notBeforeVal = element.getAttribute("NotBefore").getValue();
+        String notOnOrAfterVal = element.getAttribute("NotOnOrAfter").getValue();
+
+        // parse and reconstruct to check the format
+        Calendar notBeforeValCalendar  = XSDDateTime.parse(notBeforeVal);
+        Calendar notOnOrAfterValCalendar = XSDDateTime.parse(notOnOrAfterVal);
+        notBefore = XSDDateTime.getDateTime(notBeforeValCalendar);
+        notOnOrAfter = XSDDateTime.getDateTime(notOnOrAfterValCalendar);
+    }
+    
+    public Conditions(String xml) throws ValidityException, ParsingException, IOException {
+    	Document doc = XmlUtils.parse(xml);
+    	Element element = doc.getRootElement();
+    	init(element);
+    }
+    
+    public Conditions(Calendar notBeforeCal, Calendar notOnOrAfterCal) {
+    	notBefore = XSDDateTime.getDateTime(notBeforeCal);
+    	notOnOrAfter = XSDDateTime.getDateTime(notOnOrAfterCal);
+    }
+    
+    public boolean validate(Calendar when)
+    {
+    	Calendar now = null;
+    	if (when == null) {
+    		now = XSDDateTime.parse(new XSDDateTime().getDateTime());
+    	} else {
+    		now = when;
+    	}
+    	
+    	Calendar startValidityPeriod = XSDDateTime.parse(notBefore);
+    	Calendar endValidityPeriod = XSDDateTime.parse(notOnOrAfter);
+    	
+    	boolean before = startValidityPeriod.before(now);
+    	boolean on = endValidityPeriod.equals(now);
+    	boolean after = endValidityPeriod.after(now);
+    	boolean onOrAfter = on || after;
+    	return before && onOrAfter;
+    }
+    
     /**
      * @param beforeNow negativ value in minutes before now
      * @param mins		positiv value in minutes after now
@@ -50,13 +100,20 @@ public class Conditions implements Serializable {
         XSDDateTime now = new XSDDateTime(nowMinus);
         notBefore = now.getDateTime();
 
-        //TODO - make setable
         XSDDateTime andLater = new XSDDateTime(nowPlus);
         notOnOrAfter = andLater.getDateTime();
 
 
     }
 
+    public Calendar getNotBefore() {
+    	return XSDDateTime.parse(notBefore);
+    }
+    
+    public Calendar getNotOnOrAfter() {
+    	return XSDDateTime.parse(notOnOrAfter);
+    }
+    
     private Element getConditions() {
         Element conditions = new Element(WSConstants.SAML_PREFIX + ":Conditions", WSConstants.SAML11_NAMESPACE);
         Attribute notBeforeAttr = new Attribute("NotBefore", notBefore);

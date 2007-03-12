@@ -42,6 +42,12 @@ public class XSDDateTimeTest extends TestCase {
         assertEquals(exp.get(Calendar.SECOND), cal.get(Calendar.SECOND));
     }
 
+    public void testGetDateTime() throws Exception {
+    	Calendar cal = XSDDateTime.parse("2006-09-27T12:58:26Z");
+    	String datetime = XSDDateTime.getDateTime(cal);
+    	assertEquals("2006-09-27T12:58:26Z", datetime);
+    }
+
     public void testFormat() throws Exception {
 //    	2006-09-27T12:58:26Z
 //    	2006-09-27T13:16:09Z
