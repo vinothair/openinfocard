@@ -28,6 +28,8 @@
 
 package org.xmldap.saml;
 
+import java.util.Calendar;
+
 import nu.xom.Element;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
@@ -85,6 +87,13 @@ public class SAMLAssertion implements Serializable {
 
     public void setIssuer(String issuer) {
         this.issuer = issuer;
+    }
+
+    /**
+     * @param issueInstant e.g.: XSDDateTime.parse("2007-03-12T12:19:01Z")
+     */
+    public void setIssueInstant(Calendar issueInstant) {
+        this.issueInstant = XSDDateTime.getDateTime(issueInstant);
     }
 
     public void setConditions(Conditions conditions) {
