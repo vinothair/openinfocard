@@ -28,6 +28,7 @@
 
 package org.xmldap.util;
 
+import java.security.InvalidParameterException;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -60,30 +61,37 @@ public class XSDDateTime {
         Calendar cal = Calendar.getInstance(tz, Locale.US);
         cal.set(year, month, day, hour, minutes, seconds);
         return cal;
-    }
+     }
 
-    public String getDateTime() {
-        TimeZone tz = TimeZone.getTimeZone("GMT+00:00");
-        Calendar cal = Calendar.getInstance(tz, Locale.US);
-        cal.add(Calendar.MINUTE, moreMinutes);
-        
-        int year = cal.get(Calendar.YEAR);
-        int month = cal.get(Calendar.MONTH);
-        month++;
-        String monthString = pad(month);
-        int day = cal.get(Calendar.DAY_OF_MONTH);
-        String dayString = pad(day);
-        int hour = cal.get(Calendar.HOUR_OF_DAY);
-        String hourString = pad(hour);
-        int minutes = cal.get(Calendar.MINUTE);
-        String minutesString = pad(minutes);
-        int seconds = cal.get(Calendar.SECOND);
-        String secondsString = pad(seconds);
+     public static String getDateTime(Calendar cal) {
+    	if (!cal.getTimeZone().equals(TimeZone.getTimeZone("GMT+00:00"))) {
+    		throw new InvalidParameterException();
+    	}
+		int year = cal.get(Calendar.YEAR);
+		int month = cal.get(Calendar.MONTH);
+		month++;
+		String monthString = pad(month);
+		int day = cal.get(Calendar.DAY_OF_MONTH);
+		String dayString = pad(day);
+		int hour = cal.get(Calendar.HOUR_OF_DAY);
+		String hourString = pad(hour);
+		int minutes = cal.get(Calendar.MINUTE);
+		String minutesString = pad(minutes);
+		int seconds = cal.get(Calendar.SECOND);
+		String secondsString = pad(seconds);
 
-        return year + "-" + monthString + "-" + dayString + "T" + hourString + ":" + minutesString + ":" + secondsString + "Z";
-    }
+		return year + "-" + monthString + "-" + dayString + "T" + hourString
+				+ ":" + minutesString + ":" + secondsString + "Z";
+	}
 
-    protected String pad(int value) {
+	public String getDateTime() {
+		TimeZone tz = TimeZone.getTimeZone("GMT+00:00");
+		Calendar cal = Calendar.getInstance(tz, Locale.US);
+		cal.add(Calendar.MINUTE, moreMinutes);
+		return getDateTime(cal);
+	}
+
+    protected static String pad(int value) {
 
         Integer valueInt = new Integer(value);
         String valueString = valueInt.toString();
