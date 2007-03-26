@@ -134,7 +134,8 @@ public class EnvelopedSignatureTest extends TestCase {
 		RSAPrivateKey signingKey = org.xmldap.util.XmldapCertsAndKeys
 				.getXmldapPrivateKey();
 
-		EnvelopedSignature signer = new EnvelopedSignature(signingCert,
+		KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
 				signingKey);
 		Element signedXML = signer.sign(body);
 //		System.out.println(signedXML.toXML());
@@ -160,7 +161,8 @@ public class EnvelopedSignatureTest extends TestCase {
 		RSAPrivateKey signingKey = org.xmldap.util.XmldapCertsAndKeys
 				.getXmldapPrivateKey();
 
-		EnvelopedSignature signer = new EnvelopedSignature(signingCert,
+		KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
 				signingKey);
 		Document signedXML = signer.sign(bodyDoc);
 //		String test = signedXML.toXML();
@@ -179,7 +181,8 @@ public class EnvelopedSignatureTest extends TestCase {
 		RSAPrivateKey signingKey = org.xmldap.util.XmldapCertsAndKeys
 				.getXmldapPrivateKey();
 
-		EnvelopedSignature signer = new EnvelopedSignature(signingCert,
+		KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
 				signingKey);
 
 		assertTrue(signer.validate(signer.sign(XML)));

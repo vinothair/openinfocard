@@ -52,7 +52,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
-import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -204,23 +203,23 @@ public class CryptoUtils {
      * @return the base64 encoded cipher text
      * @throws CryptoException
      */
-    public static String rsaoaepEncrypt(byte[] input, X509Certificate cert) throws CryptoException {
+    public static String rsaoaepEncrypt(byte[] input, RSAPublicKey rsaPublicKey) throws CryptoException {
 
 
 
         AsymmetricBlockCipher engine = new RSAEngine();
         OAEPEncoding cipher = new OAEPEncoding(engine);
 
-        PublicKey pk = cert.getPublicKey();
-        String algorithm = pk.getAlgorithm();
-        if (!algorithm.equalsIgnoreCase("RSA")) {
-        	throw new CryptoException("Algorithm " + algorithm + " is not supported");
-        }
-        
-        //populate modulus
-        RSAPublicKey key = (RSAPublicKey) pk;
-        BigInteger mod = key.getModulus();
-        BigInteger exp = key.getPublicExponent();
+//        PublicKey pk = cert.getPublicKey();
+//        String algorithm = pk.getAlgorithm();
+//        if (!algorithm.equalsIgnoreCase("RSA")) {
+//        	throw new CryptoException("Algorithm " + algorithm + " is not supported");
+//        }
+//        
+//        //populate modulus
+//        RSAPublicKey rsaPublicKey = (RSAPublicKey) pk;
+        BigInteger mod = rsaPublicKey.getModulus();
+        BigInteger exp = rsaPublicKey.getPublicExponent();
         RSAKeyParameters keyParams = new RSAKeyParameters(false, mod, exp);
         cipher.init(true, keyParams);
 
