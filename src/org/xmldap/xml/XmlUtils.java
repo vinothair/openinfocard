@@ -33,9 +33,9 @@ import nu.xom.Document;
 
 public class XmlUtils {
 
-    public static Document parse( String s ) throws java.io.IOException, nu.xom.ParsingException {
+    public static Document parse( String xml ) throws java.io.IOException, nu.xom.ParsingException {
         Builder builder = new Builder();
-        return builder.build(s);
+        return new Document(builder.build(xml, ""));
     }
 
 }
