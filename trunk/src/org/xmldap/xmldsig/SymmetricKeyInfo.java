@@ -31,13 +31,11 @@ package org.xmldap.xmldsig;
 import nu.xom.Attribute;
 import nu.xom.Element;
 import org.xmldap.crypto.CryptoUtils;
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
 
 import java.security.PublicKey;
-import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
 
 /**
  * Created by IntelliJ IDEA.
@@ -49,11 +47,11 @@ import java.security.cert.X509Certificate;
 public class SymmetricKeyInfo implements KeyInfo {
 
     private byte[] secretKey;
-    private X509Certificate cert;
+    private PublicKey publicKey;
 
-    public SymmetricKeyInfo(X509Certificate cert, byte[] secretKey) {
+    public SymmetricKeyInfo(PublicKey publicKey, byte[] secretKey) {
         this.secretKey = secretKey;
-        this.cert = cert;
+        this.publicKey = publicKey;
     }
 
     public byte[] getSecretKey() {
@@ -78,13 +76,12 @@ public class SymmetricKeyInfo implements KeyInfo {
         Attribute encodingType = new Attribute("EncodingType", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary");
         keyIdentifier.addAttribute(valueType);
         keyIdentifier.addAttribute(encodingType);
-        PublicKey key = cert.getPublicKey();
 
         //System.out.println(cert.toString());
 
         String fingerPrint = "";
         try {
-            fingerPrint = CryptoUtils.digest(key.getEncoded());
+            fingerPrint = CryptoUtils.digest(publicKey.getEncoded());
 
         } catch (org.xmldap.exceptions.CryptoException e) {
             e.printStackTrace();
@@ -100,7 +97,7 @@ public class SymmetricKeyInfo implements KeyInfo {
         Element cipherValue = new Element(WSConstants.ENC_PREFIX + ":CipherValue", WSConstants.ENC_NAMESPACE);
 
         try {
-            String cipherText = CryptoUtils.rsaoaepEncrypt(secretKey, cert);
+            String cipherText = CryptoUtils.rsaoaepEncrypt(secretKey, (RSAPublicKey)publicKey);
             cipherValue.appendChild(cipherText);
         } catch (org.xmldap.exceptions.CryptoException e) {
             e.printStackTrace();
@@ -129,30 +126,30 @@ public class SymmetricKeyInfo implements KeyInfo {
     }
 
 
-    public static void main(String[] args) {
-
-
-        KeystoreUtil keystore = null;
-        try {
-            keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-        SymmetricKeyInfo keyInfo = null;
-        try {
-            keyInfo = new SymmetricKeyInfo(keystore.getCertificate("xmldap"), CryptoUtils.genKey(128));
-        } catch (org.xmldap.exceptions.CryptoException e) {
-            e.printStackTrace();
-        } catch (KeyStoreException e) {
-			e.printStackTrace();
-		}
-
-
-        try {
-            System.out.println(keyInfo.toXML());
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void main(String[] args) {
+//
+//
+//        KeystoreUtil keystore = null;
+//        try {
+//            keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
+//        } catch (KeyStoreException e) {
+//            e.printStackTrace();
+//        }
+//
+//        SymmetricKeyInfo keyInfo = null;
+//        try {
+//            keyInfo = new SymmetricKeyInfo(keystore.getCertificate("xmldap"), CryptoUtils.genKey(128));
+//        } catch (org.xmldap.exceptions.CryptoException e) {
+//            e.printStackTrace();
+//        } catch (KeyStoreException e) {
+//			e.printStackTrace();
+//		}
+//
+//
+//        try {
+//            System.out.println(keyInfo.toXML());
+//        } catch (SerializationException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }

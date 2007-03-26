@@ -39,6 +39,7 @@ import org.xmldap.xml.Serializable;
 
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
 
 /**
  * <AsymmetricKeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
@@ -120,7 +121,8 @@ public class KeyInfo implements Serializable {
         Element cipherValue = new Element(WSConstants.ENC_PREFIX + ":CipherValue", WSConstants.ENC_NAMESPACE);
 
         try {
-            String cipherText = CryptoUtils.rsaoaepEncrypt(secretKey, cert);
+        	RSAPublicKey rsaPublicKey = (RSAPublicKey)cert.getPublicKey();
+            String cipherText = CryptoUtils.rsaoaepEncrypt(secretKey, rsaPublicKey);
             cipherValue.appendChild(cipherText);
         } catch (org.xmldap.exceptions.CryptoException e) {
             throw new SerializationException(e);

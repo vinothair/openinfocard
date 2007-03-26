@@ -40,6 +40,7 @@ import org.xmldap.xmldsig.KeyInfo;
 import org.xmldap.xmldsig.SymmetricKeyInfo;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.Vector;
@@ -262,7 +263,8 @@ public class SelfIssuedToken implements Serializable {
 			}
 
 			if (relyingPartyCert != null) {
-				keyInfo = new SymmetricKeyInfo(relyingPartyCert, secretKey);
+				PublicKey publicKey = relyingPartyCert.getPublicKey();
+				keyInfo = new SymmetricKeyInfo(publicKey, secretKey);
 			} else {
 				throw new SerializationException(
 						"You did not provide the relying party cert");
@@ -317,8 +319,7 @@ public class SelfIssuedToken implements Serializable {
 		assertion.setAttributeStatement(statement);
 
 		//make this support multiple signing modes
-		EnvelopedSignature signer = new EnvelopedSignature(signingCert,
-				signingKey);
+		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,	signingKey);
 
 		Element signedXML = null;
 		try {

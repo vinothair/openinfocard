@@ -36,178 +36,172 @@ import org.xmldap.util.RandomGUID;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.xmldsig.EnvelopedSignature;
+import org.xmldap.xmldsig.KeyInfo;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
-
 
 public class ManagedToken implements Serializable {
 
 	//private String namespacePrefix = null;
-    private String privatePersonalIdentifier;
-    private String issuer;
+	private String privatePersonalIdentifier;
 
-//    private String givenName;
-//    private String surname;
-//    private String emailAddress;
-//    private String streetAddress;
-//    private String locality;
-//    private String stateOrProvince;
-//    private String postalCode;
-//    private String country;
-//    private String primaryPhone;
-//    private String otherPhone;
-//    private String mobilePhone;
-//    private String dateOfBirth;
-//    private String gender;
+	private String issuer;
 
-    private Map<String,String> supportedClaims = new HashMap<String,String>();
-    
-    private X509Certificate signingCert;
-    private PrivateKey signingKey;
+	private Map/*<String,String>*/supportedClaims = new HashMap/*<String,String>*/();
 
+	//    private X509Certificate signingCert;
+	    private PrivateKey signingKey;
+	KeyInfo keyInfo;
 
-    private int nowPlus = 10; //default to 10 minutes
-    private int nowMinus = 10; //default to 5 minutes
+	private int nowPlus = 10; //default to 10 minutes
 
-    public ManagedToken( X509Certificate signingCert, PrivateKey signingKey ) {
-        this.signingCert = signingCert;
-        this.signingKey = signingKey;
-//        namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
-    }
+	private int nowMinus = 10; //default to 5 minutes
 
-    public void setIssuer(String issuer) {
-    	this.issuer = issuer;
-    }
-    
-    public String getIssuer() {
-    	return issuer;
-    }
-    
-//    public void setNamespacePrefix(String namespacePrefix) {
-//        this.namespacePrefix = namespacePrefix;
-//    }
-//
-//    public String getNamespacePrefix() {
-//    	return namespacePrefix;
-//    }
+	//    public ManagedToken( X509Certificate signingCert, PrivateKey signingKey ) {
+	//        this.signingCert = signingCert;
+	//        this.signingKey = signingKey;
+	////        namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
+	//    }
+	public ManagedToken(KeyInfo keyInfo, PrivateKey signingKey) {
+		this.keyInfo = keyInfo;
+		this.signingKey = signingKey;
+	}
 
-    public String getClaim(String uri) {
-    	return supportedClaims.get(uri);
-    }
-    
-    public void setClaim(String uri, String value) {
-    	supportedClaims.put(uri, value);
-    }
+	public void setIssuer(String issuer) {
+		this.issuer = issuer;
+	}
 
-//    public int getValidityPeriod() {
-//        return nowPlus;
-//    }
+	public String getIssuer() {
+		return issuer;
+	}
 
-    public void setValidityPeriod(int nowMinus, int nowPlus) {
-        this.nowMinus = nowMinus;
-        this.nowPlus = nowPlus;
-    }
+	//    public void setNamespacePrefix(String namespacePrefix) {
+	//        this.namespacePrefix = namespacePrefix;
+	//    }
+	//
+	//    public String getNamespacePrefix() {
+	//    	return namespacePrefix;
+	//    }
 
-    public String getPrivatePersonalIdentifier() {
-        return privatePersonalIdentifier;
-    }
+	public String getClaim(String uri) {
+		return (String)supportedClaims.get(uri);
+	}
 
-    public void setPrivatePersonalIdentifier(String privatePersonalIdentifier) {
-        this.privatePersonalIdentifier = privatePersonalIdentifier;
-    }
+	public void setClaim(String uri, String value) {
+		supportedClaims.put(uri, value);
+	}
 
+	//    public int getValidityPeriod() {
+	//        return nowPlus;
+	//    }
 
+	public void setValidityPeriod(int nowMinus, int nowPlus) {
+		this.nowMinus = nowMinus;
+		this.nowPlus = nowPlus;
+	}
 
+	public String getPrivatePersonalIdentifier() {
+		return privatePersonalIdentifier;
+	}
 
-    public Element getToken(RandomGUID uuid) throws SerializationException {
+	public void setPrivatePersonalIdentifier(String privatePersonalIdentifier) {
+		this.privatePersonalIdentifier = privatePersonalIdentifier;
+	}
 
-        Conditions conditions = new Conditions(nowMinus, nowPlus);
+	public Element getToken(RandomGUID uuid) throws SerializationException {
 
+		Conditions conditions = new Conditions(nowMinus, nowPlus);
 
-        //SimpleKeyInfo keyInfo = new SimpleKeyInfo(signingCert);
-        AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+		//SimpleKeyInfo keyInfo = new SimpleKeyInfo(signingCert);
+//		AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
 
-        Subject subject = new Subject(keyInfo);
+		Subject subject = new Subject(keyInfo);
 
-        Vector<Attribute> attributes = new Vector<Attribute>();
+		Vector/*<Attribute>*/ attributes = new Vector/*<Attribute>*/();
 
-        Attribute ppidAttribute = new Attribute(org.xmldap.infocard.Constants.IC_PRIVATEPERSONALIDENTIFIER, org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, privatePersonalIdentifier);
-        attributes.add(ppidAttribute);
-        
-        for (String uri : supportedClaims.keySet()) {
-        	String value = supportedClaims.get(uri);
-        	if ((value != null) && (!"".equals(value))) {
-        		String name;
-        		int lastSlash = uri.lastIndexOf('/');
-        		if (lastSlash > -1) {
-        			name = uri.substring(lastSlash+1);
-        			if (name.length() == 0) {
-        				name = uri;
-        			}
-//        			if (lastSlash > 0) {
-//        				uri = uri.substring(0, lastSlash-1);
-//        			}
-        		} else {
-        			name = uri;
-        		}
-                Attribute attr = new Attribute(name, uri, value);
-                attributes.add(attr);
-        	}
-        }
+		Attribute ppidAttribute = new Attribute(
+				org.xmldap.infocard.Constants.IC_PRIVATEPERSONALIDENTIFIER,
+				org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER,
+				privatePersonalIdentifier);
+		attributes.add(ppidAttribute);
 
-        AttributeStatement statement = new AttributeStatement();
-        statement.setSubject(subject);
+		Set uriSet = supportedClaims.keySet();
+		{
+			Iterator iter = uriSet.iterator();
+			while (iter.hasNext()) {
+				String uri = (String)iter.next();
+				String value = (String)supportedClaims.get(uri);
+				if ((value != null) && (!"".equals(value))) {
+					String name;
+					int lastSlash = uri.lastIndexOf('/');
+					if (lastSlash > -1) {
+						name = uri.substring(lastSlash + 1);
+						if (name.length() == 0) {
+							name = uri;
+						}
+						//        			if (lastSlash > 0) {
+						//        				uri = uri.substring(0, lastSlash-1);
+						//        			}
+					} else {
+						name = uri;
+					}
+					Attribute attr = new Attribute(name, uri, value);
+					attributes.add(attr);
+				}
+			}
+		}
+		AttributeStatement statement = new AttributeStatement();
+		statement.setSubject(subject);
 
-        Iterator iter = attributes.iterator();
-        while (iter.hasNext()) {
+		{
+			Iterator iter = attributes.iterator();
+			while (iter.hasNext()) {
+	
+				statement.addAttribute((Attribute) iter.next());
+	
+			}
+		}
 
-            statement.addAttribute((Attribute) iter.next());
+		SAMLAssertion assertion = new SAMLAssertion(uuid);
+		assertion.setIssuer(issuer);
+		assertion.setConditions(conditions);
+		assertion.setAttributeStatement(statement);
 
-        }
+		//make this support multiple signing modes
+		EnvelopedSignature signer = new EnvelopedSignature(keyInfo, signingKey);
 
-        SAMLAssertion assertion = new SAMLAssertion(uuid);
-        assertion.setIssuer(issuer);
-        assertion.setConditions(conditions);
-        assertion.setAttributeStatement(statement);
+		Element signedXML = null;
+		try {
+			signedXML = signer.sign(assertion.serialize());
+		} catch (SigningException e) {
+			throw new SerializationException("Error signing assertion", e);
+		}
 
-        //make this support multiple signing modes
-        EnvelopedSignature signer = new EnvelopedSignature(signingCert, signingKey);
+		return signedXML;
 
-        Element signedXML = null;
-        try {
-            signedXML = signer.sign(assertion.serialize());
-        } catch (SigningException e) {
-            throw new SerializationException("Error signing assertion", e);
-        }
+	}
 
-        return signedXML;
+	public String toXML() throws SerializationException {
 
+		Element sit = serialize();
+		return sit.toXML();
 
-    }
+	}
 
-    public String toXML() throws SerializationException {
+	public Element serialize() throws SerializationException {
+		//TODO - clean up hack
+		return null;
 
-        Element sit = serialize();
-        return sit.toXML();
+	}
 
-    }
-
-    public Element serialize() throws SerializationException {
-        //TODO - clean up hack
-        return null;
-
-
-    }
-
-    public Element serialize(RandomGUID uuid) throws SerializationException {
-        return getToken(uuid);
-    }
-
-
+	public Element serialize(RandomGUID uuid) throws SerializationException {
+		return getToken(uuid);
+	}
 
 }

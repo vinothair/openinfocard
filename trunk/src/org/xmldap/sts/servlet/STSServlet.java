@@ -36,6 +36,7 @@ import org.xmldap.util.Bag;
 import org.xmldap.util.RandomGUID;
 import org.xmldap.util.ServletUtil;
 import org.xmldap.ws.WSConstants;
+import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.DbSupportedClaim;
 import org.xmldap.sts.db.DbSupportedClaims;
@@ -331,7 +332,8 @@ public class STSServlet  extends HttpServlet {
 
         Element rst = new Element(WSConstants.TRUST_PREFIX + ":RequestedSecurityToken", WSConstants.TRUST_NAMESPACE_05_02);
 
-        ManagedToken token = new ManagedToken(cert,key);
+        AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(cert);
+        ManagedToken token = new ManagedToken(keyInfo,key);
 
         Set<String> cardClaims = card.getClaims();
         for (String claim : cardClaims) {

@@ -42,18 +42,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
 import java.util.Vector;
 
 
 public class EnvelopedSignature {
 
-    private X509Certificate signingCert;
+//    private X509Certificate signingCert;
     private PrivateKey privateKey;
-
-    public EnvelopedSignature(X509Certificate signingCert, PrivateKey privateKey) {
+	KeyInfo keyInfo;
+	
+//    public EnvelopedSignature(X509Certificate signingCert, PrivateKey privateKey) {
+//        this.privateKey = privateKey;
+//        this.signingCert = signingCert;
+//    }
+    public EnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey) {
+        this.keyInfo = keyInfo;
         this.privateKey = privateKey;
-        this.signingCert = signingCert;
     }
 
 
@@ -228,7 +232,7 @@ public class EnvelopedSignature {
         SignatureValue signatureValue = new SignatureValue(signedInfo, privateKey);
 
         //Get KeyInfo
-        KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+//        KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
 
 
         //Create the signature block
