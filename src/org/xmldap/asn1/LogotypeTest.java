@@ -39,6 +39,7 @@ import org.xmldap.util.CertsAndKeys;
 import java.io.ByteArrayInputStream;
 import java.security.KeyPair;
 import java.security.Provider;
+import java.security.Security;
 import java.security.cert.X509Certificate;
 
 public class LogotypeTest extends TestCase {
@@ -86,6 +87,9 @@ public class LogotypeTest extends TestCase {
 	
 	public void testLogotypeCert()  throws Exception {
 		Provider provider = new BouncyCastleProvider();
+		if (null == Security.getProvider(provider.getName())) {
+			Security.addProvider(provider);
+		}
 		KeyPair kp = CertsAndKeys.generateKeyPair(provider);
 		KeyPair caKeyPair = CertsAndKeys.generateKeyPair(provider);
 		X509Name issuer = new X509Name(
