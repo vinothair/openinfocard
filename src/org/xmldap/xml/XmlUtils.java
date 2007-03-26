@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Chuck Mortimore - xmldap.org
+ * Copyright (c) 2007, Axel Nennker - axel at nennker.de
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,12 +30,22 @@ package org.xmldap.xml;
 
 import nu.xom.Builder;
 import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Nodes;
+import nu.xom.XPathContext;
 
 public class XmlUtils {
 
     public static Document parse( String xml ) throws java.io.IOException, nu.xom.ParsingException {
         Builder builder = new Builder();
         return new Document(builder.build(xml, ""));
+    }
+
+    public static String query(Element tokenXML, XPathContext context, String query) {
+            Nodes uns = tokenXML.query(query,context);
+    Element un = (Element) uns.get(0);
+    String userName = un.getValue();
+            return userName;
     }
 
 }
