@@ -35,7 +35,7 @@ import org.xmldap.exceptions.SigningException;
 import org.xmldap.saml.*;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
-import org.xmldap.xmldsig.EnvelopedSignature;
+import org.xmldap.xmldsig.BaseEnvelopedSignature;
 import org.xmldap.xmldsig.KeyInfo;
 import org.xmldap.xmldsig.SymmetricKeyInfo;
 
@@ -319,7 +319,7 @@ public class SelfIssuedToken implements Serializable {
 		assertion.setAttributeStatement(statement);
 
 		//make this support multiple signing modes
-		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,	signingKey);
+		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo,	signingKey);
 
 		Element signedXML = null;
 		try {
