@@ -36,6 +36,7 @@ import org.xmldap.xml.Canonicalizable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,6 +56,10 @@ public class SignedInfo implements Canonicalizable {
         this.references = references;
     }
 
+    public SignedInfo(Reference reference) {
+        this.references = new ArrayList();
+        references.add(reference);
+    }
 
     public Element getSignedInfo() {
 

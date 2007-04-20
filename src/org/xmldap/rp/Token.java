@@ -46,7 +46,7 @@ import java.security.cert.CertificateException;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.exceptions.CryptoException;
-import org.xmldap.xmldsig.EnvelopedSignature;
+import org.xmldap.xmldsig.ValidatingBaseEnvelopedSignature;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.saml.Conditions;
 import org.xmldap.util.XSDDateTime;
@@ -177,7 +177,7 @@ public class Token {
         if ( ! haveValidatedSignature ) {
 
             try {
-                signatureValid = EnvelopedSignature.validate(getDoc());
+                signatureValid = ValidatingBaseEnvelopedSignature.validate(getDoc());
             } catch (CryptoException e) {
                 throw new InfoCardProcessingException("Error validating signature", e);
             }
