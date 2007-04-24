@@ -1,6 +1,6 @@
 = Introduction =
 
-In October 2006 I wrote a simple LoginModule for SUN's Access Manager which uses openinfocard to decrypt the xmltoken and authenticate him by his infocard. The LoginModule is very basic, but can be extended to be usefull (I guess). Currently it accepts users by there email address and a fixed password. This *SHOULD* be changed to PPID and the Modulus (or the hash thereof) found in the decrypted token. If the login is successfull you are redirected to a demo shop website (which IP address you don't know). You have to change this behaviour in the java code.
+In October 2006 I wrote a simple LoginModule for SUN's Access Manager (opensso) which uses openinfocard to decrypt the xmltoken and authenticate him by his infocard. The LoginModule is very basic, but can be extended to be usefull (I guess). Currently it accepts users by there email address and a fixed password. This *SHOULD* be changed to PPID and the Modulus (or the hash thereof) found in the decrypted token. If the login is successfull you are redirected to a demo shop website (which IP address you don't know). You have to change this behaviour in the java code.
 *Remember this is a demo -> NO WARRANTY.*
 
 [http://openinfocard.googlecode.com/svn/trunk/AccessManager-LoginModulInfocard/]
@@ -29,7 +29,6 @@ http://openinfocard.googlecode.com/svn/trunk/AccessManager-LoginModulInfocard/lo
 If you click on the "card" the infocard selector should be launched.
 
 http://openinfocard.googlecode.com/svn/trunk/AccessManager-LoginModulInfocard/infocard-selector.png
-
 
 
 
