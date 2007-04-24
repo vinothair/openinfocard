@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+
 
 = Introduction =
 
@@ -29,7 +29,6 @@ In October 2006 I wrote a simple LoginModule for SUN's Access Manager which uses
 http://openinfocard.googlecode.com/svn/trunk/AccessManager-LoginModulInfocard/loginpage.png
 
 If you click on the "card" the infocard selector should be launched.
-
 
 
 
