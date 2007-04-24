@@ -1,75 +1,61 @@
+/*
+ * Copyright (c) 2006, Axel Nennker - nennker.de
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-prerequisites
- java and probably JAVA_HOME set
- ant and probably ANT_HOME set
- 
- Firefox Identity Selector
- Firefox (tested with 2.0)
+CAVEAT
+	This installs a copy of your webservers private key to the alias directory
+	This might not be what you want.
 
- Relyingparte and STS
- tomcat or jboss or...
+INSTALL
 
-Installation procedure
- Firefox Identity Selector
+Assumptions: 
+ Access Manager and AppServer are installed and running
+ The AppServer must support SSL
+ (currently the SUN ONE server must run as root when AM is used)
 
-  cd ant && ant
-  // currently 5 warnings
+1) Edit Makefile to adapt to your environment
+1a) # http://docs.sun.com/source/816-6773-10/amadmin.html
+    # read "Loading the Login Module Sample into Access Manager"
+    # http://docs-pdf.sun.com/817-7649/817-7649.pdf
+    # <AMADMIN> --runasdn uid=amAdmin,ou=People,<root_suffix> \
+    #  --password <password> --data amadmin.xml
+    # root_suffix can be found in /etc/opt/SUNWam/config/AMConfig.properties
+    # com.iplanet.am.rootsuffix=dc=e1,dc=i3alab,dc=net
+    #
+   /opt/SUNWam/bin/amadmin --runasdn uid=amAdmin,ou=People,dc=e1,dc=i3alab,dc=net --password password --data amadmin.xml
+2) make && make deploy
+3) redeploy amserver
+4) stop && start websrvr
+5) test: notice the httpS. InfoCard login does not work without SSL
+   https://n1v1.e1.i3alab.net/amserver/UI/Login?module=LoginInfoCard
+   - This first authentication fails because you have to administer user
+     Add a user with uid=<emailaddress> and 
+     password=<password from LoginInfoCard.java> in the AM's user database
+   - The default password is "password". Change it! 
+     Remember: This is only a demo. NO WARRANTY!
+6) Modify the success page and the layout
 
-  cd ../build
-  open xmldap.xpi with Firefox and restart Firefox
-  navigate Firefox to https://xmldap.org/relyingparty/ to test
-
-  If something does not work...
-   Look at the Firefox javascript console!
-
- STS and Relyingparty
-  Install your application server (AS)
-  Edit server.xml to enable SSL/TLS
-  Create a self-signed cert and test your AS with https.
-  keytool -genkey -alias xmldap -keypass password -keystore keystore.jks -storepass password -keyalg rsa -validity 1000 -sigalg SHA1withRSA
-
-  Please note: the default keyalg for keytool is DSA. DSA is not supported by CardSpace and not by this relyingparty.
-  The default sigalg for RSA is MD5withRSA. This is not supported by CardSpace and not by this relyingparty.
-
-
-  Now your application server is ready to serve https. Good.
-
-  Move sts.properties.tmpl to sts.properties
-  Move rp.properties.tmpl to rp.properties
-  Edit sts.properties and rp.properties and
-  - replace xmldap.org by your AS domainname and port
-    e.g.: xmldap.org -> w4de3esy0069028.gdc-bln01.t-systems.com:8443
-  - change the name of the keystore, alias, keystorepass and keypass
-    to appropriate values for your environment
-  Copy build/sts.war and build/relyingparty.war to the 
-   deploy directory e.g. $JBOSS_HOME/server/default/deploy
-  Start your AS. $JBOSS_HOME/bin/run.bat (or run.sh)
-
-  Navigate Firefox to your https://domainname:port/sts/ and 
-  create a managed card.
-  Navigate Firefox to your https://domainname:port/relyingparty/
-   Click "New Card", choose "managed card" and import the created card.
-
-  Now everything should work. Add a comment at http://xmldap.blogspot.com/
-   how cool this all is.
-
-
-  If something does not work...
-
-
-  Look at the AS logs!
-   If its something with "keystore not found" or the like, then check
-   rp-web.xml and sts-web.xml
-
-   If the AS complains about "/Users/cmort/..." not found, then check
-   rp-web.xml and sts-web.xml again. If these are clean, edit ServletUtil.java
-   and insert your keystore, password etc. Sorry. Somebody should fix this...
-
-- Axel Nennker
-
-If you are using SUN One Application Server... 
-Configure it to use JKS as the keystore type. 
-DO NOT USE NSS!!! You can not access the private key with NSS api, but
-you need it to decrypt the xmlToken.
-Repeat: DO NOT USE NSS!!!
-Gather some friends to chant it for added fun.
+DEBUG
+   /var/opt/SUNWam/debug/amAuth search for "Exception"
+   /opt/SUNWwbsvr/https-n1v1.e1.i3alab.net/logs/errors
