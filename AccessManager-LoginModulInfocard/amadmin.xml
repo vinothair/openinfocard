@@ -1,0 +1,14 @@
+<!DOCTYPE Requests
+ PUBLIC "-//iPlanet//iDSAME 5.0 Admin CLI DTD//EN"
+ "jar://com/iplanet/am/admin/cli/amAdmin.dtd"
+> 
+<Requests> 
+ <SchemaRequests serviceName="iPlanetAMAuthService" SchemaType="Global">
+  <AddDefaultValues>
+   <AttributeValuePair>
+    <Attribute name="iplanet-am-auth-authenticators"/> 
+    <Value>de.nennker.axel.LoginInfoCard</Value>
+   </AttributeValuePair>
+  </AddDefaultValues> 
+ </SchemaRequests>
+</Requests>
