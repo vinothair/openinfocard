@@ -35,6 +35,7 @@ import org.xmldap.ws.WSConstants;
 import org.xmldap.exceptions.CryptoException;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.PrivateKey;
 
 
@@ -47,8 +48,14 @@ public class DecryptUtil {
         try {
             xml = parser.build(encryptedXML, "");
         } catch (ParsingException e) {
+            System.err.println("ERROR encrypted xml: " + encryptedXML);
+            System.err.println("ERROR PrivateKey: " + key.toString());
+
             throw new CryptoException("Error buidling a XOM Document out of encrypted token", e);
         } catch (IOException e) {
+            System.err.println("ERROR encrypted xml: " + encryptedXML);
+            System.err.println("ERROR PrivateKey: " + key.toString());
+
             throw new CryptoException("Error buidling a XOM Document out of encrypted token", e);
         }
 
@@ -70,10 +77,11 @@ public class DecryptUtil {
         byte[] clearTextKey = null;
         try {
             clearTextKey = CryptoUtils.decryptRSAOAEP(keyCipherText, key);
+            System.out.println("Key Length: " + clearTextKey.length);
         } catch (org.xmldap.exceptions.CryptoException e) {
             throw new CryptoException("Error using RSA to decrypt the AES Encryption Key", e);
         }
-
+        
         SafeObject keyBytes = new SafeObject();
         try {
             keyBytes.setText(clearTextKey);
@@ -86,6 +94,7 @@ public class DecryptUtil {
         try {
             clearText = CryptoUtils.decryptAESCBC(clearTextBuffer, keyBytes);
         } catch (org.xmldap.exceptions.CryptoException e) {
+            System.out.println("ClearTextBuffer: " + clearTextBuffer.toString());
             throw new CryptoException("Error performing AES decryption of token", e);
         }
 

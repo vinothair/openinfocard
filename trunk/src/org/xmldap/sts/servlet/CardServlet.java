@@ -42,10 +42,7 @@ import org.xmldap.sts.db.DbSupportedClaims;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
-import org.xmldap.util.KeystoreUtil;
-import org.xmldap.util.ServletUtil;
-import org.xmldap.util.XSDDateTime;
-import org.xmldap.util.Base64;
+import org.xmldap.util.*;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -54,6 +51,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.security.cert.Certificate;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
@@ -63,15 +61,38 @@ import java.util.List;
 
 public class CardServlet extends HttpServlet {
 
-    private static ServletUtil _su;
     private static CardStorage storage = new CardStorageEmbeddedDBImpl();
     private String base64ImageFile = null;
 
-    public void init(ServletConfig servletConfig) throws ServletException {
-        super.init(servletConfig);
-        _su = new ServletUtil(servletConfig);
-        storage.startup();
-        base64ImageFile = getImageFileEncodedAsBase64(_su);
+    private X509Certificate cert = null;
+    private PrivateKey privateKey = null;
+    private String domainname = null;
+
+
+
+    public void init(ServletConfig config) throws ServletException {
+
+        super.init(config);
+
+        try {
+
+            PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
+            String keystorePath = properties.getProperty("keystore");
+            String keystorePassword = properties.getProperty("keystore.password");
+            String key = properties.getProperty("key.name");
+            String keyPassword = properties.getProperty("key.password");
+
+            KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
+            privateKey = keystore.getPrivateKey(key,keyPassword);
+            cert = keystore.getCertificate(key);
+            domainname = properties.getProperty("domain");
+
+        } catch (IOException e) {
+            throw new ServletException(e);
+        } catch (KeyStoreException e) {
+            throw new ServletException(e);
+        }
+
     }
 
 
@@ -96,40 +117,12 @@ public class CardServlet extends HttpServlet {
             return;
         }
 
-        if (_su == null) {
-            _su = new ServletUtil(getServletConfig());
-        }
 
-        //Get my keystore
-        KeystoreUtil keystore = null;
-        try {
-            keystore = _su.getKeystore();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        X509Certificate cert = null;
-        try {
-            cert = _su.getCertificate();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        PrivateKey pKey = null;
-        try {
-            pKey = _su.getPrivateKey();
-        } catch (KeyStoreException e) {
-            throw new ServletException(e);
-        }
-
-        String domainname = _su.getDomainName();
         String tokenServiceEndpoint = "https://" + domainname + "/sts/tokenservice";
         String mexEndpoint = "https://" + domainname + "/sts/mex";
 
 
-        InfoCard card = new InfoCard(cert, pKey);
+        InfoCard card = new InfoCard(cert, privateKey);
         card.setCardId("https://" + domainname + "/sts/card/" + managedCard.getCardId());
         card.setCardName(managedCard.getCardName());
         card.setCardVersion(1);

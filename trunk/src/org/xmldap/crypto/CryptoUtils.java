@@ -179,7 +179,7 @@ public class CryptoUtils {
     public static StringBuffer decryptAESCBC(StringBuffer text, SafeObject keybytes) throws CryptoException {
 
         StringBuffer clearText;
-
+        
         try {
             clearText = Crypt.decrypt(text, keybytes);
         } catch (net.sourceforge.lightcrypto.CryptoException e) {
