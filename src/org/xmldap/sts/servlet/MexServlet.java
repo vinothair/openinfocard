@@ -33,8 +33,10 @@ import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.ServletUtil;
+import org.xmldap.util.PropertiesManager;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -51,31 +53,29 @@ public class MexServlet extends HttpServlet {
     private String mexFile = null;
 
 
-    public void init() throws ServletException {
+    public void init(ServletConfig config) throws ServletException {
 
-        ServletUtil su = new ServletUtil(getServletConfig());
-
-        mexFile = su.getMexFilePathString();
+        super.init(config);
 
         try {
 
-            KeystoreUtil keystore = su.getKeystore();
-            X509Certificate certificate = su.getCertificate();
+            PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
+            String keystorePath = properties.getProperty("keystore");
+            String keystorePassword = properties.getProperty("keystore.password");
+            String key = properties.getProperty("key.name");
 
-            try {
-                cert = Base64.encodeBytes(certificate.getEncoded());
-            } catch (CertificateEncodingException e) {
-                throw new ServletException(e);
-            }
+            KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
+            X509Certificate certificate = keystore.getCertificate(key);
+            cert = Base64.encodeBytes(certificate.getEncoded());
+            mexFile = properties.getProperty("mex.file");
 
-        } catch (KeyStoreException e) {
-
-            e.printStackTrace();
+        } catch (IOException e) {
             throw new ServletException(e);
-
+        } catch (KeyStoreException e) {
+            throw new ServletException(e);
+        } catch (CertificateEncodingException e) {
+            throw new ServletException(e);
         }
-
-
 
     }
 
