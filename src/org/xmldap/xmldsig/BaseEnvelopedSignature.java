@@ -68,6 +68,16 @@ public class BaseEnvelopedSignature {
         Element signThisOne = (Element) xml.copy();
 
         String idVal = signThisOne.getAttributeValue("Id", WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
+        if (idVal == null) {
+            //let's see if its a SAML assertions
+            Attribute assertionID = signThisOne.getAttribute("AssertionID");
+            if (assertionID != null) {
+                idVal = assertionID.getValue();
+            }
+        }
+        if (idVal == null) {
+        	throw new IllegalArgumentException("BaseEnvelopedSignature: Element to sign does not have an id-ttribute");
+        }
 		Reference reference = new Reference(signThisOne, idVal);
 		
         //Get SignedInfo for reference
