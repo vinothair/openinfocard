@@ -38,7 +38,6 @@ import org.xmldap.xml.Serializable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-
 public class Reference implements Serializable {
 
     //TODO - fix URI handling
@@ -48,8 +47,13 @@ public class Reference implements Serializable {
 
 
     public Reference(Element data, String id) {
-
+    	if (data == null) {
+    		throw new IllegalArgumentException("Parameter data must not be null");
+    	}
         this.data = data;
+    	if (id == null) {
+    		throw new IllegalArgumentException("Parameter id must not be null");
+    	}
         this.id = id;
 
     }
