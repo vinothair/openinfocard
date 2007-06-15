@@ -595,12 +595,12 @@ public class TokenIssuer {
     		String requiredClaims = null;
     		String optionalClaims = null;
     		try {
-    		    requiredClaims = (String) policy.get("requiredClaims");
+    		    requiredClaims = policy.getString("requiredClaims");
     		} catch (JSONException e) {
     		    // throw new TokenIssuanceException(e); // requiredClaims not found
     		}
     		try {
-    		    optionalClaims = (String) policy.get("optionalClaims");
+    		    optionalClaims = policy.getString("optionalClaims");
     		} catch (JSONException e) {
     		    // throw new TokenIssuanceException(e); // optionalClaims not found
     		}
