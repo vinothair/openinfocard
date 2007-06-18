@@ -3,9 +3,13 @@ package org.xmldap.xmldsig;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 
+import org.xmldap.saml.AttributeStatement;
+import org.xmldap.saml.Conditions;
+import org.xmldap.saml.SAMLAssertion;
+import org.xmldap.saml.Subject;
 import org.xmldap.ws.WSConstants;
 
-import nu.xom.Attribute;
+//import nu.xom.Attribute;
 import nu.xom.Document;
 import nu.xom.Element;
 
@@ -122,7 +126,7 @@ public class EnvelopedSignatureTest extends TestCase {
 		Element body = new Element("xmldap:Body", "http://www.xmldap.org");
 		body.addNamespaceDeclaration(WSConstants.WSU_PREFIX,
 				WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
-		Attribute idAttr = new Attribute(WSConstants.WSU_PREFIX + ":Id",
+		nu.xom.Attribute idAttr = new nu.xom.Attribute(WSConstants.WSU_PREFIX + ":Id",
 				WSConstants.WSSE_OASIS_10_WSU_NAMESPACE,
 				"urn:guid:58824342-832F-C99B-925B-CB0E858E5D65");
 		body.addAttribute(idAttr);
@@ -148,7 +152,7 @@ public class EnvelopedSignatureTest extends TestCase {
 		Element body = new Element("xmldap:Body", "http://www.xmldap.org");
 		body.addNamespaceDeclaration(WSConstants.WSU_PREFIX,
 				WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
-		Attribute idAttr = new Attribute(WSConstants.WSU_PREFIX + ":Id",
+		nu.xom.Attribute idAttr = new nu.xom.Attribute(WSConstants.WSU_PREFIX + ":Id",
 				WSConstants.WSSE_OASIS_10_WSU_NAMESPACE,
 				"urn:guid:58824342-832F-C99B-925B-CB0E858E5D65");
 		body.addAttribute(idAttr);
@@ -186,6 +190,37 @@ public class EnvelopedSignatureTest extends TestCase {
 				signingKey);
 
 		assertTrue(EnvelopedSignature.validate(signer.sign(XML)));
+
+	}
+	
+	public void testSAMLAssertionString() throws Exception {
+
+		X509Certificate signingCert = org.xmldap.util.XmldapCertsAndKeys
+				.getXmldapCert();
+		RSAPrivateKey signingKey = org.xmldap.util.XmldapCertsAndKeys
+				.getXmldapPrivateKey();
+
+		KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
+				signingKey);
+
+        Conditions conditions = new Conditions(-5, 10);
+
+        Subject subject = new Subject(keyInfo);
+        org.xmldap.saml.Attribute given = new org.xmldap.saml.Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName", "Chuck");
+        org.xmldap.saml.Attribute sur = new org.xmldap.saml.Attribute("surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/SurName", "Mortimore");
+        org.xmldap.saml.Attribute email = new org.xmldap.saml.Attribute("email", "http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress", "cmortspam@gmail.com");
+        AttributeStatement statement = new AttributeStatement();
+        statement.setSubject(subject);
+        statement.addAttribute(given);
+        statement.addAttribute(sur);
+        statement.addAttribute(email);
+
+        SAMLAssertion assertion = new SAMLAssertion();
+        assertion.setConditions(conditions);
+        assertion.setAttributeStatement(statement);
+
+		assertTrue(EnvelopedSignature.validate(signer.sign(assertion.toXML())));
 
 	}
 
