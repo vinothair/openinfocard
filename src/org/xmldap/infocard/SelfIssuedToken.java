@@ -90,7 +90,7 @@ public class SelfIssuedToken implements Serializable {
 
 	private int nowMinus = 10; //default to 5 minutes
 
-	private boolean asymmetric = false; //default to symmetric key
+	private boolean asymmetric = true; //default to symmetric key
 
 	public SelfIssuedToken(X509Certificate relyingPartyCert,
 			X509Certificate signingCert, PrivateKey signingKey) {
