@@ -10,6 +10,7 @@ import nu.xom.Element;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.XPathContext;
+import nu.xom.XPathException;
 
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.CryptoException;
@@ -32,7 +33,7 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 	 * @return
 	 * @throws CryptoException
 	 */
-	public static boolean validate(Element root, byte[] signedInfoCanonicalBytes, String signatureValue, String mod, String exp, String digest) throws CryptoException {
+	public static boolean validateRSA(Element root, byte[] signedInfoCanonicalBytes, String signatureValue, String mod, String exp, String digest) throws CryptoException {
 		// WEVE GOT:
 		// byte[] signedInfoCanonicalBytes
 		// String signatureValue
@@ -98,37 +99,100 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 			throw new CryptoException(e);
 		}
 
-		Nodes signatureValues = xmlDoc.query("//dsig:SignatureValue",
-				thisContext);
-		Element signatureValueElm = (Element) signatureValues.get(0);
-		String signatureValue = signatureValueElm.getValue();
+		String signatureValue = getFirstValue(xmlDoc, thisContext, "//dsig:SignatureValue");
+		if (signatureValue == null) {
+			return false;
+		}
 
-		// And we need to fetch the modulus
-		// Nodes modVals =
-		// assertion.query("/saml:Assertion/dsig:Signature/dsig:KeyInfo/disg:KeyValue/dsig:RSAKeyValue/dsig:Modulus",
-		// thisContext);
-		Nodes modVals = xmlDoc.query("//dsig:Modulus", thisContext);
-		Element modulusElm = (Element) modVals.get(0);
-		String mod = modulusElm.getValue();
-		// System.out.println("Modulus: " + mod);
-
-		// And we need to fetch the exponent
-		Nodes expVals = xmlDoc.query("//dsig:Exponent", thisContext);
-		Element expElm = (Element) expVals.get(0);
-		String exp = expElm.getValue();
-		// System.out.println("Exponent: " + exp);
 
 		// GET THE KEY CIPHERTEXT and DECRYPT
 		XPathContext encContext = new XPathContext();
 		encContext.addNamespace("enc", WSConstants.ENC_NAMESPACE);
 		encContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
-		Nodes digestValues = xmlDoc.query("//dsig:DigestValue", encContext);
-		Element digestValue = (Element) digestValues.get(0);
-		String digest = digestValue.getValue();
+		String digest = getFirstValue(xmlDoc, encContext, "//dsig:DigestValue");
+		if (digest == null) {
+			return false;
+		}
 
 		Element root = xmlDoc.getRootElement();
-		return validate(root, signedInfoCanonicalBytes, signatureValue, mod, exp, digest);
 
+		// And we need to fetch the modulus
+		// Nodes modVals =
+		// assertion.query("/saml:Assertion/dsig:Signature/dsig:KeyInfo/disg:KeyValue/dsig:RSAKeyValue/dsig:Modulus",
+		// thisContext);
+		String mod = getFirstValue(xmlDoc, thisContext, "//dsig:Modulus");
+		if (mod != null) {
+			// System.out.println("Modulus: " + mod);
+			// And we need to fetch the exponent
+			String exp = getFirstValue(xmlDoc, thisContext, "//dsig:Exponent");
+			if (exp == null) {
+				return false;
+			}
+
+			// System.out.println("Exponent: " + exp);
+
+			return validateRSA(root, signedInfoCanonicalBytes, signatureValue, mod, exp, digest);
+		} else {
+			// mod == null maybe it is AES instead of RSA
+			String base64encodedAndEncryptedAESKey = getFirstValue(xmlDoc, thisContext, "//" + WSConstants.ENC_PREFIX + ":CipherValue");
+			if (base64encodedAndEncryptedAESKey != null) {
+				System.out.println("Can not validate signature: unsupported method!");
+//				return validateAES(root, signedInfoCanonicalBytes, signatureValue, base64encodedAndEncryptedAESKey, privateKey, digest );
+				return false;
+			} else {
+				return false;
+			}
+		}
+
+	}
+
+	private static boolean validateAES(
+			Element root, byte[] signedInfoCanonicalBytes, String signatureValue, String base64encodedAndEncryptedAESKey, PrivateKey privateKey, String digest) throws CryptoException {
+		// WEVE GOT:
+		// byte[] signedInfoCanonicalBytes
+		// String signatureValue
+		// byte[] digestBytes
+		// String digest
+		// String mod
+		// String exp
+
+		// WE now have the digest, and the signing key. Let's validate the
+		// REFERENCES:
+		String b64EncodedDigest = digestElement(root);
+
+		if (!digest.equals(b64EncodedDigest)) {
+
+			System.out
+					.println("Digest of the Reference did not match the provided Digest.  Exiting.");
+			return false;
+
+		}
+
+		byte[] aeskey = CryptoUtils.decryptRSAOAEP(base64encodedAndEncryptedAESKey, privateKey);
+		// Axel: the AES key in SymmetricKeyInfo is actually never used
+		return false;
+	}
+	
+	/**
+	 * @param xmlDoc
+	 * @param thisContext
+	 * @return
+	 */
+	private static String getFirstValue(Document xmlDoc, XPathContext thisContext, String query) {
+		try {
+			Nodes signatureValues = xmlDoc.query(query,
+					thisContext);
+			if (signatureValues.size() > 0) {
+				Element signatureValueElm = (Element) signatureValues.get(0);
+				String signatureValue = signatureValueElm.getValue();
+				return signatureValue;
+			} else {
+				System.out.println("Could not find (" + query + ") in...\n" + xmlDoc.toXML() + "\n");
+			}
+		} catch (XPathException  e) {
+			
+		}
+		return null;
 	}
 
 }
