@@ -62,6 +62,7 @@ TokenIssuer.getAllCards = function(dirName, password) {
     } catch (e) {
         this._fail(e);
     }
+    return null;
 };
 
 TokenIssuer.getCard = function(dirName, password, card) {
@@ -74,6 +75,7 @@ TokenIssuer.getCard = function(dirName, password, card) {
     } catch (e) {
         this._fail(e);
     }
+    return null;
 };
 
 TokenIssuer.newCard = function(dirName, password, card) {
@@ -86,6 +88,7 @@ TokenIssuer.newCard = function(dirName, password, card) {
     } catch (e) {
         this._fail(e);
     }
+    return null;
 };
 
 TokenIssuer.deleteCard = function(cardId) {
@@ -98,6 +101,7 @@ TokenIssuer.deleteCard = function(cardId) {
     } catch (e) {
         this._fail(e);
     }
+    return null;
 };
 
 
@@ -112,6 +116,7 @@ TokenIssuer.getIssuerLogoURL = function(cert) {
     } catch (e) {
         this._fail(e);
     }
+    return null;
 };
 
 TokenIssuer.getToken = function(policy) {
@@ -125,6 +130,7 @@ TokenIssuer.getToken = function(policy) {
     } catch (e) {
         this._fail(e);
     }
+    return null;
 };
 
 TokenIssuer.getTokenIssuer = function() {
