@@ -3,10 +3,13 @@ package org.xmldap.xmldsig;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 
+import org.xmldap.infocard.SelfIssuedToken;
 import org.xmldap.saml.AttributeStatement;
 import org.xmldap.saml.Conditions;
 import org.xmldap.saml.SAMLAssertion;
 import org.xmldap.saml.Subject;
+import org.xmldap.util.Base64;
+import org.xmldap.util.XmldapCertsAndKeys;
 import org.xmldap.ws.WSConstants;
 
 //import nu.xom.Attribute;
@@ -222,6 +225,26 @@ public class EnvelopedSignatureTest extends TestCase {
 
 		assertTrue(EnvelopedSignature.validate(signer.sign(assertion.toXML())));
 
+	}
+
+	public void testSelfIssuedToken() throws Exception {
+
+		X509Certificate xmldapCert = XmldapCertsAndKeys.getXmldapCert();
+		RSAPrivateKey xmldapKey = XmldapCertsAndKeys.getXmldapPrivateKey();
+		
+//		KeyInfo keyInfo = new AsymmetricKeyInfo(xmldapCert);
+//		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
+//				xmldapKey);
+//
+		SelfIssuedToken token = new SelfIssuedToken(xmldapCert,
+				xmldapCert, xmldapKey);
+	
+		token.setPrivatePersonalIdentifier(Base64.encodeBytes("ppid".getBytes()));
+		token.setValidityPeriod(-5, 10);
+	
+		String xml = token.toXML();
+//		String signedToken = signer.sign(xml);
+		assertTrue(EnvelopedSignature.validate(xml));
 	}
 
 	public void testStub() throws Exception {
