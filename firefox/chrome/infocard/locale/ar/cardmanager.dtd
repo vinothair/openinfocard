@@ -1,7 +1,7 @@
 <!ENTITY cardmanager.title " &#1575;&#1583;&#1585;&#1587; &#1605;&#1606;:">
 <!ENTITY cardmanager.daylabel "Identity Selector">
 <!ENTITY cardmanager.cardname "&#1606;&#1575;&#1605; &#1705;&#1575;&#1585;&#1578;:">
-<!ENTITY cardmanager.givenname" &#1606;&#1575;&#1605; :">
+<!ENTITY cardmanager.givenname "&#1606;&#1575;&#1605; :">
 <!ENTITY cardmanager.surname " &#1606;&#1575;&#1605; &#1582;&#1575;&#1606;&#1608;&#1575;&#1583;&#1711;&#1740;:">
 <!ENTITY cardmanager.email "&#1662;&#1587;&#1578; &#1575;&#1604;&#1705;&#1578;&#1585;&#1608;&#1606;&#1740;&#1705;&#1740;:">
 <!ENTITY cardmanager.streetaddress "&#1582;&#1740;&#1575;&#1576;&#1575;&#1606;:">
