@@ -75,6 +75,10 @@
             <param-name>domain</param-name>
             <param-value>@domain@</param-value>
         </init-param>
+        <init-param>
+            <param-name>image-file</param-name>
+            <param-value>@image-file@</param-value>
+        </init-param>
     </servlet>
     <servlet>
         <servlet-name>Decrypt</servlet-name>

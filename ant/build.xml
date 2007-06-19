@@ -132,6 +132,7 @@
             <replacefilter token="@key-password@" value="${key.password}"/>
             <replacefilter token="@domain@" value="${domain}"/>
             <replacefilter token="@mex-file@" value="${mex.file}"/>
+            <replacefilter token="@image-file@" value="${image.file}"/>
         </replace>
 
         <replace  file="${build.dir}/xmldap.org/sts/mex.xml">

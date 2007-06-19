@@ -75,7 +75,8 @@ public class CardServlet extends HttpServlet {
         super.init(config);
 
         try {
-
+        	ServletUtil _su = new ServletUtil(config);
+        	
             PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
             String keystorePath = properties.getProperty("keystore");
             String keystorePassword = properties.getProperty("keystore.password");
@@ -87,6 +88,8 @@ public class CardServlet extends HttpServlet {
             cert = keystore.getCertificate(key);
             domainname = properties.getProperty("domain");
 
+            base64ImageFile = getImageFileEncodedAsBase64(_su);
+            
         } catch (IOException e) {
             throw new ServletException(e);
         } catch (KeyStoreException e) {
@@ -255,6 +258,7 @@ public class CardServlet extends HttpServlet {
                 return null;
             }
         } else {
+        	System.out.println("Did not find the image file for the new card (" + imageFilePathString + ")");
             return null;
         }
     }
