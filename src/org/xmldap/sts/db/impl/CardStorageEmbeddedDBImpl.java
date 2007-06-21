@@ -1,22 +1,24 @@
 package org.xmldap.sts.db.impl;
 
 import org.xmldap.sts.db.CardStorage;
-import org.xmldap.sts.db.DbDisplayTag;
 import org.xmldap.sts.db.DbSupportedClaim;
 import org.xmldap.sts.db.DbSupportedClaims;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.exceptions.StorageException;
 
 import java.sql.*;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 public class CardStorageEmbeddedDBImpl implements CardStorage {
 
+	Logger log = Logger.getLogger("org.xmldap.sts.db.implCardStorageEmbeddedDBImpl");
+	
+	public final String USERNAME_LEN = "255";
+	public final String PASSWORD_LEN = "255";
+	
     public String framework = "embedded";
     public String driver = "org.apache.derby.jdbc.EmbeddedDriver";
     public String protocol = "jdbc:derby:";
@@ -104,12 +106,12 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
                 System.out.println("Not initialized - creating card tables");
 
 
-                s.execute("create table accounts(username varchar(48) NOT NULL CONSTRAINT ACCOUNT_PK PRIMARY KEY, password varchar(48))");
+                s.execute("create table accounts(username varchar(" + USERNAME_LEN + ") NOT NULL CONSTRAINT ACCOUNT_PK PRIMARY KEY, password varchar(" + PASSWORD_LEN + "))");
                 System.out.println("Created table accounts");
 
                 createTableCards(s);
 
-                s.execute("create table account_cards(username varchar(48), cardid varchar(255))");
+                s.execute("create table account_cards(username varchar(" + USERNAME_LEN + "), cardid varchar(255))");
                 //TODO - figure out the foreign key constraints
                 //s.execute("alter table account_cards ADD CONSTRAINT USERNAME_FK FOREIGN KEY (username) REFERENCES accounts (username)");
                 //s.execute("alter table account_cards ADD CONSTRAINT CARD_FK FOREIGN KEY (cardid) REFERENCES cards (cardid)");
@@ -143,6 +145,26 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
     }
 
     public void addAccount(String username, String password) throws StorageException{
+    	log.log(java.util.logging.Level.INFO, "addAccount: username ("+username+") password (" + password + ")");
+    	System.out.println("addAccount: username ("+username+") password (" + password + ")");
+    	if (username == null) {
+    		throw new StorageException("username can not be null");
+    	}
+    	if (password == null) {
+    		throw new StorageException("password can not be null");
+    	}
+    	if ("".equals(username)) {
+    		throw new StorageException("username can not be of zero length");
+    	}
+    	if ("".equals(password)) {
+    		throw new StorageException("password can not be of zero length");
+    	}
+    	if (username.length() > Integer.valueOf(USERNAME_LEN)) {
+    		throw new StorageException("username is longer than " + Integer.valueOf(USERNAME_LEN));
+    	}
+    	if (password.length() > Integer.valueOf(PASSWORD_LEN)) {
+    		throw new StorageException("password is longer than " + Integer.valueOf(PASSWORD_LEN));
+    	}
     	if (conn == null) {
     		startup();
     	}
@@ -179,7 +201,27 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
 
     }
 
-    public boolean authenticate(String uid, String password){
+    public boolean authenticate(String uid, String password) {
+    	log.log(java.util.logging.Level.INFO, "authenticate: username ("+uid+") password (" + password + ")");
+    	System.out.println( "authenticate: username ("+uid+") password (" + password + ")");
+    	if (uid == null) {
+    		return false;
+    	}
+    	if (password == null) {
+    		return false;
+    	}
+    	if ("".equals(uid)) {
+    		return false;
+    	}
+    	if ("".equals(password)) {
+    		return false;
+    	}
+    	if (uid.length() > Integer.valueOf(USERNAME_LEN)) {
+    		return false;
+    	}
+    	if (password.length() > Integer.valueOf(PASSWORD_LEN)) {
+    		return false;
+    	}
     	if (conn == null) {
     		startup();
     	}
