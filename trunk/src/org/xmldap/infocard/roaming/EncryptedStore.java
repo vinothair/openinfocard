@@ -35,10 +35,7 @@ import org.xmldap.util.KeystoreUtil;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.crypto.EncryptedStoreKeys;
 import org.xmldap.ws.WSConstants;
-import org.xmldap.exceptions.CryptoException;
-import org.xmldap.exceptions.SerializationException;
-import org.xmldap.exceptions.InfoCardProcessingException;
-import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.exceptions.*;
 import org.xmldap.infocard.roaming.RoamingStore;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedClaimList;
@@ -46,6 +43,7 @@ import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.TokenServiceReference;
 import org.xmldap.infocard.InfoCard;
+import org.xmldap.infocard.Constants;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.engines.AESLightEngine;
@@ -63,11 +61,31 @@ import java.security.cert.X509Certificate;
 
 import net.sourceforge.lightcrypto.SafeObject;
 import nu.xom.*;
+import nu.xom.ParsingException;
 
 
 public class EncryptedStore {
 
     private static byte[] bom = {(byte)0xEF, (byte)0xBB, (byte)0xBF};
+
+
+    public Document decryptStore(String encryptedStoreString, String password) throws CryptoException, ParsingException{
+
+        int index = encryptedStoreString.indexOf("<?xml");
+        String data = encryptedStoreString.substring(index);
+
+        Builder parser = new Builder();
+        Document encryptedStore = null;
+        try {
+            encryptedStore = parser.build(data, "");
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new ParsingException("Error parsing", e);
+        }
+
+        return decryptStore(encryptedStore, password);
+
+    }
 
 
     public Document decryptStore(InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
@@ -78,6 +96,15 @@ public class EncryptedStore {
         } catch (IOException e) {
             throw new ParsingException("Error parsing EncryptedStore", e);
         }
+
+        return decryptStore(encryptedStore, password);
+
+
+    }
+
+    public Document decryptStore(Document encryptedStore, String password) throws CryptoException, ParsingException{
+
+
 
         XPathContext context = new XPathContext();
         context.addNamespace("id","http://schemas.xmlsoap.org/ws/2005/05/identity");
@@ -316,7 +343,7 @@ public class EncryptedStore {
 
         X509Certificate cert = null;
         try {
-            cert = keystore.getCertificate("xmldap");
+            cert = keystore.getCertificate("tomcat");
         } catch (KeyStoreException e) {
             e.printStackTrace();
         }
@@ -327,7 +354,6 @@ public class EncryptedStore {
         card.setCardName("Custom card");
         card.setCardVersion(1);
         card.setIssuerName("xmldap.org");
-        //card.setIssuer("http://xmldap.org/jaxws-sts/sts");
         card.setIssuer("http://xmldap.org/");
         XSDDateTime issued = new XSDDateTime();
         XSDDateTime expires = new XSDDateTime(525600);
@@ -336,9 +362,6 @@ public class EncryptedStore {
         card.setTimeExpires(expires.getDateTime());
 
         TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
-        //TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/jaxws-sts/sts", "https://xmldap.org/sts/mex", cert);
-        //TokenServiceReference tsr = new TokenServiceReference("http://localhost:8080/jaxws-sts/sts", "https://xmldap.org/sts/mex", cert);
-        //TokenServiceReference tsr = new TokenServiceReference("https://www.fabrikam.com:7000/sample/trust/usernamepassword/sts", "https://www.fabrikam.com:7001/sample/trust/usernamepassword/mex", cert);
         tsr.setUserName("cmort");
         card.setTokenServiceReference(tsr);
 
@@ -349,18 +372,12 @@ public class EncryptedStore {
         card.setTokenList(tokenList);
 
         SupportedClaimList claimList = new SupportedClaimList();
-        //SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname");
-        //SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname");
-        //SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress");
-        //SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier");
-        SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname");
-        SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname");
-        SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress");
-        SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier");
+        SupportedClaim given = new SupportedClaim("GivenName", Constants.IC_NAMESPACE_PREFIX + "givenname");
+        SupportedClaim sur = new SupportedClaim("Surname", Constants.IC_NAMESPACE_PREFIX + "surname");
+        SupportedClaim email = new SupportedClaim("EmailAddress", Constants.IC_NAMESPACE_PREFIX + "emailaddress");
         claimList.addSupportedClaim(given);
         claimList.addSupportedClaim(sur);
         claimList.addSupportedClaim(email);
-        claimList.addSupportedClaim(ppid);
         card.setClaimList(claimList);
 
         card.setPrivacyPolicy("https://xmldap.org/PrivacyPolicy.xml");

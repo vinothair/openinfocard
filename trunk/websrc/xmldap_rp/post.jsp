@@ -7,7 +7,7 @@
 <%@ page import="javax.servlet.ServletException"%>
 <%@ page import="java.security.PrivateKey"%>
 <%@ page import="java.security.cert.X509Certificate"%>
-<%@ page import="org.xmldap.util.ServletUtil"%>
+<%@ page import="org.xmldap.util.PropertiesManager"%>
 
 
 <%
@@ -20,13 +20,17 @@
    X509Certificate cert = null;
 
 
+    PropertiesManager properties = new PropertiesManager(PropertiesManager.RELYING_PARTY, config.getServletContext());
+    String keystorePath = properties.getProperty("keystore");
+    String keystorePassword = properties.getProperty("keystore-password");
+    String key = properties.getProperty("key");
+    String keyPassword = properties.getProperty("key-password");
 
-    ServletUtil su = new ServletUtil(config);
-    KeystoreUtil keystore = su.getKeystore();
-    privateKey = su.getPrivateKey();
-    cert = su.getCertificate();
+    KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
+    privateKey = keystore.getPrivateKey(key,keyPassword);
+    cert = keystore.getCertificate(key);
+
     
-
    String message="";
    EncryptedData encryptor = new EncryptedData(cert);
    SelfIssuedToken token = new SelfIssuedToken(cert,cert,privateKey);

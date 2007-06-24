@@ -34,10 +34,11 @@ import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.util.Bag;
 import org.xmldap.util.KeystoreUtil;
-import org.xmldap.util.ServletUtil;
+import org.xmldap.util.PropertiesManager;
 import org.xmldap.ws.WSConstants;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -51,23 +52,35 @@ public class STSWithSym  extends HttpServlet {
 
 
     RSAPrivateKey key;
-    private ServletUtil _su;
 
-    public void init() throws ServletException {
 
-        //Get my keystore
-       try {
+    public void init(ServletConfig config) throws ServletException {
 
-	   _su = new ServletUtil(getServletConfig());
-	   KeystoreUtil keystore = _su.getKeystore();
+        super.init(config);
 
-           key = (RSAPrivateKey) _su.getPrivateKey();
+        try {
 
-       } catch (KeyStoreException e) {
-           e.printStackTrace();
-       }
+            PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
+            String keystorePath = properties.getProperty("keystore");
+            String keystorePassword = properties.getProperty("keystore-password");
+            String keyname = properties.getProperty("key-name");
+            String keypassword = properties.getProperty("key-password");
+
+            KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
+            key = (RSAPrivateKey) keystore.getPrivateKey(keyname,keypassword);
+
+
+
+        } catch (IOException e) {
+            throw new ServletException(e);
+        } catch (KeyStoreException e) {
+            throw new ServletException(e);
+        }
 
     }
+
+
+
 
 
 

@@ -32,11 +32,11 @@ import nu.xom.*;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
-import org.xmldap.util.ServletUtil;
 import org.xmldap.util.PropertiesManager;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -50,8 +50,6 @@ public class MexServlet extends HttpServlet {
 
 
     private String cert = null;
-    private String mexFile = null;
-
 
     public void init(ServletConfig config) throws ServletException {
 
@@ -61,13 +59,12 @@ public class MexServlet extends HttpServlet {
 
             PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
             String keystorePath = properties.getProperty("keystore");
-            String keystorePassword = properties.getProperty("keystore.password");
-            String key = properties.getProperty("key.name");
+            String keystorePassword = properties.getProperty("keystore-password");
+            String key = properties.getProperty("key-name");
 
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             X509Certificate certificate = keystore.getCertificate(key);
             cert = Base64.encodeBytes(certificate.getEncoded());
-            mexFile = properties.getProperty("mex.file");
 
         } catch (IOException e) {
             throw new ServletException(e);
@@ -113,16 +110,15 @@ public class MexServlet extends HttpServlet {
 
         String[] args = {messageID.getValue(), cert};
 
-        //ServletContext application = getServletConfig().getServletContext();
-        //InputStream in = application.getResourceAsStream("/mex.xml");
-        InputStream in = new FileInputStream(mexFile);
+        ServletContext application = getServletConfig().getServletContext();
+        InputStream in = application.getResourceAsStream("/mex.xml");
 
 
 
         StringBuffer mexBuff = new StringBuffer();
         BufferedReader ins = new BufferedReader(new InputStreamReader(in));
         try {
-            System.out.println("MEX reading file: " + mexFile);
+            System.out.println("MEX reading file");
 
             while (in.available() !=0) {
                 mexBuff.append(ins.readLine());

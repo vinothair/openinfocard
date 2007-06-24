@@ -75,21 +75,19 @@ public class CardServlet extends HttpServlet {
         super.init(config);
 
         try {
-        	ServletUtil _su = new ServletUtil(config);
-        	
+
             PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
             String keystorePath = properties.getProperty("keystore");
-            String keystorePassword = properties.getProperty("keystore.password");
-            String key = properties.getProperty("key.name");
-            String keyPassword = properties.getProperty("key.password");
+            String keystorePassword = properties.getProperty("keystore-password");
+            String key = properties.getProperty("key-name");
+            String keyPassword = properties.getProperty("key-password");
 
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             privateKey = keystore.getPrivateKey(key,keyPassword);
             cert = keystore.getCertificate(key);
             domainname = properties.getProperty("domain");
+            base64ImageFile = properties.getProperty("image-file");
 
-            base64ImageFile = getImageFileEncodedAsBase64(_su);
-            
         } catch (IOException e) {
             throw new ServletException(e);
         } catch (KeyStoreException e) {
@@ -244,21 +242,19 @@ public class CardServlet extends HttpServlet {
 
     /**
      * Gets the file referenced in servlet config and returns it's data as a Base64 string.
-     * @param servletUtil
      * @return Base64 encoded image data (usaully a PNG)
      */
-    protected String getImageFileEncodedAsBase64(ServletUtil servletUtil) {
-        String imageFilePathString = servletUtil.getImageFilePathString();
-        if (imageFilePathString != null) {
+    protected String getImageFileEncodedAsBase64() {
+        if (base64ImageFile != null) {
             try {
-                return getImageFileEncodedAsBase64(imageFilePathString);
+                return getImageFileEncodedAsBase64(base64ImageFile);
             } catch (Exception e) {
                 System.err.println("CardServelet::getImageFileEncodedAsBase64: " + e.getMessage());
                 // use the standard image, if an error occurs
                 return null;
             }
         } else {
-        	System.out.println("Did not find the image file for the new card (" + imageFilePathString + ")");
+        	System.out.println("Did not find the image file for the new card (" + base64ImageFile + ")");
             return null;
         }
     }
