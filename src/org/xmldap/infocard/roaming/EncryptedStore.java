@@ -36,7 +36,6 @@ import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.crypto.EncryptedStoreKeys;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.exceptions.*;
-import org.xmldap.infocard.roaming.RoamingStore;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedTokenList;
@@ -56,7 +55,6 @@ import java.util.Random;
 import java.util.Arrays;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
 import net.sourceforge.lightcrypto.SafeObject;
@@ -318,7 +316,7 @@ public class EncryptedStore {
 
     public static void main(String[] args) {
 
-        String password = "password";
+        String  password = "password";
 
         EncryptedStore encryptedStore = new EncryptedStore();
         Document roamingStore = null;

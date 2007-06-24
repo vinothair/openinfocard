@@ -31,7 +31,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.RandomGUID;
 import org.xmldap.util.XSDDateTime;

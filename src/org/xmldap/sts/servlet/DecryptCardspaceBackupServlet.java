@@ -112,8 +112,7 @@ public class DecryptCardspaceBackupServlet extends HttpServlet {
             return;
         }
 
-        System.out.println(store);
-
+        //System.out.println(store);
 
         EncryptedStore encryptedStore = new EncryptedStore();
         Document roamingStore = null;
@@ -127,23 +126,15 @@ public class DecryptCardspaceBackupServlet extends HttpServlet {
             out.close();
             return;
         }
-        
-        response.setContentType("text/xml");
-        OutputStream out = response.getOutputStream();
-        Serializer serializer = null;
-        try {
-            serializer = new Serializer(out, "UTF8");
-            serializer.setIndent(4);
-            serializer.setMaxLength(64);
-            serializer.setPreserveBaseURI(false);
-            serializer.write(roamingStore);
-            serializer.flush();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
+        PrintWriter out = response.getWriter();
+
+        out.println("<html><title>Backup File</title><style>BODY {color:#000;font-family: verdana, arial, sans-serif;}</style>\n" +
+                "<body>\n" +
+                "<b>Your Backup File:</b><br><br>" +
+                "<textarea cols=80 rows=20>" + roamingStore.toXML() + "</textarea>\n" +
+                "</body>\n" +
+                "</html>");
         out.flush();
         out.close();
 
