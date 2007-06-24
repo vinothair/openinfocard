@@ -136,6 +136,8 @@
 Here you can create and download managed cards.
 <br><br>
 
+<b>Your Cards:</b><br>
+
 <table  border="0" cellpadding="5">
 <%
 
@@ -149,13 +151,19 @@ Here you can create and download managed cards.
 
     }
 
+    String backupfile = "/sts/backup/" + username + ".crds";
+
 
 %>
 
 </table>
 <br>
-<a href="./createcard.jsp">Create a new card</a><br><br>
-
+<br>
+<b>Operations:</b><br>
+<blockquote>
+<a href="<%= backupfile %>">Download all your cards as a Cardspace Backup file</a><br>
+<a href="./createcard.jsp">Create a new card</a><br>
+</blockquote>
 
 
 <%

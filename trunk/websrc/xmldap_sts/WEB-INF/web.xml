@@ -86,6 +86,12 @@
         <description>Decrypt a Cardspace Backup</description>
         <servlet-class>org.xmldap.sts.servlet.DecryptCardspaceBackupServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>Backup</servlet-name>
+        <display-name>Backup</display-name>
+        <description>Download a Cardspace Backup</description>
+        <servlet-class>org.xmldap.sts.servlet.BackupServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>MexServlet</servlet-name>
         <url-pattern>/mex</url-pattern>
@@ -101,5 +107,9 @@
     <servlet-mapping>
         <servlet-name>Decrypt</servlet-name>
         <url-pattern>/decrypt</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Backup</servlet-name>
+        <url-pattern>/backup/*</url-pattern>
     </servlet-mapping>
 </web-app>

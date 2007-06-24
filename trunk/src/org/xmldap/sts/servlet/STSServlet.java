@@ -177,10 +177,13 @@ public class STSServlet  extends HttpServlet {
         }
 
         Nodes kts = requestXML.query("//wst:KeyType",context);
-        Element kt = (Element) kts.get(0);
-        String keyType = kt.getValue();
-        if (DEBUG) System.out.println("keyType: " + keyType);
-        requestElements.put("keyType", keyType);
+        if ( kts != null )  {
+            Element kt = (Element) kts.get(0);
+            String keyType = kt.getValue();
+            if (DEBUG) System.out.println("keyType: " + keyType);
+            requestElements.put("keyType", keyType);
+        }
+            
 
         Nodes tts = requestXML.query("//wst:TokenType",context);
         Element tt = (Element) tts.get(0);
