@@ -128,11 +128,11 @@
         <replace  file="${build.dir}/xmldap.org/sts/WEB-INF/web.xml">
          <replacefilter token="@keystore@" value="${keystore}"/>
             <replacefilter token="@key@" value="${key.name}"/>
-            <replacefilter token="@keystore-password@" value="${keystore.password}"/>
-            <replacefilter token="@key-password@" value="${key.password}"/>
+            <replacefilter token="@keystore-password@" value="${keystore-password}"/>
+            <replacefilter token="@key-password@" value="${key-password}"/>
             <replacefilter token="@domain@" value="${domain}"/>
-            <replacefilter token="@mex-file@" value="${mex.file}"/>
-            <replacefilter token="@image-file@" value="${image.file}"/>
+            <replacefilter token="@mex-file@" value="${mex-file}"/>
+            <replacefilter token="@image-file@" value="${image-file}"/>
         </replace>
 
         <replace  file="${build.dir}/xmldap.org/sts/mex.xml">

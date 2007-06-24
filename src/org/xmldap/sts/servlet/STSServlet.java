@@ -32,9 +32,7 @@ import nu.xom.*;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.ManagedToken;
-import org.xmldap.util.Bag;
-import org.xmldap.util.RandomGUID;
-import org.xmldap.util.ServletUtil;
+import org.xmldap.util.*;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.sts.db.CardStorage;
@@ -44,6 +42,7 @@ import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,27 +63,39 @@ public class STSServlet  extends HttpServlet {
     private boolean DEBUG = true;
     RSAPrivateKey key;
     X509Certificate cert;
-    private ServletUtil _su;
+    String domain;
+
     CardStorage storage = new CardStorageEmbeddedDBImpl();
 
-    public void init() throws ServletException {
 
-        //Get my keystore
-       try {
+    public void init(ServletConfig config) throws ServletException {
 
-	   _su = new ServletUtil(getServletConfig());
+        super.init(config);
 
-           key = (RSAPrivateKey) _su.getPrivateKey();
-           cert = _su.getCertificate();
+        try {
 
-       } catch (KeyStoreException e) {
-           e.printStackTrace();
-       }
+            PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
+            String keystorePath = properties.getProperty("keystore");
+            String keystorePassword = properties.getProperty("keystore-password");
+            String keyname = properties.getProperty("key-name");
+            String keypassword = properties.getProperty("key-password");
+            domain = properties.getProperty("domain");
 
-       storage.startup();
+            KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
+            cert = keystore.getCertificate(keyname);
+            key = (RSAPrivateKey) keystore.getPrivateKey(keyname,keypassword);
+
+
+
+        } catch (IOException e) {
+            throw new ServletException(e);
+        } catch (KeyStoreException e) {
+            throw new ServletException(e);
+        }
+
+        storage.startup();
 
     }
-
 
 
     private Bag parseToken(Element tokenXML) throws ParsingException{
@@ -342,8 +353,7 @@ public class STSServlet  extends HttpServlet {
         
         token.setPrivatePersonalIdentifier(card.getPrivatePersonalIdentifier());
         token.setValidityPeriod(-3, 10);
-        String domainname = _su.getDomainName();
-        token.setIssuer("https://" + domainname + "/sts/tokenservice");
+        token.setIssuer("https://" + domain + "/sts/tokenservice");
         
         RandomGUID uuid = new RandomGUID();
 
@@ -404,10 +414,6 @@ public class STSServlet  extends HttpServlet {
 
 
 
-	/**
-	 * @param card
-	 * @param displayToken
-	 */
 	private void addDisplayClaim(Element displayToken, String claimUri, String claimName, String claimValue) {
 		Element displayClaim = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
         Attribute uri = new Attribute("Uri", claimUri);
