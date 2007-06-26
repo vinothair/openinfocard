@@ -144,9 +144,9 @@ public class BackupServlet extends HttpServlet {
             tokenList.addSupportedToken(token);
             card.setTokenList(tokenList);
 
-           // SupportedClaimList claimList = getSupportedClaimList();
-           // card.setClaimList(claimList);
-
+            SupportedClaimList claimList = getSupportedClaimList();
+            card.setClaimList(claimList);
+            /*
             SupportedClaimList claimList = new SupportedClaimList();
             SupportedClaim given = new SupportedClaim("GivenName", Constants.IC_NAMESPACE_PREFIX + "givenname");
             SupportedClaim sur = new SupportedClaim("Surname", Constants.IC_NAMESPACE_PREFIX + "surname");
@@ -155,7 +155,7 @@ public class BackupServlet extends HttpServlet {
             claimList.addSupportedClaim(sur);
             claimList.addSupportedClaim(email);
             card.setClaimList(claimList);
-
+            */
             card.setPrivacyPolicy(getPrivacyPolicyReference(domainname));
             card.setSignCard(false);
 
@@ -192,10 +192,10 @@ public class BackupServlet extends HttpServlet {
         List<DbSupportedClaim> supportedClaims = DbSupportedClaims.dbSupportedClaims();
         SupportedClaimList claimList = new SupportedClaimList();
         SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
-        claimList.addSupportedClaim(supportedClaim);
+        //claimList.addSupportedClaim(supportedClaim);
         for (DbSupportedClaim claim : supportedClaims) {
-            supportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri);
-            claimList.addSupportedClaim(supportedClaim);
+            SupportedClaim thisSupportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri);
+            claimList.addSupportedClaim(thisSupportedClaim);
         }
 //        SupportedClaimList claimList = new SupportedClaimList();
 //        SupportedClaim given = new SupportedClaim("GivenName", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
