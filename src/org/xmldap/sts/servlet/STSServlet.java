@@ -406,7 +406,7 @@ public class STSServlet  extends HttpServlet {
             		value);
         }
 
-        addDisplayClaim(displayToken, org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "PPID", card.getPrivatePersonalIdentifier());
+        addDisplayClaim(displayToken, org.xmldap.infocard.Constants.IC_NAMESPACE, "PPID", card.getPrivatePersonalIdentifier());
 
         rstr.appendChild(requestedDisplayToken);
 

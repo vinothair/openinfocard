@@ -3,6 +3,7 @@ package org.xmldap.infocard.roaming;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.infocard.InfoCard;
+import org.xmldap.util.Base64;
 import nu.xom.*;
 
 import java.io.IOException;
@@ -39,7 +40,9 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
 
         Element hashSalt = new Element("HashSalt", WSConstants.INFOCARD_NAMESPACE);
         informationCardMetaData.appendChild(hashSalt);
-        hashSalt.appendChild("610+M5O09oikUhLQ3n324g==");
+        //hashSalt.appendChild("610+M5O09oikUhLQ3n324g==");
+        //TODO - this should be random, but we at least need it to be per card
+        hashSalt.appendChild(Base64.encodeBytes(card.getCardId().getBytes()));
 
         Element timeLastUpdated = new Element("TimeLastUpdated", WSConstants.INFOCARD_NAMESPACE);
         informationCardMetaData.appendChild(timeLastUpdated);
@@ -61,7 +64,10 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
 
         Element masterKey = new Element("MasterKey", WSConstants.INFOCARD_NAMESPACE);
         informationCardPrivateData.appendChild(masterKey);
-        masterKey.appendChild("iJzz3+thvV6wWdFQCFADcHbNaOasZpt0qTaC7Brvbfc=");
+        //masterKey.appendChild("iJzz3+thvV6wWdFQCFADcHbNaOasZpt0qTaC7Brvbfc=");
+        //TODO - generate a real master key.   This is a security issue
+        masterKey.appendChild(Base64.encodeBytes(card.getCardId().getBytes()));
+
 
         Element claimValueList = new Element("ClaimValueList", WSConstants.INFOCARD_NAMESPACE);
         informationCardPrivateData.appendChild(claimValueList);
