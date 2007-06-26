@@ -471,13 +471,13 @@ public class TokenIssuer {
 	}
 	
 	private String generateRPPPID(
-			String infoCardPpi, 
+			String cardId,
 			X509Certificate relyingPartyCert,
 			X509Certificate[] chain)
 		throws TokenIssuanceException {
 		try {
 			byte[] rpIdentifierBytes = sha256(rpIdentifier(relyingPartyCert, chain));
-			byte[] canonicalCardIdBytes = sha256(infoCardPpi.getBytes("UTF-8"));
+			byte[] canonicalCardIdBytes = sha256(cardId.getBytes("UTF-8"));
 			byte[] bytes = new byte[rpIdentifierBytes.length+canonicalCardIdBytes.length];
 			System.arraycopy(rpIdentifierBytes, 0, bytes, 0, rpIdentifierBytes.length);
 			System.arraycopy(canonicalCardIdBytes, 0, bytes, rpIdentifierBytes.length, canonicalCardIdBytes.length);
@@ -674,8 +674,19 @@ public class TokenIssuer {
 		            "Error: This infocard has no privatepersonalidentifier!");
 		}
 
-		// storeInfoCardAsCertificate(ppi, infocard);
-		ppi = generateRPPPID(ppi, relyingPartyCert, chain);
+		String cardId = "";
+		Nodes cardIdNodes = infocard.query("/infocard/id");
+		Element cardIdElm = (Element) cardIdNodes.get(0);
+		if (cardIdElm != null) {
+		    cardId = cardIdElm.getValue();
+		} else {
+		    throw new TokenIssuanceException(
+		            "Error: This infocard has no id!");
+		}
+
+
+        // storeInfoCardAsCertificate(ppi, infocard);
+		ppi = generateRPPPID(cardId, relyingPartyCert, chain);
 //		ppi = generatePpiForThisRP(ppi, relyingPartyCert
 //		        .getSubjectX500Principal().getName());
 
