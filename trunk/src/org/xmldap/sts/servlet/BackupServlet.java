@@ -191,21 +191,15 @@ public class BackupServlet extends HttpServlet {
     protected SupportedClaimList getSupportedClaimList() {
         List<DbSupportedClaim> supportedClaims = DbSupportedClaims.dbSupportedClaims();
         SupportedClaimList claimList = new SupportedClaimList();
-        SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
+
+        //PPID is breaking backup files
+        //SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
         //claimList.addSupportedClaim(supportedClaim);
         for (DbSupportedClaim claim : supportedClaims) {
             SupportedClaim thisSupportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri);
             claimList.addSupportedClaim(thisSupportedClaim);
         }
-//        SupportedClaimList claimList = new SupportedClaimList();
-//        SupportedClaim given = new SupportedClaim("GivenName", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
-//        SupportedClaim sur = new SupportedClaim("Surname", org.xmldap.infocard.Constants.IC_NS_SURNAME);
-//        SupportedClaim email = new SupportedClaim("EmailAddress", org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS);
-//        SupportedClaim ppid = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
-//        claimList.addSupportedClaim(given);
-//        claimList.addSupportedClaim(sur);
-//        claimList.addSupportedClaim(email);
-//        claimList.addSupportedClaim(ppid);
+
         return claimList;
     }
 
