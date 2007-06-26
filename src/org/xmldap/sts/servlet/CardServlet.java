@@ -131,7 +131,7 @@ public class CardServlet extends HttpServlet {
 
         // set card logo/image if available . . . if not available it will default to Milo :-)
         if (base64ImageFile != null) {
-            card.setBase64BinaryCardImage(base64ImageFile);
+            card.setBase64BinaryCardImage(getImageFileEncodedAsBase64());
         }
 
 
