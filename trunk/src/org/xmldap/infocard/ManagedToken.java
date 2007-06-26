@@ -151,7 +151,11 @@ public class ManagedToken implements Serializable {
 					} else {
 						name = uri;
 					}
-					Attribute attr = new Attribute(name, uri, value);
+
+
+                    //TODO - this is a very dodgy fix for the attribute namespace bug.   Figure out how to do this upstream.   Fixing for interop.
+                    if (uri.indexOf(Constants.IC_NAMESPACE) == 0) uri = Constants.IC_NAMESPACE;
+                    Attribute attr = new Attribute(name, uri, value);
 					attributes.add(attr);
 				}
 			}

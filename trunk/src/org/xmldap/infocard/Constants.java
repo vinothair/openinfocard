@@ -31,6 +31,7 @@ public class Constants {
 //	public static final String MS_NAMESPACE_PREFIX = "http://schemas.microsoft.com/ws/2005/05/identity/claims/";
 
 	public static final String IC_NAMESPACE_PREFIX = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/";
+	public static final String IC_NAMESPACE = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims";
 
     public static final String IC_GIVENNAME 						= "givenname";
     public static final String IC_SURNAME 							= "surname";
