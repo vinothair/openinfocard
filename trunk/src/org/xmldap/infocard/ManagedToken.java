@@ -127,7 +127,7 @@ public class ManagedToken implements Serializable {
 
 		Attribute ppidAttribute = new Attribute(
 				org.xmldap.infocard.Constants.IC_PRIVATEPERSONALIDENTIFIER,
-				org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER,
+				org.xmldap.infocard.Constants.IC_NAMESPACE,
 				privatePersonalIdentifier);
 		attributes.add(ppidAttribute);
 
