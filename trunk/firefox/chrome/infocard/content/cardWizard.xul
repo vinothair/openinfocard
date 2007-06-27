@@ -211,15 +211,14 @@
              var cardName = cardxml.dsig::Object.ic::InformationCard.ic::CardName;
              var cardImage = cardxml.dsig::Object.ic::InformationCard.ic::CardImage;
              var issuer = cardxml.dsig::Object.ic::InformationCard.ic::Issuer;
-             var mex =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
-
+             var mexEP =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
              var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
              var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
 
               debug(cardId);
               debug(cardName);
               debug(issuer);
-              debug(mex);
+              debug(mexEP);
               debug(cardHint);
               debug(cardUid);
 
@@ -230,7 +229,7 @@
               callbackdata["cardName"] = cardName;
               callbackdata["cardImage"] = cardImage;
               callbackdata["issuer"] = issuer;
-              callbackdata["mex"] = mex;
+              callbackdata["mex"] = mexEP;
               callbackdata["hint"] = cardHint;
               callbackdata["uid"] = cardUid;
               
