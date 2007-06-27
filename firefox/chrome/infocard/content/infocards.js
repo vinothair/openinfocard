@@ -28,6 +28,8 @@
 
 var selectedCard;
 
+var selectorDebugging = false;
+
 function ok(){
 
     var tokenToReturn;
@@ -38,7 +40,7 @@ function ok(){
         policy["type"] = "selfAsserted";
         policy["card"] = selectedCard.toString();
         //TRUE or FALSE on the second param enabled debug
-        tokenToReturn = processCard(policy,false);
+        tokenToReturn = processCard(policy,selectorDebugging);
         finish(tokenToReturn);
 
     } else if (selectedCard.type == "managedCard"){
@@ -49,7 +51,7 @@ function ok(){
         policy["type"] = "managedCard";
         policy["assertion"] = assertion;
         //TRUE or FALSE on the second param enabled debug
-        tokenToReturn = processCard(policy,false);
+        tokenToReturn = processCard(policy,selectorDebugging);
         finish(tokenToReturn);
 
 
