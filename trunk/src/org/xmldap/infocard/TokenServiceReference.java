@@ -40,10 +40,10 @@ import java.security.cert.X509Certificate;
 
 public class TokenServiceReference implements Serializable {
 
-    private static final String USERNAME = "UserNamePasswordAuthenticate";
-    private static final String SELF_ISSUED = "SelfIssuedAuthenticate";
-    private static final String X509 = "X509V3Authenticate";
-    private static final String KERB = "KerberosV5Authenticate";
+    public static final String USERNAME = "UserNamePasswordAuthenticate";
+    public static final String SELF_ISSUED = "SelfIssuedAuthenticate";
+    public static final String X509 = "X509V3Authenticate";
+    public static final String KERB = "KerberosV5Authenticate";
 
 
     private String authType = USERNAME;
@@ -83,8 +83,19 @@ public class TokenServiceReference implements Serializable {
         return authType;
     }
 
-    public void setAuthType(String authType) {
-        this.authType = authType;
+    public void setAuthType(String authType, String value) {
+    	if (USERNAME.equals(authType)) {
+    		setUserName(value);
+    	} else if (KERB.equals(authType)) {
+    		setKerberosServicePrincipalName(value);
+    	} else if (SELF_ISSUED.equals(authType)) {
+    		setPPI(value);
+    	} else if (X509.equals(authType)) {
+    		setX509Hash(value);
+    	} else {
+    		throw new IllegalArgumentException("undefined authentication type (" + authType + ")");
+    	}
+		this.authType = authType;
     }
 
     public String getAddress() {
@@ -182,6 +193,7 @@ public class TokenServiceReference implements Serializable {
 	        credentialValue.appendChild(ppi);
 	        credential.appendChild(credentialValue);
 	        userCredential.appendChild(credential);
+	        System.out.println(userCredential.toXML());
         } else if (X509.equals(authType)) {
         	/*
   				  <ic:DisplayCredentialHint> xs:string </ic:DisplayCredentialHint>
