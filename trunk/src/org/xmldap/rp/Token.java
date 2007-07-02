@@ -250,16 +250,17 @@ public class Token {
     	}
     }
 
-	private String getModulusOrNull() throws InfoCardProcessingException {
-	    XPathContext thisContext = new XPathContext();
-	    thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
-	    thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
-	    Nodes nodes = getDoc().query("//dsig:KeyValue/dsig:RSAKeyValue/dsig:Modulus", thisContext);
-	    if ((nodes != null) && (nodes.size() > 0)) {
-	        String element = nodes.get(0).getValue();
-	        return element;
-	    } 
-	    return null;
+	public String getModulusOrNull() throws InfoCardProcessingException {
+//	    XPathContext thisContext = new XPathContext();
+//	    thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
+//	    thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
+//	    Nodes nodes = getDoc().query("//dsig:KeyValue/dsig:RSAKeyValue/dsig:Modulus", thisContext);
+//	    if ((nodes != null) && (nodes.size() > 0)) {
+//	        String element = nodes.get(0).getValue();
+//	        return element;
+//	    } 
+//	    return null;
+		return ValidatingBaseEnvelopedSignature.getModulusOrNull(getDoc());
 	}
 
 	public X509Certificate getCertificateOrNull() throws InfoCardProcessingException {
