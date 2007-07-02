@@ -51,6 +51,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.security.cert.Certificate;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
@@ -74,19 +75,20 @@ public class CardServlet extends HttpServlet {
         super.init(config);
 
         try {
-
             PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
             String keystorePath = properties.getProperty("keystore");
-            String keystorePassword = properties.getProperty("keystore-password");
-            String key = properties.getProperty("key-name");
-            String keyPassword = properties.getProperty("key-password");
-
+            String keystorePassword = properties.getProperty("keystore.password");
+            String key = properties.getProperty("key.name");
+            String keyPassword = properties.getProperty("key.password");
+            String imageFilePathString = properties.getProperty("image.file");
+            
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             privateKey = keystore.getPrivateKey(key,keyPassword);
             cert = keystore.getCertificate(key);
             domainname = properties.getProperty("domain");
-            base64ImageFile = properties.getProperty("image-file");
 
+            base64ImageFile = getImageFileEncodedAsBase64(imageFilePathString);
+            
         } catch (IOException e) {
             throw new ServletException(e);
         } catch (KeyStoreException e) {
@@ -105,7 +107,6 @@ public class CardServlet extends HttpServlet {
             return;
         }
 
-
         String cardId = extractCardIdFromRequest(request);
 
 
@@ -116,11 +117,10 @@ public class CardServlet extends HttpServlet {
         	System.out.println("CardServlet: could not find card:" + cardId);
             return;
         }
-
+        String userCredential = (String)session.getAttribute("UserCredential");
 
         String tokenServiceEndpoint = "https://" + domainname + "/sts/tokenservice";
-        String mexEndpoint = "https://" + domainname + "/sts/mex";
-
+        String mexEndpoint = "https://" + domainname + "/sts/mex" + "/" + userCredential;
 
         InfoCard card = new InfoCard(cert, privateKey);
         card.setCardId("https://" + domainname + "/sts/card/" + managedCard.getCardId());
@@ -131,7 +131,7 @@ public class CardServlet extends HttpServlet {
 
         // set card logo/image if available . . . if not available it will default to Milo :-)
         if (base64ImageFile != null) {
-            card.setBase64BinaryCardImage(getImageFileEncodedAsBase64());
+            card.setBase64BinaryCardImage(base64ImageFile);
         }
 
 
@@ -142,9 +142,10 @@ public class CardServlet extends HttpServlet {
         card.setTimeExpires(expires.getDateTime());
 
 
-        TokenServiceReference tsr = getTokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert, username);
+        TokenServiceReference tsr = getTokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
+        tsr.setAuthType(userCredential, username);
         card.setTokenServiceReference(tsr);
-
+        
 
         SupportedTokenList tokenList = new SupportedTokenList();
         SupportedToken token = new SupportedToken(SupportedToken.SAML11);
@@ -177,9 +178,8 @@ public class CardServlet extends HttpServlet {
         return "https://" + domainname + "/PrivacyPolicy.xml";
     }
 
-    protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert, String username) {
+    protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert) {
         TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
-        tsr.setUserName(username);
         return tsr;
     }
 
@@ -237,25 +237,6 @@ public class CardServlet extends HttpServlet {
         index++;
         String cardID = url.substring(index, url.length() - 4);
         return cardID;
-    }
-
-    /**
-     * Gets the file referenced in servlet config and returns it's data as a Base64 string.
-     * @return Base64 encoded image data (usaully a PNG)
-     */
-    protected String getImageFileEncodedAsBase64() {
-        if (base64ImageFile != null) {
-            try {
-                return getImageFileEncodedAsBase64(base64ImageFile);
-            } catch (Exception e) {
-                System.err.println("CardServelet::getImageFileEncodedAsBase64: " + e.getMessage());
-                // use the standard image, if an error occurs
-                return null;
-            }
-        } else {
-        	System.out.println("Did not find the image file for the new card (" + base64ImageFile + ")");
-            return null;
-        }
     }
 
     /**
