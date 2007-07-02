@@ -14,6 +14,7 @@ import nu.xom.XPathException;
 
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.CryptoException;
+import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.util.Base64;
 import org.xmldap.ws.WSConstants;
 
@@ -22,6 +23,13 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
     protected ValidatingBaseEnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey) {
     	super(keyInfo, privateKey);
     }
+
+	public static String getModulusOrNull(Document xmlDoc) throws InfoCardProcessingException {
+		XPathContext thisContext = new XPathContext();
+		thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
+		String mod = getFirstValue(xmlDoc, thisContext, "//dsig:Modulus");
+		return mod;
+	}
 
 	/**
 	 * @param xmlDoc
