@@ -299,7 +299,6 @@ function load(){
         var label = document.getElementById("notify");
 		var site = policy["cn"];
         var please = stringsBundle.getFormattedString('pleaseselectacard', [site]);
-        label.setAttribute("crop", "end");
         label.setAttribute("value", please);
     } else {
         var label = document.getElementById("notify");
