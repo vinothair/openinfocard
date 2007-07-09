@@ -17,7 +17,7 @@
 
 #mainlabel{padding:5px;font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:3.6em;text-align:left; color: white;}
 #select{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
-.lblTitle{crop:end; padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: white;}
+.lblTitle{max-width:780px; crop:end; padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: white;}
 .lblText{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:right; color: white;}
 .cardcontrols{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
 
