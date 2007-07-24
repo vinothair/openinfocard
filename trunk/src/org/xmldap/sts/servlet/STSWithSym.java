@@ -104,8 +104,8 @@ public class STSWithSym  extends HttpServlet {
 
 
         XPathContext context = new XPathContext();
-        context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
-        context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
+        context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
+        context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
         context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
         context.addNamespace("wsid","http://schemas.microsoft.com/ws/2005/05/identity");
         context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
@@ -170,8 +170,8 @@ public class STSWithSym  extends HttpServlet {
 
 
         XPathContext context = new XPathContext();
-        context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
-        context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
+        context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
+        context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
         context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
         context.addNamespace("wsid","http://schemas.xmlsoap.org/ws/2005/05/identity");
         context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
@@ -254,9 +254,9 @@ public class STSWithSym  extends HttpServlet {
         System.out.println("We have a doc");
 
         XPathContext context = new XPathContext();
-        context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
+        context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
         context.addNamespace("e","http://www.w3.org/2001/04/xmlenc#");
-        context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
+        context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
         context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
         context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
         context.addNamespace("c","http://schemas.xmlsoap.org/ws/2005/02/sc");

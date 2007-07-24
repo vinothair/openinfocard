@@ -1,15 +1,20 @@
-<%@ page import="java.util.Collection"%>
-<%@ page import="java.util.Iterator"%>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <%@ page import="java.util.List"%>
 <%@ page import="java.util.Locale"%>
 <%@ page import="org.xmldap.sts.db.ManagedCard"%>
 <%@ page import="org.xmldap.sts.db.CardStorage"%>
 <%@ page import="org.xmldap.sts.db.DbSupportedClaim"%>
-<%@ page import="org.xmldap.sts.db.DbSupportedClaims"%>
 <%@ page import="org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl"%>
-<%!
+<%@ page import="org.xmldap.util.PropertiesManager"%>
+<%@ page import="org.xmldap.sts.db.SupportedClaims"%>
+<%
 
-    CardStorage storage = new CardStorageEmbeddedDBImpl();
+	PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, getServletContext());
+	String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
+	SupportedClaims supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
+	CardStorage storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
 	
 %>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -103,7 +108,7 @@
     <tr><td>Card Name:</td><td><input type="text" name="cardName" class="forminput"></td></tr>
 <%
 		Locale clientLocale = request.getLocale();
-		List dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+		List dbSupportedClaims = supportedClaimsImpl.dbSupportedClaims();
 		for (int i=0; i<dbSupportedClaims.size(); i++) {
 		 DbSupportedClaim claim = (DbSupportedClaim)dbSupportedClaims.get(i);
 		 String key = claim.columnName;
@@ -124,7 +129,7 @@
         String cardName = request.getParameter("cardName");
         if (cardName != null ) card.setCardName(cardName);
 
-        List dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+        List dbSupportedClaims = supportedClaimsImpl.dbSupportedClaims();
 	    for (int i=0; i<dbSupportedClaims.size(); i++) {
 	    	DbSupportedClaim claim = (DbSupportedClaim)dbSupportedClaims.get(i);
 	    	String key = claim.columnName;

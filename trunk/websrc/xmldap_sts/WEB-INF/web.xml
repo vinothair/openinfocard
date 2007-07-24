@@ -94,7 +94,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>MexServlet</servlet-name>
-        <url-pattern>/mex</url-pattern>
+        <url-pattern>/mex/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>STSServlet</servlet-name>

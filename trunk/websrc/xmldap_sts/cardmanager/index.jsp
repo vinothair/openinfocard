@@ -1,16 +1,21 @@
-<%@ page import="java.util.Collection"%>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <%@ page import="java.util.Iterator"%>
 <%@ page import="org.xmldap.sts.db.ManagedCard"%>
 <%@ page import="org.xmldap.sts.db.CardStorage"%>
 <%@ page import="org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl"%>
 <%@ page import="java.util.List"%>
 <%@ page import="org.xmldap.exceptions.StorageException"%>
-<%!
+<%@ page import="org.xmldap.util.PropertiesManager"%>
+<%@ page import="org.xmldap.sts.db.SupportedClaims"%>
+<%
 
-
-    CardStorage storage = new CardStorageEmbeddedDBImpl();
-
-
+	PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, getServletContext());
+	String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
+	SupportedClaims supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
+	CardStorage storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
+	
 %>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>

@@ -32,7 +32,6 @@ package org.xmldap.sts.servlet;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.TokenServiceReference;
-import org.xmldap.infocard.Constants;
 import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedToken;
@@ -42,8 +41,8 @@ import org.xmldap.infocard.roaming.RoamingInformationCard;
 import org.xmldap.infocard.roaming.RoamingStore;
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.DbSupportedClaim;
-import org.xmldap.sts.db.DbSupportedClaims;
 import org.xmldap.sts.db.ManagedCard;
+import org.xmldap.sts.db.SupportedClaims;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
 import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
@@ -66,13 +65,14 @@ import java.util.List;
 
 public class BackupServlet extends HttpServlet {
 
-    private static CardStorage storage = new CardStorageEmbeddedDBImpl();
+    private static CardStorage storage = null;
     private String base64ImageFile = null;
 
     private X509Certificate cert = null;
     private PrivateKey privateKey = null;
     private String domainname = null;
-
+    private String servletPath = null;
+    private SupportedClaims supportedClaimsImpl = null;
 
 
     public void init(ServletConfig config) throws ServletException {
@@ -86,18 +86,28 @@ public class BackupServlet extends HttpServlet {
             String keystorePassword = properties.getProperty("keystore-password");
             String key = properties.getProperty("key-name");
             String keyPassword = properties.getProperty("key-password");
-
+            String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
+            supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
+            storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
+            
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             privateKey = keystore.getPrivateKey(key,keyPassword);
             cert = keystore.getCertificate(key);
             domainname = properties.getProperty("domain");
+            servletPath = properties.getProperty("servletPath");
             base64ImageFile = properties.getProperty("image-file");
 
         } catch (IOException e) {
             throw new ServletException(e);
         } catch (KeyStoreException e) {
             throw new ServletException(e);
-        }
+        } catch (InstantiationException e) {
+        	throw new ServletException(e);
+		} catch (IllegalAccessException e) {
+			throw new ServletException(e);
+		} catch (ClassNotFoundException e) {
+			throw new ServletException(e);
+		}
 
     }
 
@@ -120,11 +130,11 @@ public class BackupServlet extends HttpServlet {
 
 
             ManagedCard managedCard = storage.getCard(cardId);
-            String tokenServiceEndpoint = "https://" + domainname + "/sts/tokenservice";
-            String mexEndpoint = "https://" + domainname + "/sts/mex";
+            String tokenServiceEndpoint = "https://" + domainname + servletPath + "tokenservice";
+            String mexEndpoint = "https://" + domainname + servletPath + "mex";
 
             InfoCard card = new InfoCard();
-            card.setCardId("https://" + domainname + "/sts/card/" + managedCard.getCardId());
+            card.setCardId("https://" + domainname + servletPath + "card/" + managedCard.getCardId());
             card.setCardName(managedCard.getCardName());
             card.setCardVersion(1);
             card.setIssuerName(domainname);
@@ -189,14 +199,15 @@ public class BackupServlet extends HttpServlet {
     }
 
     protected SupportedClaimList getSupportedClaimList() {
-        List<DbSupportedClaim> supportedClaims = DbSupportedClaims.dbSupportedClaims();
+        List<DbSupportedClaim> supportedClaims = supportedClaimsImpl.dbSupportedClaims();
         SupportedClaimList claimList = new SupportedClaimList();
 
         //PPID is breaking backup files
         //SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
         //claimList.addSupportedClaim(supportedClaim);
         for (DbSupportedClaim claim : supportedClaims) {
-            SupportedClaim thisSupportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri);
+        	// TODO: support description. Axel
+            SupportedClaim thisSupportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri, "A Description");
             claimList.addSupportedClaim(thisSupportedClaim);
         }
 

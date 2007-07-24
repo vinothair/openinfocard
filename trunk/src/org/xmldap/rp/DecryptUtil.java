@@ -35,7 +35,6 @@ import org.xmldap.ws.WSConstants;
 import org.xmldap.exceptions.CryptoException;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.PrivateKey;
 
 

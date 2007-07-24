@@ -28,11 +28,19 @@
 
 package org.xmldap.sts.servlet;
 
-import nu.xom.*;
+import nu.xom.Builder;
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Nodes;
+import nu.xom.ParsingException;
+import nu.xom.XPathContext;
+
 import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.infocard.TokenServiceReference;
 import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.PropertiesManager;
+import org.xmldap.ws.WSConstants;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
@@ -48,6 +56,8 @@ import java.text.MessageFormat;
 
 public class MexServlet extends HttpServlet {
 
+	private final static String soap_prefix = "<?xml version=\"1.0\"?><s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://www.w3.org/2005/08/addressing\"><s:Header><a:Action s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2004/09/transfer/GetResponse</a:Action><a:RelatesTo>{0}</a:RelatesTo></s:Header><s:Body>";
+	private final static String soap_postfix = "</s:Body></s:Envelope>";
 
     private String cert = null;
 
@@ -59,12 +69,12 @@ public class MexServlet extends HttpServlet {
 
             PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
             String keystorePath = properties.getProperty("keystore");
-            String keystorePassword = properties.getProperty("keystore-password");
-            String key = properties.getProperty("key-name");
+            String keystorePassword = properties.getProperty("keystore.password");
+            String key = properties.getProperty("key.name");
 
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             X509Certificate certificate = keystore.getCertificate(key);
-            cert = Base64.encodeBytes(certificate.getEncoded());
+            cert = Base64.encodeBytesNoBreaks(certificate.getEncoded());
 
         } catch (IOException e) {
             throw new ServletException(e);
@@ -76,10 +86,66 @@ public class MexServlet extends HttpServlet {
 
     }
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
 
-        System.out.println("MEX got a request: " + request.getRequestURL());
+    	String url = request.getRequestURL().toString();
+    	
+		System.out.println("MEX got a GET request: " + url);
+		ServletContext application = getServletConfig().getServletContext();
+		
+		String filename = null;
+		if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
+			filename = "/WEB-INF/mex-pwd-meta.xml";
+		} else if (url.endsWith(TokenServiceReference.SELF_ISSUED)) {
+			filename = "/WEB-INF/mex-self.xml";
+		} else if (url.endsWith(TokenServiceReference.X509)) {
+			filename = "/WEB-INF/mex-x509.xml";
+		} else if (url.endsWith(TokenServiceReference.KERB)) {
+			filename = "/WEB-INF/mex-kerb.xml";
+		} else {
+			response.sendError(HttpServletResponse.SC_NOT_FOUND, "no mex data is associated with this url " + url);
+			return;
+		}
+		System.out.println("MEX reading file " + filename);
+		InputStream in = application.getResourceAsStream(filename);
 
+		StringBuffer mexBuff = new StringBuffer();
+		BufferedReader ins = new BufferedReader(new InputStreamReader(in));
+		try {
+
+			while (in.available() != 0) {
+				mexBuff.append(ins.readLine());
+			}
+
+			in.close();
+			ins.close();
+
+		} catch (IOException e) {
+			throw new ServletException(e);
+		}
+
+		String[] args = { cert };
+		MessageFormat mexResponse = new MessageFormat(mexBuff.toString());
+
+		String resp = mexResponse.format(args);
+		response.setContentLength(resp.length());
+		response.setContentType("application/xml; charset=utf-8");
+
+		PrintWriter out = response.getWriter();
+		out.println(resp);
+		out.flush();
+		out.close();
+		System.out.println("MEX replied");
+		System.out.println(resp);
+
+	}
+
+ protected void doPost(HttpServletRequest request, HttpServletResponse
+ response) throws ServletException, IOException {
+
+        System.out.println("MEX got a POST request: " + request.getRequestURL());
+    	String url = request.getRequestURL().toString();
 
         int contentLen = request.getContentLength();
         DataInputStream inStream = new DataInputStream(request.getInputStream());
@@ -100,7 +166,7 @@ public class MexServlet extends HttpServlet {
 
 
         XPathContext context = new XPathContext();
-        context.addNamespace("s", "http://www.w3.org/2003/05/soap-envelope");
+        context.addNamespace("s", WSConstants.SOAP12_NAMESPACE);
         context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
 
 
@@ -110,8 +176,23 @@ public class MexServlet extends HttpServlet {
 
         String[] args = {messageID.getValue(), cert};
 
+		String filename = null;
+		if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
+			filename = "/WEB-INF/mex-pwd-soap.xml";
+		} else if (url.endsWith(TokenServiceReference.SELF_ISSUED)) {
+			filename = "/WEB-INF/mex-self.xml";
+		} else if (url.endsWith(TokenServiceReference.X509)) {
+			filename = "/WEB-INF/mex-x509.xml";
+		} else if (url.endsWith(TokenServiceReference.KERB)) {
+			filename = "/WEB-INF/mex-kerb.xml";
+		} else {
+			response.sendError(HttpServletResponse.SC_NOT_FOUND, "no mex data is associated with this url " + url);
+			return;
+		}
+		System.out.println("MEX reading file " + filename);
+
         ServletContext application = getServletConfig().getServletContext();
-        InputStream in = application.getResourceAsStream("/mex.xml");
+        InputStream in = application.getResourceAsStream(filename);
 
 
 

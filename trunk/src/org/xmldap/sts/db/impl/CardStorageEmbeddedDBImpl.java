@@ -2,8 +2,8 @@ package org.xmldap.sts.db.impl;
 
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.DbSupportedClaim;
-import org.xmldap.sts.db.DbSupportedClaims;
 import org.xmldap.sts.db.ManagedCard;
+import org.xmldap.sts.db.SupportedClaims;
 import org.xmldap.exceptions.StorageException;
 
 import java.sql.*;
@@ -27,9 +27,14 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
 
     private boolean initialized = false;
     
+    SupportedClaims supportedClaimsImpl = null;
+    
+    public CardStorageEmbeddedDBImpl(SupportedClaims supportedClaimsImpl) {
+    	this.supportedClaimsImpl = supportedClaimsImpl;
+    }
     
     private String claimsDefinition() {
-    	List<DbSupportedClaim>dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+    	List<DbSupportedClaim>dbSupportedClaims = supportedClaimsImpl.dbSupportedClaims();
     	if (dbSupportedClaims.size() > 0) {
 	    	StringBuffer claimsDefinition = new StringBuffer();
     		claimsDefinition.append(",");
@@ -86,9 +91,9 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
             //System.out.println("Loaded the appropriate driver.");
 
             Properties props = new Properties();
-            conn = DriverManager.getConnection(protocol + "cardDB;create=true", props);
+            conn = DriverManager.getConnection(protocol + supportedClaimsImpl.getClass().getName() + "cardDB;create=true", props);
 
-            System.out.println("Connected to cardDB");
+            System.out.println("Connected to " + supportedClaimsImpl.getClass().getName() + "cardDB");
 
             conn.setAutoCommit(false);
             Statement s = conn.createStatement();
@@ -97,7 +102,7 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
             try {
                 rs = s.executeQuery( "SELECT init FROM initialized");
                 if (rs.next()){
-                    System.out.println("CardDB initialized");
+                    System.out.println(supportedClaimsImpl.getClass().getName() + "cardDB is already initialized");
                     initialized = true;
                 }
 
@@ -120,7 +125,7 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
 
                 s.execute("create table initialized(init int, version int)");
                 s.execute("insert into initialized values (1, 1)");
-                System.out.println("Card DB Initialized");
+                System.out.println(supportedClaimsImpl.getClass().getName() + "cardDB initialized");
 
 
             } finally {
@@ -290,7 +295,7 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
         	   insert.append(card.getTimeExpires());
         	   insert.append("'");
         	   
-        	   List<DbSupportedClaim> dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+        	   List<DbSupportedClaim> dbSupportedClaims = supportedClaimsImpl.dbSupportedClaims();
         	   for (int i=0; i<dbSupportedClaims.size(); i++) {
         		   DbSupportedClaim claim = dbSupportedClaims.get(i);
         		   boolean isString = (claim.columnType.indexOf("varChar") > -1);
@@ -388,7 +393,7 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
                     card.setTimeIssued(rs.getString(4));
                     card.setTimeExpires(rs.getString(5));
                     
-                    List<DbSupportedClaim> dbSupportedClaims = DbSupportedClaims.dbSupportedClaims();
+                    List<DbSupportedClaim> dbSupportedClaims = supportedClaimsImpl.dbSupportedClaims();
                     for (int i=0; i<dbSupportedClaims.size(); i++) {
                     	String value = rs.getString(i+6);
                     	if ((value != null) && (!"".equals(value)) && (!"null".equals(value))) {

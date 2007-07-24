@@ -370,9 +370,9 @@ public class EncryptedStore {
         card.setTokenList(tokenList);
 
         SupportedClaimList claimList = new SupportedClaimList();
-        SupportedClaim given = new SupportedClaim("GivenName", Constants.IC_NAMESPACE_PREFIX + "givenname");
-        SupportedClaim sur = new SupportedClaim("Surname", Constants.IC_NAMESPACE_PREFIX + "surname");
-        SupportedClaim email = new SupportedClaim("EmailAddress", Constants.IC_NAMESPACE_PREFIX + "emailaddress");
+        SupportedClaim given = new SupportedClaim("GivenName", Constants.IC_NAMESPACE_PREFIX + "givenname", "Your given name.");
+        SupportedClaim sur = new SupportedClaim("Surname", Constants.IC_NAMESPACE_PREFIX + "surname", "Your surname.");
+        SupportedClaim email = new SupportedClaim("EmailAddress", Constants.IC_NAMESPACE_PREFIX + "emailaddress", "Your Email-Address");
         claimList.addSupportedClaim(given);
         claimList.addSupportedClaim(sur);
         claimList.addSupportedClaim(email);

@@ -11,9 +11,8 @@
 
 <%
 
-   String givenName =   request.getParameter("GivenName");
-   String sureName =   request.getParameter("Surname");
-   String email =   request.getParameter("EmailAddress");
+   String ppid =   request.getParameter("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier");
+   String country =   request.getParameter("urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:country");
    String xml =   request.getParameter("token");
    PrivateKey privateKey = null;
    X509Certificate cert = null;
@@ -34,9 +33,8 @@
    EncryptedData encryptor = new EncryptedData(cert);
    SelfIssuedToken token = new SelfIssuedToken(cert,cert,privateKey);
 
-   token.setGivenName(givenName);
-   token.setSurname(sureName);
-   token.setEmailAddress(email);
+   token.setPrivatePersonalIdentifier(ppid);
+   token.setSurname(country);
    token.setValidityPeriod(1, 10);
    Element securityToken = null;
    try {
@@ -61,7 +59,7 @@
 <div style="font-family: Helvetica;">
 
 <h2>Here's the token I made for you...</h2>
-    <form name='infocard' method='post' action='https://xmldap.org/relyingparty/infocard'>
+    <form name='infocard' method='post' action='/geopriv_rp/infocard'>
        <textarea cols='150' rows='20' name="xmlToken"><%= message %></textarea><br>
         <input type=submit value="Login with this token">
     </form>

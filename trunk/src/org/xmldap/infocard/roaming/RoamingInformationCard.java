@@ -6,9 +6,6 @@ import org.xmldap.infocard.InfoCard;
 import org.xmldap.util.Base64;
 import nu.xom.*;
 
-import java.io.IOException;
-
-
 public class RoamingInformationCard implements org.xmldap.xml.Serializable {
 
     private InfoCard card;

@@ -31,7 +31,6 @@ package org.xmldap.asn1;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.json.JSONException;
-import org.xmldap.exceptions.TokenIssuanceException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

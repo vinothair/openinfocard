@@ -3,7 +3,7 @@
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Java Based Relying Party</title>
+	<title>Java Based geopriv Relying Party</title>
 
 
     <style>
@@ -63,10 +63,10 @@
 
 </head>
 <body>
-	<div id="title">java based relying party</div>
+	<div id="title">geopriv relying party</div>
 	<div id="links">
 	<a href="../">resources</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<a href="http://xmldap.blogspot.com">xmldap.blogspot.com</a>
+	<a href="http://ignisvulpis.blogspot.com">ignisvulpis.blogspot.com</a>
 	</div>
 
 
@@ -89,17 +89,15 @@
 
     <OBJECT type="application/x-informationCard" name="xmlToken">
                   <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
-                  <PARAM Name="requiredClaims" Value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress">
-                  <PARAM Name="optionalClaims"
-            Value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender">
-            </OBJECT>
+                  <PARAM Name="requiredClaims" Value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:country urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:A1 urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:A2 urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:A3 urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:A4 urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:A5 urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:A6 urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:PRD urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:POD urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:STS urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:HNO urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:HNS urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:LMK urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:LOC urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:FLR urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:NAM urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:PC">
+    </OBJECT>
 </form>
                     <br>Click on the image above to login with and Infocard.<br>
-                    <br><a href="/sts/cardmanager/">Click here to create a managed card.</a>
+                    <br><a href="/geopriv_sts/cardmanager/">Click here to create a managed card.</a>
 <%
  } else {
 %>
-The infocard login will only work if you're on my secure site.  <p><a href="https://xmldap.org/relyingparty/">https://xmldap.org/relyingparty/</a>
+The infocard login will only work if you're on my secure site.  <p><a href="https://@domain@/relyingparty/">https://@domain@/relyingparty/</a>
 <%
  }
 %>
@@ -113,9 +111,8 @@ The infocard login will only work if you're on my secure site.  <p><a href="http
 
     <form action="./post.jsp" method="POST">
         <table border="0">
-            <tr><td>First Name:</td><td><input type="text" name="GivenName" class="forminput"><br></td></tr>
-            <tr><td>Last Name:</td><td><input type="text" name="Surname" class="forminput"><br></td></tr>
-            <tr><td>Email:</td><td><input type="text" name="EmailAddress" class="forminput"><br></td></tr>
+            <tr><td>PPID:</td><td><input type="text" name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier" class="forminput"><br></td></tr>
+            <tr><td>Country:</td><td><input type="text" name="urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:country" class="forminput"><br></td></tr>
             <tr><td colspan="2"><input type="submit" value="Create it for me"></td></tr>
         </table>
 

@@ -37,6 +37,9 @@ public interface WSConstants {
 
     static final String WSA_NAMESPACE_04_08 = "http://schemas.xmlsoap.org/ws/2004/08/addressing";
     static final String WSA_NAMESPACE_05_08 = "http://www.w3.org/2005/08/addressing";
+    //    http://www.w3.org/2006/03/addressing/ws-addr.xsd.
+    static final String WSA_NAMESPACE_06_03 = "http://www.w3.org/2006/03/addressing";
+
     static final String WSA_PREFIX = "wsa";
 
     static final String WSSE_NAMESPACE_OASIS_10 = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd";

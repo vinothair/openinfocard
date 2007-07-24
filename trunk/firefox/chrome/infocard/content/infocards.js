@@ -44,8 +44,9 @@ function ok(){
         finish(tokenToReturn);
 
     } else if (selectedCard.type == "managedCard"){
+		var requiredClaims = policy["requiredClaims"];
 
-        var assertion = processManagedCard(selectedCard);
+        var assertion = processManagedCard(selectedCard, requiredClaims);
         debug(assertion);
 
         policy["type"] = "managedCard";
@@ -122,7 +123,7 @@ function finish(tokenToReturn) {
 
 
 
-function processManagedCard(managedCard) {
+function processManagedCard(managedCard, requiredClaims) {
 
     var tokenToReturn = null;
     var mexResponse;
@@ -204,11 +205,56 @@ debug("processManagedCard: mex request status 200");
 
             rst = rst + pw;
 
-            rst = rst + "</o:Password></o:UsernameToken></o:Security></s:Header><s:Body><wst:RequestSecurityToken Context=\"ProcessRequestSecurityToken\" xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\"><wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><wsid:CardId>";
+            rst = rst + "</o:Password></o:UsernameToken></o:Security></s:Header>" +
+            "<s:Body><wst:RequestSecurityToken Context=\"ProcessRequestSecurityToken\" " +
+            "xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">" +
+            "<wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
+            "<wsid:CardId>";
 
             rst = rst + managedCard.id;
 
-            rst = rst + "</wsid:CardId><wsid:CardVersion>1</wsid:CardVersion></wsid:InformationCardReference><wst:Claims><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/><wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/></wst:Claims><wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType><ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>TBD_WHAT_TO_DO</PPID></ClientPseudonym><wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType><wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/></wst:RequestSecurityToken></s:Body></s:Envelope>";
+            rst = rst + "</wsid:CardId><wsid:CardVersion>1</wsid:CardVersion></wsid:InformationCardReference>";
+            
+            if ((requiredClaims == undefined) || (requiredClaims.length < 1)) {
+               // get all the claims from the managed card
+               rst = rst + "<wst:Claims>";
+	           var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+			   var list = managedCard.carddata.managed.ic::SupportedClaimTypeList.ic::SupportedClaimType;
+			   for (var index = 0; index<list.length(); index++) {
+				 var supportedClaim = list[index];
+				 var uri = supportedClaim.@Uri;
+				 rst = rst + "<wsid:ClaimType Uri=\"" + uri + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+               }
+               rst = rst + "</wst:Claims>";
+            } else {
+               rst = rst + "<wst:Claims>";
+               // TODO: check that requiredClaims are provided by the selected managed card
+               var claimsArray = requiredClaims.split(" ");
+               debug("requiredClaims:" + requiredClaims);
+               debug("claimsArray:" + claimsArray);
+               for (var index = 0; index<claimsArray.length; index++) {
+                 var uri = claimsArray[index];
+				 rst = rst + "<wsid:ClaimType Uri=\"" + uri + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+               }
+               rst = rst + "</wst:Claims>";
+            }
+            
+            //rst = rst + "<wst:Claims>" +
+            //"<wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier\" " +
+            //"xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
+            //"<wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\" " +
+            //"xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
+            //"<wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\" " +
+            //"xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
+            //"<wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\" " +
+            //"xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
+            //"</wst:Claims>";
+            
+            rst = rst + "<wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>" +
+            "<ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>TBD_WHAT_TO_DO</PPID></ClientPseudonym>" +
+            "<wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType>" +
+            "<wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
+            "</wst:RequestSecurityToken></s:Body></s:Envelope>";
 
 debug("processManagedCard: request: " + rst);
             var rstr;
@@ -456,8 +502,17 @@ function setCard(card){
 		 var uri = supportedClaim.@Uri;
   		 var row = document.createElement("row");
 		 var label = document.createElement("label");
-		 label.setAttribute("value", supportedClaim.ic::DisplayTag);
-		 label.setAttribute("class", "lblText");
+		 label.setAttribute("crop", "end");
+		 label.setAttribute("class", "claimText");
+		 label.setAttribute("value", supportedClaim.ic::DisplayTag); // this is cropped
+		 try {
+		 	  // DisplayTag should be changed to Description when description is supported
+			 label.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
+		 }
+		 catch (err) {
+		  // tooltiptext barfs on "invalid character" while value does not... Axel
+		  debug(err + "(" + supportedClaim.ic::DisplayTag + ")");
+		 }
 		 var textbox = document.createElement("textbox");
 		 textbox.setAttribute("id", "");
 		 textbox.setAttribute("value", "");
@@ -477,8 +532,17 @@ function setCard(card){
 		 var uri = supportedClaim.@Uri;
   		 var row = document.createElement("row");
 		 var label = document.createElement("label");
+		 label.setAttribute("crop", "end");
+		 label.setAttribute("class", "claimText");
 		 label.setAttribute("value", supportedClaim.ic::DisplayTag);
-		 label.setAttribute("class", "lblText");
+		 try {
+		 	  // DisplayTag should be changed to Description when description is supported
+			 label.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
+		 }
+		 catch (err) {
+		  // tooltiptext barfs on "invalid character" while value does not... Axel
+		  debug(err + "(" + supportedClaim.ic::DisplayTag + ")");
+		 }
 		 var textbox = document.createElement("textbox");
 		 textbox.setAttribute("id", "");
 		 textbox.setAttribute("value", "");

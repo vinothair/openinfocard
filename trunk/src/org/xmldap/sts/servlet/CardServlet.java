@@ -38,9 +38,9 @@ import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.sts.db.DbSupportedClaim;
-import org.xmldap.sts.db.DbSupportedClaims;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.CardStorage;
+import org.xmldap.sts.db.SupportedClaims;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
 import org.xmldap.util.*;
 
@@ -51,7 +51,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.security.cert.Certificate;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
@@ -61,13 +60,15 @@ import java.util.List;
 
 public class CardServlet extends HttpServlet {
 
-    private static CardStorage storage = new CardStorageEmbeddedDBImpl();
+    private static CardStorage storage = null;
     private String base64ImageFile = null;
 
     private X509Certificate cert = null;
     private PrivateKey privateKey = null;
     private String domainname = null;
+    private String servletPath = null;
 
+    private SupportedClaims supportedClaimsImpl = null;
 
 
     public void init(ServletConfig config) throws ServletException {
@@ -81,19 +82,40 @@ public class CardServlet extends HttpServlet {
             String key = properties.getProperty("key.name");
             String keyPassword = properties.getProperty("key.password");
             String imageFilePathString = properties.getProperty("image.file");
+            String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
+            supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
+            storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
             
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             privateKey = keystore.getPrivateKey(key,keyPassword);
+            if (privateKey == null) {
+            	throw new ServletException("privateKey is null");
+            }
             cert = keystore.getCertificate(key);
+            if (cert == null) {
+            	throw new ServletException("cert is null");
+            }
             domainname = properties.getProperty("domain");
-
+            if (domainname == null) {
+            	throw new ServletException("domainname is null");
+            }
+            servletPath = properties.getProperty("servletPath");
+            if (servletPath == null) {
+            	throw new ServletException("servletPath is null");
+            }
             base64ImageFile = getImageFileEncodedAsBase64(imageFilePathString);
             
         } catch (IOException e) {
             throw new ServletException(e);
         } catch (KeyStoreException e) {
             throw new ServletException(e);
-        }
+        } catch (InstantiationException e) {
+        	throw new ServletException(e);
+		} catch (IllegalAccessException e) {
+			throw new ServletException(e);
+		} catch (ClassNotFoundException e) {
+			throw new ServletException(e);
+    }
 
     }
 
@@ -118,12 +140,16 @@ public class CardServlet extends HttpServlet {
             return;
         }
         String userCredential = (String)session.getAttribute("UserCredential");
-
-        String tokenServiceEndpoint = "https://" + domainname + "/sts/tokenservice";
-        String mexEndpoint = "https://" + domainname + "/sts/mex" + "/" + userCredential;
+        if (userCredential == null) {
+        	userCredential = TokenServiceReference.USERNAME;
+        	System.out.println("Warn: UserCredentialType is null. Using default: " + TokenServiceReference.USERNAME);
+        }
+        
+        String tokenServiceEndpoint = "https://" + domainname + "/" + servletPath + "/" + "tokenservice";
+        String mexEndpoint = "https://" + domainname + "/" + servletPath + "/" + "mex" + "/" + userCredential;
 
         InfoCard card = new InfoCard(cert, privateKey);
-        card.setCardId("https://" + domainname + "/sts/card/" + managedCard.getCardId());
+        card.setCardId("https://" + domainname + "/" + servletPath + "/" + "card/" + managedCard.getCardId());
         card.setCardName(managedCard.getCardName());
         card.setCardVersion(1);
         card.setIssuerName(domainname);
@@ -184,12 +210,13 @@ public class CardServlet extends HttpServlet {
     }
 
     protected SupportedClaimList getSupportedClaimList() {
-    	List<DbSupportedClaim> supportedClaims = DbSupportedClaims.dbSupportedClaims();
+    	List<DbSupportedClaim> supportedClaims = supportedClaimsImpl.dbSupportedClaims();
         SupportedClaimList claimList = new SupportedClaimList();
-        SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
+        SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "your personal private identitfier");
         claimList.addSupportedClaim(supportedClaim);
     	for (DbSupportedClaim claim : supportedClaims) {
-    		supportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri);
+    		// TODO: support description. Axel
+    		supportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri, "A Description");
     		claimList.addSupportedClaim(supportedClaim);
     	}
 //        SupportedClaimList claimList = new SupportedClaimList();
