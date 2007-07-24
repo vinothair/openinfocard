@@ -37,8 +37,8 @@ import org.xmldap.ws.WSConstants;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.DbSupportedClaim;
-import org.xmldap.sts.db.DbSupportedClaims;
 import org.xmldap.sts.db.ManagedCard;
+import org.xmldap.sts.db.SupportedClaims;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
 
 import javax.servlet.ServletException;
@@ -64,9 +64,10 @@ public class STSServlet  extends HttpServlet {
     RSAPrivateKey key;
     X509Certificate cert;
     String domain;
+    private String servletPath = null;
 
-    CardStorage storage = new CardStorageEmbeddedDBImpl();
-
+    CardStorage storage = null;
+    SupportedClaims supportedClaimsImpl = null;
 
     public void init(ServletConfig config) throws ServletException {
 
@@ -76,22 +77,51 @@ public class STSServlet  extends HttpServlet {
 
             PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
             String keystorePath = properties.getProperty("keystore");
-            String keystorePassword = properties.getProperty("keystore-password");
-            String keyname = properties.getProperty("key-name");
-            String keypassword = properties.getProperty("key-password");
+            if (keystorePath == null) {
+            	throw new ServletException("keystorePath is null");
+            }
+            String keystorePassword = properties.getProperty("keystore.password");
+            if (keystorePassword == null) {
+            	throw new ServletException("keystorePassword is null");
+            }
+            String keyname = properties.getProperty("key.name");
+            if (keyname == null) {
+            	throw new ServletException("cert is null");
+            }
+            String keypassword = properties.getProperty("key.password");
+            if (keypassword == null) {
+            	throw new ServletException("keypassword is null");
+            }
             domain = properties.getProperty("domain");
+            if (domain == null) {
+            	throw new ServletException("domainname is null");
+            }
+            servletPath = properties.getProperty("servletPath");
+            if (servletPath == null) {
+            	throw new ServletException("servletPath is null");
+            }
 
+            String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
+            supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
+            storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
+            
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             cert = keystore.getCertificate(keyname);
-            key = (RSAPrivateKey) keystore.getPrivateKey(keyname,keypassword);
 
+            key = (RSAPrivateKey) keystore.getPrivateKey(keyname,keypassword);
 
 
         } catch (IOException e) {
             throw new ServletException(e);
         } catch (KeyStoreException e) {
             throw new ServletException(e);
-        }
+        } catch (InstantiationException e) {
+        	throw new ServletException(e);
+		} catch (IllegalAccessException e) {
+			throw new ServletException(e);
+		} catch (ClassNotFoundException e) {
+			throw new ServletException(e);
+    }
 
         storage.startup();
 
@@ -103,8 +133,8 @@ public class STSServlet  extends HttpServlet {
         Bag tokenElements = new Bag();
 
         XPathContext context = new XPathContext();
-        context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
-        context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
+        context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
+        context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
         context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
         context.addNamespace("wsid","http://schemas.microsoft.com/ws/2005/05/identity");
         context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
@@ -134,8 +164,8 @@ public class STSServlet  extends HttpServlet {
 
 
         XPathContext context = new XPathContext();
-        context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
-        context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
+        context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
+        context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
         context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
         context.addNamespace("wsid","http://schemas.xmlsoap.org/ws/2005/05/identity");
         context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
@@ -146,7 +176,7 @@ public class STSServlet  extends HttpServlet {
         String cardIdUri = cid.getValue();
         
 //        String domainname = _su.getDomainName();
-//        String prefix = "https://" + domainname + "/sts/card/";
+//        String prefix = "https://" + domainname + servletPath + "card/";
         String cardId = null;
         if (cardIdUri.startsWith(requestURL+"/card/")) {
         	cardId = cardIdUri.substring(requestURL.length()+6);
@@ -235,8 +265,8 @@ public class STSServlet  extends HttpServlet {
         if (DEBUG) System.out.println("We have a doc");
 
         XPathContext context = new XPathContext();
-        context.addNamespace("s","http://www.w3.org/2003/05/soap-envelope");
-        context.addNamespace("a", "http://www.w3.org/2005/08/addressing");
+        context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
+        context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
         context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
         context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
         context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
@@ -356,7 +386,7 @@ public class STSServlet  extends HttpServlet {
         
         token.setPrivatePersonalIdentifier(card.getPrivatePersonalIdentifier());
         token.setValidityPeriod(-3, 10);
-        token.setIssuer("https://" + domain + "/sts/tokenservice");
+        token.setIssuer("https://" + domain + servletPath + "tokenservice");
         
         RandomGUID uuid = new RandomGUID();
 
@@ -397,7 +427,7 @@ public class STSServlet  extends HttpServlet {
 
         for (String uri : cardClaims) {
         	String value = card.getClaim(uri);
-        	DbSupportedClaim dbClaim = DbSupportedClaims.getClaimByUri(uri);
+        	DbSupportedClaim dbClaim = supportedClaimsImpl.getClaimByUri(uri);
         	String displayTag = dbClaim.getDisplayTag(clientLocale);
             addDisplayClaim(
             		displayToken, 

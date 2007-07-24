@@ -1,11 +1,12 @@
 package org.xmldap.sts.db;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class DbSupportedClaims {
+public class DbSupportedClaims extends SupportedClaims {
     public final static DbDisplayTag[] givenNameDisplayTagsOA = {new DbDisplayTag("en_US","Given Name"), new DbDisplayTag("de_DE","Vorname")};
     public final static DbSupportedClaim givenNameO = new DbSupportedClaim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname", "givenName", "varChar(50)", givenNameDisplayTagsOA);
     
@@ -38,22 +39,24 @@ public class DbSupportedClaims {
     
     public final static DbDisplayTag[] genderDisplayTagsOA = {new DbDisplayTag("en_US","Gender"), new DbDisplayTag("de_DE","Geschlecht")};
     public final static DbSupportedClaim genderO = new DbSupportedClaim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender", "gender", "varChar(10)", genderDisplayTagsOA);
- 
-    private final static DbSupportedClaim[] dbSupportedClaims = {
-    		givenNameO,
-    		surnammeO,
-    		emailAddressO,
-    		streetAddressO,
-    		localityNameO,
-    		stateOrProvinceO,
-    		postalCodeO,
-    		countryO,
-    		primaryPhoneO,
-    		dateOfBirthO,
-    		genderO
-    		};
+
+    protected DbSupportedClaims() {
+    	List<DbSupportedClaim> claim = new ArrayList<DbSupportedClaim>();
+		claim.add(givenNameO);
+		claim.add(surnammeO);
+		claim.add(emailAddressO);
+		claim.add(streetAddressO);
+		claim.add(localityNameO);
+		claim.add(stateOrProvinceO);
+		claim.add(postalCodeO);
+		claim.add(countryO);
+		claim.add(primaryPhoneO);
+		claim.add(dateOfBirthO);
+		claim.add(genderO);
+		dbSupportedClaims = claim.toArray(new DbSupportedClaim[claim.size()]);
+    }    
     
-    public static DbSupportedClaim getClaimByUri(String uri) {
+    public DbSupportedClaim getClaimByUri(String uri) {
     	for (DbSupportedClaim claim : dbSupportedClaims) {
     		if (claim.uri.equals(uri)) {
     			return claim;
@@ -62,10 +65,10 @@ public class DbSupportedClaims {
     	throw new IllegalArgumentException("This URI is not supported:" + uri);
     }
     
-    public static List<DbSupportedClaim> dbSupportedClaims() {
+    public List<DbSupportedClaim> dbSupportedClaims() {
     	return Collections.unmodifiableList(Arrays.asList(dbSupportedClaims));
     }
-    public static Iterator<DbSupportedClaim> iterator() {
+    public Iterator<DbSupportedClaim> iterator() {
     	return dbSupportedClaims().iterator();
     }
 

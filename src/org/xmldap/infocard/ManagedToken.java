@@ -34,12 +34,10 @@ import org.xmldap.exceptions.SigningException;
 import org.xmldap.saml.*;
 import org.xmldap.util.RandomGUID;
 import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.xmldsig.BaseEnvelopedSignature;
 import org.xmldap.xmldsig.KeyInfo;
 
 import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

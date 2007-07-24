@@ -30,7 +30,6 @@ package org.xmldap.tools;
 import org.bouncycastle.asn1.DERBMPString;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.jce.PKCS10CertificationRequest;
 import org.bouncycastle.jce.interfaces.PKCS12BagAttributeCarrier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;

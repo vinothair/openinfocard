@@ -29,7 +29,6 @@
 package org.xmldap.sts.servlet;
 
 import nu.xom.Document;
-import nu.xom.Serializer;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;

@@ -57,7 +57,7 @@
             <vbox>
                 <label id="mainlabel" value="&cardmanager.daylabel;"/>
             </vbox>
-            <vbox flex="10">
+            <vbox flex="1">
                 <spacer></spacer>
             </vbox>
 
@@ -75,27 +75,20 @@
 
 
         <hbox id="instructarea">
-            <label class="lblTitle" id="notify" value=""/>
-            <hbox flex="1">
-             <spacer width="10"></spacer>
-            </hbox>
-            
+            <label class="lblTitle" id="notify" value="" crop="end"/>
         </hbox>
-
 
 
             <hbox id="editarea" class="editarea" flex="1">
 
-                <iframe src="" id="openid_iframe" name="openid_iframe" style="visibility: hidden; width: 100%; height:100px;"/>
+                <iframe src="" id="openid_iframe" class="openid_iframe" hidden="true"/>
 
                <vbox align="left">
 
-                <hbox id="issuer_hbox" flex="0">
+                <hbox id="issuer_hbox" hidden="true">
                     <label class="lblTitle" id="issuerlogo_label" value="issuer logo: (hash value not verified)" hidden="true" />
                     <image id="issuerlogo" src="chrome://infocard/content/xmldap.png" hidden="true" />
                 </hbox>
-
-
 
                 <hbox>
                     <label class="lblTitle" id="cardname" value=""/>
@@ -104,32 +97,32 @@
                     <vbox>
                         <spacer height="5"/>
 
-                    <grid id="editgrid" hidden="true">
+                    <grid id="editgrid" class="editgrid_left" hidden="true">
                         <columns><column id="colText"/><column id="colData"/></columns>
                         <rows id="rows0">
-                            <row><label id="_givenname" class="lblText" value="&cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
-                            <row><label id="_surname" class="lblText" value="&cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
-                            <row><label id="_streetAddress" class="lblText" value="&cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
-                            <row><label id="_locality" class="lblText" value="&cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
-                            <row><label id="_stateOrProvince" class="lblText" value="&cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
-                            <row><label id="_postalCode" class="lblText" value="&cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
-                            <row><label id="_country" class="lblText" value="&cardmanager.country;"  /><textbox id="country"   value=""/></row>
+                            <row><label id="_givenname" class="claimText" value="&cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
+                            <row><label id="_surname" class="claimText" value="&cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
+                            <row><label id="_streetAddress" class="claimText" value="&cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
+                            <row><label id="_locality" class="claimText" value="&cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
+                            <row><label id="_stateOrProvince" class="claimText" value="&cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
+                            <row><label id="_postalCode" class="claimText" value="&cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
+                            <row><label id="_country" class="claimText" value="&cardmanager.country;"  /><textbox id="country"   value=""/></row>
                         </rows>
                     </grid>
 
                     </vbox>
                     <vbox>
                         <spacer height="5"/>
-                    <grid id="editgrid1" hidden="true">
+                    <grid id="editgrid1" class="editgrid_right" hidden="true">
                         <columns><column id="colText"/><column id="colData"/></columns>
                         <rows id="rows1">
-                            <row><label id="_email" class="lblText" value="&cardmanager.email;"  /><textbox id="email"   value=""/></row>
-                            <row><label id="_primaryPhone" class="lblText" value="&cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
-                            <row><label id="_mobilePhone" class="lblText" value="&cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
-                            <row><label id="_otherPhone" class="lblText" value="&cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
-                            <row><label id="_dateOfBirth" class="lblText" value="&cardmanager.dateofbirth;"    /><textbox id="dateOfBirth"     value=""/></row>
-                            <row><label id="_gender" class="lblText" value="&cardmanager.gender;"    /><textbox id="gender"     value=""/></row>
-                            <row><label class="lblText" value="&cardmanager.imgurl;"    /><textbox id="imgurl"     value=""/></row>
+                            <row><label id="_email" class="claimText" value="&cardmanager.email;"  /><textbox id="email"   value=""/></row>
+                            <row><label id="_primaryPhone" class="claimText" value="&cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
+                            <row><label id="_mobilePhone" class="claimText" value="&cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
+                            <row><label id="_otherPhone" class="claimText" value="&cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
+                            <row><label id="_dateOfBirth" class="claimText" value="&cardmanager.dateofbirth;"    /><textbox id="dateOfBirth"     value=""/></row>
+                            <row><label id="_gender" class="claimText" value="&cardmanager.gender;"    /><textbox id="gender"     value=""/></row>
+                            <row><label class="claimText" value="&cardmanager.imgurl;"    /><textbox id="imgurl"     value=""/></row>
                         </rows>
                     </grid>
 
@@ -139,7 +132,7 @@
                 <hbox id="managedClaims" class="managedClaims" hidden="true">
                     <vbox>
                         <spacer height="5"/>
-	                    <grid id="editgrid2" hidden="true">
+	                    <grid id="editgrid2" class="editgrid_left" hidden="true">
 	                        <columns><column id="colText"/><column id="colData"/></columns>
 	                        <rows id="managedRows0">
 	                        </rows>
@@ -148,7 +141,7 @@
                     </vbox>
                     <vbox>
                         <spacer height="5"/>
-	                    <grid id="editgrid3" hidden="true">
+	                    <grid id="editgrid3" class="editgrid_right" hidden="true">
 	                        <columns><column id="colText"/><column id="colData"/></columns>
 	                        <rows id="managedRows1">
 	                        </rows>

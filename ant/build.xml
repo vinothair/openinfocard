@@ -113,6 +113,19 @@
 
     </target>
 
+        <target name="dist_GEOPRIV_RP" depends="init">
+
+            <mkdir dir="${build.dir}/geopriv_rp/"/>
+            <copy todir="${build.dir}/geopriv_rp/geopriv_rp/">
+              <fileset dir="${websrc.dir}/geopriv_rp/"/>
+            </copy>
+            <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_rp/geopriv_rp/WEB-INF/lib/"/>
+            <jar destfile="${build.dir}/geopriv_rp/geopriv_rp.war">
+                <fileset dir="${build.dir}/geopriv_rp/geopriv_rp/"/>
+            </jar>
+
+        </target>
+
 
 
 
@@ -120,12 +133,12 @@
 
 
         <mkdir dir="${build.dir}/xmldap.org/"/>
-        <copy todir="${build.dir}/xmldap.org/sts/">
+        <copy todir="${build.dir}/xmldap.org/${xmldap_stspath}/">
           <fileset dir="${websrc.dir}/xmldap_sts/"/>
         </copy>
         <property file="${websrc.dir}/xmldap_sts/WEB-INF/sts.properties"/>
 
-        <replace  file="${build.dir}/xmldap.org/sts/WEB-INF/web.xml">
+        <replace  file="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/web.xml">
          <replacefilter token="@keystore@" value="${keystore}"/>
             <replacefilter token="@key@" value="${key.name}"/>
             <replacefilter token="@keystore-password@" value="${keystore-password}"/>
@@ -133,29 +146,59 @@
             <replacefilter token="@domain@" value="${domain}"/>
             <replacefilter token="@mex-file@" value="${mex-file}"/>
             <replacefilter token="@image-file@" value="${image-file}"/>
+            <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
         </replace>
 
-        <replace  file="${build.dir}/xmldap.org/sts/mex.xml">
+        <replace  dir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/" includes="mex*xml">
             <replacefilter token="@domain@" value="${domain}"/>
+            <replacefilter token="@sts@" value="${xmldap_stspath}"/>
         </replace>
 
-        <replace  file="${build.dir}/xmldap.org/sts/mex-pwd.xml">
-            <replacefilter token="@domain@" value="${domain}"/>
-        </replace>
-
-        <replace  file="${build.dir}/xmldap.org/sts/mex-self.xml">
-            <replacefilter token="@domain@" value="${domain}"/>
-        </replace>
-
-        <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/sts/WEB-INF/lib/"/>
+        <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
+        <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
+        <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
+        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
         <jar destfile="${build.dir}/xmldap.org/sts.war">
-            <fileset dir="${build.dir}/xmldap.org/sts/"/>
+            <fileset dir="${build.dir}/xmldap.org/${xmldap_stspath}/"/>
         </jar>
 
     </target>
+
+
+                <target name="dist_GEOPRIV_STS" depends="init">
+
+
+                    <mkdir dir="${build.dir}/geopriv_sts/"/>
+                    <copy todir="${build.dir}/geopriv_sts/${geopriv_stspath}/">
+                      <fileset dir="${websrc.dir}/geopriv_sts/"/>
+                    </copy>
+                    <property file="${websrc.dir}/geopriv_sts/WEB-INF/sts.properties"/>
+
+                    <replace  file="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/web.xml">
+                     <replacefilter token="@keystore@" value="${keystore}"/>
+                        <replacefilter token="@key@" value="${key.name}"/>
+                        <replacefilter token="@keystore-password@" value="${keystore-password}"/>
+                        <replacefilter token="@key-password@" value="${key-password}"/>
+                        <replacefilter token="@domain@" value="${domain}"/>
+                        <replacefilter token="@mex-file@" value="${mex-file}"/>
+                        <replacefilter token="@image-file@" value="${image-file}"/>
+                        <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
+                    </replace>
+
+                    <replace  dir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/" includes="mex*.xml">
+                        <replacefilter token="@domain@" value="${domain}"/>
+                        <replacefilter token="@sts@" value="${geopriv_stspath}"/>
+                    </replace>
+
+                    <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+                    <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+                    <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+                    <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+                    <jar destfile="${build.dir}/geopriv_sts/geopriv_sts.war">
+                        <fileset dir="${build.dir}/geopriv_sts/${geopriv_stspath}/"/>
+                    </jar>
+
+                </target>
 
 
     <target name="distFireFox"
@@ -259,6 +302,6 @@
     <target name="build_xmldap.org" depends="build_core, dist_XMLDAP_RP, dist_XMLDAP_STS"/>
     <target name="build_firefox" depends="build_core, distFireFox"/>
 
-    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS"/>
+    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS"/>
 
 </project>

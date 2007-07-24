@@ -38,10 +38,12 @@ public class SupportedClaim {
 
     private String displayName;
     private String uri;
+    private String description;
 
-    public SupportedClaim(String displayName, String uri) {
+    public SupportedClaim(String displayName, String uri, String description) {
         this.displayName = displayName;
         this.uri = uri;
+        this.description = description;
     }
 
 
@@ -54,9 +56,9 @@ public class SupportedClaim {
         displayTag.appendChild(displayName);
         supportedClaimType.appendChild(displayTag);
 
-        Element description = new Element(WSConstants.INFOCARD_PREFIX + ":Description", WSConstants.INFOCARD_NAMESPACE);
-        description.appendChild("A description");
-        supportedClaimType.appendChild(description);
+        Element descriptionE = new Element(WSConstants.INFOCARD_PREFIX + ":Description", WSConstants.INFOCARD_NAMESPACE);
+        descriptionE.appendChild(description);
+        supportedClaimType.appendChild(descriptionE);
 
         return supportedClaimType;
 
