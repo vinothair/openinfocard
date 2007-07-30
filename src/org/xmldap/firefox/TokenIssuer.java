@@ -30,10 +30,16 @@ package org.xmldap.firefox;
 
 import nu.xom.*;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.xmldap.asn1.Logotype;
+import org.xmldap.asn1.LogotypeDetails;
+import org.xmldap.asn1.LogotypeInfo;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.TokenIssuanceException;
@@ -751,4 +757,36 @@ public class TokenIssuer {
 		return issuedToken;
 	}
 
+	public String getIssuerLogoURL(String serializedPolicy) throws TokenIssuanceException {
+		try {
+			JSONObject policy = new JSONObject(serializedPolicy);
+			String der = (String) policy.get("cert");
+			X509Certificate cert = org.xmldap.util.CertsAndKeys.der2cert(der);
+			byte[] fromExtensionValue = cert
+					.getExtensionValue(Logotype.id_pe_logotype.getId());
+			ASN1Encodable extVal = X509ExtensionUtil
+					.fromExtensionValue(fromExtensionValue);
+			if (extVal == null)
+				return null;
+			Logotype logotype = Logotype.getInstance((ASN1Sequence) extVal);
+			LogotypeInfo issuerLogo = logotype.getIssuerLogo();
+			if (issuerLogo == null)
+				return "getIssuerLogo returned null";
+			LogotypeDetails logotypeDetails[] = issuerLogo.getLogotypeData()
+					.getImages();
+			if (logotypeDetails.length == 0)
+				return "getLogotypeData returned zero length array";
+			String urls[] = logotypeDetails[0].getLogotypeURI();
+			if (urls.length == 0)
+				return "logotypeDetails[0].getLogotypeURI() has length 0";
+			return urls[0];
+		} catch (CertificateException e) {
+			throw new TokenIssuanceException(e);
+		} catch (IOException e) {
+			throw new TokenIssuanceException(e);
+		} catch (JSONException e) {
+			throw new TokenIssuanceException(e);
+		}
+
+	}
 }

@@ -28,7 +28,7 @@
 
 var selectedCard;
 
-var selectorDebugging = false;
+var selectorDebugging = true;
 
 function ok(){
 
@@ -373,15 +373,18 @@ function load(){
     }
 	{
 		var policy = window.arguments[0];
-		var cert = policy["cert"];
-		//var issuerLogoURL = TokenIssuer.getIssuerLogoURL(cert);
-		//if (issuerLogoURL != undefined) {
-		//	var issuerlogo = document.getElementById("issuerlogo");
-		//	issuerlogo.src = issuerLogoURL;
-		//	issuerlogo.hidden = false;
-		//	var issuerlogo_label = document.getElementById("issuerlogo_label");
-        //                issuerlogo_label.hidden = false;
-		//}
+		var serializedPolicy = JSON.stringify(policy);
+		var issuerLogoURL = TokenIssuer.getIssuerLogoURL(serializedPolicy);
+		debug("issuerLogoURL=" + issuerLogoURL);
+		if (issuerLogoURL != undefined) {
+			var issuerlogo = document.getElementById("issuerlogo");
+			issuerlogo.src = issuerLogoURL;
+			issuerlogo.hidden = false;
+			var issuerlogo_label = document.getElementById("issuerlogo_label");
+            issuerlogo_label.hidden = false;
+			var issuer_hbox = document.getElementById("issuer_hbox");
+            issuer_hbox.hidden = false;
+		}
 	}
 }
 
@@ -433,6 +436,13 @@ function setCard(card){
     var select = document.getElementById('selectcontrol');
     select.setAttribute('hidden', 'false');
 
+	var issuerlogo = document.getElementById("issuerlogo");
+	issuerlogo.src = "";
+	issuerlogo.hidden = true;
+	var issuerlogo_label = document.getElementById("issuerlogo_label");
+    issuerlogo_label.hidden = true;
+	var issuer_hbox = document.getElementById("issuer_hbox");
+    issuer_hbox.hidden = true;
 
     selectedCard = card;
 

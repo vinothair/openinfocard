@@ -86,7 +86,7 @@
                <vbox align="left">
 
                 <hbox id="issuer_hbox" hidden="true">
-                    <label class="lblTitle" id="issuerlogo_label" value="issuer logo: (hash value not verified)" hidden="true" />
+                    <label class="lblTitle" id="issuerlogo_label" value="issuer logo" hidden="true" />
                     <image id="issuerlogo" src="chrome://infocard/content/xmldap.png" hidden="true" />
                 </hbox>
 
