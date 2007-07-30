@@ -121,13 +121,7 @@ function finish(tokenToReturn) {
 
 }
 
-
-
-function processManagedCard(managedCard, requiredClaims) {
-
-    var tokenToReturn = null;
-    var mexResponse;
-
+function getMex(managedCard) {
     var messageIdInt = Math.floor(Math.random()*100000+1);
     var messageId = "urn:uuid:" + messageIdInt;
     var mex = "<s:Envelope " + 
@@ -153,12 +147,37 @@ debug("processManagedCard: mex request: " + mex);
     req.setRequestHeader("User-Agent", "xmldap infocard stack");
     debug('mex xmlhttprequest send');
     req.send(mex);
-debug("processManagedCard: mex request status="+req.status);
+debug("processManagedCard: mex POST request status="+req.status);
     if(req.status == 200) {
-debug("processManagedCard: mex request status 200");
+debug("processManagedCard: mex POST request status 200");
 
         mexResponse = req.responseText;
+        return mexResponse;
+    } else {
+	    req.open('GET', managedCard.carddata.managed.mex, false);
+	    debug('mex xmlhttprequest open');
+	    req.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
+	    req.setRequestHeader("Cache-Control", "no-cache");
+	    req.setRequestHeader("accept-language", "en-us");
+	    req.setRequestHeader("User-Agent", "xmldap infocard stack");
+	    debug('mex GET xmlhttprequest send');
+	    req.send(null);
+debug("processManagedCard: mex GET request status="+req.status);
+    if(req.status == 200) {
+debug("processManagedCard: mex GET request status 200");
+        mexResponse = req.responseText;
+        return mexResponse;
+    }
+	return null;
+}
+}
 
+function processManagedCard(managedCard, requiredClaims) {
+
+    var tokenToReturn = null;
+    var mexResponse = getMex(managedCard);
+
+    if(mexResponse != null) {
         //Start with TransportBinding support
         var tb = mexResponse.indexOf("TransportBinding");
         if (tb < 0) {
@@ -287,7 +306,7 @@ debug("processManagedCard: request status 200");
         }
 
     } else {
-    	alert("mex requeste (" + managedCard.carddata.managed.mex + ") failed: " + req.status);
+    	alert("mex request (" + managedCard.carddata.managed.mex + ") failed: " + req.status);
     }
 
     return tokenToReturn;
