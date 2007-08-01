@@ -764,6 +764,9 @@ public class TokenIssuer {
 			X509Certificate cert = org.xmldap.util.CertsAndKeys.der2cert(der);
 			byte[] fromExtensionValue = cert
 					.getExtensionValue(Logotype.id_pe_logotype.getId());
+			if ((fromExtensionValue == null) || (fromExtensionValue.length == 0)) {
+				return null;
+			}
 			ASN1Encodable extVal = X509ExtensionUtil
 					.fromExtensionValue(fromExtensionValue);
 			if (extVal == null)
