@@ -38,6 +38,7 @@ import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
 
 import java.security.PublicKey;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 
@@ -102,15 +103,17 @@ public class KeyInfo implements Serializable {
         Attribute encodingType = new Attribute("EncodingType", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary");
         keyIdentifier.addAttribute(valueType);
         keyIdentifier.addAttribute(encodingType);
-        PublicKey key = cert.getPublicKey();
+//        PublicKey key = cert.getPublicKey();
 
         String fingerPrint = "";
         try {
-            fingerPrint = CryptoUtils.digest(key.getEncoded());
-
+//            fingerPrint = CryptoUtils.digest(key.getEncoded());
+        	fingerPrint = CryptoUtils.digest(cert.getEncoded());
         } catch (org.xmldap.exceptions.CryptoException e) {
             throw new SerializationException(e);
-        }
+        } catch (CertificateEncodingException e) {
+        	throw new SerializationException(e);
+		}
 
         keyIdentifier.appendChild(fingerPrint);
         securityTokenReference.appendChild(keyIdentifier);
