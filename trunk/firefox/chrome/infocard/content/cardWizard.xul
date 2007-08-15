@@ -203,36 +203,50 @@
              var cardxml = new XML(cardData);
              var dsig = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
              var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+             var wsid = new Namespace("wsid", "http://schemas.xmlsoap.org/ws/2006/02/addressingidentity");
              var wsa = new Namespace("wsa", "http://www.w3.org/2005/08/addressing");
              var mex = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
+             var wss = new Namespace("wss", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
 
 
              var cardId = cardxml.dsig::Object.ic::InformationCard.ic::InformationCardReference.ic::CardId;
+             var cardVersion = cardxml.dsig::Object.ic::InformationCard.ic::InformationCardReference.ic::CardVersion;
              var cardName = cardxml.dsig::Object.ic::InformationCard.ic::CardName;
              var cardImage = cardxml.dsig::Object.ic::InformationCard.ic::CardImage;
              var issuer = cardxml.dsig::Object.ic::InformationCard.ic::Issuer;
              var mexEP =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
-             var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
-             var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
+			 var stsCert = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data.dsig::X509Certificate;
+			 var cardUserCredential = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.toXMLString();
+//             var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
+//             var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
+//             var cardKeyIdentifier = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::X509V3Credential.dsig::X509Data.wss::KeyIdentifier;
+//             var cardPrivatePersonalIdentifier = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::SelfIssuedCredential.dsig::PrivatePersonalIdentifier;
 
               debug(cardId);
               debug(cardName);
               debug(issuer);
               debug(mexEP);
-              debug(cardHint);
-              debug(cardUid);
-
-
+//              debug(cardHint);
+//              debug(cardUid);
+//			  debug(cardKeyIdentifier);
+//			  debug(cardPrivatePersonalIdentifier);
+			  debug(cardUserCredential);
+			  debug(stsCert);
+			  
               var callbackdata = {};
               callbackdata["type"] = "managedCard";
               callbackdata["cardId"] = cardId;
+              callbackdata["cardVersion"] = cardVersion;
               callbackdata["cardName"] = cardName;
               callbackdata["cardImage"] = cardImage;
               callbackdata["issuer"] = issuer;
               callbackdata["mex"] = mexEP;
-              callbackdata["hint"] = cardHint;
-              callbackdata["uid"] = cardUid;
-              
+//              callbackdata["hint"] = cardHint;
+//              callbackdata["uid"] = cardUid;
+//              callbackdata["KeyIdentifier"] = cardKeyIdentifier;
+//              callbackdata["PrivatePersonalIdentifier"] = cardPrivatePersonalIdentifier;
+			  callbackdata["usercredential"] = cardUserCredential;
+              callbackdata["stsCert"] = stsCert;
               callbackdata["supportedClaims"] = cardxml.dsig::Object.ic::InformationCard.ic::SupportedClaimTypeList.toXMLString();
               
               window.arguments[1](callbackdata);
