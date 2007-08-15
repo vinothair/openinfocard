@@ -17,10 +17,10 @@
         h4 { color:#000;
          font-family: verdana, arial, sans-serif;}
 
-        .forminput{position:relative;width:300;background-color: #ffffff;border: 1px solid #666666;}
+        .forminput{position:relative;width:300px;background-color: #ffffff;border: 1px solid #666666;}
 
 
-        A {color: #657485; font:verdana, arial, sans-serif; text-decoration: none}
+        A {color: #657485; font-family:verdana, arial, sans-serif; text-decoration: none}
         A:hover {color: #657485; text-decoration: underline}
 
         .container {
@@ -29,26 +29,26 @@
            margin: 10px;
            font-family:verdana, arial, sans-serif;
             position:relative;
-              left:0;
-              top:25;
+              left:0px;
+              top:25px;
             width: 95%;
            }
 
 
         #title {color: #FFF; font:bold 250% arial; text-decoration: none;
             position:relative;
-              left:10;
-              top:42;
+              left:10px;
+              top:42px;
         }
 
         #links {
             position:relative;
-              left:-5;
-              top:11;
+              left:-5px;
+              top:11px;
         text-align: right;
         }
 
-        #links A {color: #FFF; font:bold 150% verdana, arial, sans-serif; text-decoration: none}
+        #links A {color: #FFF; font-weight:bold; font-family:verdana, arial, sans-serif; text-decoration: none}
         #links A:hover {color: #FFF; text-decoration: underline}
 
     </style>
@@ -111,7 +111,7 @@ The infocard login will only work if you're on my secure site.  <p><a href="http
 
     <h2>Or, if you don't yet have CardSpace installed, I can make a security token for you...</h2>
 
-    <form action="./post.jsp" method="POST">
+    <form action="./post.jsp" method="post">
         <table border="0">
             <tr><td>First Name:</td><td><input type="text" name="GivenName" class="forminput"><br></td></tr>
             <tr><td>Last Name:</td><td><input type="text" name="Surname" class="forminput"><br></td></tr>
