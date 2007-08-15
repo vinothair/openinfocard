@@ -109,7 +109,7 @@ The infocard login will only work if you're on my secure site.  <p><a href="http
 
     <h2>Or, if you don't yet have CardSpace installed, I can make a security token for you...</h2>
 
-    <form action="./post.jsp" method="POST">
+    <form action="./post.jsp" method="post">
         <table border="0">
             <tr><td>PPID:</td><td><input type="text" name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier" class="forminput"><br></td></tr>
             <tr><td>Country:</td><td><input type="text" name="urn:ietf:params:xml:ns:pidf:geopriv10:civicLoc:country" class="forminput"><br></td></tr>

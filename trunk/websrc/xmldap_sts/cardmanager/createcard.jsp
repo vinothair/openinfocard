@@ -102,7 +102,7 @@
 
 %>
 <b>Create a card</b><br><br>
-<form action="./createcard.jsp" method="POST">
+<form action="./createcard.jsp" method="post">
     <input type="hidden" name="action" value="createcard">
     <table>
     <tr><td>Card Name:</td><td><input type="text" name="cardName" class="forminput"></td></tr>
