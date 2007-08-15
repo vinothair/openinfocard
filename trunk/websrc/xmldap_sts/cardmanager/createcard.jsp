@@ -1,10 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jsp:root version="1.2" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:jsp="http://java.sun.com/JSP/Page">
-<jsp:directive.page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"/>
-
-<jsp:output doctype-root-element="html"
-    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
-    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"/>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <%@ page import="java.util.List"%>
 <%@ page import="java.util.Locale"%>
 <%@ page import="org.xmldap.sts.db.ManagedCard"%>
@@ -21,10 +17,7 @@
 	CardStorage storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
 	
 %>
-<h:html 
-    xmlns="http://www.w3c.org/1999/xhtml" 
-    xmlns:jsp="http://java.sun.com/JSP/Page" 
-    xmlns:c="http://java.sun.com/jsp/jstl/core">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>XMLDAP Card Manager</title>
 
@@ -108,11 +101,11 @@
         if (action == null ) {
 
 %>
-<b>Create a card</b><br/><br/>
-<form action="./createcard.jsp" method="post">
-    <input type="hidden" name="action" value="createcard"/>
+<b>Create a card</b><br><br>
+<form action="./createcard.jsp" method="POST">
+    <input type="hidden" name="action" value="createcard">
     <table>
-    <tr><td>Card Name:</td><td><input type="text" name="cardName" class="forminput"/></td></tr>
+    <tr><td>Card Name:</td><td><input type="text" name="cardName" class="forminput"></td></tr>
 <%
 		Locale clientLocale = request.getLocale();
 		List dbSupportedClaims = supportedClaimsImpl.dbSupportedClaims();
@@ -123,7 +116,7 @@
 		 out.println("<tr><td>" + displayTag + ":</td><td><input type=\"text\" name=\"" + key + "\" class=\"forminput\"></td></tr>");
 		}
 %>
-    <tr><td colspan=2><br/><input type="submit" value="Create a new card"/></td></tr>
+    <tr><td colspan=2><br><input type="submit" value="Create a new card"></td></tr>
     </table>
 </form>
 
@@ -165,4 +158,4 @@
 }
 %>
 </body>
-</h:html>
+</html>

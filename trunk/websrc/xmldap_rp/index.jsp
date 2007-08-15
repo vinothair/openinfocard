@@ -70,7 +70,7 @@
 	</div>
 
 
-	<div>   <br>
+	<div>   <br/>
 	<div class="container" id="relying_party">
 
 <h2>Login with an InfoCard</h2>
@@ -81,21 +81,21 @@
 <%
  if (request.isSecure()) {
 %>
-<form name='infocard' method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
+<form method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
 <img src="./img/card_off.png"
-     onMouseOver="this.src='./img/card_on.png';"
-     onMouseOut="this.src='./img/card_off.png';"
-     onClick="infocard.submit()"/>
+     onmouseover="this.src='./img/card_on.png';"
+     onmouseout="this.src='./img/card_off.png';"
+     onclick="infocard.submit()"/>
 
-    <OBJECT type="application/x-informationCard" name="xmlToken">
-                  <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
-                  <PARAM Name="requiredClaims" Value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress">
-                  <PARAM Name="optionalClaims"
-            Value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender">
-            </OBJECT>
+    <object type="application/x-informationCard" name="xmlToken">
+                  <param name="tokenType" value="urn:oasis:names:tc:SAML:1.0:assertion"/>
+                  <param name="requiredClaims" value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"/>
+                  <param name="optionalClaims"
+            value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender"/>
+            </object>
 </form>
-                    <br>Click on the image above to login with and Infocard.<br>
-                    <br><a href="/sts/cardmanager/">Click here to create a managed card.</a>
+                    <br/>Click on the image above to login with and Infocard.<br/>
+                    <br/><a href="/sts/cardmanager/">Click here to create a managed card.</a>
 <%
  } else {
 %>
@@ -113,23 +113,23 @@ The infocard login will only work if you're on my secure site.  <p><a href="http
 
     <form action="./post.jsp" method="post">
         <table border="0">
-            <tr><td>First Name:</td><td><input type="text" name="GivenName" class="forminput"><br></td></tr>
-            <tr><td>Last Name:</td><td><input type="text" name="Surname" class="forminput"><br></td></tr>
-            <tr><td>Email:</td><td><input type="text" name="EmailAddress" class="forminput"><br></td></tr>
-            <tr><td colspan="2"><input type="submit" value="Create it for me"></td></tr>
+            <tr><td>First Name:</td><td><input type="text" name="GivenName" class="forminput"/><br/></td></tr>
+            <tr><td>Last Name:</td><td><input type="text" name="Surname" class="forminput"/><br/></td></tr>
+            <tr><td>Email:</td><td><input type="text" name="EmailAddress" class="forminput"/><br/></td></tr>
+            <tr><td colspan="2"><input type="submit" value="Create it for me"/></td></tr>
         </table>
 
     </form>
 
-    <br><br>
+    <br/><br/>
     <h2>Curious about how it works...?</h2>
 
         The Java Based Relying Party is a simple CardSpace RP implementation, written in 100% in Java and running on Linux. The RP provides the ability to request and accept information cards from Microsoft CardSpace (InfoCard), or other Identity Selectors, and displays information about the card that was submitted. It currently is only tested with self-asserted cards, and SAML 1.0 assertions<p>
 
         This RP developed from the ground up using protocol documentation, and was the first non-Microsoft affiliated relying party on a non-Windows platform.
 
-    <br>
-    <br>
+    <br/>
+    <br/>
     <a href="http://xmldap.blogspot.com/2006/03/how-to-consume-tokens-from-infocard.html">Here's a brief overview of what it's doing.</a>
 
     </div>

@@ -83,9 +83,9 @@
 %>
 <form name='infocard' method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
 <img src="./img/card_off.png"
-     onMouseOver="this.src='./img/card_on.png';"
-     onMouseOut="this.src='./img/card_off.png';"
-     onClick="infocard.submit()"/>
+     onmouseover="this.src='./img/card_on.png';"
+     onmouseout="this.src='./img/card_off.png';"
+     onclick="infocard.submit()"/>
 
     <OBJECT type="application/x-informationCard" name="xmlToken">
                   <PARAM Name="tokenType" Value="urn:oasis:names:tc:SAML:1.0:assertion">
