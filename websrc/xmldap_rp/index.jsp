@@ -81,7 +81,7 @@
 <%
  if (request.isSecure()) {
 %>
-<form method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
+<form name='infocard' method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
 <img src="./img/card_off.png"
      onmouseover="this.src='./img/card_on.png';"
      onmouseout="this.src='./img/card_off.png';"

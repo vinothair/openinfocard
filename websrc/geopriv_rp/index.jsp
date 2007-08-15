@@ -17,10 +17,10 @@
         h4 { color:#000;
          font-family: verdana, arial, sans-serif;}
 
-        .forminput{position:relative;width:300;background-color: #ffffff;border: 1px solid #666666;}
+        .forminput{position:relative;size:300;background-color: #ffffff;border: 1px solid #666666;}
 
 
-        A {color: #657485; font:verdana, arial, sans-serif; text-decoration: none}
+        A {color: #657485; font-family:verdana, arial, sans-serif; text-decoration: none}
         A:hover {color: #657485; text-decoration: underline}
 
         .container {
@@ -35,7 +35,7 @@
            }
 
 
-        #title {color: #FFF; font:bold 250% arial; text-decoration: none;
+        #title {color: #FFF; font-weight:bold; font-size:250%; font-family:arial; text-decoration: none;
             position:relative;
               left:10;
               top:42;
@@ -48,7 +48,7 @@
         text-align: right;
         }
 
-        #links A {color: #FFF; font:bold 150% verdana, arial, sans-serif; text-decoration: none}
+        #links A {color: #FFF; font-weight:bold; font-size:150%; font-family:arial; text-decoration: none}
         #links A:hover {color: #FFF; text-decoration: underline}
 
     </style>

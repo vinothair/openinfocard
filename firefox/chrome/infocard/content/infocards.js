@@ -344,7 +344,7 @@ debug("processManagedCard: request status 200");
         }
 
     } else {
-    	alert("mex request (" + managedCard.carddata.managed.mex + ") failed: " + req.status);
+    	alert("mex request (" + managedCard.carddata.managed.mex + ") failed: ");
     }
 
     return tokenToReturn;
