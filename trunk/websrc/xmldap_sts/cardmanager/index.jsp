@@ -1,6 +1,3 @@
-<!DOCTYPE html 
-     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <%@ page import="java.util.Iterator"%>
 <%@ page import="org.xmldap.sts.db.ManagedCard"%>
 <%@ page import="org.xmldap.sts.db.CardStorage"%>
@@ -17,6 +14,9 @@
 	CardStorage storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
 	
 %>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>XMLDAP Card Manager</title>
@@ -33,10 +33,10 @@
         h4 { color:#000;
          font-family: verdana, arial, sans-serif;}
 
-        .forminput{position:relative;width:300;background-color: #ffffff;border: 1px solid #666666;}
+        .forminput{position:relative;size:300;background-color: #ffffff;border: 1px solid #666666;}
 
 
-        A {color: #657485; font:verdana, arial, sans-serif; text-decoration: none}
+        A {color: #657485; font-family:verdana, arial, sans-serif; text-decoration: none}
         A:hover {color: #657485; text-decoration: underline}
 
         .container {
@@ -51,7 +51,7 @@
            }
 
 
-        #title {color: #FFF; font:bold 250% arial; text-decoration: none;
+        #title {color: #FFF; font-weight:bold; font-size:250%; font-family:arial; text-decoration: none;
             position:relative;
               left:10;
               top:42;
@@ -64,7 +64,7 @@
         text-align: right;
         }
 
-        #links A {color: #FFF; font:bold 150% verdana, arial, sans-serif; text-decoration: none}
+        #links A {color: #FFF; font-weight:bold; font-size:150%; font-family:arial; text-decoration: none}
         #links A:hover {color: #FFF; text-decoration: underline}
 
     </style>
@@ -104,7 +104,7 @@
                 } catch (StorageException e) {
                     %>
 
-                        <b>Authentication failed.</b><p>
+                        <p style="font-style:bold">Authentication failed.</p><p>
 
                     <%
 
@@ -118,14 +118,14 @@
 
 %>
 
-<b>Please Login or Create an Account:</b><br><br>
-<form action="" method="POST">
+<b>Please Login or Create an Account:</b><br/><br/>
+<form action="" method="post">
     <table border="0" cellpadding="5">
-    <tr><td>Username: </td><td><input type="text" name="uid" class="forminput"> </td></tr>
-    <tr><td>Password: </td><td><input type="password" name="password" class="forminput"> </td></tr>
+    <tr><td>Username: </td><td><input type="text" name="uid" class="forminput"/> </td></tr>
+    <tr><td>Password: </td><td><input type="password" name="password" class="forminput"/> </td></tr>
     </table>
-                                                                          <br>
-    <input type="submit" value="Login or Create a New Account">                     <br>
+                                                                          <br/>
+    <input type="submit" value="Login or Create a New Account"/>                     <br/>
 </form>
 
 
@@ -136,12 +136,12 @@
 
 %>
 
-     <b>Welcome, <%= username %></b>  <br><br>
+     <b>Welcome, <%= username %></b>  <br/><br/>
 
-Here you can create and download managed cards.
-<br><br>
+<p>Here you can create and download managed cards.</p>
+<br/><br/>
 
-<b>Your Cards:</b><br>
+<b>Your Cards:</b><br/>
 
 <table  border="0" cellpadding="5">
 <%
@@ -162,12 +162,12 @@ Here you can create and download managed cards.
 %>
 
 </table>
-<br>
-<br>
-<b>Operations:</b><br>
+<br/>
+<br/>
+<p style="font-style:bold">Operations:</p><br/>
 <blockquote>
-<a href="<%= backupfile %>">Download all your cards as a Cardspace Backup file</a><br>
-<a href="./createcard.jsp">Create a new card</a><br>
+<a href="<%= backupfile %>">Download all your cards as a Cardspace Backup file</a><br/>
+<a href="./createcard.jsp">Create a new card</a><br/>
 </blockquote>
 
 
