@@ -47,7 +47,10 @@ function ok(){
 		var requiredClaims = policy["requiredClaims"];
 
         var assertion = processManagedCard(selectedCard, requiredClaims);
-        debug(assertion);
+        debug("assertion:" + assertion);
+        if (assertion == null) {
+         return;
+        }
 
         policy["type"] = "managedCard";
         policy["assertion"] = assertion;
@@ -199,16 +202,10 @@ function processManagedCard(managedCard, requiredClaims) {
 
             debug(address);
 
-            var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-            username = {value:managedCard.carddata.managed.username};
-            password = {value:""};
-            var check = {value: false};
-            okorcancel = prompts.promptUsernameAndPassword(window, 'Card Authentication', managedCard.carddata.managed.hint, username, password, null, check);
-            var uid =  username.value;
-            var pw =  password.value;
+            var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
 
-            var messageIdInt1 = Math.floor(Math.random()*100000+1);
-            var messageId1 = "urn:uuid:" + messageIdInt;
+			var usercredential = managedCard.carddata.managed.ic::UserCredential;
+debug("processManagedCard::usercredential>>>" + usercredential);
 
             var rst = "<s:Envelope " + 
     			"xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" " + 
@@ -216,15 +213,54 @@ function processManagedCard(managedCard, requiredClaims) {
     			"<s:Header>" + 
     			 "<o:Security s:mustUnderstand=\"1\" xmlns:o=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">"; 
 
-            rst = rst + "<o:UsernameToken u:Id=\"" + messageId1 + "\"><o:Username>";
+			if (!(usercredential.ic::UsernamePasswordCredential == undefined)) {
+	            var hint = usercredential.ic::DisplayCredentialHint;
+	            debug("hint:" + hint);
+	            var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+	            username = {value:usercredential.ic::UsernamePasswordCredential.ic::Username};
+	            password = {value:""};
+	            var check = {value: false};
+	            okorcancel = prompts.promptUsernameAndPassword(window, 'Card Authentication', hint, username, password, null, check);
+	            var uid =  username.value;
+	            var pw =  password.value;
 
-            rst = rst + uid;
-
-            rst = rst + "</o:Username><o:Password o:Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">";
-
-            rst = rst + pw;
-
-            rst = rst + "</o:Password></o:UsernameToken></o:Security></s:Header>" +
+	            var messageIdInt = Math.floor(Math.random()*100000+1);
+	            var messageId = "urn:uuid:" + messageIdInt;
+	
+	
+	            rst = rst + "<o:UsernameToken u:Id=\"" + messageId + "\"><o:Username>";
+	
+	            rst = rst + uid;
+	
+	            rst = rst + "</o:Username><o:Password o:Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">";
+	
+	            rst = rst + pw;
+	
+	            rst = rst + "</o:Password></o:UsernameToken>";
+	        }  else if (!(usercredential.ic::KerberosV5Credential == undefined)) {
+				alert("unimplemented user credential type: KerberosV5Credential");
+				return null;
+	        } else if (!(usercredential.ic::X509V3Credential == undefined)) {
+	            var dsig = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
+	            var wsa = new Namespace("wsa", "http://www.w3.org/2005/08/addressing");
+	            var mex = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
+	            var wss = new Namespace("wss", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
+				alert("unimplemented user credential type: X509V3Credential");
+				return null;
+	        } else if (!(usercredential.ic::SelfIssuedCredential == undefined)) {
+	            var hint = usercredential.ic::DisplayCredentialHint;
+	            debug("hint:" + hint);
+	            var ppid = usercredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier;
+	            debug("ppid:" + ppid);
+	            debug("stsCert:" + managedCard.carddata.managed.stsCert);
+				alert("unimplemented user credential type: SelfIssuedCredential");
+				return null;
+			} else {
+				alert("undefined user credential type");
+				return null;
+			}	        
+	            
+	        rst = rst + "</o:Security></s:Header>" +
             "<s:Body><wst:RequestSecurityToken Context=\"ProcessRequestSecurityToken\" " +
             "xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">" +
             "<wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
@@ -232,7 +268,9 @@ function processManagedCard(managedCard, requiredClaims) {
 
             rst = rst + managedCard.id;
 
-            rst = rst + "</wsid:CardId><wsid:CardVersion>1</wsid:CardVersion></wsid:InformationCardReference>";
+            rst = rst + "</wsid:CardId>";
+            
+            rst = rst + "<wsid:CardVersion>" + managedCard.version + "</wsid:CardVersion>" + "</wsid:InformationCardReference>";
             
             if ((requiredClaims == undefined) || (requiredClaims.length < 1)) {
                // get all the claims from the managed card
@@ -812,19 +850,22 @@ debug(JSON.stringify(callback));
         var card = new XML("<infocard/>");
         card.name = "" + cardName + "";
         card.type = type;
-        var version = "1";
-        card.version = version;
+        card.version = "" + callback.cardVersion + "";
         card.id = "" + callback.cardId + "";
 
         var data = new XML("<managed/>");
         data.issuer = "" + callback.issuer + "";
         data.mex = "" + callback.mex + "";
-        data.username = "" + callback.uid + "";
-        data.hint = "" + callback.hint + "";
+//        data.username = "" + callback.uid + "";
+//        data.KeyIdentifier = "" + callback.KeyIdentifier + "";
+//        data.hint = "" + callback.hint + "";
         data.image = "data:image/png;base64," + callback.cardImage + "";
         var supportedClaims = new XML(callback.supportedClaims);
         data.supportedClaims = supportedClaims;
-
+debug("new card" + callback.usercredential);
+		data.usercredential = new XML(callback.usercredential);
+		data.stsCert = "" + callback.stsCert + "";
+		
         card.carddata.data = data;
         saveCard(card);
 
