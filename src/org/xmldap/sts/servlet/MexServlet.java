@@ -96,13 +96,13 @@ public class MexServlet extends HttpServlet {
 		
 		String filename = null;
 		if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
-			filename = "/WEB-INF/mex-pwd-get.xml";
+			filename = "WEB-INF/mex-pwd-get.xml";
 		} else if (url.endsWith(TokenServiceReference.SELF_ISSUED)) {
-			filename = "/WEB-INF/mex-self-get.xml";
+			filename = "WEB-INF/mex-self-get.xml";
 		} else if (url.endsWith(TokenServiceReference.X509)) {
-			filename = "/WEB-INF/mex-x509-get.xml";
+			filename = "WEB-INF/mex-x509-get.xml";
 		} else if (url.endsWith(TokenServiceReference.KERB)) {
-			filename = "/WEB-INF/mex-kerb-get.xml";
+			filename = "WEB-INF/mex-kerb-get.xml";
 		} else {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, "no mex data is associated with this url " + url);
 			return;
@@ -178,13 +178,13 @@ public class MexServlet extends HttpServlet {
 
 		String filename = null;
 		if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
-			filename = "/WEB-INF/mex-pwd-post.xml";
+			filename = "WEB-INF/mex-pwd-post.xml";
 		} else if (url.endsWith(TokenServiceReference.SELF_ISSUED)) {
-			filename = "/WEB-INF/mex-self-post.xml";
+			filename = "WEB-INF/mex-self-post.xml";
 		} else if (url.endsWith(TokenServiceReference.X509)) {
-			filename = "/WEB-INF/mex-x509-post.xml";
+			filename = "WEB-INF/mex-x509-post.xml";
 		} else if (url.endsWith(TokenServiceReference.KERB)) {
-			filename = "/WEB-INF/mex-kerb-post.xml";
+			filename = "WEB-INF/mex-kerb-post.xml";
 		} else {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, "no mex data is associated with this url " + url);
 			return;
