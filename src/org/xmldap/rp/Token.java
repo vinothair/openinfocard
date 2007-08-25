@@ -62,6 +62,7 @@ public class Token {
     private boolean haveValidatedConditions = false;
     private boolean conditionsValid = false;
     private Conditions conditions = null;
+    private String	audience = null;
 
     private boolean haveValidatedCertificate = false;
     private boolean certificateValid = true;
@@ -120,6 +121,10 @@ public class Token {
         return decryptedToken;
     }
 
+    public String getAudience() {
+    	return audience;
+    }
+    
     public boolean isConditionsValid() throws InfoCardProcessingException {
         if ( ! haveValidatedConditions ) validateConditions();
         return conditionsValid;
@@ -204,6 +209,14 @@ public class Token {
 
     private void parseConditions() throws InfoCardProcessingException {
         //Get the conditions
+    	//  <saml:Conditions 
+    	//   NotBefore="2007-08-21T07:18:50.605Z" 
+    	//   NotOnOrAfter="2007-08-21T08:18:50.605Z">
+    	//   <saml:AudienceRestrictionCondition>
+    	//    <saml:Audience>https://w4de3esy0069028.gdc-bln01.t-systems.com:8443/relyingparty/</saml:Audience>
+    	//   </saml:AudienceRestrictionCondition>
+    	//  </saml:Conditions>
+
         XPathContext thisContext = new XPathContext();
         thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
         Nodes nodes = getDoc().query("//saml:Conditions", thisContext);
@@ -215,6 +228,36 @@ public class Token {
 
         conditions = new Conditions(
         		XSDDateTime.parse(notBeforeVal), XSDDateTime.parse(notOnOrAfterVal));
+        
+        Elements elements = element.getChildElements("AudienceRestrictionCondition", WSConstants.SAML11_NAMESPACE);
+        if (elements.size() == 1) {
+        	Element audienceRestrictionCondition = elements.get(0);
+        	elements = audienceRestrictionCondition.getChildElements("Audience", WSConstants.SAML11_NAMESPACE);
+        	if (elements.size() == 1) {
+        		audience = elements.get(0).getValue();
+        	} else {
+        		throw new InfoCardProcessingException("Expected the element AudienceRestrictionCondition to have one child Audience, but found" + elements.size());
+        	}
+        } else {
+        	audience = null;
+        }
+    }
+
+    public String getConfirmationMethod() {
+        XPathContext thisContext = new XPathContext();
+        thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
+        Nodes nodes = null;
+		try {
+			nodes  = getDoc().query("saml:Assertion/saml:AttributeStatement/saml:Subject/saml:SubjectConfirmation/saml:ConfirmationMethod", thisContext);;
+		} catch (InfoCardProcessingException e) {
+			return e.getMessage();
+		}
+		if (nodes.size() == 1) {
+			Element element = (Element) nodes.get(0);
+			return element.getValue();
+		} else {
+			return "Expected one saml:ConfirmationMethod, but found " + nodes.size();
+		}
     }
 
 
