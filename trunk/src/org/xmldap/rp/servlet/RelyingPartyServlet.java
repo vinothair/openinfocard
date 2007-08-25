@@ -121,6 +121,12 @@ public class RelyingPartyServlet extends HttpServlet {
 
             out.println("<h2>Valid Signature: " + token.isSignatureValid() + "</h2>");
             out.println("<h2>Valid Conditions: " + token.isConditionsValid() + "</h2>");
+            out.println("<h2>Confirmation method: " + token.getConfirmationMethod() + "</h2>");
+            if (token.getAudience() != null) {
+                out.println("<h2>Audience is restricted to: " + token.getAudience() + "</h2>");
+            } else {
+                out.println("<h2>Audience is NOT restricted</h2>");
+            }
             try {
             	X509Certificate cert = token.getCertificateOrNull();
             	if (cert != null) {
