@@ -45,8 +45,16 @@ function ok(){
 
     } else if (selectedCard.type == "managedCard"){
 		var requiredClaims = policy["requiredClaims"];
-
-        var assertion = processManagedCard(selectedCard, requiredClaims);
+		var tokenType;
+		try {
+		 tokenType = policy["tokenType"];
+		}
+		catch (e) {
+		 tokenType = null;
+		}
+		var url = policy["url"]; // RP url
+		var clientPseudonym = hex_sha1(url + selectedCard.id);
+        var assertion = processManagedCard(selectedCard, requiredClaims, tokenType, clientPseudonym);
         debug("assertion:" + assertion);
         if (assertion == null) {
          return;
@@ -140,6 +148,7 @@ function getMex(managedCard) {
     	"</s:Header><s:Body/></s:Envelope>";
 
 debug("processManagedCard: mex request: " + mex);
+debug("managedCard.carddata.managed.mex: " + managedCard.carddata.managed.mex);
 
     var req = new XMLHttpRequest();
     req.open('POST', managedCard.carddata.managed.mex, false);
@@ -175,7 +184,7 @@ debug("processManagedCard: mex GET request status 200");
 }
 }
 
-function processManagedCard(managedCard, requiredClaims) {
+function processManagedCard(managedCard, requiredClaims, tokenType, clientPseudonym) {
 
     var tokenToReturn = null;
     var mexResponse = getMex(managedCard);
@@ -250,8 +259,8 @@ debug("processManagedCard::usercredential>>>" + usercredential);
 	        } else if (!(usercredential.ic::SelfIssuedCredential == undefined)) {
 	            var hint = usercredential.ic::DisplayCredentialHint;
 	            debug("hint:" + hint);
-	            var ppid = usercredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier;
-	            debug("ppid:" + ppid);
+	            var usercredential = usercredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier;
+	            debug("usercredential:" + usercredential);
 	            debug("stsCert:" + managedCard.carddata.managed.stsCert);
 				alert("unimplemented user credential type: SelfIssuedCredential");
 				return null;
@@ -273,6 +282,7 @@ debug("processManagedCard::usercredential>>>" + usercredential);
             rst = rst + "<wsid:CardVersion>" + managedCard.version + "</wsid:CardVersion>" + "</wsid:InformationCardReference>";
             
             if ((requiredClaims == undefined) || (requiredClaims.length < 1)) {
+               debug("requiredClaims from RP are undefined");
                // get all the claims from the managed card
                rst = rst + "<wst:Claims>";
 	           var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
@@ -296,21 +306,19 @@ debug("processManagedCard::usercredential>>>" + usercredential);
                rst = rst + "</wst:Claims>";
             }
             
-            //rst = rst + "<wst:Claims>" +
-            //"<wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier\" " +
-            //"xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
-            //"<wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\" " +
-            //"xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
-            //"<wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\" " +
-            //"xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
-            //"<wsid:ClaimType Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\" " +
-            //"xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
-            //"</wst:Claims>";
+            rst = rst + "<wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>";
             
-            rst = rst + "<wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>" +
-            "<ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>TBD_WHAT_TO_DO</PPID></ClientPseudonym>" +
-            "<wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType>" +
-            "<wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
+            // if a ppid is requested, then provide some selector entropy (clientPseudonym). The STS uses this to generate a RP depended ppid
+            // even if the STS does not know the RP
+            if (requiredClaims.indexOf("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") > 0) {
+	            rst = rst + "<ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>" + clientPseudonym + "</PPID></ClientPseudonym>";
+			}
+			
+            // tokenType is optional. http://docs.oasis-open.org/ws-sx/ws-trust/200512/ws-trust-1.3-os.html
+            if (tokenType != null) {
+	            rst = rst + "<wst:TokenType>" + tokenType + "</wst:TokenType>";
+	        }
+            rst = rst + "<wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
             "</wst:RequestSecurityToken></s:Body></s:Envelope>";
 
 debug("processManagedCard: request: " + rst);
@@ -338,13 +346,22 @@ debug("processManagedCard: request status 200");
                 tokenToReturn = assertion;
 
             } else {
-            	alert("token request (" + address + ") failed." + rstReq.status);
+	            debug("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
+	            alert("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
+//            	var responseXml = new XML(rstReq.responseText);
+//            	var soap = new Namespace("soap", "http://www.w3.org/2003/05/soap-envelope");
+//            	var text = responseXml..soap::Text;
+//            	if (text == undefined) {
+//	            	alert("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
+//	            } else {
+//	            	alert("token request (" + address + ") failed. (" + rstReq.status +")\n" + text);
+//	            }	
             }
 
         }
 
     } else {
-    	alert("mex request (" + managedCard.carddata.managed.mex + ") failed: ");
+    	alert("mex request (" + managedCard.carddata.managed.mex + ") failed. ");
     }
 
     return tokenToReturn;
@@ -588,6 +605,11 @@ function setCard(card){
 		 row.appendChild(textbox);
 		 managedRows.appendChild(row);
 		}
+		if (managedRows.hasChildNodes()) {
+	        var grid = document.getElementById("editgrid2");
+	        grid.setAttribute("hidden", "false");
+		}
+		
 		managedRows = document.getElementById("managedRows1");
 		
 		// remove child rows before appending new ones
@@ -618,15 +640,12 @@ function setCard(card){
 		 row.appendChild(textbox);
 		 managedRows.appendChild(row);
 		}
+		if (managedRows.hasChildNodes()) {
+	        var grid1 = document.getElementById("editgrid3");
+    	    grid1.setAttribute("hidden", "false");
+		}
 		
         //indicateRequiredClaims();
-
-        var grid = document.getElementById("editgrid2");
-        grid.setAttribute("hidden", "false");
-
-
-        var grid1 = document.getElementById("editgrid3");
-        grid1.setAttribute("hidden", "false");
 
 		var stringsBundle = document.getElementById("string-bundle");
 		var managedcardfromissuer = stringsBundle.getFormattedString('managedcardfromissuer', [selectedCard.carddata.managed.issuer]);
@@ -733,6 +752,15 @@ function newCard(){
     var cardWiz = window.openDialog("chrome://infocard/content/cardWizard.xul","Card Wizard", "modal,chrome,resizable=yes,width=640,height=480",
                                     null, function (callbackData) { callback = callbackData;});
 
+	if (callback == undefined) {
+	 alert("no new card was imported");
+	 return;
+	}
+	if (callback == null) {
+	 alert("No new card was imported");
+	 return;
+	}
+	
     var cardName = callback.cardName;
     var type = callback.type;
 
@@ -909,6 +937,12 @@ function deleteCard(){
 
     var grid1 = document.getElementById("editgrid1");
     grid1.setAttribute("hidden", "true");
+
+    var grid = document.getElementById("editgrid2");
+    grid.setAttribute("hidden", "false");
+
+    var grid1 = document.getElementById("editgrid3");
+    grid1.setAttribute("hidden", "false");
 
     var label = document.getElementById("notify");
     label.setAttribute("value", "Please select another card");

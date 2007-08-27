@@ -215,7 +215,7 @@ public class EnvelopedSignatureTest extends TestCase {
 
         Conditions conditions = new Conditions(-5, 10);
 
-        Subject subject = new Subject(keyInfo);
+        Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
         org.xmldap.saml.Attribute given = new org.xmldap.saml.Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName", "Chuck");
         org.xmldap.saml.Attribute sur = new org.xmldap.saml.Attribute("surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/SurName", "Mortimore");
         org.xmldap.saml.Attribute email = new org.xmldap.saml.Attribute("email", "http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress", "cmortspam@gmail.com");

@@ -208,13 +208,47 @@
              var mex = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
              var wss = new Namespace("wss", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
 
+// the following line does not work with the openidcards.sxip.com cards. It works down to the mexReference but failes to retrieve the address
+//             var mexEP =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
+
+             var tokenservice =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService;
+             //debug("tokenservice:" + tokenservice.toXMLString());
+             var epr = tokenservice.wsa::EndpointReference;
+             //debug("EndpointReference:" + epr.toXMLString());
+             var mexOuter = epr.wsa::Metadata;
+             //debug("outer Metadata:" + mexOuter.toXMLString());
+             var mexInner = mexOuter.mex::Metadata;
+             //debug("inner Metadata:" + mexInner.toXMLString());
+             var mexSection = mexInner.mex::MetadataSection;
+             //debug("MetadataSection:" + mexSection.toXMLString());
+             var mexReference = mexSection.mex::MetadataReference;
+             //debug("MetadataReference: " + mexReference.toXMLString());
+             var mexEP = mexReference.wsa::Address; // this does not work with the sxip openidinfocards
+             debug("mexAddress: " + mexEP.toXMLString());
+             if (mexEP == undefined) {
+                var address = "" + mexReference.toString() + "";
+                var ia = address.indexOf("Address");
+                if (ia > 0) {
+                	var lt = String.fromCharCode(60); 
+                	ia += "Address".length+1;
+                	address = address.substring(ia);
+                	var ib = address.indexOf(lt);
+                	address = address.substring(0, ib);
+                	debug("address:" + address);
+                	mexEP = address;
+                } else {
+                	alert("Could not find Metadata Address in imported card");
+		            window.arguments[1](null);
+	                document.getElementById('card-window').cancel();
+                	return;
+                }
+             }
 
              var cardId = cardxml.dsig::Object.ic::InformationCard.ic::InformationCardReference.ic::CardId;
              var cardVersion = cardxml.dsig::Object.ic::InformationCard.ic::InformationCardReference.ic::CardVersion;
              var cardName = cardxml.dsig::Object.ic::InformationCard.ic::CardName;
              var cardImage = cardxml.dsig::Object.ic::InformationCard.ic::CardImage;
              var issuer = cardxml.dsig::Object.ic::InformationCard.ic::Issuer;
-             var mexEP =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
 			 var stsCert = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data.dsig::X509Certificate;
 			 var cardUserCredential = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.toXMLString();
 //             var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;

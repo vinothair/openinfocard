@@ -158,7 +158,7 @@ public class Token {
         if (! haveValidatedCertificate ) {
 
             try {
-            	certificate = getCertificate();
+            	certificate = getCertificateOrNull();
             	if (certificate != null) {
             		certificate.checkValidity();
             	} else {

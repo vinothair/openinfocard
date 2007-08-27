@@ -153,7 +153,7 @@ public class SAMLAssertion implements Serializable {
 		} catch (KeyStoreException e1) {
 			e1.printStackTrace();
 		}
-        Subject subject = new Subject(keyInfo);
+        Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
         Attribute given = new Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName", "Chuck");
         Attribute sur = new Attribute("surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/SurName", "Mortimore");
         Attribute email = new Attribute("email", "http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress", "cmortspam@gmail.com");

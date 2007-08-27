@@ -28,8 +28,10 @@
 
 package org.xmldap.xmldsig;
 
+import nu.xom.Attribute;
 import nu.xom.Element;
 import org.xmldap.exceptions.SerializationException;
+import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
 
 /**
@@ -44,6 +46,7 @@ public class Signature implements Serializable {
     SignedInfo signedInfo = null;
     SignatureValue signatureValue = null;
     KeyInfo keyInfo = null;
+    String Id = null;
 
     public Signature(SignedInfo signedInfo, SignatureValue signatureValue, KeyInfo keyInfo) {
         this.signedInfo = signedInfo;
@@ -51,10 +54,21 @@ public class Signature implements Serializable {
         this.keyInfo = keyInfo;
     }
 
+    public Signature(SignedInfo signedInfo, SignatureValue signatureValue, KeyInfo keyInfo, String Id) {
+        this.signedInfo = signedInfo;
+        this.signatureValue = signatureValue;
+        this.keyInfo = keyInfo;
+        this.Id = Id;
+    }
+
     private Element getSignature() {
 
 
         Element signature = new Element("dsig:Signature", "http://www.w3.org/2000/09/xmldsig#");
+        if (Id != null) {
+        	Attribute wsuId = new Attribute(WSConstants.WSU_PREFIX + ":Id", WSConstants.WSU_NAMESPACE, Id);
+        	signature.addAttribute(wsuId);
+        }
         try {
             signature.appendChild(signedInfo.serialize());
         } catch (SerializationException e) {

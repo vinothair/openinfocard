@@ -52,7 +52,7 @@ public class AttributeStatementTest extends TestCase {
         AsymmetricKeyInfo keyInfo = null;
 		keyInfo = new AsymmetricKeyInfo(cert);
 
-		Subject subject = new Subject(keyInfo);
+		Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
         Attribute given = new Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName", "Chuck");
         Attribute sur = new Attribute("surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/SurName", "Mortimore");
         Attribute email = new Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress", "cmortspam@gmail.com");

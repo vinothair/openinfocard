@@ -92,6 +92,10 @@ public class SelfIssuedToken implements Serializable {
 
 	private boolean asymmetric = true; //default to symmetric key
 
+	private String restrictedTo = null;
+	
+	private String confirmationMethod = null;
+	
 	public SelfIssuedToken(X509Certificate relyingPartyCert,
 			X509Certificate signingCert, PrivateKey signingKey) {
 		this.signingCert = signingCert;
@@ -100,6 +104,12 @@ public class SelfIssuedToken implements Serializable {
 		namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
 	}
 
+	public void setAudience(String restrictedTo) {
+		this.restrictedTo = restrictedTo;
+	}
+	public String getAudience() {
+		return restrictedTo;
+	}
 	public void setNamespacePrefix(String namespacePrefix) {
 		this.namespacePrefix = namespacePrefix;
 	}
@@ -242,9 +252,61 @@ public class SelfIssuedToken implements Serializable {
 		}
 	}
 	
+	// <saml:Assertion MajorVersion="1" MinorVersion="1" 
+	//  AssertionID="uuid:3c11daf5-0dfe-430c-a840-3e6b60ff6b11" 
+	//  Issuer="http://schemas.xmlsoap.org/ws/2005/05/identity/issuer/self" 
+	//  IssueInstant="2007-08-21T07:18:50.605Z" 
+	//  xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion">
+	//  <saml:Conditions 
+	//   NotBefore="2007-08-21T07:18:50.605Z" 
+	//   NotOnOrAfter="2007-08-21T08:18:50.605Z">
+	//   <saml:AudienceRestrictionCondition>
+	//    <saml:Audience>https://w4de3esy0069028.gdc-bln01.t-systems.com:8443/relyingparty/</saml:Audience>
+	//   </saml:AudienceRestrictionCondition>
+	//  </saml:Conditions>
+	//  <saml:AttributeStatement>
+	//   <saml:Subject>
+	//    <saml:SubjectConfirmation>
+	//     <saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:bearer</saml:ConfirmationMethod>
+	//    </saml:SubjectConfirmation>
+	//   </saml:Subject>
+	//  <saml:Attribute AttributeName="privatepersonalidentifier" 
+	//  AttributeNamespace="http://schemas.xmlsoap.org/ws/2005/05/identity/claims">
+	//  <saml:AttributeValue>WpgMKY+0UOeGoIqK+7coQSU/I0xxBJ1sN4poHO8hMZg=</saml:AttributeValue>
+	//  </saml:Attribute>
+	//  <saml:Attribute AttributeName="givenname" AttributeNamespace="http://schemas.xmlsoap.org/ws/2005/05/identity/claims">
+	//  <saml:AttributeValue>Axel</saml:AttributeValue></saml:Attribute>
+	//  <saml:Attribute AttributeName="surname" AttributeNamespace="http://schemas.xmlsoap.org/ws/2005/05/identity/claims">
+	//  <saml:AttributeValue>Nennker</saml:AttributeValue></saml:Attribute>
+	//  <saml:Attribute AttributeName="emailaddress" AttributeNamespace="http://schemas.xmlsoap.org/ws/2005/05/identity/claims">
+	//  <saml:AttributeValue>axel@nennker.de</saml:AttributeValue></saml:Attribute>
+	//  </saml:AttributeStatement>
+	//  <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+	//  <SignedInfo>
+	//  <CanonicalizationMethod 
+	//  Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">
+	//  </CanonicalizationMethod>
+	//  <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"></SignatureMethod>
+	//  <Reference URI="#uuid:3c11daf5-0dfe-430c-a840-3e6b60ff6b11">
+	//  <Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></Transform>
+	//  <Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></Transform>
+	//  </Transforms>
+	//  <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1">
+	//  </DigestMethod>
+	//  <DigestValue>AYI++6wA4bnAdJexrfZsGCdAMow=</DigestValue>
+	//  </Reference>
+	//  </SignedInfo>
+	//  <SignatureValue>...</SignatureValue>
+	//  <KeyInfo><KeyValue><RSAKeyValue><Modulus>...</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue></KeyInfo>
+	//  </Signature>
+	//  </saml:Assertion>
 	public Element getSelfIssuedToken() throws SerializationException {
 
 		Conditions conditions = new Conditions(nowMinus, nowPlus);
+		if (restrictedTo != null) {
+			AudienceRestrictionCondition audienceRestrictionCondition = new AudienceRestrictionCondition(restrictedTo);
+			conditions.setAudienceRestrictionCondition(audienceRestrictionCondition);
+		}
 		KeyInfo keyInfo = null;
 		if (asymmetric) {
 
@@ -272,7 +334,17 @@ public class SelfIssuedToken implements Serializable {
 
 		}
 
-		Subject subject = new Subject(keyInfo);
+		Subject subject = null;
+
+		if (confirmationMethod == null) {
+			confirmationMethod = Subject.HOLDER_OF_KEY;
+		}
+		
+		if (Subject.HOLDER_OF_KEY.equals(confirmationMethod)) {
+			subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
+		} else {
+			subject = new Subject(Subject.BEARER);
+		}
 
 		Vector attributes = new Vector();
 
@@ -434,6 +506,14 @@ public class SelfIssuedToken implements Serializable {
 			}
 		}
 		return token;
+	}
+
+	public String getConfirmationMethod() {
+		return confirmationMethod;
+	}
+
+	public void setConfirmationMethod(String confirmationMethod) {
+		this.confirmationMethod = confirmationMethod;
 	}
 
 }

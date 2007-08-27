@@ -33,6 +33,8 @@ import nu.xom.*;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.asn1.x509.X509NameEntryConverter;
+import org.bouncycastle.asn1.x509.X509NameTokenizer;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.json.JSONException;
@@ -44,6 +46,7 @@ import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.infocard.SelfIssuedToken;
+import org.xmldap.saml.Subject;
 import org.xmldap.util.Base64;
 import org.xmldap.util.CertsAndKeys;
 import org.xmldap.util.KeystoreUtil;
@@ -261,7 +264,7 @@ public class TokenIssuer {
 		return "TokenIssuer initialized";
 	}
 
-	private Document getInfocard(String card) throws TokenIssuanceException {
+	private static Document getInfocard(String card) throws TokenIssuanceException {
 		Builder parser = new Builder();
 		Document infocard = null;
 		try {
@@ -346,11 +349,11 @@ public class TokenIssuer {
 	// return sb.toString();
 	// }
 
-	public boolean isExtendedEvaluationCert(X509Certificate relyingpartyCert) {
+	public static boolean isExtendedEvaluationCert(X509Certificate relyingpartyCert) {
 		return false;
 	}
 	
-	public byte[] rpIdentifier(
+	public static byte[] rpIdentifier(
 			X509Certificate relyingpartyCert, 
 			X509Certificate[] chain)
 	throws TokenIssuanceException {
@@ -361,7 +364,7 @@ public class TokenIssuer {
 		}
 	}
 	
-	private String orgIdString(X509Certificate relyingpartyCert)
+	private static String orgIdString(X509Certificate relyingpartyCert)
 	throws TokenIssuanceException {
 		X500Principal principal = relyingpartyCert.getSubjectX500Principal();
 		String dn = principal.getName();
@@ -415,7 +418,7 @@ public class TokenIssuer {
 		return orgIdStringBuffer.toString();
 	}
 	
-	public byte[] rpIdentifierNonEV(
+	public static byte[] rpIdentifierNonEV(
 			X509Certificate relyingpartyCert,
 			X509Certificate[] chain)
 	throws TokenIssuanceException {
@@ -435,7 +438,7 @@ public class TokenIssuer {
 	 * @param chain
 	 * @param orgIdString
 	 */
-	public String qualifiedOrgIdString(X509Certificate[] chain, String orgIdString) {
+	public static String qualifiedOrgIdString(X509Certificate[] chain, String orgIdString) {
 		StringBuffer qualifiedOrgIdString = new StringBuffer();
 		for (int i=chain.length; i<0; i++) {
 			X509Certificate parent = chain[i];
@@ -450,7 +453,7 @@ public class TokenIssuer {
 		return qualifiedOrgIdString.toString();
 	}
 	
-	public byte[] rpIdentifierEV(X509Certificate relyingpartyCert)
+	public static byte[] rpIdentifierEV(X509Certificate relyingpartyCert)
 	throws TokenIssuanceException {
 		String rpIdentifier = null;
 		String orgIdString = orgIdString(relyingpartyCert);
@@ -464,7 +467,7 @@ public class TokenIssuer {
 		return digest;
 	}
 	
-	private byte[] sha256(byte[] bytes) throws TokenIssuanceException {
+	private static byte[] sha256(byte[] bytes) throws TokenIssuanceException {
 		MessageDigest mdAlgorithm;
 		try {
 			mdAlgorithm = MessageDigest.getInstance("SHA-256");
@@ -476,7 +479,7 @@ public class TokenIssuer {
 		return digest;
 	}
 	
-	private String generateRPPPID(
+	private static String generateRPPPID(
 			String cardId,
 			X509Certificate relyingPartyCert,
 			X509Certificate[] chain)
@@ -557,13 +560,15 @@ public class TokenIssuer {
 		String der = null;
         String issuedToken = "";
         String type = null;
-
+        String audience = null;
         try {
 
             policy = new JSONObject(serializedPolicy);
             type = (String) policy.get("type");
             der = (String) policy.get("cert");
-
+            if (policy.has("url")) {
+            	audience = (String) policy.get("url");
+            }
         } catch (JSONException e) {
             throw new TokenIssuanceException(e);
         }
@@ -618,8 +623,11 @@ public class TokenIssuer {
     		    throw new TokenIssuanceException(e);
     		}
 
+    		String confirmationMethod = Subject.HOLDER_OF_KEY;
             issuedToken = getSelfAssertedToken(
-            		card, relyingPartyCert, chain, requiredClaims, optionalClaims);
+            		card, relyingPartyCert, chain, requiredClaims, optionalClaims,
+        			signingCert, signingKey,
+        			audience, confirmationMethod);
 
         } else {
 
@@ -655,12 +663,16 @@ public class TokenIssuer {
 	 * @return
 	 * @throws TokenIssuanceException
 	 */
-	private String getSelfAssertedToken(
+	public static String getSelfAssertedToken(
 			String card, 
 			X509Certificate relyingPartyCert,
 			X509Certificate[] chain,
-			String requiredClaims, String 
-			optionalClaims) throws TokenIssuanceException {
+			String requiredClaims, 
+			String optionalClaims,
+			X509Certificate signingCert,
+			PrivateKey signingKey,
+			String audience,
+			String confirmationMethod) throws TokenIssuanceException {
 		String issuedToken = null;
 
 		Document infocard = getInfocard(card);
@@ -699,10 +711,37 @@ public class TokenIssuer {
    //		System.out.println("Server Cert: "
    //				+ relyingPartyCert.getSubjectDN().toString());
 
+		issuedToken = getSelfAssertedToken(
+				relyingPartyCert, requiredClaims, optionalClaims, issuedToken, data, ppi, 
+				signingCert, signingKey, audience, confirmationMethod);
+		return issuedToken;
+	}
+
+	/**
+	 * @param relyingPartyCert
+	 * @param requiredClaims
+	 * @param optionalClaims
+	 * @param issuedToken
+	 * @param data
+	 * @param ppi
+	 * @return
+	 * @throws TokenIssuanceException
+	 */
+	public static String getSelfAssertedToken(
+			X509Certificate relyingPartyCert, 
+			String requiredClaims, String optionalClaims, 
+			String issuedToken, Element data, String ppi,
+			X509Certificate signingCert,
+			PrivateKey signingKey,
+			String audience,
+			String confirmationMethod) throws TokenIssuanceException {
 		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
 		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
 		        signingCert, signingKey);
-
+		
+		if (audience != null) {
+			token.setAudience(audience);
+		}
 		token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
 		token.setValidityPeriod(-5, 10);
 
@@ -748,6 +787,7 @@ public class TokenIssuer {
 		Element securityToken = null;
 		try {
 		    securityToken = token.serialize();
+System.out.println("saml assertion:" + securityToken.toXML());
 		    encryptor.setData(securityToken.toXML());
 		    issuedToken = encryptor.toXML();
 

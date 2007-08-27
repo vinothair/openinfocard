@@ -61,6 +61,8 @@ public class SignedInfo implements Canonicalizable {
         references.add(reference);
     }
 
+    protected SignedInfo() {}
+    
     public Element getSignedInfo() {
 
         
