@@ -196,7 +196,8 @@ function invokeSelector(aEvent){
 
     policy["cert"] = cert;
     policy["cn"] = certificate.commonName;
-
+	policy["url"] = document.URL;
+	
     var doc = form.ownerDocument;
     var win = doc.defaultView;
 

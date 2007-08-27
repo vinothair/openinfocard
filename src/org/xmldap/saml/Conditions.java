@@ -45,10 +45,18 @@ import org.xmldap.xml.XmlUtils;
 
 
 public class Conditions implements Serializable {
+	//  <saml:Conditions 
+	//   NotBefore="2007-08-21T07:18:50.605Z" 
+	//   NotOnOrAfter="2007-08-21T08:18:50.605Z">
+	//   <saml:AudienceRestrictionCondition>
+	//    <saml:Audience>https://w4de3esy0069028.gdc-bln01.t-systems.com:8443/relyingparty/</saml:Audience>
+	//   </saml:AudienceRestrictionCondition>
+	//  </saml:Conditions>
 
     private String notBefore;
     private String notOnOrAfter;
-
+    private AudienceRestrictionCondition audienceRestrictionCondition = null;
+    
     private void init(Element element) {
         //Get the values
         String notBeforeVal = element.getAttribute("NotBefore").getValue();
@@ -65,11 +73,13 @@ public class Conditions implements Serializable {
     	Document doc = XmlUtils.parse(xml);
     	Element element = doc.getRootElement();
     	init(element);
+    	audienceRestrictionCondition = null;
     }
     
     public Conditions(Calendar notBeforeCal, Calendar notOnOrAfterCal) {
     	notBefore = XSDDateTime.getDateTime(notBeforeCal);
     	notOnOrAfter = XSDDateTime.getDateTime(notOnOrAfterCal);
+    	audienceRestrictionCondition = null;
     }
     
     public boolean validate(Calendar when)
@@ -103,9 +113,17 @@ public class Conditions implements Serializable {
         XSDDateTime andLater = new XSDDateTime(nowPlus);
         notOnOrAfter = andLater.getDateTime();
 
-
+        audienceRestrictionCondition = null;
     }
 
+    public void setAudienceRestrictionCondition(AudienceRestrictionCondition audienceRestrictionCondition) {
+    	this.audienceRestrictionCondition = audienceRestrictionCondition;
+    }
+    
+    public AudienceRestrictionCondition getAudienceRestrictionCondition(AudienceRestrictionCondition audienceRestrictionCondition) {
+    	return this.audienceRestrictionCondition;
+    }
+    
     public Calendar getNotBefore() {
     	return XSDDateTime.parse(notBefore);
     }
@@ -114,12 +132,15 @@ public class Conditions implements Serializable {
     	return XSDDateTime.parse(notOnOrAfter);
     }
     
-    private Element getConditions() {
+    private Element getConditions() throws SerializationException {
         Element conditions = new Element(WSConstants.SAML_PREFIX + ":Conditions", WSConstants.SAML11_NAMESPACE);
         Attribute notBeforeAttr = new Attribute("NotBefore", notBefore);
         Attribute notOnOrAfterAttr = new Attribute("NotOnOrAfter", notOnOrAfter);
         conditions.addAttribute(notBeforeAttr);
         conditions.addAttribute(notOnOrAfterAttr);
+        if (audienceRestrictionCondition != null) {
+        	conditions.appendChild(audienceRestrictionCondition.serialize());
+        }
         return conditions;
 
     }

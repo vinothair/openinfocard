@@ -69,6 +69,9 @@ Xmldapidentityselector.prototype = {
 
         policy["cert"] = getDer(serverCert,win);
         policy["cn"] = serverCert.commonName;
+        // win.document.URL is undefined
+        // win.document.location.href is chrome://.../browser.xul
+		policy["url"] = recipientURL; 
 
 	    var chain = serverCert.getChain();
 		debug('chain: ' + chain);

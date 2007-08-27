@@ -130,7 +130,7 @@ public class MexServlet extends HttpServlet {
 
 		String resp = mexResponse.format(args);
 		response.setContentLength(resp.length());
-		response.setContentType("application/xml; charset=utf-8");
+        response.setContentType("application/soap+xml; charset=utf-8");
 
 		PrintWriter out = response.getWriter();
 		out.println(resp);

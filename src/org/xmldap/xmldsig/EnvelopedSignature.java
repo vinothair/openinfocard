@@ -2,6 +2,7 @@ package org.xmldap.xmldsig;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.util.List;
 import java.util.Vector;
 
 import nu.xom.Attribute;
@@ -137,100 +138,5 @@ public class EnvelopedSignature extends ValidatingBaseEnvelopedSignature {
         if (nodesToReference.size() == 0) throw new SigningException("XPath returned no results");
 		return nodesToReference;
 	}
-
-	/**
-	 * @param nodesToReference
-	 * @return
-	 * @throws SigningException
-	 */
-	private Vector getReferences(Nodes nodesToReference) throws SigningException {
-		Vector references = new Vector();
-
-        for (int i = 0; i < nodesToReference.size(); i++) {
-
-            try {
-
-
-                Element referenceThis = (Element) nodesToReference.get(i);
-                //Check for root
-                boolean isRoot = false;
-                Document thisDoc = referenceThis.getDocument();
-
-                //TODO - common code
-                //it isn't a doc, let's check if it's the top of the tree.
-                if (thisDoc == null) {
-
-                    ParentNode parent = referenceThis.getParent();
-                    if (parent == null) isRoot = true;
-
-                } else {
-
-                    //It is a doc - let's see if it's root.
-                    Element root = thisDoc.getRootElement();
-                    if (root.equals(referenceThis)) isRoot = true;
-
-                }
-
-                //Attribute id = referenceThis.getAttribute("Id",WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
-
-                String idVal = "";
-
-                if (!isRoot) {
-                    //TODO - support multiple ID id Ids
-                    Attribute id = referenceThis.getAttribute("id");
-                    if (id == null)
-                        throw new SigningException("XPath returned Element with no wsu:Id attribute. Id is required");
-                    idVal = id.getValue();
-                    //System.out.println("Building reference for ID " + id.getValue() + ": " + referenceThis);
-                } else {
-
-                    //let's see if its a SAML assertions
-                    Attribute assertionID = referenceThis.getAttribute("AssertionID");
-                    if (assertionID != null) {
-
-                        idVal = assertionID.getValue();
-
-                    }
-
-                }
-
-                Reference referenceElm = new Reference(referenceThis, idVal);
-
-
-                references.add(referenceElm);
-
-            } catch (ClassCastException e) {
-
-                throw new SigningException("XPath returned an item which was not an element. Signing only allowed on elements.", e);
-
-            }
-
-        }
-		return references;
-	}
-
-	/**
-	 * @param xml
-	 * @param nodesToReference
-	 * @throws SigningException
-	 */
-	private void signNodes(Element xml, Nodes nodesToReference) throws SigningException {
-		Vector references = getReferences(nodesToReference);
-
-        //Get SignedInfo for reference
-        SignedInfo signedInfo = new SignedInfo(references);
-
-        Signature signature = getSignatureValue(signedInfo);
-
-        //Envelope it.
-        try {
-            //Element rootElement = xml.getRootElement();
-            //rootElement.appendChild(signature.serialize());
-            xml.appendChild(signature.serialize());
-        } catch (SerializationException e) {
-            throw new SigningException("Could not create enveloped signature due to serialization error", e);
-        }
-	}
-
 
 }

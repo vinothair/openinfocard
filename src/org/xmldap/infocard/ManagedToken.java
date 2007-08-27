@@ -119,7 +119,7 @@ public class ManagedToken implements Serializable {
 		//SimpleKeyInfo keyInfo = new SimpleKeyInfo(signingCert);
 //		AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
 
-		Subject subject = new Subject(keyInfo);
+		Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
 
 		Vector/*<Attribute>*/ attributes = new Vector/*<Attribute>*/();
 

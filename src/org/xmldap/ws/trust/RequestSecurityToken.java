@@ -29,10 +29,12 @@
 package org.xmldap.ws.trust;
 
 import nu.xom.Element;
+
+import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
+import org.xmldap.xml.Serializable;
 
-
-public class RequestSecurityToken {
+public class RequestSecurityToken implements Serializable {
 
 
     String requestType = null;
@@ -55,7 +57,7 @@ public class RequestSecurityToken {
     String encryptionAlgorithm = null;
     String canonicalizationAlgorithm = null;
     String proofEncryption = null;
-    String useKey = null;
+    UseKey useKey = null;
     String signWith = null;
     String encryptWith = null;
     String delegateTo = null;
@@ -67,15 +69,10 @@ public class RequestSecurityToken {
     String policyReference = null;
 
 
-    private RequestSecurityToken() {
-
-
-    }
+    private RequestSecurityToken() {}
 
     public RequestSecurityToken(String requestType) {
-
         this.requestType = requestType;
-
     }
 
     public String getTokenType() {
@@ -102,13 +99,60 @@ public class RequestSecurityToken {
         this.appliesTo = appliesTo;
     }
 
-    public String toXML() {
+    public String getKeyType() {
+        return keyType;
+    }
+
+    public void setKeyType(String keyType) {
+        this.keyType = keyType;
+    }
+
+    public void setUseKey(UseKey useKey) {
+    	this.useKey = useKey;
+    }
+    
+    public String toXML() throws SerializationException {
 
         Element rst = serialize();
         return rst.toXML();
     }
 
-    public Element serialize() {
+    /*
+     * <wst:RequestSecurityToken>
+     *  <wst:TokenType>
+     *   urn:oasis:names:tc:SAML:1.0:assertion
+     *  </wst:TokenType>
+     *  <wst:RequestType>
+     *   http://schemas.xmlsoap.org/ws/2005/02/trust/Issue
+     *  </wst:RequestType>
+     *  <wst:KeyType>
+     *   http://schemas.xmlsoap.org/ws/2005/02/trust/PublicKey
+     *  </wst:KeyType>
+     *  <ic:InformationCardReference>
+     *   <ic:CardId> http://contoso.com/id/d795621fa01d454285f9</ic:CardId>
+     *  </ic:InformationCardReference>
+     *  <wst:Claims
+     *   wst:Dialect=”http://schemas.xmlsoap.org/ws/2005/05/identity”>
+     *   <ic:ClaimType Uri=”http://.../identity/claims/givenname”/>
+     *   <ic:ClaimType Uri=”http://.../identity/claims/surname”/>
+     *  </wst:Claims>
+     *  <ic:ClientPseudonym>
+     *   <ic:PPID>NHbuoB4KVKuvUx7b8szaux+bM8Rr0rPTPOXQlQTEBAo=</ic:PPID>
+     *  </ic:ClientPseudonym>
+     *  <wst:UseKey Sig="#_46">
+     *   <ds:KeyInfo>
+     *    <ds:KeyValue>
+     *     <ds:RSAKeyValue>
+     *      <ds:Modulus>...</ds:Modulus>
+     *      <ds:Exponent>...</ds:Exponent>
+     *     </ds:RSAKeyValue>
+     *    </ds:KeyValue>
+     *   </ds:KeyInfo>
+     *  </wst:UseKey>
+     *  <ic:RequestDisplayToken xml:lang="en-us" />
+     * </wst:RequestSecurityToken>
+     */
+    public Element serialize() throws SerializationException {
 
         Element rst = new Element(WSConstants.TRUST_PREFIX + ":RequestSecurityToken", WSConstants.TRUST_NAMESPACE_04_04);
 
@@ -117,18 +161,26 @@ public class RequestSecurityToken {
         rst.appendChild(requestTypeElm);
 
         if (tokenType != null) {
-            Element tokenTypeElm = new Element(WSConstants.TRUST_PREFIX + ":TokenType", WSConstants.TRUST_NAMESPACE_04_04);
-            tokenTypeElm.appendChild(tokenType);
-            rst.appendChild(tokenTypeElm);
+            Element element = new Element(WSConstants.TRUST_PREFIX + ":TokenType", WSConstants.TRUST_NAMESPACE_04_04);
+            element.appendChild(tokenType);
+            rst.appendChild(element);
         }
 
         if (appliesTo != null) {
-            Element tokenTypeElm = new Element(WSConstants.POLICY_PREFIX + ":AppliesTo", WSConstants.POLICY_NAMESPACE_02_12);
-            tokenTypeElm.appendChild(appliesTo);
-            rst.appendChild(tokenTypeElm);
+            Element element = new Element(WSConstants.POLICY_PREFIX + ":AppliesTo", WSConstants.POLICY_NAMESPACE_02_12);
+            element.appendChild(appliesTo);
+            rst.appendChild(element);
         }
 
-
+        if (keyType != null) {
+        	Element element = new Element(WSConstants.TRUST_PREFIX + ":KeyType", WSConstants.TRUST_NAMESPACE_04_04);
+        	element.appendChild(keyType);
+        	rst.appendChild(element);
+        }
+        
+        if (useKey != null) {
+        	rst.appendChild(useKey.serialize());
+        }
         rst.appendChild(getSecurityTokenReference());
 
         return rst;

@@ -40,12 +40,20 @@ import org.xmldap.xmldsig.KeyInfo;
 
 public class Subject implements Serializable {
 
+	public static String HOLDER_OF_KEY = "urn:oasis:names:tc:SAML:1.0:cm:holder-of-key";
+	public static String BEARER = "urn:oasis:names:tc:SAML:1.0:cm:bearer";
+	
+    private String confirmationMethod = null;
+    private KeyInfo keyInfo = null;
 
-    private String confirmationMethod = "urn:oasis:names:tc:SAML:1.0:cm:holder-of-key";
-    private KeyInfo keyInfo;
-
-    public Subject(KeyInfo keyInfo) {
+    public Subject(KeyInfo keyInfo, String confirmationMethod) {
         this.keyInfo = keyInfo;
+        this.confirmationMethod = confirmationMethod;
+    }
+
+    public Subject(String confirmationMethod) {
+        this.keyInfo = null;
+        this.confirmationMethod = confirmationMethod;
     }
 
     private Element getSubject() throws SerializationException {
@@ -55,7 +63,9 @@ public class Subject implements Serializable {
         Element confirmationMethodElm = new Element(WSConstants.SAML_PREFIX + ":ConfirmationMethod", WSConstants.SAML11_NAMESPACE);
         confirmationMethodElm.appendChild(confirmationMethod);
         subjectConfirmation.appendChild(confirmationMethodElm);
-        subjectConfirmation.appendChild(keyInfo.serialize());
+        if (keyInfo != null) {
+        	subjectConfirmation.appendChild(keyInfo.serialize());
+        }
         subject.appendChild(subjectConfirmation);
         return subject;
 
@@ -91,7 +101,7 @@ public class Subject implements Serializable {
 			e1.printStackTrace();
 		}
 
-        Subject subject = new Subject(keyInfo);
+        Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
         try {
             System.out.println(subject.toXML());
         } catch (SerializationException e) {

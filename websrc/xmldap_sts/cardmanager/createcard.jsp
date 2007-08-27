@@ -1,6 +1,3 @@
-<!DOCTYPE html 
-     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <%@ page import="java.util.List"%>
 <%@ page import="java.util.Locale"%>
 <%@ page import="org.xmldap.sts.db.ManagedCard"%>
@@ -17,6 +14,9 @@
 	CardStorage storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
 	
 %>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>XMLDAP Card Manager</title>
@@ -101,11 +101,11 @@
         if (action == null ) {
 
 %>
-<b>Create a card</b><br><br>
-<form action="./createcard.jsp" method="POST">
-    <input type="hidden" name="action" value="createcard">
+<p style="font-weight:bold">Create a card</p><br/><br/>
+<form action="./createcard.jsp" method="post">
+    <input type="hidden" name="action" value="createcard"/>
     <table>
-    <tr><td>Card Name:</td><td><input type="text" name="cardName" class="forminput"></td></tr>
+    <tr><td>Card Name:</td><td><input type="text" name="cardName" class="forminput"/></td></tr>
 <%
 		Locale clientLocale = request.getLocale();
 		List dbSupportedClaims = supportedClaimsImpl.dbSupportedClaims();
@@ -113,10 +113,10 @@
 		 DbSupportedClaim claim = (DbSupportedClaim)dbSupportedClaims.get(i);
 		 String key = claim.columnName;
 		 String displayTag = claim.getDisplayTag(clientLocale);
-		 out.println("<tr><td>" + displayTag + ":</td><td><input type=\"text\" name=\"" + key + "\" class=\"forminput\"></td></tr>");
+		 out.println("<tr><td>" + displayTag + ":</td><td><input type=\"text\" name=\"" + key + "\" class=\"forminput\"/></td></tr>");
 		}
 %>
-    <tr><td colspan=2><br><input type="submit" value="Create a new card"></td></tr>
+    <tr><td colspan=2><br/><input type="submit" value="Create a new card"/></td></tr>
     </table>
 </form>
 

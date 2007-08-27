@@ -3,10 +3,13 @@ package org.xmldap.xmldsig;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PrivateKey;
+import java.util.ArrayList;
+import java.util.List;
 
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
+import nu.xom.Elements;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.XPathContext;
@@ -92,6 +95,23 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 
 	}
 
+	public static boolean validateSignatures(Document xmlDoc) throws CryptoException, IOException {
+		Element root = xmlDoc.getRootElement();
+		Elements signatures = root.getChildElements("Signature", WSConstants.DSIG_NAMESPACE);
+		List<ParsedSignature> parsedSignatures = new ArrayList<ParsedSignature>();
+		for (int i=0; i<signatures.size(); i++) {
+			Element signature = signatures.get(i);
+			ParsedSignature parsedSignature = new ParsedSignature(signature);
+			parsedSignatures.add(parsedSignature);
+			root.removeChild(signature);
+		}
+		for (ParsedSignature parsedSignature : parsedSignatures) {
+			boolean valid = parsedSignature.validate(root);
+			if (!valid) { return false; }
+		}
+		return true;
+	}
+
 	public static boolean validate(Document xmlDoc) throws CryptoException {
 
 		XPathContext thisContext = new XPathContext();
@@ -100,57 +120,77 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		// OK - on to signature validation - we need to get the SignedInfo
 		// Element, and the Signature Element
 		byte[] signedInfoCanonicalBytes;
+		ParsedSignature parsedSignature = null;
+		String mod = null;
+		String exp = null;
+		Element root = xmlDoc.getRootElement();
 		try {
-			Element root = xmlDoc.getRootElement();
-			signedInfoCanonicalBytes = EnvelopedSignature.getSignedInfoCanonicalBytes(root);
+			Element signature = root.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
+			parsedSignature = new ParsedSignature(signature);
+			signedInfoCanonicalBytes = parsedSignature.getSignedInfoCanonicalBytes();
+			
+			ParsedKeyInfo parsedKeyInfo = parsedSignature.getParsedKeyInfo();
+			ParsedKeyValue keyValue = parsedKeyInfo.getParsedKeyValue();
+			mod = keyValue.getModulus();
+			exp = keyValue.getExponent();
 		} catch (IOException e) {
 			throw new CryptoException(e);
 		}
 
-		String signatureValue = getFirstValue(xmlDoc, thisContext, "//dsig:SignatureValue");
-		if (signatureValue == null) {
-			return false;
-		}
-
+//		String signatureValue = getFirstValue(xmlDoc, thisContext, "//dsig:SignatureValue");
+//		if (signatureValue == null) {
+//			return false;
+//		}
+		String signatureValue = parsedSignature.getSignatureValue();
 
 		// GET THE KEY CIPHERTEXT and DECRYPT
-		XPathContext encContext = new XPathContext();
-		encContext.addNamespace("enc", WSConstants.ENC_NAMESPACE);
-		encContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
-		String digest = getFirstValue(xmlDoc, encContext, "//dsig:DigestValue");
-		if (digest == null) {
-			return false;
-		}
-
-		Element root = xmlDoc.getRootElement();
-
-		// And we need to fetch the modulus
-		// Nodes modVals =
-		// assertion.query("/saml:Assertion/dsig:Signature/dsig:KeyInfo/disg:KeyValue/dsig:RSAKeyValue/dsig:Modulus",
-		// thisContext);
-		String mod = getFirstValue(xmlDoc, thisContext, "//dsig:Modulus");
-		if (mod != null) {
-			// System.out.println("Modulus: " + mod);
-			// And we need to fetch the exponent
-			String exp = getFirstValue(xmlDoc, thisContext, "//dsig:Exponent");
-			if (exp == null) {
-				return false;
-			}
-
-			// System.out.println("Exponent: " + exp);
-
+//		XPathContext encContext = new XPathContext();
+//		encContext.addNamespace("enc", WSConstants.ENC_NAMESPACE);
+//		encContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
+//		String digest = getFirstValue(xmlDoc, encContext, "//dsig:DigestValue");
+//		if (digest == null) {
+//			return false;
+//		}
+		ParsedSignedInfo parsedSignedInfo = parsedSignature.getParsedSignedInfo();
+		List<ParsedReference> references = parsedSignedInfo.getReferences();
+		String digest = null;
+		if (references.size() == 1) {
+			ParsedReference parsedReference = references.get(0);
+			digest = parsedReference.getDigestValue();
 			return validateRSA(root, signedInfoCanonicalBytes, signatureValue, mod, exp, digest);
 		} else {
-			// mod == null maybe it is AES instead of RSA
-			String base64encodedAndEncryptedAESKey = getFirstValue(xmlDoc, thisContext, "//" + WSConstants.ENC_PREFIX + ":CipherValue");
-			if (base64encodedAndEncryptedAESKey != null) {
-				System.out.println("Can not validate signature: unsupported method!");
-//				return validateAES(root, signedInfoCanonicalBytes, signatureValue, base64encodedAndEncryptedAESKey, privateKey, digest );
-				return false;
-			} else {
-				return false;
-			}
+			throw new CryptoException("not implemented");
 		}
+		
+//		Element root = xmlDoc.getRootElement();
+
+//		// And we need to fetch the modulus
+//		// Nodes modVals =
+//		// assertion.query("/saml:Assertion/dsig:Signature/dsig:KeyInfo/disg:KeyValue/dsig:RSAKeyValue/dsig:Modulus",
+//		// thisContext);
+//		String mod = getFirstValue(xmlDoc, thisContext, "//dsig:Modulus");
+//		if (mod != null) {
+//			// System.out.println("Modulus: " + mod);
+//			// And we need to fetch the exponent
+//			String exp = getFirstValue(xmlDoc, thisContext, "//dsig:Exponent");
+//			if (exp == null) {
+//				return false;
+//			}
+//
+//			// System.out.println("Exponent: " + exp);
+//
+//			return validateRSA(root, signedInfoCanonicalBytes, signatureValue, mod, exp, digest);
+//		} else {
+//			// mod == null maybe it is AES instead of RSA
+//			String base64encodedAndEncryptedAESKey = getFirstValue(xmlDoc, thisContext, "//" + WSConstants.ENC_PREFIX + ":CipherValue");
+//			if (base64encodedAndEncryptedAESKey != null) {
+//				System.out.println("Can not validate signature: unsupported method!");
+////				return validateAES(root, signedInfoCanonicalBytes, signatureValue, base64encodedAndEncryptedAESKey, privateKey, digest );
+//				return false;
+//			} else {
+//				return false;
+//			}
+//		}
 
 	}
 

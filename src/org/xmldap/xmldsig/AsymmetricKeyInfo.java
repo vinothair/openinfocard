@@ -65,7 +65,7 @@ public class AsymmetricKeyInfo implements KeyInfo {
 
 
         try {
-            //Pupulate the cert element
+            //Populate the cert element
             x509Certificate.appendChild(Base64.encodeBytesNoBreaks(cert.getEncoded()));
 
             //populate the name element
