@@ -72,6 +72,7 @@ public class BaseEnvelopedSignature {
 	 * @param xml
 	 * @param nodesToReference
 	 * @throws SigningException
+	 * @return a signed copy of this element
 	 */
 	public Element sign(Element xml) throws SigningException {
         Element signThisOne = (Element) xml.copy();
