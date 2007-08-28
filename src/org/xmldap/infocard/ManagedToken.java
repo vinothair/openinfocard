@@ -50,6 +50,7 @@ public class ManagedToken implements Serializable {
 	private String privatePersonalIdentifier;
 
 	private String issuer;
+	private String confirmationMethod = Subject.HOLDER_OF_KEY;
 
 	private Map/*<String,String>*/supportedClaims = new HashMap/*<String,String>*/();
 
@@ -119,7 +120,7 @@ public class ManagedToken implements Serializable {
 		//SimpleKeyInfo keyInfo = new SimpleKeyInfo(signingCert);
 //		AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
 
-		Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
+		Subject subject = new Subject(keyInfo, confirmationMethod);
 
 		Vector/*<Attribute>*/ attributes = new Vector/*<Attribute>*/();
 
@@ -204,6 +205,14 @@ public class ManagedToken implements Serializable {
 
 	public Element serialize(RandomGUID uuid) throws SerializationException {
 		return getToken(uuid);
+	}
+
+	public String getConfirmationMethod() {
+		return confirmationMethod;
+	}
+
+	public void setConfirmationMethod(String confirmationMethod) {
+		this.confirmationMethod = confirmationMethod;
 	}
 
 }
