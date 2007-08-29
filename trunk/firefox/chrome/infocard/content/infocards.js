@@ -37,10 +37,10 @@ function xmlreplace(text) {
  } else {
   str = "" + text + "";
  }
- var result = str.replace("&", "&amp;", "g");
- result = result.replace("<", "&lt;", "g");
- result = result.replace(">", "&gt;", "g");
- result = result.replace("?", "%3F", "g");
+ var result = str.replace(/&/g, "&amp;");
+ result = result.replace(/</g, "&lt;");
+ result = result.replace(/>/g, "&gt;");
+ result = result.replace(/\?/g, "%3F");
  return(result);
 }
 
@@ -286,6 +286,7 @@ debug("processManagedCard::usercredential>>>" + usercredential);
 	        rst = rst + "</o:Security></s:Header>" +
             "<s:Body><wst:RequestSecurityToken Context=\"ProcessRequestSecurityToken\" " +
             "xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">" +
+            "<wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType>" +
             "<wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
             "<wsid:CardId>";
 debug("cardid:"+ managedCard.id);
