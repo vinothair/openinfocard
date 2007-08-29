@@ -95,7 +95,9 @@ public class MexServlet extends HttpServlet {
 		ServletContext application = getServletConfig().getServletContext();
 		
 		String filename = null;
-		if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
+		if (url.indexOf("symmetric-binding") > 0) { // this is experimental and works only for my environment. Axel
+			filename = "WEB-INF/mex-pwd-symmetric-binding-get.xml";
+		} else if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
 			filename = "WEB-INF/mex-pwd-get.xml";
 		} else if (url.endsWith(TokenServiceReference.SELF_ISSUED)) {
 			filename = "WEB-INF/mex-self-get.xml";
