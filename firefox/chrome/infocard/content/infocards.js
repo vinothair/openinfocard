@@ -30,6 +30,20 @@ var selectedCard;
 
 var selectorDebugging = true;
 
+function xmlreplace(text) {
+ var str;
+ if (typeof(text) == 'string') {
+  str = text;
+ } else {
+  str = "" + text + "";
+ }
+ var result = str.replace("&", "&amp;", "g");
+ result = result.replace("<", "&lt;", "g");
+ result = result.replace(">", "&gt;", "g");
+ result = result.replace("?", "%3F", "g");
+ return(result);
+}
+
 function ok(){
 
     var tokenToReturn;
@@ -144,7 +158,7 @@ function getMex(managedCard) {
     	 "<a:ReplyTo>" + 
     	  "<a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address>" + 
     	 "</a:ReplyTo>" + 
-    	 "<a:To s:mustUnderstand=\"1\">" + managedCard.carddata.managed.issuer + "</a:To>" + 
+    	 "<a:To s:mustUnderstand=\"1\">" + xmlreplace(managedCard.carddata.managed.issuer) + "</a:To>" + 
     	"</s:Header><s:Body/></s:Envelope>";
 
 debug("processManagedCard: mex request: " + mex);
@@ -239,11 +253,11 @@ debug("processManagedCard::usercredential>>>" + usercredential);
 	
 	            rst = rst + "<o:UsernameToken u:Id=\"" + messageId + "\"><o:Username>";
 	
-	            rst = rst + uid;
+	            rst = rst + xmlreplace(uid);
 	
 	            rst = rst + "</o:Username><o:Password o:Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">";
 	
-	            rst = rst + pw;
+	            rst = rst + xmlreplace(pw);
 	
 	            rst = rst + "</o:Password></o:UsernameToken>";
 	        }  else if (!(usercredential.ic::KerberosV5Credential == undefined)) {
@@ -274,12 +288,13 @@ debug("processManagedCard::usercredential>>>" + usercredential);
             "xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">" +
             "<wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
             "<wsid:CardId>";
-
-            rst = rst + managedCard.id;
+debug("cardid:"+ managedCard.id);
+debug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
+            rst = rst + xmlreplace(managedCard.id);
 
             rst = rst + "</wsid:CardId>";
             
-            rst = rst + "<wsid:CardVersion>" + managedCard.version + "</wsid:CardVersion>" + "</wsid:InformationCardReference>";
+            rst = rst + "<wsid:CardVersion>" + xmlreplace(managedCard.version) + "</wsid:CardVersion>" + "</wsid:InformationCardReference>";
             
             if ((requiredClaims == undefined) || (requiredClaims.length < 1)) {
                debug("requiredClaims from RP are undefined");
@@ -290,7 +305,7 @@ debug("processManagedCard::usercredential>>>" + usercredential);
 			   for (var index = 0; index<list.length(); index++) {
 				 var supportedClaim = list[index];
 				 var uri = supportedClaim.@Uri;
-				 rst = rst + "<wsid:ClaimType Uri=\"" + uri + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+				 rst = rst + "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
                }
                rst = rst + "</wst:Claims>";
             } else {
@@ -301,7 +316,7 @@ debug("processManagedCard::usercredential>>>" + usercredential);
                debug("claimsArray:" + claimsArray);
                for (var index = 0; index<claimsArray.length; index++) {
                  var uri = claimsArray[index];
-				 rst = rst + "<wsid:ClaimType Uri=\"" + uri + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+				 rst = rst + "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
                }
                rst = rst + "</wst:Claims>";
             }
@@ -311,12 +326,12 @@ debug("processManagedCard::usercredential>>>" + usercredential);
             // if a ppid is requested, then provide some selector entropy (clientPseudonym). The STS uses this to generate a RP depended ppid
             // even if the STS does not know the RP
             if (requiredClaims.indexOf("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") > 0) {
-	            rst = rst + "<ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>" + clientPseudonym + "</PPID></ClientPseudonym>";
+	            rst = rst + "<ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>" + xmlreplace(clientPseudonym) + "</PPID></ClientPseudonym>";
 			}
 			
             // tokenType is optional. http://docs.oasis-open.org/ws-sx/ws-trust/200512/ws-trust-1.3-os.html
             if (tokenType != null) {
-	            rst = rst + "<wst:TokenType>" + tokenType + "</wst:TokenType>";
+	            rst = rst + "<wst:TokenType>" + xmlreplace(tokenType) + "</wst:TokenType>";
 	        }
             rst = rst + "<wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
             "</wst:RequestSecurityToken></s:Body></s:Envelope>";
