@@ -68,7 +68,7 @@ public class CertsAndKeys {
 	public static KeyPair generateKeyPair(Provider provider)
 			throws NoSuchAlgorithmException, NoSuchProviderException {
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", provider);
-		keyGen.initialize(1024, new SecureRandom());
+		keyGen.initialize(2048, new SecureRandom());
 		return keyGen.generateKeyPair();
 	}
 
