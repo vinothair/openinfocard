@@ -3,6 +3,9 @@ package org.xmldap.xmldsig;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +47,7 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 	 * @return
 	 * @throws CryptoException
 	 */
-	public static boolean validateRSA(Element root, byte[] signedInfoCanonicalBytes, String signatureValue, String mod, String exp, String digest) throws CryptoException {
+	public static boolean validateRSA(Element root, byte[] signedInfoCanonicalBytes, String signatureValue, BigInteger modulus, BigInteger exponent, String digest) throws CryptoException {
 		// WEVE GOT:
 		// byte[] signedInfoCanonicalBytes
 		// String signatureValue
@@ -74,8 +77,6 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		// String mod
 		// String exp
 
-		BigInteger modulus = new BigInteger(1, Base64.decode(mod));
-		BigInteger exponent = new BigInteger(1, Base64.decode(exp));
 		return CryptoUtils.verify(signedInfoCanonicalBytes, Base64
 				.decode(signatureValue), modulus, exponent);
 	}
@@ -121,8 +122,8 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		// Element, and the Signature Element
 		byte[] signedInfoCanonicalBytes;
 		ParsedSignature parsedSignature = null;
-		String mod = null;
-		String exp = null;
+		BigInteger modulus = null;
+		BigInteger exponent = null;
 		Element root = xmlDoc.getRootElement();
 		try {
 			Element signature = root.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
@@ -130,13 +131,31 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 			signedInfoCanonicalBytes = parsedSignature.getSignedInfoCanonicalBytes();
 			
 			ParsedKeyInfo parsedKeyInfo = parsedSignature.getParsedKeyInfo();
-			ParsedKeyValue keyValue = parsedKeyInfo.getParsedKeyValue();
-			mod = keyValue.getModulus();
-			exp = keyValue.getExponent();
+			ParsedX509Data x509Data = parsedKeyInfo.getParsedX509Data();
+			if (x509Data != null) {
+				String b64EncodedX509Certificate = x509Data.getCertificateB64();
+				X509Certificate cert = CryptoUtils.X509fromB64(b64EncodedX509Certificate);
+				PublicKey publicKey = cert.getPublicKey();
+				RSAPublicKey rsaPublicKey = (RSAPublicKey)publicKey;
+				modulus = rsaPublicKey.getModulus();
+				exponent = rsaPublicKey.getPublicExponent();
+			} else {
+				ParsedKeyValue keyValue = parsedKeyInfo.getParsedKeyValue();
+				String mod = keyValue.getModulus();
+				String exp = keyValue.getExponent();
+				modulus = new BigInteger(1, Base64.decode(mod));
+				exponent = new BigInteger(1, Base64.decode(exp));
+			}
 		} catch (IOException e) {
 			throw new CryptoException(e);
 		}
 
+		if (modulus == null) {
+			throw new CryptoException("modulus must not be null");
+		}
+		if (exponent == null) {
+			throw new CryptoException("exponent must not be null");
+		}
 //		String signatureValue = getFirstValue(xmlDoc, thisContext, "//dsig:SignatureValue");
 //		if (signatureValue == null) {
 //			return false;
@@ -157,7 +176,7 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		if (references.size() == 1) {
 			ParsedReference parsedReference = references.get(0);
 			digest = parsedReference.getDigestValue();
-			return validateRSA(root, signedInfoCanonicalBytes, signatureValue, mod, exp, digest);
+			return validateRSA(root, signedInfoCanonicalBytes, signatureValue, modulus, exponent, digest);
 		} else {
 			throw new CryptoException("not implemented");
 		}
