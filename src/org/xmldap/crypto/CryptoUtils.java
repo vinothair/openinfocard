@@ -42,6 +42,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.xmldap.exceptions.CryptoException;
+import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.util.Base64;
 
 import javax.crypto.KeyGenerator;
@@ -52,6 +53,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -374,5 +378,21 @@ public class CryptoUtils {
 
     }
 
+    public static X509Certificate X509fromB64(String b64EncodedX509Certificate) throws CryptoException {
+        StringBuffer sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
+        sb.append(b64EncodedX509Certificate);
+        sb.append("\n-----END CERTIFICATE-----\n");
+
+        ByteArrayInputStream bis = new ByteArrayInputStream(sb.toString().getBytes());
+        CertificateFactory cf;
+        try {
+            cf = CertificateFactory.getInstance("X509");
+            X509Certificate certificate = (X509Certificate)cf.generateCertificate(bis);
+            return certificate;
+        } catch (CertificateException e) {
+            throw new CryptoException("Error creating X509Certificate from base64-encoded String", e);
+        }
+
+    }
 
 }
