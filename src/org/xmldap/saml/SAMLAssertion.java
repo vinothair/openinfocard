@@ -31,6 +31,7 @@ package org.xmldap.saml;
 import java.util.Calendar;
 
 import nu.xom.Element;
+
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.KeystoreUtil;
@@ -47,7 +48,7 @@ public class SAMLAssertion implements Serializable {
     private static final String MINOR_VERSION = "1";
 
     private String assertionID;
-    private String issuer;
+    private String issuer = org.xmldap.infocard.Constants.ISSUER_DEFAULT;
     private String issueInstant;
 
     private Conditions conditions;
@@ -58,7 +59,6 @@ public class SAMLAssertion implements Serializable {
 
         RandomGUID guidGen = new RandomGUID();
         assertionID = "uuid-" + guidGen.toString();
-        issuer = "http://schemas.microsoft.com/ws/2005/05/identity/issuer/self";
         XSDDateTime dateTime = new XSDDateTime();
         issueInstant = dateTime.getDateTime();
 
@@ -68,7 +68,6 @@ public class SAMLAssertion implements Serializable {
     public SAMLAssertion(RandomGUID uuid) {
 
         assertionID = "uuid-" + uuid.toString();
-        issuer = "http://schemas.microsoft.com/ws/2005/05/identity/issuer/self";
         XSDDateTime dateTime = new XSDDateTime();
         issueInstant = dateTime.getDateTime();
 
@@ -111,21 +110,20 @@ public class SAMLAssertion implements Serializable {
         nu.xom.Attribute issueInstantAttr = new nu.xom.Attribute("IssueInstant", issueInstant);
         nu.xom.Attribute majorVersion = new nu.xom.Attribute("MajorVersion", MAJOR_VERSION);
         nu.xom.Attribute minorVersion = new nu.xom.Attribute("MinorVersion", MINOR_VERSION);
+        assertion.addAttribute(majorVersion);
+        assertion.addAttribute(minorVersion);
         assertion.addAttribute(assertionIDAttr);
         assertion.addAttribute(issuerAtr);
         assertion.addAttribute(issueInstantAttr);
-        assertion.addAttribute(majorVersion);
-        assertion.addAttribute(minorVersion);
         assertion.appendChild(conditions.serialize());
         assertion.appendChild(attributeStatement.serialize());
         return assertion;
     }
 
-
     public String toXML() throws SerializationException {
 
         Element assertion = serialize();
-        return assertion.toXML();
+        return assertion.toXML(); 
     }
 
     public Element serialize() throws SerializationException {
