@@ -68,6 +68,8 @@ import java.util.Vector;
 
 public class TokenIssuer {
 
+	static final String defaultSubjectConfirmationMethod = Subject.BEARER;
+	
 	static final String storePassword = "storepassword";
 
 	static final String keyPassword = "keypassword";
@@ -623,7 +625,12 @@ public class TokenIssuer {
     		    throw new TokenIssuanceException(e);
     		}
 
-    		String confirmationMethod = Subject.HOLDER_OF_KEY;
+    		String confirmationMethod = defaultSubjectConfirmationMethod;
+    		if (policy.has("confirmationMethod")) {
+    			try {
+					confirmationMethod = policy.getString("confirmationMethod");
+				} catch (JSONException e) { /* should not happen */ }
+    		}
             issuedToken = getSelfAssertedToken(
             		card, relyingPartyCert, chain, requiredClaims, optionalClaims,
         			signingCert, signingKey,
@@ -738,6 +745,10 @@ public class TokenIssuer {
 		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
 		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
 		        signingCert, signingKey);
+		
+		if (confirmationMethod != null) {
+			token.setConfirmationMethod(confirmationMethod);
+		}
 		
 		if (audience != null) {
 			token.setAudience(audience);
