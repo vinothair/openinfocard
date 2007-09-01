@@ -47,4 +47,8 @@ public class Constants {
     public static final String IC_NS_EMAILADDRESS 					= IC_NAMESPACE_PREFIX + IC_EMAILADDRESS;
 
     public static final String IC_NS_PRIVATEPERSONALIDENTIFIER 		= IC_NAMESPACE_PREFIX + IC_PRIVATEPERSONALIDENTIFIER;
+    
+    public static final String ISSUER_MICROSOFT = "http://schemas.microsoft.com/ws/2005/05/identity/issuer/self";
+    public static final String ISSUER_XMLSOAP = "http://schemas.xmlsoap.org/ws/2005/05/identity/issuer/self";
+    public static final String ISSUER_DEFAULT = ISSUER_XMLSOAP;
 }
