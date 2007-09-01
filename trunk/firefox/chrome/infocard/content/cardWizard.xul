@@ -255,7 +255,8 @@
 //             var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
 //             var cardKeyIdentifier = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::X509V3Credential.dsig::X509Data.wss::KeyIdentifier;
 //             var cardPrivatePersonalIdentifier = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::SelfIssuedCredential.dsig::PrivatePersonalIdentifier;
-
+			 var requireAppliesTo = cardxml.dsig::Object.ic::InformationCard.ic::RequireAppliesTo;
+			 
               debug(cardId);
               debug(cardName);
               debug(issuer);
@@ -266,6 +267,7 @@
 //			  debug(cardPrivatePersonalIdentifier);
 			  debug(cardUserCredential);
 			  debug(stsCert);
+			  debug("requireAppliesTo:" + requireAppliesTo);
 			  
               var callbackdata = {};
               callbackdata["type"] = "managedCard";
@@ -282,6 +284,7 @@
 			  callbackdata["usercredential"] = cardUserCredential;
               callbackdata["stsCert"] = stsCert;
               callbackdata["supportedClaims"] = cardxml.dsig::Object.ic::InformationCard.ic::SupportedClaimTypeList.toXMLString();
+              callbackdata["requireAppliesTo"] = requireAppliesTo;
               
               window.arguments[1](callbackdata);
 

@@ -68,16 +68,26 @@ function ok(){
 		}
 		var url = policy["url"]; // RP url
 		var clientPseudonym = hex_sha1(url + selectedCard.id);
-        var assertion = processManagedCard(selectedCard, requiredClaims, tokenType, clientPseudonym);
+		var relyingPartyCertB64 = policy["cert"];
+        var assertion = processManagedCard(selectedCard, requiredClaims, tokenType, clientPseudonym, url, relyingPartyCertB64);
         debug("assertion:" + assertion);
         if (assertion == null) {
          return;
         }
 
-        policy["type"] = "managedCard";
-        policy["assertion"] = assertion;
-        //TRUE or FALSE on the second param enabled debug
-        tokenToReturn = processCard(policy,selectorDebugging);
+        
+
+        if (!(selectedCard.carddata.managed.requireAppliesTo == undefined)) {
+        	// STS is in auditing mode -> just return the unencrypted assertion
+        	tokenToReturn = assertion;
+	    } else {
+	        policy["type"] = "managedCard";
+    	    policy["assertion"] = assertion;
+	    	// STS is NOT in auditing mode -> encrypt the assertion
+	        //TRUE or FALSE on the second param enabled debug
+	        tokenToReturn = processCard(policy,selectorDebugging);
+	    }
+	    
         finish(tokenToReturn);
 
 
@@ -198,7 +208,9 @@ debug("processManagedCard: mex GET request status 200");
 }
 }
 
-function processManagedCard(managedCard, requiredClaims, tokenType, clientPseudonym) {
+function processManagedCard(
+	managedCard, requiredClaims, tokenType, clientPseudonym, 
+	relyingPartyURL, relyingPartyCertB64) {
 
     var tokenToReturn = null;
     var mexResponse = getMex(managedCard);
@@ -232,8 +244,10 @@ debug("processManagedCard::usercredential>>>" + usercredential);
 
             var rst = "<s:Envelope " + 
     			"xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" " + 
+    			"xmlns:a=\"http://www.w3.org/2005/08/addressing\" " +
     			"xmlns:u=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">" + 
     			"<s:Header>" + 
+              	 "<a:Action u:Id=\"_1\">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a:Action>" +
     			 "<o:Security s:mustUnderstand=\"1\" xmlns:o=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">"; 
 
 			if (!(usercredential.ic::UsernamePasswordCredential == undefined)) {
@@ -285,8 +299,21 @@ debug("processManagedCard::usercredential>>>" + usercredential);
 	            
 	        rst = rst + "</o:Security></s:Header>" +
             "<s:Body><wst:RequestSecurityToken Context=\"ProcessRequestSecurityToken\" " +
-            "xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">" +
-            "<wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType>" +
+            "xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">";
+            
+            if (!(managedCard.carddata.managed.requireAppliesTo == undefined)) {
+            	var appliesTo = "<p:AppliesTo xmlns:p=\"http://schemas.xmlsoap.org/ws/2004/09/policy\"><a:EndpointReference>" + 
+            		"<a:Address>" + xmlreplace(relyingPartyURL) + "</a:Address>" + 
+                    "<i:Identity xmlns:i=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\">" + 
+                    "<ds:KeyInfo xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><ds:X509Data>" +
+					"<ds:X509Certificate>" + relyingPartyCertB64 + "</ds:X509Certificate>" +
+					"</ds:X509Data></ds:KeyInfo></i:Identity>" +
+                    "</a:EndpointReference></p:AppliesTo>";
+debug("requireAppliesTo" + appliesTo);
+			    rst = rst + appliesTo;
+            }
+            
+            rst = rst + "<wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType>" +
             "<wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
             "<wsid:CardId>";
 debug("cardid:"+ managedCard.id);
@@ -350,17 +377,35 @@ debug("processManagedCard: request: " + rst);
 debug("processManagedCard: request status 200");
 
                 rstr = rstReq.responseText;
+debug("processManagedCard: RSTR:" + rstr);
 
-                var rstIndex = rstr.indexOf("RequestedSecurityToken>");
-                rstIndex += 23;
-                var assertionStart = rstr.substring(rstIndex);
-
-                var assertionEndIndex = assertionStart.indexOf("Assertion>");
-                assertionEndIndex += 10;
-                var assertion = assertionStart.substring(0,assertionEndIndex);
-
-                tokenToReturn = assertion;
-
+    var j = rstReq.responseText.indexOf("RequestedSecurityToken");
+    if (j<0) {
+     alert("token server did not sent a RequestedSecurityToken.\n" + rstReq.responseText);
+     return null;
+    }
+    var prefix;
+    if (rstReq.responseText.charAt(j-1) == ':') {
+	    var start = rstReq.responseText.substring(0,j-1);
+	    var i = start.lastIndexOf("<");
+	    if (i<0) {
+	     alert("illegal XML\n" + start);
+	     return null;
+	    }
+	    var prefix = start.substring(i+1) + ":";
+	} else {
+	 	prefix = "";
+	}    
+debug("prefix=" + prefix);
+    var rest = rstReq.responseText.substring(j);
+debug("rest=" + rest);
+    var l = rest.indexOf(">");
+    rest = rest.substring(l+1);
+debug("Rest=" + rest);
+    var k = rest.indexOf("</" + prefix + "RequestedSecurityToken");
+    var tokenToReturn = rest.substring(0,k);
+    
+debug("RSTR: " + tokenToReturn);
             } else {
 	            debug("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
 	            alert("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
@@ -596,15 +641,17 @@ function setCard(card){
 		//alert("list[0] type:" + typeof(list[0]));
 		//alert(list[0]);
 		//alert("length:" + list.length());
+		//alert(list.toXMLString());
 		var half = list.length() / 2;
-		for (var index = 0; index<half; index++) {
+		var index=0;
+		for (; index<half; index++) {
 		 var supportedClaim = list[index];
 		 var uri = supportedClaim.@Uri;
   		 var row = document.createElement("row");
 		 var label = document.createElement("label");
 		 label.setAttribute("crop", "end");
 		 label.setAttribute("class", "claimText");
-		 label.setAttribute("value", supportedClaim.ic::DisplayTag); // this is cropped
+		 label.setAttribute("value", xmlreplace(supportedClaim.ic::DisplayTag));
 		 try {
 		 	  // DisplayTag should be changed to Description when description is supported
 			 label.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
@@ -632,14 +679,14 @@ function setCard(card){
 		while (managedRows.hasChildNodes()) { 
   		 managedRows.removeChild(managedRows.childNodes[0]);
 		}
-		for (var index = half; index<list.length(); index++) {
+		for (; index<list.length(); index++) {
 		 var supportedClaim = list[index];
 		 var uri = supportedClaim.@Uri;
   		 var row = document.createElement("row");
 		 var label = document.createElement("label");
 		 label.setAttribute("crop", "end");
 		 label.setAttribute("class", "claimText");
-		 label.setAttribute("value", supportedClaim.ic::DisplayTag);
+		 label.setAttribute("value", xmlreplace(supportedClaim.ic::DisplayTag));
 		 try {
 		 	  // DisplayTag should be changed to Description when description is supported
 			 label.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
@@ -786,8 +833,11 @@ function newCard(){
         var card = new XML("<infocard/>");
         card.name = cardName;
         card.type = type;
-        var version = "1";
-        card.version = version;
+        if (callback["cardVersion"] == undefined) {
+	        card.version = 1;
+	    } else {
+	    	card.version = callback["cardVersion"];
+	    }
         var id = Math.floor(Math.random()*100000+1);
         card.id = id;
         card.privatepersonalidentifier = hex_sha1(cardName + version + id);
@@ -909,6 +959,7 @@ debug(JSON.stringify(callback));
 debug("new card" + callback.usercredential);
 		data.usercredential = new XML(callback.usercredential);
 		data.stsCert = "" + callback.stsCert + "";
+		data.requireAppliesTo = "" + callback.requireAppliesTo + "";
 		
         card.carddata.data = data;
         saveCard(card);
