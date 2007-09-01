@@ -307,27 +307,17 @@ public class Token {
 	}
 
 	public X509Certificate getCertificateOrNull() throws InfoCardProcessingException {
-		X509Certificate certificate = null;
 	    XPathContext thisContext = new XPathContext();
 	    thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
 	    thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
 	    Nodes nodes = getDoc().query("//dsig:X509Data/dsig:X509Certificate", thisContext);
 	    if ((nodes != null) && (nodes.size() > 0)) {
-	        String element = nodes.get(0).getValue();
-	        StringBuffer sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
-	        sb.append(element);
-	        sb.append("\n-----END CERTIFICATE-----\n");
-	
-	        ByteArrayInputStream bis = new ByteArrayInputStream(sb.toString().getBytes());
-	        CertificateFactory cf;
+	        String b64EncodedX509Certificate = nodes.get(0).getValue();
 	        try {
-	            cf = CertificateFactory.getInstance("X509");
-	            certificate = (X509Certificate)cf.generateCertificate(bis);
-	            return certificate;
-	        } catch (CertificateException e) {
-	            throw new InfoCardProcessingException("Error creating X509Certificate from Token", e);
-	        }
-	
+				return CryptoUtils.X509fromB64(b64EncodedX509Certificate);
+			} catch (CryptoException e) {
+				throw new InfoCardProcessingException(e);
+			}
 	    } 
 	    return null;
 	}

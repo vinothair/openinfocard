@@ -37,11 +37,13 @@ import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.xmldsig.BaseEnvelopedSignature;
 import org.xmldap.xmldsig.KeyInfo;
+import org.xmldap.xmldsig.RsaPublicKeyInfo;
 import org.xmldap.xmldsig.SymmetricKeyInfo;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -307,32 +309,6 @@ public class SelfIssuedToken implements Serializable {
 			AudienceRestrictionCondition audienceRestrictionCondition = new AudienceRestrictionCondition(restrictedTo);
 			conditions.setAudienceRestrictionCondition(audienceRestrictionCondition);
 		}
-		KeyInfo keyInfo = null;
-		if (asymmetric) {
-
-			if (signingCert == null)
-				throw new SerializationException(
-						"You did not provide a certificate for use with asymetric keys");
-			keyInfo = new AsymmetricKeyInfo(signingCert);
-
-		} else {
-
-			byte[] secretKey;
-			try {
-				secretKey = CryptoUtils.genKey(128);
-			} catch (org.xmldap.exceptions.CryptoException e) {
-				throw new SerializationException(e);
-			}
-
-			if (relyingPartyCert != null) {
-				PublicKey publicKey = relyingPartyCert.getPublicKey();
-				keyInfo = new SymmetricKeyInfo(publicKey, secretKey);
-			} else {
-				throw new SerializationException(
-						"You did not provide the relying party cert");
-			}
-
-		}
 
 		Subject subject = null;
 
@@ -341,6 +317,36 @@ public class SelfIssuedToken implements Serializable {
 		}
 		
 		if (Subject.HOLDER_OF_KEY.equals(confirmationMethod)) {
+			KeyInfo keyInfo = null; // for the proof key
+			if (asymmetric) {
+
+				if (signingCert == null)
+					throw new SerializationException(
+							"You did not provide a certificate for use with asymetric keys");
+//				keyInfo = new AsymmetricKeyInfo(signingCert);
+				keyInfo = new RsaPublicKeyInfo((RSAPublicKey)signingCert.getPublicKey());
+				// I am wondering where the private key gets used to proof the possession... 
+				// because the proof key can be different to the signing key
+				// Axel TODO
+			} else {
+
+				byte[] secretKey;
+				try {
+					secretKey = CryptoUtils.genKey(128);
+				} catch (org.xmldap.exceptions.CryptoException e) {
+					throw new SerializationException(e);
+				}
+
+				if (relyingPartyCert != null) {
+					PublicKey publicKey = relyingPartyCert.getPublicKey();
+					keyInfo = new SymmetricKeyInfo(publicKey, secretKey);
+				} else {
+					throw new SerializationException(
+							"You did not provide the relying party cert");
+				}
+
+			}
+
 			subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
 		} else {
 			subject = new Subject(Subject.BEARER);
@@ -391,6 +397,8 @@ public class SelfIssuedToken implements Serializable {
 		assertion.setAttributeStatement(statement);
 
 		//make this support multiple signing modes
+		RsaPublicKeyInfo keyInfo = new RsaPublicKeyInfo((RSAPublicKey)signingCert.getPublicKey());
+//		AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
 		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo,	signingKey);
 
 		Element signedXML = null;

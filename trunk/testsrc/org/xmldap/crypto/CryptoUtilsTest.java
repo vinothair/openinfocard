@@ -5,6 +5,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
@@ -185,5 +186,12 @@ public class CryptoUtilsTest extends TestCase {
 			assertEquals("", e.getMessage());
 		}
 	}
+
+    public void testX509fromB64() throws CertificateException, CryptoException {
+    	X509Certificate certIn = XmldapCertsAndKeys.getXmldapCert();
+    	String b64EncodedX509Certificate = Base64.encodeBytesNoBreaks(certIn.getEncoded());
+    	X509Certificate certOut = CryptoUtils.X509fromB64(b64EncodedX509Certificate);
+    	assertTrue(certIn.equals(certOut));
+    }
 
 }
