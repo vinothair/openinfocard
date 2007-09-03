@@ -37,4 +37,8 @@ public class ParsedReference {
 	public List<String> getTransformsAlgorithms() {
 		return transformAlgorithms;
 	}
+
+	public String getUri() {
+		return uri;
+	}
 }
