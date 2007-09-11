@@ -29,12 +29,12 @@
 package org.xmldap.util;
 
 import org.xmldap.exceptions.KeyStoreException;
-import org.xmldap.exceptions.TokenIssuanceException;
 
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -94,7 +94,17 @@ public class KeystoreUtil {
 	private void load(String keystorePath, String keystorePassword, String type) throws KeyStoreException {
 		try {
             this.keystore = KeyStore.getInstance(type);
-            keystore.load(new FileInputStream(keystorePath), keystorePassword.toCharArray());
+            File file = new File(keystorePath);
+			if (file.exists()) {
+				java.io.FileInputStream fis = new java.io.FileInputStream(file);
+				keystore.load(fis, keystorePassword.toCharArray());
+				fis.close();
+			} else {
+				keystore.load(null, keystorePassword.toCharArray());
+				OutputStream fos = new FileOutputStream(file);
+				keystore.store(fos, keystorePassword.toCharArray());
+				fos.close();
+			}
         } catch (IOException e) {
             throw new KeyStoreException(e);
         } catch (NoSuchAlgorithmException e) {

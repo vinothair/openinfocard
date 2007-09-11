@@ -2,8 +2,14 @@ package org.xmldap.xmldsig;
 
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Iterator;
+import java.util.Vector;
 
+import org.xmldap.exceptions.SerializationException;
+import org.xmldap.exceptions.SigningException;
 import org.xmldap.infocard.SelfIssuedToken;
+import org.xmldap.saml.Attribute;
 import org.xmldap.saml.AttributeStatement;
 import org.xmldap.saml.Conditions;
 import org.xmldap.saml.SAMLAssertion;
@@ -245,13 +251,94 @@ public class EnvelopedSignatureTest extends TestCase {
 //		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
 //				xmldapKey);
 //
-		SelfIssuedToken token = new SelfIssuedToken(xmldapCert,
-				xmldapCert, xmldapKey);
+		X509Certificate relyingPartyCert = xmldapCert;
+		RSAPublicKey signingKey = (RSAPublicKey)xmldapCert.getPublicKey();
+		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
+				signingKey, xmldapKey);
 	
 		token.setPrivatePersonalIdentifier(Base64.encodeBytes("ppid".getBytes()));
 		token.setValidityPeriod(-5, 10);
 	
 		String xml = token.toXML();
+//		String signedToken = signer.sign(xml);
+		assertTrue(EnvelopedSignature.validate(xml));
+	}
+	
+	public void testSelfIssuedTokenInline() throws Exception {
+
+		X509Certificate xmldapCert = XmldapCertsAndKeys.getXmldapCert();
+		RSAPrivateKey xmldapKey = XmldapCertsAndKeys.getXmldapPrivateKey();
+		
+//		KeyInfo keyInfo = new AsymmetricKeyInfo(xmldapCert);
+//		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
+//				xmldapKey);
+//
+		RSAPublicKey signingKey = (RSAPublicKey)xmldapCert.getPublicKey();
+		SelfIssuedToken token = new SelfIssuedToken(xmldapCert,
+				signingKey, xmldapKey);
+	
+		token.setPrivatePersonalIdentifier(Base64.encodeBytes("ppid".getBytes()));
+		token.setValidityPeriod(-5, 10);
+
+		Conditions conditions = new Conditions(-5, 10);
+
+		Subject subject = new Subject(Subject.BEARER);
+
+		Vector attributes = new Vector();
+
+		Attribute attr = new Attribute("emailaddress", org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX, "axel@nennker.de");
+		attributes.add(attr);
+
+		AttributeStatement statement = new AttributeStatement();
+		statement.setSubject(subject);
+
+		Iterator iter = attributes.iterator();
+		while (iter.hasNext()) {
+			statement.addAttribute((Attribute) iter.next());
+		}
+
+		SAMLAssertion assertion = new SAMLAssertion();
+		assertion.setConditions(conditions);
+		assertion.setAttributeStatement(statement);
+
+		RsaPublicKeyInfo keyInfo = new RsaPublicKeyInfo((RSAPublicKey)xmldapCert.getPublicKey());
+		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo,	xmldapKey);
+
+		Element signedXML = null;
+		try {
+			Element signThisOne = (Element) assertion.serialize().copy();
+			
+			String idVal = signThisOne.getAttributeValue("Id", WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
+			if (idVal == null) {
+			    //let's see if its a SAML assertions
+			    nu.xom.Attribute assertionID = signThisOne.getAttribute("AssertionID");
+			    if (assertionID != null) {
+			        idVal = assertionID.getValue();
+			    }
+			}
+			if (idVal == null) {
+				throw new IllegalArgumentException("BaseEnvelopedSignature: Element to sign does not have an id-ttribute");
+			}
+			Reference reference = new Reference(signThisOne, idVal);
+			
+			//Get SignedInfo for reference
+			SignedInfo signedInfo = new SignedInfo(reference);
+			
+			Signature signature = signer.getSignatureValue(signedInfo);
+			
+			//Envelope it.
+			try {
+				signThisOne.appendChild(signature.serialize());
+			} catch (SerializationException e) {
+			    throw new SigningException("Could not create enveloped signature due to serialization error", e);
+			}
+			signedXML = signThisOne;
+		} catch (SigningException e) {
+			throw new SerializationException("Error signing assertion", e);
+		}
+		Element sit = signedXML;
+	
+		String xml = sit.toXML();
 //		String signedToken = signer.sign(xml);
 		assertTrue(EnvelopedSignature.validate(xml));
 	}

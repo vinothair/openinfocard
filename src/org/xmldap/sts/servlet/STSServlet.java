@@ -30,13 +30,10 @@ package org.xmldap.sts.servlet;
 
 import nu.xom.*;
 import org.xmldap.exceptions.KeyStoreException;
-import org.xmldap.exceptions.SerializationException;
-import org.xmldap.infocard.ManagedToken;
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.util.*;
 import org.xmldap.ws.WSConstants;
-import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.sts.db.CardStorage;
-import org.xmldap.sts.db.DbSupportedClaim;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.SupportedClaims;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
@@ -54,16 +51,15 @@ import java.io.PrintWriter;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Locale;
-import java.util.Set;
-
+import java.util.logging.Logger;
 
 public class STSServlet  extends HttpServlet {
 
+	static Logger log = Logger.getLogger("org.xmldap.sts.servlet.STSServlet");
 
-    private boolean DEBUG = true;
-    RSAPrivateKey key;
-    X509Certificate cert;
-    String domain;
+    RSAPrivateKey key = null;
+    X509Certificate cert = null;
+    String domain = null;
     private String servletPath = null;
 
     CardStorage storage = null;
@@ -128,111 +124,13 @@ public class STSServlet  extends HttpServlet {
     }
 
 
-    private Bag parseToken(Element tokenXML) throws ParsingException{
-
-        Bag tokenElements = new Bag();
-
-        XPathContext context = new XPathContext();
-        context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
-        context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
-        context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
-        context.addNamespace("wsid","http://schemas.microsoft.com/ws/2005/05/identity");
-        context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
-        context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
-
-        Nodes uns = tokenXML.query("//o:Username",context);
-        Element un = (Element) uns.get(0);
-        String userName = un.getValue();
-        if (DEBUG) System.out.println("username: " + userName);
-        tokenElements.put("username", userName);
-
-
-        Nodes pws = tokenXML.query("//o:Password",context);
-        Element pw = (Element) pws.get(0);
-        String password = pw.getValue();
-        tokenElements.put("password", password);
-
-        return tokenElements;
-
-    }
-
-
-
-    private Bag parseRequest(Element requestXML, String requestURL) throws ParsingException {
-
-        Bag requestElements = new Bag();
-
-
-        XPathContext context = new XPathContext();
-        context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
-        context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
-        context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
-        context.addNamespace("wsid","http://schemas.xmlsoap.org/ws/2005/05/identity");
-        context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
-        context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
-
-        Nodes cids = requestXML.query("//wsid:CardId",context);
-        Element cid = (Element) cids.get(0);
-        String cardIdUri = cid.getValue();
-        
-//        String domainname = _su.getDomainName();
-//        String prefix = "https://" + domainname + servletPath + "card/";
-        String cardId = null;
-        if (cardIdUri.startsWith(requestURL+"/card/")) {
-        	cardId = cardIdUri.substring(requestURL.length()+6);
-        } else {
-        	throw new ParsingException("Expected:"+requestURL.toString()+", but found:"+cardIdUri);
-        }
-        if (DEBUG) System.out.println("cardId: " + cardId);
-
-        requestElements.put("cardId", cardId);
-
-
-        Nodes cvs = requestXML.query("//wsid:CardVersion",context);
-        Element cv = (Element) cvs.get(0);
-        String cardVersion = cv.getValue();
-        if (DEBUG) System.out.println("CardVersion: " + cardVersion);
-        requestElements.put("cardVersion", cardVersion);
-
-
-        Nodes claims = requestXML.query("//wsid:ClaimType",context);
-        for (int i = 0; i < claims.size(); i++ ) {
-
-            Element claimElm = (Element)claims.get(i);
-            Attribute uri = claimElm.getAttribute("Uri");
-            String claim = uri.getValue();
-            if (DEBUG) System.out.println(claim);
-            requestElements.put("claim", claim);
-
-        }
-
-        Nodes kts = requestXML.query("//wst:KeyType",context);
-        if ( kts != null )  {
-            Element kt = (Element) kts.get(0);
-            String keyType = kt.getValue();
-            if (DEBUG) System.out.println("keyType: " + keyType);
-            requestElements.put("keyType", keyType);
-        }
-            
-
-        Nodes tts = requestXML.query("//wst:TokenType",context);
-        Element tt = (Element) tts.get(0);
-        String tokenType = tt.getValue();
-        if (DEBUG) System.out.println("tokenType: " + tokenType);
-        requestElements.put("tokenType", tokenType);
-
-        return requestElements;
-
-
-    }
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
     	HttpSession session = request.getSession();
     	session.getServletContext().log("STS Servlet got a request");
     	System.out.println("Boink"); System.out.flush();
     	
-        if (DEBUG) System.out.println("STS got a request");
+    	log.finest("STS got a request");
         int contentLen = request.getContentLength();
 
         String requestXML = null;
@@ -243,8 +141,8 @@ public class STSServlet  extends HttpServlet {
             inStream.readFully(buf);
             requestXML = new String(buf);
 
-            if (DEBUG) System.out.println("STS Request:");
-            if (DEBUG) System.out.println(requestXML);
+            log.finest("STS Request:");
+            log.finest(requestXML);
 
         }
 
@@ -253,48 +151,31 @@ public class STSServlet  extends HttpServlet {
         Document req = null;
         try {
             req = parser.build(requestXML, "");
-        } catch (ParsingException e) {
+        } catch (nu.xom.ParsingException e) {
             e.printStackTrace();
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        XPathContext context = Utils.buildRSTcontext();
 
+        log.finest("We have a doc");
 
-        if (DEBUG) System.out.println("We have a doc");
-
-        XPathContext context = new XPathContext();
-        context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
-        context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
-        context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
-        context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
-        context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
-
-
-        Nodes tokenElm = req.query("//o:UsernameToken",context);
-        Element token = (Element) tokenElm.get(0);
-        if (DEBUG) System.out.println("Token:" + token.toXML());
-
-
-        Nodes rsts = req.query("//wst:RequestSecurityToken",context);
-        Element rst = (Element) rsts.get(0);
-        if (DEBUG) System.out.println("RST: " + rst.toXML());
-
-
-        Bag tokenElements = null;
-        try {
-            tokenElements = parseToken(token);
-        } catch (ParsingException e) {
-            e.printStackTrace();
-            //TODO - SOAP Fault
-        }
-
-
-        boolean isUser = authenticate(tokenElements);
-
+        boolean isUser = false;
+		try {
+			isUser = Utils.authenticate(storage, req, context);
+		} catch (ParsingException e) {
+			log.fine("authentication failed");
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "authentication failed\n\n" + e.getMessage());
+			return;
+		}
+        
         //TODO = SOAPFaulr
-        if (!isUser) return;
+        if (!isUser) {
+        	response.sendError(HttpServletResponse .SC_UNAUTHORIZED);
+        	return;
+        }
 
         String requestURL = request.getRequestURL().toString();
         String servletPath = request.getServletPath();
@@ -302,19 +183,44 @@ public class STSServlet  extends HttpServlet {
         String prefix = requestURL.substring(0, i);
         Bag requestElements = null;
         try {
-            requestElements = parseRequest(rst, prefix);
+            Nodes rsts = req.query("//wst:RequestSecurityToken",context);
+            Element rst = (Element) rsts.get(0);
+            log.finest("RST: " + rst.toXML());
+            requestElements = Utils.parseRequest(rst, prefix);
         } catch (ParsingException e) {
+        	response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             e.printStackTrace();
             //TODO - SOAP Fault
+            return;
         }
 
+        String relyingPartyURL = null;
+        String relyingPartyCertB64 = null;
+        try {
+			Bag appliesToBag = Utils.parseAppliesTo(req, context);
+			relyingPartyURL = (String) appliesToBag.get("relyingPartyURL");
+			relyingPartyCertB64 = (String) appliesToBag.get("relyingPartyCertB64");
+		} catch (ParsingException e) {
+        	response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            e.printStackTrace();
+            //TODO - SOAP Fault
+            return;
+		}
+		
+        ManagedCard card = storage.getCard((String)requestElements.get("cardId"));
+        if (card == null ) throw new IOException("Unable to read card: " + (String)requestElements.get("cardId"));
+
+        System.out.println("STS Issuing Managed Card " + (String)requestElements.get("cardId") + " for " + card.getClaim(org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS));
 
         Locale clientLocale = request.getLocale();
-        String stsResponse = issue(requestElements, clientLocale);
+        String issuer = "https://" + domain + servletPath;
+        String stsResponse = Utils.issue(
+        		card, requestElements, clientLocale, cert, key, 
+        		issuer, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
 
         response.setContentType("application/soap+xml; charset=\"utf-8\"");
         response.setContentLength(stsResponse.length());
-        if (DEBUG) System.out.println("STS Response:\n " + stsResponse);
+        log.finest("STS Response:\n " + stsResponse);
         PrintWriter out = response.getWriter();
         out.println(stsResponse);
         out.flush();
@@ -323,142 +229,10 @@ public class STSServlet  extends HttpServlet {
     }
 
 
-    private boolean authenticate(Bag tokenElements) {
-        String username = (String) tokenElements.get("username");
-        String password = (String) tokenElements.get("password");
-        return authenticate(username, password);
-    }
-
-    protected boolean authenticate(String username, String password) {
-        boolean isUser = storage.authenticate(username,password);
-        System.out.println("STS Authenticated: " + username  + ":" + isUser );
-        return isUser;
-    }
-
-
-    private String issue(Bag requestElements,  Locale clientLocale) throws IOException {
-
-
-        ManagedCard card = storage.getCard((String)requestElements.get("cardId"));
-        if (card == null ) throw new IOException("Unable to read card: " + (String)requestElements.get("cardId"));
-
-        System.out.println("STS Issuing Managed Card " + (String)requestElements.get("cardId") + " for " + card.getClaim(org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS));
-
-
-        Element envelope = new Element(WSConstants.SOAP_PREFIX + ":Envelope", WSConstants.SOAP12_NAMESPACE);
-        envelope.addNamespaceDeclaration(WSConstants.WSA_PREFIX, WSConstants.WSA_NAMESPACE_05_08);
-        envelope.addNamespaceDeclaration(WSConstants.WSU_PREFIX, WSConstants.WSU_NAMESPACE);
-        envelope.addNamespaceDeclaration(WSConstants.WSSE_PREFIX, WSConstants.WSSE_NAMESPACE_OASIS_10);
-        envelope.addNamespaceDeclaration(WSConstants.TRUST_PREFIX, WSConstants.TRUST_NAMESPACE_05_02);
-        envelope.addNamespaceDeclaration("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
-
-        Element header = new Element(WSConstants.SOAP_PREFIX + ":Header", WSConstants.SOAP12_NAMESPACE);
-        Element body = new Element(WSConstants.SOAP_PREFIX + ":Body", WSConstants.SOAP12_NAMESPACE);
-
-
-        envelope.appendChild(header);
-        envelope.appendChild(body);
 
 
 
-        //Build body
-        Element rstr = new Element(WSConstants.TRUST_PREFIX + ":RequestSecurityTokenResponse", WSConstants.TRUST_NAMESPACE_05_02);
-        Attribute context = new Attribute("Context","ProcessRequestSecurityToken");
-        rstr.addAttribute(context);
 
-        Element tokenType = new Element(WSConstants.TRUST_PREFIX + ":TokenType", WSConstants.TRUST_NAMESPACE_05_02);
-        tokenType.appendChild("urn:oasis:names:tc:SAML:1.0:assertion");
-        rstr.appendChild(tokenType);
-
-        Element requestType = new Element(WSConstants.TRUST_PREFIX + ":RequestType", WSConstants.TRUST_NAMESPACE_05_02);
-        requestType.appendChild("http://schemas.xmlsoap.org/ws/2005/02/trust/Issue");
-        rstr.appendChild(requestType);
-
-        Element rst = new Element(WSConstants.TRUST_PREFIX + ":RequestedSecurityToken", WSConstants.TRUST_NAMESPACE_05_02);
-
-        AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(cert);
-        ManagedToken token = new ManagedToken(keyInfo,key);
-
-        Set<String> cardClaims = card.getClaims();
-        for (String claim : cardClaims) {
-        	token.setClaim(claim, card.getClaim(claim));
-        }
-        
-        token.setPrivatePersonalIdentifier(card.getPrivatePersonalIdentifier());
-        token.setValidityPeriod(-3, 10);
-        token.setIssuer("https://" + domain + servletPath + "tokenservice");
-        
-        RandomGUID uuid = new RandomGUID();
-
-        try {
-            rst.appendChild(token.serialize(uuid));
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-
-        rstr.appendChild(rst);
-
-        Element requestedAttachedReference = new Element(WSConstants.TRUST_PREFIX + ":RequestedAttachedReference", WSConstants.TRUST_NAMESPACE_05_02);
-        Element securityTokenReference = new Element(WSConstants.WSSE_PREFIX + ":SecurityTokenReference", WSConstants.WSSE_NAMESPACE_OASIS_10);
-        Element keyIdentifier = new Element(WSConstants.WSSE_PREFIX + ":KeyIdentifier", WSConstants.WSSE_NAMESPACE_OASIS_10);
-        Attribute valueType = new Attribute("ValueType","http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.0#SAMLAssertionID");
-        keyIdentifier.addAttribute(valueType);
-        keyIdentifier.appendChild("uuid-" + uuid.toString());
-        securityTokenReference.appendChild(keyIdentifier);
-        requestedAttachedReference.appendChild(securityTokenReference);
-        rstr.appendChild(requestedAttachedReference);
-
-        Element requestedUnAttachedReference = new Element(WSConstants.TRUST_PREFIX + ":RequestedUnattachedReference", WSConstants.TRUST_NAMESPACE_05_02);
-        Element securityTokenReference1 = new Element(WSConstants.WSSE_PREFIX + ":SecurityTokenReference", WSConstants.WSSE_NAMESPACE_OASIS_10);
-        Element keyIdentifier1 = new Element(WSConstants.WSSE_PREFIX + ":KeyIdentifier", WSConstants.WSSE_NAMESPACE_OASIS_10);
-        Attribute valueType1 = new Attribute("ValueType","http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.0#SAMLAssertionID");
-        keyIdentifier1.addAttribute(valueType1);
-        keyIdentifier1.appendChild("uuid-" + uuid.toString());
-        securityTokenReference1.appendChild(keyIdentifier1);
-        requestedUnAttachedReference.appendChild(securityTokenReference1);
-        rstr.appendChild(requestedUnAttachedReference);
-
-
-        Element requestedDisplayToken = new Element(WSConstants.INFOCARD_PREFIX + ":RequestedDisplayToken", WSConstants.INFOCARD_NAMESPACE);
-        Element displayToken = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayToken", WSConstants.INFOCARD_NAMESPACE);
-        Attribute lang = new Attribute("xml:lang","http://www.w3.org/XML/1998/namespace","en");
-        displayToken.addAttribute(lang);
-        requestedDisplayToken.appendChild(displayToken);
-
-        for (String uri : cardClaims) {
-        	String value = card.getClaim(uri);
-        	DbSupportedClaim dbClaim = supportedClaimsImpl.getClaimByUri(uri);
-        	String displayTag = dbClaim.getDisplayTag(clientLocale);
-            addDisplayClaim(
-            		displayToken, 
-            		uri, 
-            		displayTag, 
-            		value);
-        }
-
-        addDisplayClaim(displayToken, org.xmldap.infocard.Constants.IC_NAMESPACE, "PPID", card.getPrivatePersonalIdentifier());
-
-        rstr.appendChild(requestedDisplayToken);
-
-        body.appendChild(rstr);
-
-        return envelope.toXML();
-    }
-
-
-
-	private void addDisplayClaim(Element displayToken, String claimUri, String claimName, String claimValue) {
-		Element displayClaim = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayClaim", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uri = new Attribute("Uri", claimUri);
-        displayClaim.addAttribute(uri);
-        Element displayTag = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
-        displayTag.appendChild(claimName);
-        Element displayValue = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayValue", WSConstants.INFOCARD_NAMESPACE);
-        displayValue.appendChild(claimValue);
-        displayClaim.appendChild(displayTag);
-        displayClaim.appendChild(displayValue);
-        displayToken.appendChild(displayClaim);
-	}
 
 
 }

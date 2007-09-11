@@ -100,8 +100,6 @@ public class RelyingPartyServlet extends HttpServlet {
 
         PrintWriter out = response.getWriter();
 
-        try {
-
             out.println("<html><title>Sample Relying Party</title><style>BODY {color:#000;font-family: verdana, arial, sans-serif;}</style><body>");
 
             String encryptedXML = request.getParameter("xmlToken");
@@ -111,49 +109,57 @@ public class RelyingPartyServlet extends HttpServlet {
                 return;
             }
 
-            Token token = new Token(encryptedXML, privateKey);
-
             out.println("<h2>Here's what you posted:</h2>");
-            out.println("<p><textarea rows='10' cols='150'>" + token.getEncryptedToken() + "</textarea></p>");
+            out.println("<p><textarea rows='10' cols='150'>" + encryptedXML + "</textarea></p>");
 
-            out.println("<h2>And here's the decrypted token:</h2>");
-            out.println("<p><textarea rows='10' cols='150'>" + token.getDecryptedToken() + "</textarea></p>");
-
-            out.println("<h2>Valid Signature: " + token.isSignatureValid() + "</h2>");
-            out.println("<h2>Valid Conditions: " + token.isConditionsValid() + "</h2>");
-            out.println("<h2>Confirmation method: " + token.getConfirmationMethod() + "</h2>");
-            if (token.getAudience() != null) {
-                out.println("<h2>Audience is restricted to: " + token.getAudience() + "</h2>");
-            } else {
-                out.println("<h2>Audience is NOT restricted</h2>");
-            }
             try {
-            	X509Certificate cert = token.getCertificateOrNull();
-            	if (cert != null) {
-            		out.println("<h2>Valid Certificate: " + token.isCertificateValid() + "</h2>");
-            	} else {
-            		out.println("<h2>No Certificate in Token</h2>");
-            	}
 
-            } catch (InfoCardProcessingException e) {
-
-               out.println("<h2>Valid Certificate: " + e.getMessage() + "</h2>");
-
-            }
-            Map claims = token.getClaims();
-            out.println("<h2>You provided the following claims:</h2>");
-            Set keys = claims.keySet();
-            Iterator keyIter = keys.iterator();
-            while (keyIter.hasNext()){
-                String name = (String) keyIter.next();
-                String value = (String) claims.get(name);
-                out.println(name + ": " + value + "<br>");
-            }
-
+	            Token token = new Token(encryptedXML, privateKey);
+	
+	            if (token.isEncrypted()) {
+		            out.println("<h2>And here's the decrypted token:</h2>");
+		            out.println("<p><textarea rows='10' cols='150'>" + token.getDecryptedToken() + "</textarea></p>");
+	            } else {
+		            out.println("<h2>The token is not encrypted!</h2>");
+	            }
+	            
+	            out.println("<h2>Valid Signature: " + token.isSignatureValid() + "</h2>");
+	            out.println("<h2>Valid Conditions: " + token.isConditionsValid() + "</h2>");
+	            out.println("<h2>Confirmation method: " + token.getConfirmationMethod() + "</h2>");
+	            if (token.getAudience() != null) {
+	                out.println("<h2>Audience is restricted to: " + token.getAudience() + "</h2>");
+	            } else {
+	                out.println("<h2>Audience is NOT restricted</h2>");
+	            }
+	            try {
+	            	X509Certificate cert = token.getCertificateOrNull();
+	            	if (cert != null) {
+	            		out.println("<h2>Valid Certificate: " + token.isCertificateValid() + "</h2>");
+	            	} else {
+	            		out.println("<h2>No Certificate in Token</h2>");
+	            	}
+	
+	            } catch (InfoCardProcessingException e) {
+	
+	               out.println("<h2>Valid Certificate: " + e.getMessage() + "</h2>");
+	
+	            }
+	            Map claims = token.getClaims();
+	            out.println("<h2>You provided the following claims:</h2>");
+	            Set keys = claims.keySet();
+	            Iterator keyIter = keys.iterator();
+	            while (keyIter.hasNext()){
+	                String name = (String) keyIter.next();
+	                String value = (String) claims.get(name);
+	                out.println(name + ": " + value + "<br>");
+	            }
 
         } catch (InfoCardProcessingException e) {
             e.printStackTrace();
-            out.println(e.getMessage());
+            out.println("<h2>An error occured:</h2>");
+            out.println("<p><textarea rows='10' cols='150'>");
+            e.printStackTrace(out);
+            out.println("</textarea></p>");
         } finally {
             out.close();
         }

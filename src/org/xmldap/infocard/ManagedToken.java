@@ -62,6 +62,9 @@ public class ManagedToken implements Serializable {
 
 	private int nowMinus = 10; //default to 5 minutes
 
+	private String restrictedTo = null;
+	private String relyingPartyCertB64 = null;
+	
 	//    public ManagedToken( X509Certificate signingCert, PrivateKey signingKey ) {
 	//        this.signingCert = signingCert;
 	//        this.signingKey = signingKey;
@@ -114,8 +117,11 @@ public class ManagedToken implements Serializable {
 	}
 
 	public Element getToken(RandomGUID uuid) throws SerializationException {
-
 		Conditions conditions = new Conditions(nowMinus, nowPlus);
+		if (restrictedTo != null) {
+			AudienceRestrictionCondition audienceRestrictionCondition = new AudienceRestrictionCondition(restrictedTo);
+			conditions.setAudienceRestrictionCondition(audienceRestrictionCondition);
+		}
 
 		//SimpleKeyInfo keyInfo = new SimpleKeyInfo(signingCert);
 //		AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
@@ -213,6 +219,19 @@ public class ManagedToken implements Serializable {
 
 	public void setConfirmationMethod(String confirmationMethod) {
 		this.confirmationMethod = confirmationMethod;
+	}
+
+	public String getRestrictedTo() {
+		return restrictedTo;
+	}
+
+	public String getRelyingPartyCertB64() {
+		return relyingPartyCertB64;
+	}
+
+	public void setRestrictedTo(String restrictedTo, String relyingPartyCertB64) {
+		this.restrictedTo = restrictedTo;
+		this.relyingPartyCertB64 = relyingPartyCertB64;
 	}
 
 }

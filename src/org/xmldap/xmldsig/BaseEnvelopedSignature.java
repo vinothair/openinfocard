@@ -29,15 +29,14 @@
 package org.xmldap.xmldsig;
 
 import nu.xom.*;
-import nu.xom.canonical.Canonicalizer;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Canonicalizable;
+import org.xmldap.xml.XmlUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.util.List;
@@ -233,14 +232,7 @@ public class BaseEnvelopedSignature {
 		// System.out.println(signature.toXML());
 		root.removeChild(signature);
 
-		// GET the canonical bytes of the assertion
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		Canonicalizer outputter = new Canonicalizer(stream,
-				Canonicalizable.EXCLUSIVE_CANONICAL_XML);
-		outputter.write(root);
-		byte[] assertionCanonicalBytes = stream.toByteArray();
-		stream.close();
-		return assertionCanonicalBytes;
+		return XmlUtils.canonicalize(root, Canonicalizable.EXCLUSIVE_CANONICAL_XML);
 	}
 
 	/**

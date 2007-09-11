@@ -82,9 +82,11 @@ public class SelfIssuedToken implements Serializable {
 
 	private String gender;
 
-	private X509Certificate signingCert;
+	private RSAPublicKey proofKey;
+	
+	private RSAPublicKey cardPublicKey;
 
-	private PrivateKey signingKey;
+	private PrivateKey cardPrivateKey;
 
 	private X509Certificate relyingPartyCert;
 
@@ -99,9 +101,9 @@ public class SelfIssuedToken implements Serializable {
 	private String confirmationMethod = null;
 	
 	public SelfIssuedToken(X509Certificate relyingPartyCert,
-			X509Certificate signingCert, PrivateKey signingKey) {
-		this.signingCert = signingCert;
-		this.signingKey = signingKey;
+			RSAPublicKey cardPublicKey, PrivateKey cardPrivateKey) {
+		this.cardPublicKey = cardPublicKey;
+		this.cardPrivateKey = cardPrivateKey;
 		this.relyingPartyCert = relyingPartyCert;
 		namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
 	}
@@ -320,11 +322,11 @@ public class SelfIssuedToken implements Serializable {
 			KeyInfo keyInfo = null; // for the proof key
 			if (asymmetric) {
 
-				if (signingCert == null)
+				if (proofKey == null)
 					throw new SerializationException(
-							"You did not provide a certificate for use with asymetric keys");
+							"You did not provide a proofKey, but the confirmationMethod is holder-of-key");
 //				keyInfo = new AsymmetricKeyInfo(signingCert);
-				keyInfo = new RsaPublicKeyInfo((RSAPublicKey)signingCert.getPublicKey());
+				keyInfo = new RsaPublicKeyInfo((RSAPublicKey)proofKey);
 				// I am wondering where the private key gets used to proof the possession... 
 				// because the proof key can be different to the signing key
 				// Axel TODO
@@ -354,33 +356,20 @@ public class SelfIssuedToken implements Serializable {
 
 		Vector attributes = new Vector();
 
-		addAttribute(attributes, "givenname", namespacePrefix + "givenname",
-				givenName);
-		addAttribute(attributes, "surname", namespacePrefix + "surname",
-				surname);
-		addAttribute(attributes, "emailaddress", namespacePrefix
-				+ "emailaddress", emailAddress);
-		addAttribute(attributes, "streetaddress", namespacePrefix
-				+ "streetaddress", streetAddress);
-		addAttribute(attributes, "locality", namespacePrefix + locality,
-				locality);
-		addAttribute(attributes, "stateorprovince", namespacePrefix
-				+ "stateorprovince", stateOrProvince);
-		addAttribute(attributes, "postalcode", namespacePrefix + "postalcode",
-				postalCode);
-		addAttribute(attributes, "country", namespacePrefix + "country",
-				country);
-		addAttribute(attributes, "primaryphone", namespacePrefix
-				+ "primaryphone", primaryPhone);
-		addAttribute(attributes, "otherphone", namespacePrefix + "otherphone",
-				otherPhone);
-		addAttribute(attributes, "mobilephone",
-				namespacePrefix + "mobilephone", mobilePhone);
-		addAttribute(attributes, "dateofbirth",
-				namespacePrefix + "dateofbirth", dateOfBirth);
-		addAttribute(attributes, "privatepersonalidentifier", namespacePrefix
-				+ "privatepersonalidentifier", privatePersonalIdentifier);
-		addAttribute(attributes, "gender", namespacePrefix + "gender", gender);
+		addAttribute(attributes, "givenname", namespacePrefix, givenName);
+		addAttribute(attributes, "surname", namespacePrefix, surname);
+		addAttribute(attributes, "emailaddress", namespacePrefix, emailAddress);
+		addAttribute(attributes, "streetaddress", namespacePrefix, streetAddress);
+		addAttribute(attributes, "locality", namespacePrefix, locality);
+		addAttribute(attributes, "stateorprovince", namespacePrefix, stateOrProvince);
+		addAttribute(attributes, "postalcode", namespacePrefix,	postalCode);
+		addAttribute(attributes, "country", namespacePrefix, country);
+		addAttribute(attributes, "primaryphone", namespacePrefix, primaryPhone);
+		addAttribute(attributes, "otherphone", namespacePrefix,otherPhone);
+		addAttribute(attributes, "mobilephone",	namespacePrefix, mobilePhone);
+		addAttribute(attributes, "dateofbirth",	namespacePrefix, dateOfBirth);
+		addAttribute(attributes, "privatepersonalidentifier", namespacePrefix,privatePersonalIdentifier);
+		addAttribute(attributes, "gender", namespacePrefix, gender);
 
 		AttributeStatement statement = new AttributeStatement();
 		statement.setSubject(subject);
@@ -397,9 +386,9 @@ public class SelfIssuedToken implements Serializable {
 		assertion.setAttributeStatement(statement);
 
 		//make this support multiple signing modes
-		RsaPublicKeyInfo keyInfo = new RsaPublicKeyInfo((RSAPublicKey)signingCert.getPublicKey());
+		RsaPublicKeyInfo keyInfo = new RsaPublicKeyInfo(cardPublicKey);
 //		AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
-		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo,	signingKey);
+		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo,	cardPrivateKey);
 
 		Element signedXML = null;
 		try {
@@ -519,9 +508,14 @@ public class SelfIssuedToken implements Serializable {
 	public String getConfirmationMethod() {
 		return confirmationMethod;
 	}
+	
+	public void setConfirmationMethodBEARER() {
+		this.confirmationMethod = Subject.BEARER;
+	}
 
-	public void setConfirmationMethod(String confirmationMethod) {
-		this.confirmationMethod = confirmationMethod;
+	public void setConfirmationMethodHOLDER_OF_KEY(RSAPublicKey proofKey) {
+		this.confirmationMethod = Subject.HOLDER_OF_KEY;
+		this.proofKey = proofKey;
 	}
 
 }

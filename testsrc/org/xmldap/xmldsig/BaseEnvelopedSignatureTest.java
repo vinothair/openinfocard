@@ -12,6 +12,8 @@ import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.XPathContext;
 
+import org.xmldap.crypto.CryptoUtils;
+import org.xmldap.exceptions.CryptoException;
 import org.xmldap.saml.AttributeStatement;
 import org.xmldap.saml.Conditions;
 import org.xmldap.saml.SAMLAssertion;
@@ -19,6 +21,8 @@ import org.xmldap.saml.Subject;
 import org.xmldap.util.RandomGUID;
 import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
+import org.xmldap.xml.Canonicalizable;
+import org.xmldap.xml.XmlUtils;
 
 import junit.framework.TestCase;
 
@@ -158,6 +162,20 @@ public class BaseEnvelopedSignatureTest extends TestCase {
 
 	}
 	
+	public void testSignedInfoString() throws Exception {
+		String signedInfoStr = "<dsig:SignedInfo xmlns:dsig=\"http://www.w3.org/2000/09/xmldsig#\"><dsig:CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><dsig:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\" /><dsig:Reference URI=\"#uuid-7B20C5C0-9B85-35D1-590A-D1B3093451CF\"><dsig:Transforms><dsig:Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\" /><dsig:Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /></dsig:Transforms><dsig:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\" /><dsig:DigestValue>P834/zjB6jZbz80UPkCJQ+IGoqk=</dsig:DigestValue></dsig:Reference></dsig:SignedInfo>";
+		Document signedInfoDoc = XmlUtils.parse(signedInfoStr);
+		Element signedInfo = signedInfoDoc.getRootElement();
+		byte[] bytes = XmlUtils.canonicalize(signedInfo, Canonicalizable.EXCLUSIVE_CANONICAL_XML);
+		try {
+			String b64EncodedDigest = CryptoUtils.digest(bytes);
+			String expected = "kP5B9dvJTnb+sSLDdMkgj+UYjJM=";
+			assertEquals(expected, b64EncodedDigest);
+		} catch (CryptoException e) {
+			throw new CryptoException(e);
+		}
+	}
+	
 	public void test1() throws Exception {
 		Calendar notBeforeCal = null;
 		Calendar notOnOrAfterCal = null;
@@ -210,7 +228,6 @@ public class BaseEnvelopedSignatureTest extends TestCase {
 		ParsedSignature parsedSignature = new ParsedSignature(signature);
 		byte[] digest = parsedSignature.getParsedSignedInfo().getCanonicalBytes();
 		// System.out.println(signedXML.toXML());
-		
 		Document doc = new Document(signedXML);
 		
 		XPathContext xPathContext = new XPathContext();
@@ -223,6 +240,7 @@ public class BaseEnvelopedSignatureTest extends TestCase {
 		String uuid = node.getAttribute("AssertionID").getValue();
 		assertEquals("uuid-"+guidGen.toString(), uuid);
 		Nodes nodes1 = doc.query("*[@AssertionID = uuid-"+guidGen.toString()+"]", xPathContext);
+		// this currently fails. Please correct the above query. Axel
 		assertEquals(1, nodes1.size());
 
 	}
