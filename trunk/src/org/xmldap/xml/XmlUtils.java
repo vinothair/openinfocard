@@ -28,11 +28,17 @@
 
 package org.xmldap.xml;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import org.xmldap.exceptions.SerializationException;
+
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Nodes;
 import nu.xom.XPathContext;
+import nu.xom.canonical.Canonicalizer;
 
 public class XmlUtils {
 
@@ -47,5 +53,23 @@ public class XmlUtils {
     String userName = un.getValue();
             return userName;
     }
+
+	/**
+	 * @return
+	 * @throws SerializationException
+	 */
+	public static byte[] canonicalize(Element data, String method) throws IOException {
+		byte[] dataBytes;
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        //Canonicalizer outputer = new Canonicalizer(stream, Canonicalizer.CANONICAL_XML);
+        Canonicalizer outputer = new Canonicalizer(stream, method);
+        outputer.write(data);
+
+        dataBytes = stream.toByteArray();
+        stream.close();
+        
+		return dataBytes;
+	}
 
 }
