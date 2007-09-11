@@ -1,10 +1,29 @@
 /*
- * XmldapCertsAndKeys.java
+ * Copyright (c) 2006, Axel Nennker - http://axel.nennker.de/
+ * All rights reserved.
  *
- * Created on 6. September 2006, 11:08
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * The names of the contributors may NOT be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
 
 package org.xmldap.util;
@@ -37,6 +56,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -265,22 +286,31 @@ public class CertsAndKeys {
 	 * generates an X509 certificate which is used to sign the xmlTokens in the
 	 * firefox infocard selector
 	 * 
-	 * @param kp
+	 * @param provider
+	 * @param certificatePublicKey
+	 * @param caPrivateKey
 	 * @param issuer
 	 * @param subject
+	 * @param gender
+	 * @param dateOfBirth
+	 * @param streetAddress
+	 * @param telephoneNumber
 	 * @return
 	 * @throws TokenIssuanceException
 	 * @throws UnsupportedEncodingException
-	 * @throws SignatureException 
-	 * @throws SecurityException 
-	 * @throws InvalidKeyException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws NoSuchProviderException 
-	 * @throws IllegalStateException 
-	 * @throws CertificateEncodingException 
+	 * @throws InvalidKeyException
+	 * @throws SecurityException
+	 * @throws SignatureException
+	 * @throws CertificateEncodingException
+	 * @throws IllegalStateException
+	 * @throws NoSuchProviderException
+	 * @throws NoSuchAlgorithmException
 	 */
-	public static X509Certificate generateClientCertificate(String provider,
-			KeyPair kp, X509Name issuer, X509Name subject, String gender,
+	public static X509Certificate generateClientCertificate(
+			String provider,
+			RSAPublicKey certificatePublicKey,
+			RSAPrivateKey caPrivateKey,
+			X509Name issuer, X509Name subject, String gender,
 			Date dateOfBirth, String streetAddress, String telephoneNumber)
 			throws TokenIssuanceException, UnsupportedEncodingException,
 			InvalidKeyException, SecurityException, SignatureException,
@@ -297,7 +327,7 @@ public class CertsAndKeys {
 		rightNow.add(Calendar.YEAR, 5);
 		gen.setNotAfter(rightNow.getTime());
 		gen.setSubjectDN(subject);
-		gen.setPublicKey(kp.getPublic());
+		gen.setPublicKey(certificatePublicKey);
 		gen.setSignatureAlgorithm("SHA1WithRSAEncryption");
 		gen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
 		gen = addClientExtensions(gen);
@@ -308,7 +338,7 @@ public class CertsAndKeys {
 					sda);
 		}
 
-		cert = gen.generate(kp.getPrivate(), provider);
+		cert = gen.generate(caPrivateKey, provider);
 		return cert;
 	}
 
