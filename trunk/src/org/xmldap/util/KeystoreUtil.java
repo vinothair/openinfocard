@@ -29,13 +29,17 @@
 package org.xmldap.util;
 
 import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.exceptions.TokenIssuanceException;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -43,15 +47,49 @@ import java.security.cert.X509Certificate;
 public class KeystoreUtil {
 
     private KeyStore keystore = null;
+    private String keystorePath = null;
+    private String keystorePassword = null;
 
     public KeystoreUtil(String keystorePath, String keystorePassword) throws KeyStoreException {
         load(keystorePath, keystorePassword, "JKS");
+        this.keystorePath = keystorePath;
+        this.keystorePassword = keystorePassword;
     }
 
     //TODO - fix this to use types in constructor
     public KeystoreUtil(String keystorePath, String keystorePassword, String type) throws KeyStoreException {
         load(keystorePath, keystorePassword, type);
     }
+
+	public void storeCert(
+			String cardCertNickname,
+			X509Certificate cardCert,
+			PrivateKey signingKey,
+			String keyPassword)
+			throws KeyStoreException {
+			try {
+				if (keystore.containsAlias(cardCertNickname)) {
+					throw new KeyStoreException("duplicate certAlias");
+				}
+				Certificate[] chain = { cardCert };
+				keystore.setKeyEntry(cardCertNickname, signingKey, keyPassword
+						.toCharArray(), chain);
+				FileOutputStream fos = new java.io.FileOutputStream(keystorePath);
+				keystore.store(fos, keystorePassword.toCharArray());
+				fos.close();
+			} catch (java.security.KeyStoreException e) {
+				throw new KeyStoreException(e);
+			} catch (FileNotFoundException e) {
+				throw new KeyStoreException(e);
+			} catch (NoSuchAlgorithmException e) {
+				throw new KeyStoreException(e);
+			} catch (CertificateException e) {
+				throw new KeyStoreException(e);
+			} catch (IOException e) {
+				throw new KeyStoreException(e);
+			}
+
+	}
 
 	private void load(String keystorePath, String keystorePassword, String type) throws KeyStoreException {
 		try {
@@ -97,4 +135,5 @@ public class KeystoreUtil {
         return privateKey;
 
     }
+    
 }
