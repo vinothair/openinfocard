@@ -33,8 +33,8 @@ import nu.xom.Element;
 import nu.xom.canonical.Canonicalizer;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.xml.Canonicalizable;
+import org.xmldap.xml.XmlUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -49,6 +49,8 @@ import java.util.List;
  */
 public class SignedInfo implements Canonicalizable {
 
+	protected String defaultCanonicalizationMethod = Canonicalizer.EXCLUSIVE_XML_CANONICALIZATION;
+	
     //TODO - support multiple C14n types
     List references = null;
 
@@ -63,7 +65,7 @@ public class SignedInfo implements Canonicalizable {
 
     protected SignedInfo() {}
     
-    public Element getSignedInfo() {
+    public Element getSignedInfo() throws SerializationException {
 
         
         //TODO - handle ID References!
@@ -76,8 +78,7 @@ public class SignedInfo implements Canonicalizable {
         //signedInfo.addAttribute(idAttr);
 
         Element canonicalizationMethod = new Element("dsig:CanonicalizationMethod", "http://www.w3.org/2000/09/xmldsig#");
-        Attribute canonAlgorithm = new Attribute("Algorithm", Canonicalizer.EXCLUSIVE_XML_CANONICALIZATION);
-        //Attribute canonAlgorithm = new Attribute("Algorithm", Canonicalizer.CANONICAL_XML);
+        Attribute canonAlgorithm = new Attribute("Algorithm", defaultCanonicalizationMethod);
         canonicalizationMethod.addAttribute(canonAlgorithm);
         signedInfo.appendChild(canonicalizationMethod);
 
@@ -95,7 +96,7 @@ public class SignedInfo implements Canonicalizable {
 
             }
         } catch (SerializationException e) {
-            e.printStackTrace();
+        	throw new SerializationException(e);
         }
 
         return signedInfo;
@@ -104,30 +105,15 @@ public class SignedInfo implements Canonicalizable {
 
 
     public byte[] canonicalize() throws SerializationException {
-        return canonicalize(Canonicalizable.EXCLUSIVE_CANONICAL_XML);  //To change body of implemented methods use File | Settings | File Templates.
+        return canonicalize(defaultCanonicalizationMethod);
     }
 
     public byte[] canonicalize(String canonicalizationAlgorithm) throws SerializationException {
-
-
-        byte[] dataBytes = null;
-
-        try {
-
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            Canonicalizer outputter = new Canonicalizer(stream, canonicalizationAlgorithm);
-            //TODO - support prefix list for exclusive!
-            //outputter.setInclusiveNamespacePrefixList("");
-            //Canonicalizer outputter = new Canonicalizer(stream, Canonicalizer.CANONICAL_XML);
-            outputter.write(serialize());
-            dataBytes = stream.toByteArray();
-        } catch (IOException ioe) {
-
-            throw new SerializationException("IO Exception during canonicalization of SignedInfo");
-        }
-
-        return dataBytes;
-
+    	try {
+			return XmlUtils.canonicalize(serialize(), canonicalizationAlgorithm);
+		} catch (IOException e) {
+			throw new SerializationException(e);
+		}
     }
 
     public String toXML() throws SerializationException {

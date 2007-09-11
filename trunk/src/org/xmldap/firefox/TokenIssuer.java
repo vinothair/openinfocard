@@ -64,6 +64,7 @@ import java.net.URLDecoder;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.*;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Vector;
 
 public class TokenIssuer {
@@ -187,22 +188,9 @@ public class TokenIssuer {
 	private void storeCertKey(String keystorePath)
 			throws TokenIssuanceException {
 		try {
-			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-			ks.load(null, storePassword.toCharArray());
-			Certificate[] chain = { signingCert };
-			ks.setKeyEntry(nickname, signingKey, keyPassword.toCharArray(),
-					chain);
-			// store away the keystore
-			FileOutputStream fos = new java.io.FileOutputStream(keystorePath);
-			ks.store(fos, storePassword.toCharArray());
-			fos.close();
-		} catch (java.security.KeyStoreException e) {
-			throw new TokenIssuanceException(e);
-		} catch (NoSuchAlgorithmException e) {
-			throw new TokenIssuanceException(e);
-		} catch (CertificateException e) {
-			throw new TokenIssuanceException(e);
-		} catch (IOException e) {
+			KeystoreUtil keystore = new KeystoreUtil(keystorePath, storePassword);
+			keystore.storeCert(nickname,signingCert,signingKey,keyPassword);
+		} catch (KeyStoreException e) {
 			throw new TokenIssuanceException(e);
 		}
 	}
@@ -214,8 +202,13 @@ public class TokenIssuer {
 		try {
 			keystore = new KeystoreUtil(keystorePath, storePassword);
 			signingCert = keystore.getCertificate(nickname);
+			if (signingCert == null) {
+				throw new TokenIssuanceException("cert (" + nickname + ") not found");
+			}
 			signingKey = keystore.getPrivateKey(nickname, keyPassword);
-
+			if (signingKey == null) {
+				throw new TokenIssuanceException("private key (" + nickname + ") not found");
+			}
 		} catch (KeyStoreException e) {
 			throw new TokenIssuanceException(e);
 		}
@@ -731,6 +724,10 @@ public class TokenIssuer {
 	 * @param issuedToken
 	 * @param data
 	 * @param ppi
+	 * @param signingCert
+	 * @param signingKey
+	 * @param audience
+	 * @param confirmationMethod
 	 * @return
 	 * @throws TokenIssuanceException
 	 */
@@ -741,13 +738,23 @@ public class TokenIssuer {
 			X509Certificate signingCert,
 			PrivateKey signingKey,
 			String audience,
-			String confirmationMethod) throws TokenIssuanceException {
+			String confirmationMethod) throws TokenIssuanceException 
+	{
 		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
+		RSAPublicKey cardPublicKey = (RSAPublicKey)signingCert.getPublicKey();
+		PrivateKey cardPrivateKey = signingKey;
 		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
-		        signingCert, signingKey);
+				cardPublicKey, cardPrivateKey);
 		
 		if (confirmationMethod != null) {
-			token.setConfirmationMethod(confirmationMethod);
+			if (Subject.BEARER.equals(confirmationMethod)) {
+				token.setConfirmationMethodBEARER();
+			} else if (Subject.HOLDER_OF_KEY.equals(confirmationMethod)) {
+				RSAPublicKey proofKey = (RSAPublicKey)signingCert.getPublicKey();
+				token.setConfirmationMethodHOLDER_OF_KEY(proofKey);
+			} else {
+				throw new TokenIssuanceException("unsupported confirmationsmethod: " + confirmationMethod);
+			}
 		}
 		
 		if (audience != null) {

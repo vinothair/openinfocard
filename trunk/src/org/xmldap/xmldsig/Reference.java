@@ -34,8 +34,8 @@ import nu.xom.canonical.Canonicalizer;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.xml.Serializable;
+import org.xmldap.xml.XmlUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class Reference implements Serializable {
@@ -87,7 +87,6 @@ public class Reference implements Serializable {
 
         Element transforms = new Element("dsig:Transforms", "http://www.w3.org/2000/09/xmldsig#");
 
-        //Attribute transformDsigAlgorithm = new Attribute("Algorithm", Canonicalizer.CANONICAL_XML);
         if (enveloped) {
 
             Element transformEnveloped = new Element("dsig:Transform", "http://www.w3.org/2000/09/xmldsig#");
@@ -100,7 +99,8 @@ public class Reference implements Serializable {
 
 
         Element transformDsig = new Element("dsig:Transform", "http://www.w3.org/2000/09/xmldsig#");
-        Attribute transformDsigAlgorithm = new Attribute("Algorithm", Canonicalizer.EXCLUSIVE_XML_CANONICALIZATION);
+        String method = Canonicalizer.EXCLUSIVE_XML_CANONICALIZATION;
+        Attribute transformDsigAlgorithm = new Attribute("Algorithm", method);
         transformDsig.addAttribute(transformDsigAlgorithm);
         transforms.appendChild(transformDsig);
 
@@ -115,23 +115,18 @@ public class Reference implements Serializable {
         Element digestValue = new Element("dsig:DigestValue", "http://www.w3.org/2000/09/xmldsig#");
         byte[] dataBytes = null;
 
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-
-        //Canonicalizer outputer = new Canonicalizer(stream, Canonicalizer.CANONICAL_XML);
-        Canonicalizer outputer = new Canonicalizer(stream, Canonicalizer.EXCLUSIVE_XML_CANONICALIZATION);
         try {
-            outputer.write(data);
-        } catch (IOException e) {
-            throw new SerializationException("Error canonicalizing data to be digested", e);
-        }
-        dataBytes = stream.toByteArray();
+			dataBytes = XmlUtils.canonicalize(data, method);
+		} catch (IOException e) {
+			throw new SerializationException("Error canonicalizing data to be digested", e);
+		}
 
 
         try {
             String digest = CryptoUtils.digest(dataBytes);
             digestValue.appendChild(digest);
         } catch (org.xmldap.exceptions.CryptoException e) {
-            e.printStackTrace();
+        	throw new SerializationException("Error digesting canonicalized data", e);
         }
 
         reference.appendChild(digestValue);
@@ -139,7 +134,6 @@ public class Reference implements Serializable {
         return reference;
 
     }
-
 
     public String toXML() throws SerializationException {
         Element reference = serialize();

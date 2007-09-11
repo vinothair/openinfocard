@@ -34,14 +34,11 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.IOException;
-import java.io.ByteArrayInputStream;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.CertificateException;
 
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.InfoCardProcessingException;
@@ -71,27 +68,30 @@ public class Token {
     private boolean haveValidatedSignature = false;
     private boolean signatureValid = false;
 
-    private String encryptedToken = null;
+    private String tokenStr = null;
     private String decryptedToken = null;
     private Document doc = null;
 
     private HashMap claims = null;
 
-    public Token(String encryptedToken, PrivateKey privateKey) throws InfoCardProcessingException{
+    boolean isEncrypted = false;
+    
+    public Token(String tokenStr, PrivateKey privateKey) throws InfoCardProcessingException{
 
-        this.encryptedToken = encryptedToken;
+        this.tokenStr = tokenStr;
 
-        DecryptUtil decryptUtil = new DecryptUtil();
         try {
-           decryptedToken = decryptUtil.decryptToken(encryptedToken, privateKey);
+           DecryptUtil decryptUtil = new DecryptUtil(tokenStr, privateKey);
+           isEncrypted = decryptUtil.isEncrypted();
+           if (isEncrypted) {
+        	   decryptedToken = decryptUtil.decryptToken();
+               if (decryptedToken == null) {
+                   throw new InfoCardProcessingException("Result of token decryption was null");
+               }
+           }
         } catch (CryptoException e) {
            throw new InfoCardProcessingException("Error decrypting encrypted token", e);
         }
-
-        if (decryptedToken == null) {
-           throw new InfoCardProcessingException("Result of token decryption was null");
-        }
-
 
     }
 
@@ -100,7 +100,11 @@ public class Token {
         if (doc == null ) {
 
             try {
-                doc = org.xmldap.xml.XmlUtils.parse(decryptedToken);
+            	if (isEncrypted) {
+            		doc = org.xmldap.xml.XmlUtils.parse(decryptedToken);
+            	} else {
+            		doc = org.xmldap.xml.XmlUtils.parse(tokenStr);
+            	}
             } catch (ParsingException e) {
                 throw new InfoCardProcessingException("Unable to parse decrypted token into a XOM document", e);
             } catch (IOException e) {
@@ -114,7 +118,7 @@ public class Token {
     }
 
     public String getEncryptedToken() {
-        return encryptedToken;
+        return tokenStr;
     }
 
     public String getDecryptedToken() {
@@ -351,6 +355,10 @@ public class Token {
         }
 
     }
+
+	public boolean isEncrypted() {
+		return isEncrypted;
+	}
 
 
 }

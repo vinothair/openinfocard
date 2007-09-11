@@ -284,7 +284,10 @@
 			  callbackdata["usercredential"] = cardUserCredential;
               callbackdata["stsCert"] = stsCert;
               callbackdata["supportedClaims"] = cardxml.dsig::Object.ic::InformationCard.ic::SupportedClaimTypeList.toXMLString();
-              callbackdata["requireAppliesTo"] = requireAppliesTo;
+              
+              if (requireAppliesTo == null) {
+	              callbackdata["requireAppliesTo"] = requireAppliesTo;
+              }
               
               window.arguments[1](callbackdata);
 

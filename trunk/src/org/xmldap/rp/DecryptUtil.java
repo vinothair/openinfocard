@@ -32,6 +32,7 @@ import net.sourceforge.lightcrypto.SafeObject;
 import nu.xom.*;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.ws.WSConstants;
+import org.xmldap.xml.XmlUtils;
 import org.xmldap.exceptions.CryptoException;
 
 import java.io.IOException;
@@ -40,12 +41,22 @@ import java.security.PrivateKey;
 
 public class DecryptUtil {
 
-    public String decryptToken(String encryptedXML, PrivateKey key) throws CryptoException {
+	Document xml = null;
+	PrivateKey key = null;
+	
+    static XPathContext context = null;
 
-        Builder parser = new Builder();
-        Document xml = null;
+
+	public DecryptUtil(String encryptedXML, PrivateKey key) throws CryptoException {
+		if (context == null) {
+			context = new XPathContext();
+		    context.addNamespace("enc", WSConstants.ENC_NAMESPACE);
+		    context.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
+		    context.addNamespace("wsse", WSConstants.WSSE_NAMESPACE_OASIS_10);
+		}
+		
         try {
-            xml = parser.build(encryptedXML, "");
+            xml = XmlUtils.parse(encryptedXML);
         } catch (ParsingException e) {
             System.err.println("ERROR encrypted xml: " + encryptedXML);
             System.err.println("ERROR PrivateKey: " + key.toString());
@@ -57,21 +68,23 @@ public class DecryptUtil {
 
             throw new CryptoException("Error buidling a XOM Document out of encrypted token", e);
         }
+		this.key = key;
+	}
+	
+	public String decryptToken() throws CryptoException {
+		return decryptToken( xml, key);
+	}
+	
+	public boolean isEncrypted() {
+		Nodes keys = xml.query("/enc:EncryptedData", context);
+		return (keys.size() > 0);
+	}
+	
+    private static String decryptToken(Document xml, PrivateKey key) throws CryptoException {
 
-        XPathContext context = new XPathContext();
-        context.addNamespace("enc", WSConstants.ENC_NAMESPACE);
-        context.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
-        context.addNamespace("wsse", WSConstants.WSSE_NAMESPACE_OASIS_10);
+        String keyCipherText = getOneElement(xml, context, "/enc:EncryptedData/dsig:KeyInfo/enc:EncryptedKey/enc:CipherData/enc:CipherValue");
 
-        Nodes keys = xml.query("/enc:EncryptedData/dsig:KeyInfo/enc:EncryptedKey/enc:CipherData/enc:CipherValue", context);
-        Element cipherValue = (Element) keys.get(0);
-        String keyCipherText = cipherValue.getValue();
-
-
-        Nodes dataNodes = xml.query("/enc:EncryptedData/enc:CipherData/enc:CipherValue", context);
-        Element dataCipherValue = (Element) dataNodes.get(0);
-        String dataCipherText = dataCipherValue.getValue();
-
+        String dataCipherText = getOneElement(xml, context, "/enc:EncryptedData/enc:CipherData/enc:CipherValue");
 
         byte[] clearTextKey = null;
         try {
@@ -100,6 +113,29 @@ public class DecryptUtil {
         return clearText.toString();
 
     }
+
+	/**
+	 * @param xml
+	 * @param context
+	 * @param keyCipherText
+	 * @return
+	 * @throws CryptoException
+	 */
+	private static String getOneElement(Document xml, XPathContext context, String query) throws CryptoException {
+		String value = null;
+		Nodes keys = xml.query(query, context);
+        if (keys.size() == 1) {
+        	Element cipherValue = (Element) keys.get(0);
+        	value = cipherValue.getValue();
+        } else {
+        	if (keys.size() < 1) {
+        		throw new CryptoException("could not find '" + query + "' in assertion");
+        	} else {
+        		throw new CryptoException("found too many values (" + keys.size() + ") of '" + query + "' in assertion");
+        	}
+        }
+		return value;
+	}
 
 
 }

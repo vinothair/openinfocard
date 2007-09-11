@@ -33,6 +33,7 @@ import nu.xom.*;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.util.*;
 import org.xmldap.ws.WSConstants;
@@ -168,10 +169,10 @@ public class MetaSTSServlet  extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
     	HttpSession session = request.getSession();
-    	session.getServletContext().log("STS Servlet got a request");
+    	session.getServletContext().log("MetaSTS Servlet got a request");
     	System.out.println("Boink"); System.out.flush();
     	
-    	log.finest("STS got a request");
+    	log.finest("MetaSTS got a request");
         int contentLen = request.getContentLength();
 
         String requestXML = null;
@@ -192,9 +193,8 @@ public class MetaSTSServlet  extends HttpServlet {
         Document req = null;
         try {
             req = parser.build(requestXML, "");
-        } catch (ParsingException e) {
+        } catch (nu.xom.ParsingException e) {
             e.printStackTrace();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -311,10 +311,23 @@ public class MetaSTSServlet  extends HttpServlet {
 			}
         }
 
+        String relyingPartyURL = null;
+        String relyingPartyCertB64 = null;
+        try {
+			Bag appliesToBag = Utils.parseAppliesTo(req, context);
+			relyingPartyURL = (String) appliesToBag.get("relyingPartyURL");
+			relyingPartyCertB64 = (String) appliesToBag.get("relyingPartyCertB64");
+		} catch (ParsingException e) {
+        	response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            e.printStackTrace();
+            //TODO - SOAP Fault
+            return;
+		}
 
         Locale clientLocale = request.getLocale();
-        String cardIssuer = "https://" + domain + servletPath + "tokenservice";
-        String stsResponse = Utils.issue(card, requestElements, clientLocale, cert, key, cardIssuer, supportedClaimsImpl);
+        String cardIssuer = "https://" + domain + servletPath;
+        String stsResponse = Utils.issue(
+        		card, requestElements, clientLocale, cert, key, cardIssuer, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
 
         response.setContentType("application/soap+xml; charset=\"utf-8\"");
         response.setContentLength(stsResponse.length());

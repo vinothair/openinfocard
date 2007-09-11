@@ -1,22 +1,19 @@
 package org.xmldap.firefox;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-import org.xmldap.exceptions.SerializationException;
 import org.xmldap.rp.Token;
 import org.xmldap.saml.Subject;
 import org.xmldap.xml.Canonicalizable;
+import org.xmldap.xml.XmlUtils;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
-import org.xmldap.xmldsig.KeyInfo;
 import org.xmldap.xmldsig.SAMLTokenKeyInfo;
 
 import nu.xom.Attribute;
 import nu.xom.Document;
 import nu.xom.Element;
-import nu.xom.canonical.Canonicalizer;
 
 import junit.framework.TestCase;
 
@@ -26,31 +23,8 @@ public class RequestSecurityTokenTest extends TestCase {
 		super.setUp();
 	}
 
-    private static byte[] canonicalize(Element xml) throws SerializationException {
-        return canonicalize(xml, Canonicalizable.EXCLUSIVE_CANONICAL_XML);  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    private static byte[] canonicalize(Element xml, String canonicalizationAlgorithm) throws SerializationException {
-
-
-        byte[] dataBytes = null;
-
-        try {
-
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            Canonicalizer outputter = new Canonicalizer(stream, canonicalizationAlgorithm);
-            //TODO - support prefix list for exclusive!
-            //outputter.setInclusiveNamespacePrefixList("");
-            //Canonicalizer outputter = new Canonicalizer(stream, Canonicalizer.CANONICAL_XML);
-            outputter.write(xml);
-            dataBytes = stream.toByteArray();
-        } catch (IOException ioe) {
-
-            throw new SerializationException("IO Exception during canonicalization of SignedInfo");
-        }
-
-        return dataBytes;
-
+    private static byte[] canonicalize(Element xml) throws IOException {
+        return XmlUtils.canonicalize(xml, Canonicalizable.EXCLUSIVE_CANONICAL_XML);  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 	public void test() throws Exception {
@@ -114,6 +88,7 @@ public class RequestSecurityTokenTest extends TestCase {
         }
 
         RequestSecurityToken rst = new RequestSecurityToken(sts, z, asymmetricKeyInfo, privateKey, samlTokenKeyInfo);
+        // this currently fails. Don't worry. Axel
         assertEquals(rst.toXML(), "");
 	}
 	

@@ -7,14 +7,18 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.servlet.http.HttpServletResponse;
+
 import nu.xom.Attribute;
+import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Nodes;
-import nu.xom.ParsingException;
 import nu.xom.XPathContext;
 
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.ManagedToken;
+import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.DbSupportedClaim;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.SupportedClaims;
@@ -93,7 +97,8 @@ public class Utils {
     		ManagedCard card, Bag requestElements,  Locale clientLocale, 
     		X509Certificate cert, RSAPrivateKey key,
     		String issuer,
-    		SupportedClaims supportedClaimsImpl) throws IOException {
+    		SupportedClaims supportedClaimsImpl,
+    		String restrictedTo, String relyingPartyCertB64) throws IOException {
 
 
         Element envelope = new Element(WSConstants.SOAP_PREFIX + ":Envelope", WSConstants.SOAP12_NAMESPACE);
@@ -130,6 +135,10 @@ public class Utils {
         AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(cert);
         ManagedToken token = new ManagedToken(keyInfo,key);
 
+        if ((restrictedTo != null) && (relyingPartyCertB64 != null)) {
+        	token.setRestrictedTo(restrictedTo, relyingPartyCertB64);
+        }
+        
         Set<String> cardClaims = card.getClaims();
         for (String claim : cardClaims) {
         	token.setClaim(claim, card.getClaim(claim));
@@ -212,7 +221,7 @@ public class Utils {
 	/**
 	 * @return an XPathContext suitable to parse a RST 
 	 */
-	private static XPathContext buildRSTcontext() {
+	static XPathContext buildRSTcontext() {
 		XPathContext context = new XPathContext();
         context.addNamespace("s",WSConstants.SOAP12_NAMESPACE);
         context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
@@ -220,8 +229,108 @@ public class Utils {
         context.addNamespace("wsid","http://schemas.xmlsoap.org/ws/2005/05/identity");
         context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
         context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
+        context.addNamespace("p", WSConstants.POLICY_NAMESPACE_04_09);
 		return context;
 	}
 
+    private static Bag parseToken(Element tokenXML, XPathContext context) throws ParsingException{
 
+        Bag tokenElements = new Bag();
+
+        Nodes uns = tokenXML.query("//o:Username",context);
+        Element un = (Element) uns.get(0);
+        String userName = un.getValue();
+        log.finest("username: " + userName);
+        tokenElements.put("username", userName);
+
+
+        Nodes pws = tokenXML.query("//o:Password",context);
+        Element pw = (Element) pws.get(0);
+        String password = pw.getValue();
+        tokenElements.put("password", password);
+
+        return tokenElements;
+
+    }
+
+    protected static boolean authenticate(CardStorage storage, String username, String password) {
+        boolean isUser = storage.authenticate(username,password);
+        System.out.println("STS Authenticated: " + username  + ":" + isUser );
+        return isUser;
+    }
+
+    private static boolean authenticate(CardStorage storage, Bag tokenElements) {
+        String username = (String) tokenElements.get("username");
+        String password = (String) tokenElements.get("password");
+        return authenticate(storage, username, password);
+    }
+
+    /**
+	 * @param req
+	 * @return
+     * @throws org.xmldap.exceptions.ParsingException 
+	 */
+	static boolean authenticate(CardStorage storage, Document req, XPathContext context) throws org.xmldap.exceptions.ParsingException {
+        Bag tokenElements = null;
+        Nodes tokenElm = req.query("//o:UsernameToken",context);
+        if (tokenElm.size() > 0) {
+	        Element token = (Element) tokenElm.get(0);
+	        log.finest("UsernameToken:" + token.toXML());
+	        try {
+	            tokenElements = parseToken(token, context);
+	        } catch (ParsingException e) {
+	            e.printStackTrace();
+	            throw new org.xmldap.exceptions.ParsingException("expected //o:UsernameToken");
+	        }
+        }
+
+		return authenticate(storage, tokenElements);
+	}
+
+	public static Bag parseAppliesTo(Document req, XPathContext context) throws ParsingException 
+    {
+		Bag appliesToBag = new Bag();
+		
+    	Nodes rsts = req.query("//p:AppliesTo",context);
+    	if (rsts.size() >0) {
+    		Element appliesTo = (Element)rsts.get(0);
+    		Element elt = appliesTo.getFirstChildElement("Address", WSConstants.WSA_NAMESPACE_05_08);
+    		if (elt != null) {
+    			String relyingPartyURL = elt.getValue();
+    			appliesToBag.put("relyingPartyURL", relyingPartyURL);
+    		} else {
+    			log.fine("found AppliesTo, but no Address");
+    			throw new ParsingException("found AppliesTo, but no Address");
+    		}
+    		elt = appliesTo.getFirstChildElement("Identity", WSConstants.WSA_ID_06_02);
+    		if (elt != null) {
+    			elt = appliesTo.getFirstChildElement("KeyInfo", WSConstants.DSIG_NAMESPACE);
+        		if (elt != null) {
+        			elt = appliesTo.getFirstChildElement("X509Data", WSConstants.DSIG_NAMESPACE);
+            		if (elt != null) {
+            			elt = appliesTo.getFirstChildElement("X509Certificate", WSConstants.DSIG_NAMESPACE);
+                		if (elt != null) {
+                			String relyingPartyCertB64 = elt.getValue();
+                			appliesToBag.put("relyingPartyCertB64", relyingPartyCertB64);
+                		} else {
+                			log.fine("found AppliesTo/Identity/KeyInfo/X509Data, but no X509Certificate");
+                			throw new ParsingException("found AppliesTo/Identity/KeyInfo/X509Data, but no X509Certificate");
+                		}
+            		} else {
+            			log.fine("found AppliesTo/Identity/KeyInfo, but no X509Data");
+            			throw new ParsingException("found AppliesTo/Identity/KeyInfo, but no X509Data");
+            		}
+        		} else {
+        			log.fine("found AppliesTo/Identity, but no KeyInfo");
+        			throw new ParsingException("found AppliesTo/Identity, but no KeyInfo");
+        		}
+
+    		} else {
+    			log.fine("found AppliesTo, but no Identity");
+    			throw new ParsingException("found AppliesTo, but no Identity");
+    		}
+    	}
+    	
+        return appliesToBag;
+	}
 }

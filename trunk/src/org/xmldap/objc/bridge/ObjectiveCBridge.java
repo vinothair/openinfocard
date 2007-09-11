@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 
 /**
@@ -59,22 +60,23 @@ public class ObjectiveCBridge {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
         pair = kpg.genKeyPair();
 
-        X509V3CertificateGenerator generator = new X509V3CertificateGenerator();
+//        X509V3CertificateGenerator generator = new X509V3CertificateGenerator();
+//
+//
+//        generator.setSerialNumber(BigInteger.valueOf(1));
+//        generator.setIssuerDN(new X509Principal(dn));
+//
+//        // sit on a fence in a 48 hr window of validity
+//        generator.setNotBefore(new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24));
+//        generator.setNotAfter(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24));
+//
+//        generator.setSubjectDN(new X509Principal(dn));
+//        generator.setPublicKey(pair.getPublic());
+//        generator.setSignatureAlgorithm(MD5_WITH_RSAENCRYPTION);
+//        clientCertificate = generator.generateX509Certificate(pair.getPrivate());
 
-
-        generator.setSerialNumber(BigInteger.valueOf(1));
-        generator.setIssuerDN(new X509Principal(dn));
-
-        // sit on a fence in a 48 hr window of validity
-        generator.setNotBefore(new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24));
-        generator.setNotAfter(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24));
-
-        generator.setSubjectDN(new X509Principal(dn));
-        generator.setPublicKey(pair.getPublic());
-        generator.setSignatureAlgorithm(MD5_WITH_RSAENCRYPTION);
-        clientCertificate = generator.generateX509Certificate(pair.getPrivate());
-
-        selfIssuedToken = new SelfIssuedToken(serverCertificate, clientCertificate, pair.getPrivate());
+        RSAPublicKey signingKey = (RSAPublicKey)pair.getPublic();
+        selfIssuedToken = new SelfIssuedToken(serverCertificate, signingKey, pair.getPrivate());
 
     }
 

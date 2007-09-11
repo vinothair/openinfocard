@@ -1,15 +1,14 @@
 package org.xmldap.xmldsig;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.xmldap.ws.WSConstants;
+import org.xmldap.xml.XmlUtils;
 
 import nu.xom.Element;
 import nu.xom.Elements;
-import nu.xom.canonical.Canonicalizer;
 
 public class ParsedSignedInfo extends SignedInfo {
 	String canonicalizationAlgorithm = null;
@@ -28,7 +27,7 @@ public class ParsedSignedInfo extends SignedInfo {
 			ParsedReference parsedReference = new ParsedReference(reference);
 			parsedReferences.add(parsedReference);
 		}
-		canonicalBytes = getCanonicalBytes(signedInfo, canonicalizationAlgorithm);
+		canonicalBytes = XmlUtils.canonicalize(signedInfo, canonicalizationAlgorithm);
 	}
 	
 	public String getCanonicalizationAlgorithm() {
@@ -44,17 +43,4 @@ public class ParsedSignedInfo extends SignedInfo {
 		return canonicalBytes;
 	}
 	
-	/**
-	 * @param signedInfo
-	 * @return
-	 * @throws IOException
-	 */
-	private byte[] getCanonicalBytes(Element signedInfo, String canonicalizationAlgorithm) throws IOException {
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		Canonicalizer outputter = new Canonicalizer(stream, canonicalizationAlgorithm);
-		outputter.write(signedInfo);
-		byte[] bytes = stream.toByteArray();
-		stream.close();
-		return bytes;
-	}
 }
