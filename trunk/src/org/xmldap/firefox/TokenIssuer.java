@@ -33,8 +33,6 @@ import nu.xom.*;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.asn1.x509.X509NameEntryConverter;
-import org.bouncycastle.asn1.x509.X509NameTokenizer;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.json.JSONException;
@@ -486,7 +484,7 @@ public class TokenIssuer {
 			System.arraycopy(rpIdentifierBytes, 0, bytes, 0, rpIdentifierBytes.length);
 			System.arraycopy(canonicalCardIdBytes, 0, bytes, rpIdentifierBytes.length, canonicalCardIdBytes.length);
 			byte[] ppidBytes = sha256(bytes);
-			return Base64.encodeBytes(ppidBytes);
+			return Base64.encodeBytesNoBreaks(ppidBytes);
 		} catch (UnsupportedEncodingException e) {
 			throw new TokenIssuanceException(e);
 		}
@@ -532,7 +530,7 @@ public class TokenIssuer {
 			MessageDigest mdAlgorithm = MessageDigest.getInstance("SHA-1");
 			mdAlgorithm.update(encrypted);
 			byte[] digest = mdAlgorithm.digest();
-			return Base64.encodeBytes(digest);
+			return Base64.encodeBytesNoBreaks(digest);
 		} catch (NoSuchAlgorithmException e) {
 			throw new TokenIssuanceException(e);
 		} catch (NoSuchPaddingException e) {
@@ -743,8 +741,7 @@ public class TokenIssuer {
 		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
 		RSAPublicKey cardPublicKey = (RSAPublicKey)signingCert.getPublicKey();
 		PrivateKey cardPrivateKey = signingKey;
-		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
-				cardPublicKey, cardPrivateKey);
+		SelfIssuedToken token = new SelfIssuedToken(cardPublicKey, cardPrivateKey);
 		
 		if (confirmationMethod != null) {
 			if (Subject.BEARER.equals(confirmationMethod)) {
@@ -760,7 +757,7 @@ public class TokenIssuer {
 		if (audience != null) {
 			token.setAudience(audience);
 		}
-		token.setPrivatePersonalIdentifier(Base64.encodeBytes(ppi.getBytes()));
+		token.setPrivatePersonalIdentifier(Base64.encodeBytesNoBreaks(ppi.getBytes()));
 		token.setValidityPeriod(-5, 10);
 
 		final String ALL_CLAIMS = "givenname"

@@ -8,6 +8,7 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 
@@ -148,6 +149,33 @@ public class CryptoUtilsTest extends TestCase {
 			RSAPublicKey publicKey = (RSAPublicKey) kp.getPublic();
 			byte[] signature = Base64.decode(b64signature);
 			
+			boolean verified = CryptoUtils.verify(text.getBytes(), signature, 
+					publicKey.getModulus(), publicKey.getPublicExponent());
+			assertTrue(verified);
+		} catch (NoSuchAlgorithmException e) {
+			assertEquals("", e.getMessage());
+		} catch (CryptoException e) {
+			assertEquals("", e.getMessage());
+		}
+	}
+
+	public void testSignVerifyLength() {
+		String text = "test";
+		try {
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", new BouncyCastleProvider());
+			keyGen.initialize(1024, new SecureRandom());
+			KeyPair kp = keyGen.generateKeyPair();
+			RSAPrivateKey privateKey = (RSAPrivateKey)kp.getPrivate();
+			assertEquals(1024, privateKey.getModulus().bitLength());
+			String b64signature = CryptoUtils.sign(text.getBytes(), privateKey);
+			assertEquals(172, b64signature.length());
+			byte[] signature = Base64.decode(b64signature);
+			assertEquals(1024 / 8, signature.length);
+
+			RSAPublicKey publicKey = (RSAPublicKey) kp.getPublic();
+			// the following must not always be true.
+			// but must be true for CardSpace
+			assertEquals(65537, publicKey.getPublicExponent().longValue());
 			boolean verified = CryptoUtils.verify(text.getBytes(), signature, 
 					publicKey.getModulus(), publicKey.getPublicExponent());
 			assertTrue(verified);

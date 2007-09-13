@@ -294,40 +294,46 @@ public class Utils {
     	Nodes rsts = req.query("//p:AppliesTo",context);
     	if (rsts.size() >0) {
     		Element appliesTo = (Element)rsts.get(0);
-    		Element elt = appliesTo.getFirstChildElement("Address", WSConstants.WSA_NAMESPACE_05_08);
-    		if (elt != null) {
-    			String relyingPartyURL = elt.getValue();
-    			appliesToBag.put("relyingPartyURL", relyingPartyURL);
-    		} else {
-    			log.fine("found AppliesTo, but no Address");
-    			throw new ParsingException("found AppliesTo, but no Address");
-    		}
-    		elt = appliesTo.getFirstChildElement("Identity", WSConstants.WSA_ID_06_02);
-    		if (elt != null) {
-    			elt = appliesTo.getFirstChildElement("KeyInfo", WSConstants.DSIG_NAMESPACE);
-        		if (elt != null) {
-        			elt = appliesTo.getFirstChildElement("X509Data", WSConstants.DSIG_NAMESPACE);
-            		if (elt != null) {
-            			elt = appliesTo.getFirstChildElement("X509Certificate", WSConstants.DSIG_NAMESPACE);
-                		if (elt != null) {
-                			String relyingPartyCertB64 = elt.getValue();
-                			appliesToBag.put("relyingPartyCertB64", relyingPartyCertB64);
-                		} else {
-                			log.fine("found AppliesTo/Identity/KeyInfo/X509Data, but no X509Certificate");
-                			throw new ParsingException("found AppliesTo/Identity/KeyInfo/X509Data, but no X509Certificate");
-                		}
-            		} else {
-            			log.fine("found AppliesTo/Identity/KeyInfo, but no X509Data");
-            			throw new ParsingException("found AppliesTo/Identity/KeyInfo, but no X509Data");
-            		}
-        		} else {
-        			log.fine("found AppliesTo/Identity, but no KeyInfo");
-        			throw new ParsingException("found AppliesTo/Identity, but no KeyInfo");
-        		}
+    		Element endpointReference = appliesTo.getFirstChildElement("EndpointReference", WSConstants.WSA_NAMESPACE_05_08);
+    		if (endpointReference != null) {
+	    		Element elt = endpointReference.getFirstChildElement("Address", WSConstants.WSA_NAMESPACE_05_08);
+	    		if (elt != null) {
+	    			String relyingPartyURL = elt.getValue();
+	    			appliesToBag.put("relyingPartyURL", relyingPartyURL);
+	    		} else {
+	    			log.fine("found AppliesTo, but no Address");
+	    			throw new ParsingException("found AppliesTo/EndpointReference, but no Address");
+	    		}
+	    		elt = endpointReference.getFirstChildElement("Identity", WSConstants.WSA_ID_06_02);
+	    		if (elt != null) {
+	    			elt = elt.getFirstChildElement("KeyInfo", WSConstants.DSIG_NAMESPACE);
+	        		if (elt != null) {
+	        			elt = elt.getFirstChildElement("X509Data", WSConstants.DSIG_NAMESPACE);
+	            		if (elt != null) {
+	            			elt = elt.getFirstChildElement("X509Certificate", WSConstants.DSIG_NAMESPACE);
+	                		if (elt != null) {
+	                			String relyingPartyCertB64 = elt.getValue();
+	                			appliesToBag.put("relyingPartyCertB64", relyingPartyCertB64);
+	                		} else {
+	                			log.fine("found AppliesTo/Identity/KeyInfo/X509Data, but no X509Certificate");
+	                			throw new ParsingException("found AppliesTo/Identity/KeyInfo/X509Data, but no X509Certificate");
+	                		}
+	            		} else {
+	            			log.fine("found AppliesTo/Identity/KeyInfo, but no X509Data");
+	            			throw new ParsingException("found AppliesTo/Identity/KeyInfo, but no X509Data");
+	            		}
+	        		} else {
+	        			log.fine("found AppliesTo/Identity, but no KeyInfo");
+	        			throw new ParsingException("found AppliesTo/Identity, but no KeyInfo");
+	        		}
 
+	    		} else {
+	    			log.fine("found AppliesTo, but no Identity");
+	    			throw new ParsingException("found AppliesTo, but no Identity");
+	    		}
     		} else {
-    			log.fine("found AppliesTo, but no Identity");
-    			throw new ParsingException("found AppliesTo, but no Identity");
+    			log.fine("found AppliesTo, but no EndpointReference");
+    			throw new ParsingException("found AppliesTo, but no EndpointReference");
     		}
     	}
     	

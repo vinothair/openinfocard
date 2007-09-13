@@ -1,5 +1,6 @@
 package org.xmldap.xmldsig;
 
+import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -17,10 +18,12 @@ import org.xmldap.saml.Subject;
 import org.xmldap.util.Base64;
 import org.xmldap.util.XmldapCertsAndKeys;
 import org.xmldap.ws.WSConstants;
+import org.xmldap.xml.XmlUtils;
 
 //import nu.xom.Attribute;
 import nu.xom.Document;
 import nu.xom.Element;
+import nu.xom.ParsingException;
 
 import junit.framework.TestCase;
 
@@ -211,6 +214,20 @@ public class EnvelopedSignatureTest extends TestCase {
 		assertTrue(EnvelopedSignature.validate(simpleSamlAssertion));
 	}
 	
+	public void testSignatureLength() throws IOException, ParsingException {
+		Document doc = XmlUtils.parse(simpleSamlAssertion);
+		Element root = doc.getRootElement();
+		Element signature = root.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
+		ParsedSignature parsedSignature = new ParsedSignature(signature);
+		String signatureValueB64 = parsedSignature.getSignatureValue();
+		assertEquals("lg/8RNBJ2JsSwkPY8G4VU+mS89NhPKn0psIIwdD9uiMVknLxQk3+79kP46CzLfpczy6Azjv17sXMgHJDr7XFchfKArhoAgaVc+ulkUpSOJNW8f5cVLMHvEmD2Qo5/VcYOgrVS72+d0rK8A42twUublm+8TjxGPp/oVSFxtTmg4E=", signatureValueB64);
+		ParsedKeyInfo parsedKeyInfo = parsedSignature.getParsedKeyInfo();
+		ParsedKeyValue parsedKeyValue = parsedKeyInfo.getParsedKeyValue();
+		String modulusB64 = parsedKeyValue.getModulus();
+		assertEquals("ALgc5OE4nyN5TfZS6wa5LT4rEfAMMuoOWknZoRv4T6wZcoEh31g2haNcbcqq+5PXeB+hSMwL4XBfKqs+JK5a4/WyTVfJ+Zedutq5t6S5Rq5v2jwVuFy5ZuWVAl5629slvcPtNGg3LeHvkz7fcgbxLreAIk5ojE4YQRRpffmGWH4j", modulusB64);
+		assertEquals(signatureValueB64.length(), modulusB64.length());
+	}
+	
 	public void testSAMLAssertion() throws Exception {
 
 		X509Certificate signingCert = org.xmldap.util.XmldapCertsAndKeys
@@ -253,12 +270,12 @@ public class EnvelopedSignatureTest extends TestCase {
 //
 		X509Certificate relyingPartyCert = xmldapCert;
 		RSAPublicKey signingKey = (RSAPublicKey)xmldapCert.getPublicKey();
-		SelfIssuedToken token = new SelfIssuedToken(relyingPartyCert,
-				signingKey, xmldapKey);
+		SelfIssuedToken token = new SelfIssuedToken(signingKey, xmldapKey);
 	
-		token.setPrivatePersonalIdentifier(Base64.encodeBytes("ppid".getBytes()));
+		token.setPrivatePersonalIdentifier(Base64.encodeBytesNoBreaks("ppid".getBytes()));
 		token.setValidityPeriod(-5, 10);
-	
+		token.setConfirmationMethodBEARER();
+		
 		String xml = token.toXML();
 //		String signedToken = signer.sign(xml);
 		assertTrue(EnvelopedSignature.validate(xml));
@@ -274,11 +291,11 @@ public class EnvelopedSignatureTest extends TestCase {
 //				xmldapKey);
 //
 		RSAPublicKey signingKey = (RSAPublicKey)xmldapCert.getPublicKey();
-		SelfIssuedToken token = new SelfIssuedToken(xmldapCert,
-				signingKey, xmldapKey);
+		SelfIssuedToken token = new SelfIssuedToken(signingKey, xmldapKey);
 	
-		token.setPrivatePersonalIdentifier(Base64.encodeBytes("ppid".getBytes()));
+		token.setPrivatePersonalIdentifier(Base64.encodeBytesNoBreaks("ppid".getBytes()));
 		token.setValidityPeriod(-5, 10);
+		token.setConfirmationMethodHOLDER_OF_KEY(xmldapCert);
 
 		Conditions conditions = new Conditions(-5, 10);
 

@@ -169,7 +169,7 @@ public class EncryptedStore {
 
         StringBuffer clearText = null;
 
-        clearText = CryptoUtils.decryptAESCBC(new StringBuffer(Base64.encodeBytes(ivPlusData)), keyBytes);
+        clearText = CryptoUtils.decryptAESCBC(new StringBuffer(Base64.encodeBytesNoBreaks(ivPlusData)), keyBytes);
 
         byte[] hashedIntegrityCode = getHashedIntegrityCode(iv, keys.getIntegrityKey(),  clearText.toString());
         boolean valid = Arrays.equals(integrityCode, hashedIntegrityCode);
@@ -193,7 +193,7 @@ public class EncryptedStore {
         byte[] salt = new byte[16];
         rand.nextBytes(salt);
 
-        storeSalt.appendChild(Base64.encodeBytes(salt));
+        storeSalt.appendChild(Base64.encodeBytesNoBreaks(salt));
         encryptedStore.appendChild(storeSalt);
         Element encryptedData = new Element("EncryptedData", WSConstants.ENC_NAMESPACE);
         Element cipherData = new Element("CipherData", WSConstants.ENC_NAMESPACE);
