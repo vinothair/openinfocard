@@ -34,7 +34,6 @@ import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 import org.xmldap.saml.*;
 import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.AsymmetricKeyInfo;
 import org.xmldap.xmldsig.BaseEnvelopedSignature;
 import org.xmldap.xmldsig.KeyInfo;
 import org.xmldap.xmldsig.RsaPublicKeyInfo;
@@ -52,7 +51,7 @@ import java.util.Vector;
  */
 public class SelfIssuedToken implements Serializable {
 
-	private String namespacePrefix = null;
+	private String claimsNamespace = null;
 
 	private String givenName;
 
@@ -88,24 +87,20 @@ public class SelfIssuedToken implements Serializable {
 
 	private PrivateKey cardPrivateKey;
 
-	private X509Certificate relyingPartyCert;
+	private X509Certificate relyingPartyCert = null;
 
 	private int nowPlus = 10; //default to 10 minutes
 
 	private int nowMinus = 10; //default to 5 minutes
 
-	private boolean asymmetric = true; //default to symmetric key
-
 	private String restrictedTo = null;
 	
-	private String confirmationMethod = null;
+	private String confirmationMethod = Subject.BEARER;
 	
-	public SelfIssuedToken(X509Certificate relyingPartyCert,
-			RSAPublicKey cardPublicKey, PrivateKey cardPrivateKey) {
+	public SelfIssuedToken(RSAPublicKey cardPublicKey, PrivateKey cardPrivateKey) {
 		this.cardPublicKey = cardPublicKey;
 		this.cardPrivateKey = cardPrivateKey;
-		this.relyingPartyCert = relyingPartyCert;
-		namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
+		claimsNamespace = org.xmldap.infocard.Constants.IC_NAMESPACE; // default is the new (Autumn 2006) namespace
 	}
 
 	public void setAudience(String restrictedTo) {
@@ -115,11 +110,11 @@ public class SelfIssuedToken implements Serializable {
 		return restrictedTo;
 	}
 	public void setNamespacePrefix(String namespacePrefix) {
-		this.namespacePrefix = namespacePrefix;
+		this.claimsNamespace = namespacePrefix;
 	}
 
 	public String getNamespacePrefix() {
-		return namespacePrefix;
+		return claimsNamespace;
 	}
 
 	//    public int getValidityPeriod() {
@@ -243,11 +238,11 @@ public class SelfIssuedToken implements Serializable {
 		this.gender = gender;
 	}
 
-	public void useAsymmetricKey() {
-
-		this.asymmetric = true;
-
-	}
+//	public void useAsymmetricKey() {
+//
+//		this.asymmetric = true;
+//
+//	}
 
 	private void addAttribute(Vector attributes, String name, String uri, String value) {
 		if (value != null) {
@@ -314,17 +309,9 @@ public class SelfIssuedToken implements Serializable {
 
 		Subject subject = null;
 
-		if (confirmationMethod == null) {
-			confirmationMethod = Subject.HOLDER_OF_KEY;
-		}
-		
 		if (Subject.HOLDER_OF_KEY.equals(confirmationMethod)) {
 			KeyInfo keyInfo = null; // for the proof key
-			if (asymmetric) {
-
-				if (proofKey == null)
-					throw new SerializationException(
-							"You did not provide a proofKey, but the confirmationMethod is holder-of-key");
+			if (proofKey != null) {
 //				keyInfo = new AsymmetricKeyInfo(signingCert);
 				keyInfo = new RsaPublicKeyInfo((RSAPublicKey)proofKey);
 				// I am wondering where the private key gets used to proof the possession... 
@@ -356,20 +343,20 @@ public class SelfIssuedToken implements Serializable {
 
 		Vector attributes = new Vector();
 
-		addAttribute(attributes, "givenname", namespacePrefix, givenName);
-		addAttribute(attributes, "surname", namespacePrefix, surname);
-		addAttribute(attributes, "emailaddress", namespacePrefix, emailAddress);
-		addAttribute(attributes, "streetaddress", namespacePrefix, streetAddress);
-		addAttribute(attributes, "locality", namespacePrefix, locality);
-		addAttribute(attributes, "stateorprovince", namespacePrefix, stateOrProvince);
-		addAttribute(attributes, "postalcode", namespacePrefix,	postalCode);
-		addAttribute(attributes, "country", namespacePrefix, country);
-		addAttribute(attributes, "primaryphone", namespacePrefix, primaryPhone);
-		addAttribute(attributes, "otherphone", namespacePrefix,otherPhone);
-		addAttribute(attributes, "mobilephone",	namespacePrefix, mobilePhone);
-		addAttribute(attributes, "dateofbirth",	namespacePrefix, dateOfBirth);
-		addAttribute(attributes, "privatepersonalidentifier", namespacePrefix,privatePersonalIdentifier);
-		addAttribute(attributes, "gender", namespacePrefix, gender);
+		addAttribute(attributes, "givenname", claimsNamespace, givenName);
+		addAttribute(attributes, "surname", claimsNamespace, surname);
+		addAttribute(attributes, "emailaddress", claimsNamespace, emailAddress);
+		addAttribute(attributes, "streetaddress", claimsNamespace, streetAddress);
+		addAttribute(attributes, "locality", claimsNamespace, locality);
+		addAttribute(attributes, "stateorprovince", claimsNamespace, stateOrProvince);
+		addAttribute(attributes, "postalcode", claimsNamespace,	postalCode);
+		addAttribute(attributes, "country", claimsNamespace, country);
+		addAttribute(attributes, "primaryphone", claimsNamespace, primaryPhone);
+		addAttribute(attributes, "otherphone", claimsNamespace,otherPhone);
+		addAttribute(attributes, "mobilephone",	claimsNamespace, mobilePhone);
+		addAttribute(attributes, "dateofbirth",	claimsNamespace, dateOfBirth);
+		addAttribute(attributes, "privatepersonalidentifier", claimsNamespace,privatePersonalIdentifier);
+		addAttribute(attributes, "gender", claimsNamespace, gender);
 
 		AttributeStatement statement = new AttributeStatement();
 		statement.setSubject(subject);
@@ -516,6 +503,15 @@ public class SelfIssuedToken implements Serializable {
 	public void setConfirmationMethodHOLDER_OF_KEY(RSAPublicKey proofKey) {
 		this.confirmationMethod = Subject.HOLDER_OF_KEY;
 		this.proofKey = proofKey;
+	}
+
+	public void setConfirmationMethodHOLDER_OF_KEY(X509Certificate relyingPartyCert) {
+		this.confirmationMethod = Subject.HOLDER_OF_KEY;
+		this.relyingPartyCert = relyingPartyCert;
+	}
+
+	public X509Certificate getRelyingPartyCert() {
+		return relyingPartyCert;
 	}
 
 }

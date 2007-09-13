@@ -39,7 +39,7 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
         informationCardMetaData.appendChild(hashSalt);
         //hashSalt.appendChild("610+M5O09oikUhLQ3n324g==");
         //TODO - this should be random, but we at least need it to be per card
-        hashSalt.appendChild(Base64.encodeBytes(card.getCardId().getBytes()));
+        hashSalt.appendChild(Base64.encodeBytesNoBreaks(card.getCardId().getBytes()));
 
         Element timeLastUpdated = new Element("TimeLastUpdated", WSConstants.INFOCARD_NAMESPACE);
         informationCardMetaData.appendChild(timeLastUpdated);
@@ -63,7 +63,7 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
         informationCardPrivateData.appendChild(masterKey);
         //masterKey.appendChild("iJzz3+thvV6wWdFQCFADcHbNaOasZpt0qTaC7Brvbfc=");
         //TODO - generate a real master key.   This is a security issue
-        masterKey.appendChild(Base64.encodeBytes(card.getCardId().getBytes()));
+        masterKey.appendChild(Base64.encodeBytesNoBreaks(card.getCardId().getBytes()));
 
 
         Element claimValueList = new Element("ClaimValueList", WSConstants.INFOCARD_NAMESPACE);

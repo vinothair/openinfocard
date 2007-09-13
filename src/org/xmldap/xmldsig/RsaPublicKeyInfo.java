@@ -57,7 +57,19 @@ public class RsaPublicKeyInfo implements KeyInfo {
         Element exponent = new Element("dsig:Exponent", WSConstants.DSIG_NAMESPACE);
         BigInteger mod = key.getModulus();
         byte[] modArray = mod.toByteArray();
-        modulus.appendChild(Base64.encodeBytesNoBreaks(modArray));
+        if (modArray[0] == (byte)0x0) {
+        	byte[] temp = new byte[modArray.length-1];
+        	for (int i=0; i<temp.length; i++) {
+        		temp[i] = modArray[i+1];
+        	}
+        	BigInteger t = new BigInteger(1, temp);
+        	if (!t.equals(mod)) {
+        		throw new SerializationException("removing the leading zero changed the value");
+        	}
+        	modArray = temp;
+        }
+        String modulusB64 = Base64.encodeBytesNoBreaks(modArray);
+        modulus.appendChild(modulusB64);
         rsaKeyValue.appendChild(modulus);
         BigInteger exp = key.getPublicExponent();
         byte[] expArray = exp.toByteArray();

@@ -21,9 +21,9 @@ public class ParsedSignature {
 		signedInfoCanonicalBytes = parsedSignedInfo.getCanonicalBytes();
 	}
 	
-	public boolean validate(Element root) {
-		return false;
-	}
+//	private boolean validate(Element root) {
+//		return false;
+//	}
 
 	public byte[] getSignedInfoCanonicalBytes() throws IOException {
 		return signedInfoCanonicalBytes;

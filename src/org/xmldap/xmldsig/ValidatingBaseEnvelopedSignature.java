@@ -96,22 +96,22 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 
 	}
 
-	public static boolean validateSignatures(Document xmlDoc) throws CryptoException, IOException {
-		Element root = xmlDoc.getRootElement();
-		Elements signatures = root.getChildElements("Signature", WSConstants.DSIG_NAMESPACE);
-		List<ParsedSignature> parsedSignatures = new ArrayList<ParsedSignature>();
-		for (int i=0; i<signatures.size(); i++) {
-			Element signature = signatures.get(i);
-			ParsedSignature parsedSignature = new ParsedSignature(signature);
-			parsedSignatures.add(parsedSignature);
-			root.removeChild(signature);
-		}
-		for (ParsedSignature parsedSignature : parsedSignatures) {
-			boolean valid = parsedSignature.validate(root);
-			if (!valid) { return false; }
-		}
-		return true;
-	}
+//	public static boolean validateSignatures(Document xmlDoc) throws CryptoException, IOException {
+//		Element root = xmlDoc.getRootElement();
+//		Elements signatures = root.getChildElements("Signature", WSConstants.DSIG_NAMESPACE);
+//		List<ParsedSignature> parsedSignatures = new ArrayList<ParsedSignature>();
+//		for (int i=0; i<signatures.size(); i++) {
+//			Element signature = signatures.get(i);
+//			ParsedSignature parsedSignature = new ParsedSignature(signature);
+//			parsedSignatures.add(parsedSignature);
+//			root.removeChild(signature);
+//		}
+//		for (ParsedSignature parsedSignature : parsedSignatures) {
+//			boolean valid = parsedSignature.validate(root);
+//			if (!valid) { return false; }
+//		}
+//		return true;
+//	}
 
 	public static boolean validate(Document xmlDoc) throws CryptoException {
 
@@ -128,6 +128,13 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		try {
 			Element signature = root.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
 			parsedSignature = new ParsedSignature(signature);
+		} catch (IOException e) {
+			throw new CryptoException(e);
+		}
+
+		String signatureValue = parsedSignature.getSignatureValue();
+
+		try {
 			signedInfoCanonicalBytes = parsedSignature.getSignedInfoCanonicalBytes();
 			
 			ParsedKeyInfo parsedKeyInfo = parsedSignature.getParsedKeyInfo();
@@ -145,6 +152,9 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 				String exp = keyValue.getExponent();
 				modulus = new BigInteger(1, Base64.decode(mod));
 				exponent = new BigInteger(1, Base64.decode(exp));
+				if (mod.length() != signatureValue.length()) {
+					new CryptoException("modulusB64.length() != signatureValueB64.length()");
+				}
 			}
 		} catch (IOException e) {
 			throw new CryptoException(e);
@@ -160,7 +170,6 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 //		if (signatureValue == null) {
 //			return false;
 //		}
-		String signatureValue = parsedSignature.getSignatureValue();
 
 		// GET THE KEY CIPHERTEXT and DECRYPT
 //		XPathContext encContext = new XPathContext();
