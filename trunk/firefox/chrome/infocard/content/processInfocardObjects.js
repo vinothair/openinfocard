@@ -139,10 +139,16 @@ function parseCard(infocard) {
 	 policy["tokenType"] = params[i].getAttribute("Value");
 	} else if ( name == "issuer") {
 	 policy["issuer"] = params[i].getAttribute("Value");
+	} else if ( name == "issuerPolicy") {
+	 policy["issuerPolicy"] = params[i].getAttribute("Value");
 	} else if ( name == "requiredClaims") {
 	 policy["requiredClaims"] = params[i].getAttribute("Value");
 	} else if ( name == "optionalClaims") {
 	 policy["optionalClaims"] = params[i].getAttribute("Value");
+	} else if ( name == "privacyUrl") {
+	 policy["privacyUrl"] = params[i].getAttribute("Value");
+	} else if ( name == "privacyVersion") {
+	 policy["privacyVersion"] = params[i].getAttribute("Value");
 	} else {
 	 debug("Unhandled attribute: " + name);
 	}
@@ -200,6 +206,17 @@ function invokeSelector(aEvent){
 	
     var doc = form.ownerDocument;
     var win = doc.defaultView;
+
+    var chain = serverCert.getChain();
+	debug('chain: ' + chain);
+	debug('chainLength: ' + chain.length);
+	debug('chain[0]: ' + chain.queryElementAt(0, nsIX509Cert));
+		
+	policy["chainLength"] = ""+chain.length;
+	for (var i = 0; i < chain.length; ++i) {
+		 var currCert = chain.queryElementAt(i, nsIX509Cert);
+		 policy["certChain"+i] = getDer(currCert,win);
+	}
 
     var callEvent = doc.createEvent("Events");
     callEvent.initEvent("CallIdentitySelector", true, true);
