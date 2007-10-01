@@ -149,6 +149,10 @@ function parseCard(infocard) {
 	 policy["privacyUrl"] = params[i].getAttribute("Value");
 	} else if ( name == "privacyVersion") {
 	 policy["privacyVersion"] = params[i].getAttribute("Value");
+	} else if ( name == "privacyPolicy") {
+	 policy["privacyUrl"] = params[i].getAttribute("Value");
+	} else if ( name == "privacyPolicyVersion") {
+	 policy["privacyVersion"] = params[i].getAttribute("Value");
 	} else {
 	 debug("Unhandled attribute: " + name);
 	}
@@ -202,21 +206,26 @@ function invokeSelector(aEvent){
 
     policy["cert"] = cert;
     policy["cn"] = certificate.commonName;
+    debug(certificate.commonName);
 	policy["url"] = document.URL;
+	debug(document.URL);
 	
     var doc = form.ownerDocument;
     var win = doc.defaultView;
 
-    var chain = serverCert.getChain();
+    var chain = certificate.getChain();
 	debug('chain: ' + chain);
+	debug('typeof(chain)' + typeof(chain));
 	debug('chainLength: ' + chain.length);
-	debug('chain[0]: ' + chain.queryElementAt(0, nsIX509Cert));
+//	debug('chain[0]: ' + chain.queryElementAt(0, nsIX509Cert));
+	debug('1');
 		
-	policy["chainLength"] = ""+chain.length;
-	for (var i = 0; i < chain.length; ++i) {
-		 var currCert = chain.queryElementAt(i, nsIX509Cert);
-		 policy["certChain"+i] = getDer(currCert,win);
-	}
+	policy["chainLength"] = "0";
+//	policy["chainLength"] = ""+chain.length;
+//	for (var i = 0; i < chain.length; ++i) {
+//		 var currCert = chain[i];
+//		 policy["certChain"+i] = getDer(currCert,win);
+//	}
 
     var callEvent = doc.createEvent("Events");
     callEvent.initEvent("CallIdentitySelector", true, true);
