@@ -213,19 +213,24 @@ function invokeSelector(aEvent){
     var doc = form.ownerDocument;
     var win = doc.defaultView;
 
-    var chain = certificate.getChain();
-	debug('chain: ' + chain);
-	debug('typeof(chain)' + typeof(chain));
-	debug('chainLength: ' + chain.length);
-//	debug('chain[0]: ' + chain.queryElementAt(0, nsIX509Cert));
-	debug('1');
-		
-	policy["chainLength"] = "0";
-//	policy["chainLength"] = ""+chain.length;
-//	for (var i = 0; i < chain.length; ++i) {
-//		 var currCert = chain[i];
-//		 policy["certChain"+i] = getDer(currCert,win);
-//	}
+    var browser = document.getElementById("content");
+    var secureUi = browser.securityUI;
+    var sslStatusProvider =
+secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
+    var sslStatus =
+sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+
+    var chain = sslStatus.serverCert.getChain();
+    debug('chain: ' + chain);
+    debug('chainLength: ' + chain.length);
+
+    debug('chain[0]: ' + chain.queryElementAt(0, Components.interfaces.nsIX509Cert));
+
+    policy["chainLength"] = ""+chain.length;
+    for (var i = 0; i < chain.length; ++i) {
+        var currCert = chain.queryElementAt(i, Components.interfaces.nsIX509Cert);
+        policy["certChain"+i] = getDer(currCert,win);
+    }
 
     var callEvent = doc.createEvent("Events");
     callEvent.initEvent("CallIdentitySelector", true, true);
