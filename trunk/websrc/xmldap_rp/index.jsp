@@ -1,6 +1,37 @@
-<!DOCTYPE html 
-     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<%
+ String queryString = request.getQueryString();
+ if ((queryString != null) && (queryString.indexOf("privacy") != -1)) {
+	 String contentType = request.getContentType();
+	 log("privacyStatement request content-Type: " + contentType);
+	 org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
+	 String privaceStatement = properties.getProperty("privacyStatement." + contentType); 
+	 if (privaceStatement == null) {
+		 privaceStatement = properties.getProperty("privacyStatement.text/plain"); 
+		 if (privaceStatement == null) {
+			 response.sendError(500, "could not find privacy statement of content type (" + contentType + ")");
+			 return;
+		 } else {
+			 contentType = "text/plain";
+		 }
+	 }
+	 response.setContentType(contentType);
+	 java.io.FileInputStream fis = new java.io.FileInputStream(privaceStatement);
+	 java.io.BufferedReader ins = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+	 try {
+			while (fis.available() != 0) {
+				out.println(ins.readLine());
+			}
+		} catch (java.io.IOException e) {
+			throw new ServletException(e);
+		}
+		finally {
+			fis.close();
+			ins.close();
+		}
+ } else {
+  out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
+%>
+
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Java Based Relying Party</title>
@@ -52,13 +83,23 @@
         #links A:hover {color: #FFF; text-decoration: underline}
 
     </style>
+    <% 
+     String servername = request.getServerName();
+     if (servername != null) {
+    	 if (servername.indexOf("xmldap.org") > 0) {
+    %>
     <script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
     </script>
     <script type="text/javascript">
-    _uacct = "UA-147402-2";
-    urchinTracker();
+    if (!(urchinTracker == undefined)) {
+     _uacct = "UA-147402-2";
+     urchinTracker();
+    }
     </script>
-
+    <%
+    	 }
+     }
+    %>
 
 
 </head>
@@ -88,6 +129,11 @@
      onclick="infocard.submit()"/>
 
     <object type="application/x-informationCard" name="xmlToken">
+    <!-- Kevin's plugin expects privacyPolicy and privacyPolicyVersion instead of the correct privacyUrl and privacyVersion -->
+<%
+    			  out.println("<param name=\"privacyPolicy\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>");
+%>
+    			  <param name="privacyPolicyVersion" value="1"/>
                   <param name="tokenType" value="urn:oasis:names:tc:SAML:1.0:assertion"/>
                   <param name="requiredClaims" value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"/>
                   <param name="optionalClaims"
@@ -141,4 +187,7 @@ The infocard login will only work if you're on my secure site.  <p><a href="http
 
 </body>
 </html>
+<%
+} 
+%>
 
