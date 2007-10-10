@@ -627,8 +627,10 @@ function load(){
 	 } catch (e) {
 	  labelText = "This is your first visit to this site. Think!";
 	 }
+	 debug("firstTime: " + labelText);
 	 firstTimeVisit.setAttribute("value", labelText);
-	 firstTimeVisit.setAttribute("hidden", "false");
+	 var firstTimeVisitBox = document.getElementById('firstTimeVisitBox');
+	 firstTimeVisitBox.setAttribute("hidden", "false");
 	}
 }
 
