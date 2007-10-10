@@ -20,3 +20,5 @@
 <!ENTITY cardmanager.updatecard "Save Carte">
 <!ENTITY cardmanager.cancel "Annuler">
 <!ENTITY cardmanager.selectcard "S&#233;lectionnez cette carte">
+<!ENTITY cardmanager.privacy "privacy">
+<!ENTITY cardmanager.firstTimeVisit "This is your first visit to this site. Think!">

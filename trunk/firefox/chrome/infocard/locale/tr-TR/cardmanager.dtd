@@ -20,3 +20,5 @@
 <!ENTITY cardmanager.updatecard "Karti kaydetiniz">
 <!ENTITY cardmanager.cancel "Vazgec">
 <!ENTITY cardmanager.selectcard "Kart seciniz">
+<!ENTITY cardmanager.privacy "privacy">
+<!ENTITY cardmanager.firstTimeVisit "This is your first visit to this site. Think!">
