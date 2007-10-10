@@ -62,6 +62,8 @@ Xmldapidentityselector.prototype = {
         policy["issuer"] = issuer;
         policy["requiredClaims"] = requiredClaims;
         policy["optionalClaims"] = optionalClaims;
+        policy["privacyUrl"] = privacyPolicy;
+        policy["privacyVersion"] = privacyPolicyVersion;
 
         //get a handle on a window
         var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
