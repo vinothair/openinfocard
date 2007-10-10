@@ -3,6 +3,7 @@
 #listarea{min-width:800px;max-width:800px;margin-left:auto;margin-right:auto;background-color:#a6a6a6; min-height: 155px; max-height: 155px;  border-left: 5px solid white;border-right: 5px solid white;}
 #cardselection{min-width:790px;max-width:790px;background-color:#a6a6a6; min-height: 155px; max-height: 155px;  border-left: 5px solid white;border-right: 5px solid white;}
 #instructarea{max-width:800px;border-top:5px solid white;background-color:#475059; min-height: 40px; max-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
+#firstTimeVisitBox{max-width:800px;border-top:5px solid white;background-color:#475059; min-height: 40px; max-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
 #editarea{padding:10px;background-color:#475059;min-height: 250px;  max-height: 250px;  border-left: 5px solid white;border-right: 5px solid white;}
 #controlarea{ padding: 5px; border-bottom:5px solid white;background-color:#475059; min-height: 40px; max-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
 #controls{ min-width: 340px; }
@@ -15,18 +16,25 @@
 
 .cardClass{background-color:#FFFFFF; min-height:110px; max-height:110px; min-width:215px; max-width:215px; border: 1px solid #475059;}
 
-.contact{padding:8px;border-bottom:1px dashed lightblue;}
+.contact{padding:8px;border-bottom:1px dashed #ADD8E6;}
+.contactGreen{padding:8px;border-bottom:1px dashed #90EE90;background-color:#90EE90;}
+.contactYellow{padding:8px;border-bottom:1px dashed #FFD700;background-color:#FFD700;}
+.contactRed{padding:8px;border-bottom:1px dashed #800000;background-color:#800000;}
 .contact:hover{background:none;background-color:#b7b7b7;}
 
 #mainlabel{padding:5px;font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:3.6em;text-align:left; color: white;}
 #select{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
 .lblTitle{max-width:780px; padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: white;}
+.lblFirstTimeVisit{max-width:780px; padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: #FF0000;}
 .lblText{max-width:780px;font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:right; color: white;}
-.claimText{max-width:140px;font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:left; color: white;}
+.rowClass{max-width:350px; max-height:72px}
+.claimText{float:right; max-width:200px;max-height:72px;font-family:trebuchet ms,verdana,helvetica;font-size:1.4em;text-align:left; color: black;}
+.claimLabel{float:left; min-width:100px; max-width:100px;max-height:72px;font-family:trebuchet ms,verdana,helvetica;font-size:1.4em;text-align:left; color: white;}
 .cardcontrols{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
 
 #colText{width:100px;}
 #colData{width:260px;}
 
+.rowClass{max-height:72px;}
 
 

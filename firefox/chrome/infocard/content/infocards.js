@@ -44,11 +44,31 @@ function xmlreplace(text) {
  return(result);
 }
 
+// update the list of RPs to where a card has been sent
+// this function is called from "ok" -> selectedCard is set
+function updateRPs() {
+   	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+	    var policy = window.arguments[0];
+		var relyingPartyCertB64 = policy["cert"];
+	    var rpIdentifier = hex_sha1(relyingPartyCertB64);
+	    var count = 0;
+	    for each (rpId in selectedCard.rpIds) {
+	     count++;
+debug(selectedCard.name + " rpId:" + rpId + " rpIdentifier:" + rpIdentifier);
+	     if (rpId == rpIdentifier) {
+	      // this RP is already in list of RPs
+	      return;
+	     }
+	    }
+	    selectedCard.rpIds[count] = rpIdentifier;
+	    updateCard(selectedCard); // save to disk
+	} // else nothing
+}
+
 function ok(){
 
     var tokenToReturn;
     var policy = window.arguments[0];
-
 
     if (selectedCard.type == "selfAsserted") {
         policy["type"] = "selfAsserted";
@@ -56,9 +76,10 @@ function ok(){
         //TRUE or FALSE on the second param enabled debug
         tokenToReturn = processCard(policy,selectorDebugging);
         finish(tokenToReturn);
-
+		updateRPs();
     } else if (selectedCard.type == "managedCard"){
 		var requiredClaims = policy["requiredClaims"];
+		var optionalClaims = policy["optionalClaims"];
 		var tokenType;
 		try {
 		 tokenType = policy["tokenType"];
@@ -69,12 +90,12 @@ function ok(){
 		var url = policy["url"]; // RP url
 		var clientPseudonym = hex_sha1(url + selectedCard.id);
 		var relyingPartyCertB64 = policy["cert"];
-        var assertion = processManagedCard(selectedCard, requiredClaims, tokenType, clientPseudonym, url, relyingPartyCertB64);
+        var assertion = processManagedCard(selectedCard, requiredClaims, optionalClaims, tokenType, clientPseudonym, url, relyingPartyCertB64);
         debug("assertion:" + assertion);
         if (assertion == null) {
          return;
         }
-
+		updateRPs();
         
 
         if (!(selectedCard.carddata.managed.requireAppliesTo == undefined)) {
@@ -92,9 +113,7 @@ function ok(){
 
 
     } else if (selectedCard.type == "openid"){
-
         openid(selectedCard.id);
-
     }
 
 }
@@ -171,7 +190,7 @@ function getMex(managedCard) {
     	 "<a:To s:mustUnderstand=\"1\">" + xmlreplace(managedCard.carddata.managed.issuer) + "</a:To>" + 
     	"</s:Header><s:Body/></s:Envelope>";
 
-debug("processManagedCard: mex request: " + mex);
+debug("getMex: mex request: " + mex);
 debug("managedCard.carddata.managed.mex: " + managedCard.carddata.managed.mex);
 
     var req = new XMLHttpRequest();
@@ -183,9 +202,9 @@ debug("managedCard.carddata.managed.mex: " + managedCard.carddata.managed.mex);
     req.setRequestHeader("User-Agent", "xmldap infocard stack");
     debug('mex xmlhttprequest send');
     req.send(mex);
-debug("processManagedCard: mex POST request status="+req.status);
+debug("getMex: mex POST request status="+req.status);
     if(req.status == 200) {
-debug("processManagedCard: mex POST request status 200");
+debug("getMex: mex POST request status 200");
 
         mexResponse = req.responseText;
         return mexResponse;
@@ -198,9 +217,9 @@ debug("processManagedCard: mex POST request status 200");
 	    req.setRequestHeader("User-Agent", "xmldap infocard stack");
 	    debug('mex GET xmlhttprequest send');
 	    req.send(null);
-debug("processManagedCard: mex GET request status="+req.status);
+debug("getMex: mex GET request status="+req.status);
     if(req.status == 200) {
-debug("processManagedCard: mex GET request status 200");
+debug("getMex: mex GET request status 200");
         mexResponse = req.responseText;
         return mexResponse;
     }
@@ -208,8 +227,33 @@ debug("processManagedCard: mex GET request status 200");
 }
 }
 
+function isClaimChecked(elementId, uri) {
+	 var checkbox = document.getElementById(elementId);
+	 if (!(checkbox == undefined)) {
+debug("isClaimChecked: found " + elementId);
+		 if (!(checkbox.checked == undefined)) {
+debug("isClaimChecked: is a checkbox ");
+		  if (checkbox.checked) {
+debug("isClaimChecked: is checked ");
+		   if ( uri === undefined ) {
+		     return "";
+		   } else {
+			 return "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+		   }
+		  } else {
+debug("isClaimChecked: is not checked ");
+		  }
+		 } else {
+		  debug( "expected type checkbox, but found: " + typeof(checkbox));
+		 } 
+	 } else {
+	  debug("checkbox not defined for uri: " + uri );
+	 }
+	 return null;
+}
+
 function processManagedCard(
-	managedCard, requiredClaims, tokenType, clientPseudonym, 
+	managedCard, requiredClaims, optionalClaims, tokenType, clientPseudonym, 
 	relyingPartyURL, relyingPartyCertB64) {
 
     var tokenToReturn = null;
@@ -327,33 +371,51 @@ debug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
             if ((requiredClaims == undefined) || (requiredClaims.length < 1)) {
                debug("requiredClaims from RP are undefined");
                // get all the claims from the managed card
-               rst = rst + "<wst:Claims>";
 	           var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
 			   var list = managedCard.carddata.managed.ic::SupportedClaimTypeList.ic::SupportedClaimType;
+			   var count=0;
+			   var requestedClaims = "";
 			   for (var index = 0; index<list.length(); index++) {
 				 var supportedClaim = list[index];
 				 var uri = supportedClaim.@Uri;
-				 rst = rst + "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+				 var claim = isClaimChecked("label_"+uri, uri);
+				 if (claim != null) {
+				  requestedClaims = requestedClaims + claim;
+				  count++;
+				 }
                }
-               rst = rst + "</wst:Claims>";
+               if (count == 0) {
+                debug("no claims were requested!");
+               }
+               rst = rst + "<wst:Claims>" + requestedClaims + "</wst:Claims>";
             } else {
-               rst = rst + "<wst:Claims>";
                // TODO: check that requiredClaims are provided by the selected managed card
-               var claimsArray = requiredClaims.split(" ");
+               var claims = requiredClaims + " " + optionalClaims;
+               var claimsArray = claims.split(/\s+/);
                debug("requiredClaims:" + requiredClaims);
                debug("claimsArray:" + claimsArray);
+			   var count=0;
+			   var requestedClaims = "";
                for (var index = 0; index<claimsArray.length; index++) {
                  var uri = claimsArray[index];
-				 rst = rst + "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+				 var claim = isClaimChecked("label_"+uri, uri);
+				 if (claim != null) {
+				  requestedClaims = requestedClaims + claim;
+				  count++;
+				 }
+                }
+               if (count == 0) {
+                debug("No claims were requested!!");
                }
-               rst = rst + "</wst:Claims>";
+               debug("requestedClaims:" + requestedClaims);
+               rst = rst + "<wst:Claims>" + requestedClaims + "</wst:Claims>";
             }
             
             rst = rst + "<wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>";
             
             // if a ppid is requested, then provide some selector entropy (clientPseudonym). The STS uses this to generate a RP depended ppid
             // even if the STS does not know the RP
-            if (requiredClaims.indexOf("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") > 0) {
+            if (requiredClaims.indexOf("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") >= 0) {
 	            rst = rst + "<ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>" + xmlreplace(clientPseudonym) + "</PPID></ClientPseudonym>";
 			}
 			
@@ -430,6 +492,21 @@ debug("RSTR: " + tokenToReturn);
 }
 
 
+function showPrivacyStatement() {
+	var policy = window.arguments[0];
+    var privacyUrl = policy["privacyUrl"];
+    if (privacyUrl == null) {
+     alert("relying party did not specify a privacy statement URL");
+     return;
+    }
+    // prevent file:// and chrome:// etc
+    if (privacyUrl.indexOf("http") != 0) {
+     alert("The relying party's privacy statement URL does not start with 'http'\n" + privacyUrl);
+     return;
+    }
+    
+    window.open(privacyUrl, "privacyStatement");
+}
 
 function cancel(){
 
@@ -439,7 +516,9 @@ function cancel(){
     window.dispatchEvent(event);
 
     stopServer();
-    window.arguments[1](null);
+   	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+	    window.arguments[1](null);
+	}
     window.close();
 }
 
@@ -458,36 +537,63 @@ function load(){
     var cancelselector = document.getElementById('cancelselector');
     cancelselector.addEventListener("click", cancel, false);
 
-
     var stringsBundle = document.getElementById("string-bundle");
+
+    var rpIdentifier = null;
+   	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+	    var policy = window.arguments[0];
+		var relyingPartyCertB64 = policy["cert"];
+	    rpIdentifier = hex_sha1(relyingPartyCertB64);
+	}
 
     var cardFile = readCardStore();
     var cardArea = document.getElementById("cardselection");
     var latestCard;
     var selectMe;
+    var beenThere = false;
     var count = 0;
     for each (c in cardFile.infocard) {
-
-        latestCard = createItem(c);
+	    var cardClass = "contact";
+    	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+			cardClass = computeCardClass(c, window.arguments[0]);
+		}
+        latestCard = createItem(c, cardClass);
         selectMe = c;
         cardArea.appendChild(latestCard);
         count++;
 
+        if (!beenThere) {
+         if (rpIdentifier != null) {
+	      for each (rpId in c.rpIds) {
+           debug("RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
+	       if (rpId == rpIdentifier) {
+	        debug("been there at: " + policy["cn"]);
+            beenThere = true;
+            break;
+           }
+          }
+         }
+        }
     }
 
     if ( count != 0) {
-        var policy = window.arguments[0];
-        var label = document.getElementById("notify");
-		var site = policy["cn"];
-        var please = stringsBundle.getFormattedString('pleaseselectacard', [site]);
-        label.setAttribute("value", please);
-    } else {
+    	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+	        var policy = window.arguments[0];
+	        var label = document.getElementById("notify");
+			var site = policy["cn"];
+	        var please = stringsBundle.getFormattedString('pleaseselectacard', [site]);
+	        label.setAttribute("value", please);
+	    } else {
+	        var label = document.getElementById("notify");
+	        label.setAttribute("value", "card management");
+	    }
+	} else {
         var label = document.getElementById("notify");
 		var button = stringsBundle.getString('newcard');
         var youdont = stringsBundle.getFormattedString('youdonthaveanycards', [button]);
         label.setAttribute("value", youdont);
     }
-	{
+	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
 		var policy = window.arguments[0];
 		var serializedPolicy = JSON.stringify(policy);
 		var issuerLogoURL = TokenIssuer.getIssuerLogoURL(serializedPolicy);
@@ -502,9 +608,31 @@ function load(){
             issuer_hbox.hidden = false;
 		}
 	}
+	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+		var policy = window.arguments[0];
+	    var privacyUrl = policy["privacyUrl"];
+        if (privacyUrl != null) {
+	    debug("privacyUrl " + privacyUrl);
+             var showPrivacyStatementElm = document.getElementById('privacy_label');
+             showPrivacyStatementElm.addEventListener("click", showPrivacyStatement, false);
+             showPrivacyStatementElm.hidden = false;
+	    }
+	}
+	if (!beenThere) {
+	 debug("never been here: " + policy["cn"]);
+	 var firstTimeVisit = document.getElementById('firstTimeVisit');
+	 var labelText;
+	 try {
+	  labelText = stringsBundle.getString('firstTimeVisit');
+	 } catch (e) {
+	  labelText = "This is your first visit to this site. Think!";
+	 }
+	 firstTimeVisit.setAttribute("value", labelText);
+	 firstTimeVisit.setAttribute("hidden", "false");
+	}
 }
 
-function indicateRequiredClaim(requiredClaims, claim){
+function indicateRequiredClaim(requiredClaims, optionalClaims, claim){
  var name = "_" + claim;
  var element = document.getElementById(name);
  if (element == undefined) {
@@ -512,67 +640,59 @@ function indicateRequiredClaim(requiredClaims, claim){
   return;
  }
  if (requiredClaims.indexOf(claim.toLowerCase()) != -1) {
-    debug("Claim " + claim + " found in " + requiredClaims);
-    if (element.value.charAt(0) != '*') {
-     element.value = "*" + element.value;
-    }
- } else {
-    debug("Claim " + claim + " not found in " + requiredClaims);
-    if (element.value.charAt(0) == '*') {
-     element.value = element.value.substr(1,element.value.length-1);
-    }
- }
+    debug("required claim " + claim + " found in " + requiredClaims);
+    element.checked = true;
+    element.disabled = true;
+    return;
+ } 
+
+ if (optionalClaims != null) {
+  if (optionalClaims.indexOf(claim.toLowerCase()) != -1) {
+    debug("optional claim " + claim + " found in " + optionalClaims);
+    element.checked = false;
+    element.disabled = false;
+    return;
+  }
+ } 
+  
+ debug("claim " + claim + " not found");
+ element.checked = false;
+ element.disabled = true;
 }
 
 function indicateRequiredClaims(){
- var policy = window.arguments[0];
- var requiredClaims = policy["requiredClaims"];
- if (requiredClaims == undefined) return;
-
- requiredClaims = requiredClaims.toLowerCase();
-debug("requiredClaims: " + requiredClaims);
- indicateRequiredClaim(requiredClaims, "givenname");
- indicateRequiredClaim(requiredClaims, "surname");
- indicateRequiredClaim(requiredClaims, "email");
- indicateRequiredClaim(requiredClaims, "streetAddress");
- indicateRequiredClaim(requiredClaims, "locality");
- indicateRequiredClaim(requiredClaims, "stateOrProvince");
- indicateRequiredClaim(requiredClaims, "postalCode");
- indicateRequiredClaim(requiredClaims, "country");
- indicateRequiredClaim(requiredClaims, "primaryPhone");
- indicateRequiredClaim(requiredClaims, "otherPhone");
- indicateRequiredClaim(requiredClaims, "mobilePhone");
- indicateRequiredClaim(requiredClaims, "dateOfBirth");
- indicateRequiredClaim(requiredClaims, "gender");
+ if (window.arguments == undefined) return;
+ if (window.arguments.length > 0) {
+	 var policy = window.arguments[0];
+	 var requiredClaims = policy["requiredClaims"];
+	 if (requiredClaims == undefined) return;
+	 if (requiredClaims == null) return;
+	
+	 var optionalClaims = policy["optionalClaims"];
+	 
+	 //requiredClaims = requiredClaims.toLowerCase();
+	 //if (optionalClaims != null) {
+	 	 //optionalClaims = optionalClaims.toLowerCase();
+	 //}
+	
+	debug("requiredClaims: " + requiredClaims);
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "givenname");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "surname");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "email");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "streetAddress");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "locality");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "stateOrProvince");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "postalCode");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "country");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "primaryPhone");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "otherPhone");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "mobilePhone");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "dateOfBirth");
+	 indicateRequiredClaim(requiredClaims, optionalClaims, "gender");
+ }
 }
 
-function setCard(card){
-
-
-    var select = document.getElementById('selectcontrol');
-    select.setAttribute('hidden', 'false');
-
-	var issuerlogo = document.getElementById("issuerlogo");
-	issuerlogo.src = "";
-	issuerlogo.hidden = true;
-	var issuerlogo_label = document.getElementById("issuerlogo_label");
-    issuerlogo_label.hidden = true;
-	var issuer_hbox = document.getElementById("issuer_hbox");
-    issuer_hbox.hidden = true;
-
-    selectedCard = card;
-
-    debug("TYPE: " + selectedCard.type);
-    debug(selectedCard);
-
-    var selfassertedClaims = document.getElementById('selfassertedClaims');
-    var managedClaims = document.getElementById('managedClaims');
-
-    if (selectedCard.type == "selfAsserted" )  {
-        selfassertedClaims.setAttribute("hidden", "false");
-        managedClaims.setAttribute("hidden", "true");
-
-        document.getElementById("cardname").value = selectedCard.name;
+function setCardSelf() {
         document.getElementById("givenname").value = selectedCard.carddata.selfasserted.givenname;
         document.getElementById("surname").value = selectedCard.carddata.selfasserted.surname;
         document.getElementById("email").value = selectedCard.carddata.selfasserted.emailaddress;
@@ -606,7 +726,6 @@ function setCard(card){
         document.getElementById("gender").visibility = 'visible';
         document.getElementById("imgurl").visibility = 'visible';
 
-
         indicateRequiredClaims();
 
         var grid = document.getElementById("editgrid");
@@ -620,13 +739,9 @@ function setCard(card){
 		var selfassertedcard = stringsBundle.getString('selfassertedcard');
         var label = document.getElementById("notify");
         label.setAttribute("value", selfassertedcard);
+}
 
-    }  else if (selectedCard.type == "managedCard" )   {
-        selfassertedClaims.setAttribute("hidden", "true");
-        managedClaims.setAttribute("hidden", "false");
-
-        document.getElementById("cardname").value = selectedCard.name;
-
+function setCardManaged(requiredClaims, optionalClaims) {
 		var managedRows = document.getElementById("managedRows0");
 		
 		// remove child rows before appending new ones
@@ -648,23 +763,50 @@ function setCard(card){
 		 var supportedClaim = list[index];
 		 var uri = supportedClaim.@Uri;
   		 var row = document.createElement("row");
-		 var label = document.createElement("label");
-		 label.setAttribute("crop", "end");
-		 label.setAttribute("class", "claimText");
-		 label.setAttribute("value", xmlreplace(supportedClaim.ic::DisplayTag));
+  		 row.setAttribute("class", "rowClass");
+  		 var checkbox = document.createElement("checkbox");
+  		 var label;
+  		 var displayTag = "" + supportedClaim.ic::DisplayTag;
+  		 if (displayTag.length > 10) {
+  		  label = displayTag.substring(0,9);
+  		 } else {
+  		  label = displayTag;
+  		 }
+  		 label = xmlreplace(label);
+		 checkbox.setAttribute("label", label);
+		 checkbox.setAttribute("id", "label_"+uri);
+ 		 checkbox.setAttribute("class", "claimLabel");
+ 		 checkbox.setAttribute("crop", "end");
+	     checkbox.setAttribute("checked", "false");
+ 		 checkbox.setAttribute("disabled", "true");
+		 if (optionalClaims != null) {
+		  if (optionalClaims.indexOf(uri) != -1) {
+ 		   checkbox.setAttribute("checked", "false");
+ 		   checkbox.setAttribute("disabled", "false");
+debug("optional claim:" + uri);
+		  }
+		 }
+		 if (requiredClaims != null) {
+		  if (requiredClaims.indexOf(uri) != -1) {
+ 		   checkbox.setAttribute("checked", "true");
+ 		   checkbox.setAttribute("disabled", "true");
+debug("required claim:" + uri);
+		  }
+		 }
 		 try {
 		 	  // DisplayTag should be changed to Description when description is supported
-			 label.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
+			 checkbox.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
 		 }
 		 catch (err) {
 		  // tooltiptext barfs on "invalid character" while value does not... Axel
 		  debug(err + "(" + supportedClaim.ic::DisplayTag + ")");
 		 }
 		 var textbox = document.createElement("textbox");
-		 textbox.setAttribute("id", "");
+		 textbox.setAttribute("id", uri);
+		 textbox.setAttribute("class", "claimText");
 		 textbox.setAttribute("value", "");
 		 textbox.setAttribute("readonly", "true");
-		 row.appendChild(label);
+		 row.appendChild(checkbox);
 		 row.appendChild(textbox);
 		 managedRows.appendChild(row);
 		}
@@ -683,23 +825,51 @@ function setCard(card){
 		 var supportedClaim = list[index];
 		 var uri = supportedClaim.@Uri;
   		 var row = document.createElement("row");
-		 var label = document.createElement("label");
-		 label.setAttribute("crop", "end");
-		 label.setAttribute("class", "claimText");
-		 label.setAttribute("value", xmlreplace(supportedClaim.ic::DisplayTag));
+  		 row.setAttribute("class", "rowClass");
+  		 var checkbox = document.createElement("checkbox");
+  		 var label;
+  		 var displayTag = "" + supportedClaim.ic::DisplayTag;
+  		 if (displayTag.length > 10) {
+  		  label = displayTag.substring(0,9);
+  		 } else {
+  		  label = displayTag;
+  		 }
+  		 label = xmlreplace(label);
+		 checkbox.setAttribute("id", "label_"+uri);
+		 checkbox.setAttribute("label", label);
+ 		 checkbox.setAttribute("class", "claimLabel");
+ 		 checkbox.setAttribute("crop", "end");
+ 		 checkbox.setAttribute("checked", "false");
+ 		 checkbox.setAttribute("checked", "false");
+ 		 checkbox.setAttribute("disabled", "true");
+		 if (optionalClaims != null) {
+		  if (optionalClaims.indexOf(uri) != -1) {
+ 		   checkbox.setAttribute("checked", "false");
+ 		   checkbox.setAttribute("disabled", "false");
+debug("optional claim:" + uri);
+		  }
+		 }
+		 if (requiredClaims != null) {
+		  if (requiredClaims.indexOf(uri) != -1) {
+ 		   checkbox.setAttribute("checked", "true");
+ 		   checkbox.setAttribute("disabled", "true");
+debug("required claim:" + uri);
+		  }
+		 }
 		 try {
 		 	  // DisplayTag should be changed to Description when description is supported
-			 label.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
+			 checkbox.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
 		 }
 		 catch (err) {
 		  // tooltiptext barfs on "invalid character" while value does not... Axel
 		  debug(err + "(" + supportedClaim.ic::DisplayTag + ")");
 		 }
 		 var textbox = document.createElement("textbox");
-		 textbox.setAttribute("id", "");
+		 textbox.setAttribute("id", uri);
+		 textbox.setAttribute("class", "claimText");
 		 textbox.setAttribute("value", "");
 		 textbox.setAttribute("readonly", "true");
-		 row.appendChild(label);
+		 row.appendChild(checkbox);
 		 row.appendChild(textbox);
 		 managedRows.appendChild(row);
 		}
@@ -708,15 +878,62 @@ function setCard(card){
     	    grid1.setAttribute("hidden", "false");
 		}
 		
-        //indicateRequiredClaims();
-
 		var stringsBundle = document.getElementById("string-bundle");
 		var managedcardfromissuer = stringsBundle.getFormattedString('managedcardfromissuer', [selectedCard.carddata.managed.issuer]);
         var label = document.getElementById("notify");
         label.setAttribute("value", managedcardfromissuer );
+}
 
+function setCard(card){
 
+	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+	    var select = document.getElementById('selectcontrol');
+    	select.setAttribute('hidden', 'false');
+	}
+	
+    var showPrivacyStatementElm = document.getElementById('privacy_label');
+    showPrivacyStatementElm.hidden = true;
+    
+	var issuerlogo = document.getElementById("issuerlogo");
+	issuerlogo.src = "";
+	issuerlogo.hidden = true;
+	var issuerlogo_label = document.getElementById("issuerlogo_label");
+    issuerlogo_label.hidden = true;
+	var issuer_hbox = document.getElementById("issuer_hbox");
+    issuer_hbox.hidden = true;
 
+    selectedCard = card;
+
+    debug("TYPE: " + selectedCard.type);
+    debug(selectedCard);
+
+    var selfassertedClaims = document.getElementById('selfassertedClaims');
+    var managedClaims = document.getElementById('managedClaims');
+
+    if (selectedCard.type == "selfAsserted" )  {
+        selfassertedClaims.setAttribute("hidden", "false");
+        managedClaims.setAttribute("hidden", "true");
+		var cardname = document.getElementById("cardname");
+        cardname.value = selectedCard.name;
+        cardname.hidden = false;
+		setCardSelf();
+    }  else if (selectedCard.type == "managedCard" )   {
+	    var requiredClaims = null;
+	    var optionalClaims = null;
+ 	    if (!(window.arguments == undefined)) {
+	     if (window.arguments.length > 0) {
+		  var policy = window.arguments[0];
+		  requiredClaims = policy["requiredClaims"];
+   	      optionalClaims = policy["optionalClaims"];
+	     }
+	    }	
+        selfassertedClaims.setAttribute("hidden", "true");
+        managedClaims.setAttribute("hidden", "false");
+
+		var cardname = document.getElementById("cardname");
+        cardname.value = selectedCard.name;
+        cardname.hidden = false;
+		setCardManaged(requiredClaims, optionalClaims);
     } else if (selectedCard.type == "openid" )  {
 
 
@@ -743,11 +960,11 @@ function handleCardChoice(event){
 
 
 
-function createItem(c){
+function createItem(c, classStr){
 
 
     var hbox = document.createElement("hbox");
-    hbox.setAttribute("class","contact");
+    hbox.setAttribute("class",classStr);
     hbox.setAttribute("cardid",c.id);
     hbox.setAttribute("id",c.id);
     var vbox = document.createElement("vbox");
@@ -798,11 +1015,104 @@ function createItem(c){
 
 }
 
+// returns true of card tokentype and RP's policy tokentype match
+// if something unexcpected happens then return false
+function computeMatching(card, policy) {
+ var matchingTokenType = false;
+ var tokenType;
+ try {
+  tokenType = policy["tokenType"];
+ }
+ catch (e) {
+  tokenType = null;
+ }
+ if (tokenType != null) {
+  debug("tokenType: " + tokenType + " card:" + card.name);
+  if (card.type == "managedCard") {
+	  var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+	  var trust = new Namespace("trust", "http://schemas.xmlsoap.org/ws/2005/02/trust");
+	  var list = card.carddata.managed.ic::SupportedTokenTypeList.trust::TokenType;
+	  
+	  for (var index = 0; index<list.length(); index++) {
+	   var cardTokenType = list[index];
+	   if (tokenType == cardTokenType) {
+	    matchingTokenType = true;
+	    debug("matchingTokenType:" + tokenType);
+	    return matchingTokenType;
+	   } else {
+	    debug("notMatchingTokenType:" + cardTokenType);
+	   }
+	  }
+  } else if (card.type == "selfAsserted") {
+   if (tokenType == "urn:oasis:names:tc:SAML:1.0:assertion") {
+    matchingTokenType = true;
+   } else if (tokenType ==  "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1") {
+    matchingTokenType = true;
+   } else {
+    debug("tokenType does not match tokenTypes for self-issued cards:" + tokenType);
+   }
+  } else {
+   debug("unsupported card type");
+   matchingTokenType = false;
+  }
+ } else { // RP does not require a special tokentype
+ }
+ return matchingTokenType;
+}
+
+function computeHasBeenSend(card, policy) {
+	var relyingPartyCertB64 = policy["cert"];
+    var rpIdentifier = hex_sha1(relyingPartyCertB64);
+    var beenThere = false;
+    for each (rpId in card.rpIds) {
+     debug(card.name + " RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
+     if (rpId == rpIdentifier) {
+      debug(card.name + " has been sent to: " + policy["cn"]);
+      beenThere = true;
+      break;
+     }
+    }
+    return beenThere;
+}
+
+// this function is intended to compute the visualization class
+// for this card. It returns one of contactGreen, contactYellow 
+// or contactRed
+// or contact of we are managing cards that is: there is no RP
+// green - 	card is matching the requirements of the RP
+// yellow - card is matching the requirements of the RP but was never sent to RP
+// red -	card is not matching
+// 
+function computeCardClass(card) {
+ var cardClass;
+ var policy = null;
+ if (!(window.arguments == undefined)) {
+  policy = window.arguments[0];
+ }
+ if (policy != null) {
+  var matching = computeMatching(card, policy);
+  if (matching == true) {
+   var hasBeenSent = computeHasBeenSend(card, policy);
+   if (hasBeenSent == true) {
+    cardClass = "contactGreen";
+   } else {
+    cardClass = "contactYellow";
+   }
+  } else {
+   cardClass = "contactRed";
+  }
+ } else {
+  cardClass = "contact";
+ }
+ debug("cardClass " + cardClass + " " + card.name);
+ return cardClass;
+}
 
 function saveCard(card){
     storeCard(card);
     var cardArea = document.getElementById("cardselection");
-    cardArea.appendChild(createItem(card));
+    var cardClass = computeCardClass(card);
+    cardArea.appendChild(createItem(card, cardClass));
     setCard(card);
     return true;
 
@@ -960,6 +1270,7 @@ debug("new card" + callback.usercredential);
 		data.usercredential = new XML(callback.usercredential);
 		data.stsCert = "" + callback.stsCert + "";
 		data.requireAppliesTo = "" + callback.requireAppliesTo + "";
+		data.supportedTokenTypeList = new XML(callback.supportedTokenTypeList);
 		
         card.carddata.data = data;
         saveCard(card);
@@ -984,14 +1295,7 @@ debug("new card" + callback.usercredential);
 
 }
 
-
-function deleteCard(){
-
-    debug("Delete Card : " + selectedCardId);
-    
-    var selectedCardId = selectedCard.id;
-    removeCard(selectedCardId);
-
+function reload() {
     var cardArea = document.getElementById("cardselection");
     while (cardArea.hasChildNodes())
 	{
@@ -1017,11 +1321,22 @@ function deleteCard(){
     var select = document.getElementById('selectcontrol');
     select.setAttribute('hidden', 'true');
 
-    document.getElementById("cardname").value = "";
+		var cardname = document.getElementById("cardname");
+        cardname.value = "";
+        cardname.hidden = false;
 
     selectedCard = null;
 
     load();
+}
+
+function deleteCard(){
+
+    debug("Delete Card : " + selectedCardId);
+    
+    var selectedCardId = selectedCard.id;
+    removeCard(selectedCardId);
+	reload();
 }
 
 function processCard(policy, enableDebug){
@@ -1029,6 +1344,169 @@ function processCard(policy, enableDebug){
     if (enableDebug) {
         var jvm = Components.classes["@mozilla.org/oji/jvm-mgr;1"].getService(Components.interfaces.nsIJVMManager);
         jvm.showJavaConsole();
+    }
+    
+    var optionalClaims = "";
+    if (!(policy["optionalClaims"] == undefined)) {
+     optionalClaims = policy["optionalClaims"];
+     if (optionalClaims != null) {
+      debug("processCard optionalClaims: " + optionalClaims);
+      var checkedClaims = null;
+      var claims = optionalClaims.split(/\s+/);
+      debug("processCard claims: " + claims);
+      var i;
+      for (i in claims) {
+       var claim = claims[i];
+      debug("processCard claim: " + claim);
+       if (claim.indexOf("givenname") != -1) {
+        if (isClaimChecked("_givenname") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("emailaddress") != -1) {
+        if (isClaimChecked("_email") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("surname") != -1) {
+        if (isClaimChecked("_surname") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("streetaddress") != -1) {
+        if (isClaimChecked("_streetAddress") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("stateorprovince") != -1) {
+        if (isClaimChecked("_stateOrProvince") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("postalcode") != -1) {
+        if (isClaimChecked("_postalCode") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("country") != -1) {
+        if (isClaimChecked("_country") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("homephone") != -1) {
+        if (isClaimChecked("_primaryPhone") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("otherphone") != -1) {
+        if (isClaimChecked("_otherPhone") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("mobilephone") != -1) {
+        if (isClaimChecked("_mobilePhone") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        } else {
+debug("processCard _mobilePhone is not checked:" + claim);
+        }
+        continue;
+       } else if(claim.indexOf("dateofbirth") != -1) {
+        if (isClaimChecked("_dateOfBirth") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("gender") != -1) {
+        if (isClaimChecked("_gender") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("locality") != -1) {
+        if (isClaimChecked("_locality") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else if(claim.indexOf("privatepersonalidentifier") != -1) {
+        if (isClaimChecked("privatepersonalidentifier") != null) {
+         var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier";
+         if (checkedClaims == null) {
+          checkedClaims = uri;
+         } else {
+          checkedClaims = checkedClaims + " " + uri;
+         }
+        }
+        continue;
+       } else {
+        debug("processCard: claim not in list:" + claim);
+       }
+      }
+      debug("processCard checkedClaims: " + checkedClaims);
+	  policy["optionalClaims"] = checkedClaims;
+     }
     }
 
     var token;
