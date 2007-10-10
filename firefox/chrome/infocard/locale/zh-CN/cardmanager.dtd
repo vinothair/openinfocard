@@ -20,3 +20,5 @@
 <!ENTITY cardmanager.updatecard "&#32232;&#36655; &#21345;&#29255;">
 <!ENTITY cardmanager.cancel "&#21462;&#28040;">
 <!ENTITY cardmanager.selectcard "&#36984;&#25799; &#21345;&#29255;">
+<!ENTITY cardmanager.privacy "privacy">
+<!ENTITY cardmanager.firstTimeVisit "This is your first visit to this site. Think!">
