@@ -3,6 +3,12 @@
 
 <overlay id="identityselector_preferences_overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+    <script>
+     function prefsCallback() {
+      var mgmtWindow = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome");
+     }
+    </script>
+    
     <!-- Merge with the BrowserPreferences Window -->
     <prefwindow id="BrowserPreferences"
                 title="IdentitySelector">
@@ -39,6 +45,9 @@
 
               <separator id="selectorSeparator1"/>
 
+              <vbox id="selectorManageCards">
+                <button label="Manage Cards" oncommand="prefsCallback();"/>
+              </vbox>
 
           </prefpane>
 

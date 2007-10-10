@@ -31,6 +31,22 @@ function removeCard(selectedCardId) {
     save(db,cardFile.toString());
 }
 
+// make a copy of the db replacing one card
+function updateCard(card) {
+    var cardFile = read(db);
+    var nDB = newDB();
+    
+    for each (c in cardFile.infocard) {
+        var latestId = c.id;
+        if (latestId == card.id) {
+         nDB.infocard += card;
+        } else {
+         nDB.infocard += c;
+        }
+    }
+    save(db,nDB.toString());
+}
+
 
 
 function save(fileName, fileContents) {

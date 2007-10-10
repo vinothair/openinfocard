@@ -250,6 +250,9 @@
              var cardImage = cardxml.dsig::Object.ic::InformationCard.ic::CardImage;
              var issuer = cardxml.dsig::Object.ic::InformationCard.ic::Issuer;
 			 var stsCert = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data.dsig::X509Certificate;
+
+			 var supportedTokenTypeList = cardxml.dsig::Object.ic::InformationCard.ic::SupportedTokenTypeList;
+
 			 var cardUserCredential = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.toXMLString();
 //             var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
 //             var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
@@ -268,6 +271,7 @@
 			  debug(cardUserCredential);
 			  debug(stsCert);
 			  debug("requireAppliesTo:" + requireAppliesTo);
+			  debug("SupportedTokenTypeList:"+ supportedTokenTypeList);
 			  
               var callbackdata = {};
               callbackdata["type"] = "managedCard";
@@ -284,7 +288,7 @@
 			  callbackdata["usercredential"] = cardUserCredential;
               callbackdata["stsCert"] = stsCert;
               callbackdata["supportedClaims"] = cardxml.dsig::Object.ic::InformationCard.ic::SupportedClaimTypeList.toXMLString();
-              
+              callbackdata["supportedTokenTypeList"] = supportedTokenTypeList.toXMLString();
               if (requireAppliesTo == null) {
 	              callbackdata["requireAppliesTo"] = requireAppliesTo;
               }

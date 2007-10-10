@@ -74,12 +74,17 @@
         </hbox>
 
 
-        <hbox id="instructarea">
+        <hbox id="instructarea" class="instructarea">
             <label class="lblTitle" id="notify" value="" crop="end"/>
+            <label class="lblTitle" id="cardname" value="" hidden="true"/>
+        </hbox>
+
+        <hbox id="firstTimeVisitBox" class="firstTimeVisitBox" hidden="true">
+            <label class="lblFirstTimeVisit" id="firstTimeVisit" value="" crop="end"/>
         </hbox>
 
 
-            <hbox id="editarea" class="editarea" flex="1">
+            <scrollbox style="overflow:auto;" id="editarea" class="editarea" flex="1">
 
                 <iframe src="" id="openid_iframe" class="openid_iframe" hidden="true"/>
 
@@ -90,9 +95,10 @@
                     <image id="issuerlogo" src="chrome://infocard/content/xmldap.png" hidden="true" />
                 </hbox>
 
-                <hbox>
-                    <label class="lblTitle" id="cardname" value=""/>
+                <hbox id="privacy_hbox">
+                	<label id="privacy_label" value="&cardmanager.privacy;" class="cardcontrols" hidden="true"/>
                 </hbox>
+
                 <hbox id="selfassertedClaims" hidden="true">
                     <vbox>
                         <spacer height="5"/>
@@ -100,13 +106,16 @@
                     <grid id="editgrid" class="editgrid_left" hidden="true">
                         <columns><column id="colText"/><column id="colData"/></columns>
                         <rows id="rows0">
-                            <row><label id="_givenname" class="claimText" value="&cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
-                            <row><label id="_surname" class="claimText" value="&cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
-                            <row><label id="_streetAddress" class="claimText" value="&cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
-                            <row><label id="_locality" class="claimText" value="&cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
-                            <row><label id="_stateOrProvince" class="claimText" value="&cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
-                            <row><label id="_postalCode" class="claimText" value="&cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
-                            <row><label id="_country" class="claimText" value="&cardmanager.country;"  /><textbox id="country"   value=""/></row>
+                            <row class="rowClass">
+                             <checkbox id="_givenname" crop="end" class="claimLabel" label="&cardmanager.givenname;"   />
+                             <textbox class="claimText" id="givenname"    value=""/>
+                            </row>
+                            <row class="rowClass"><checkbox id="_surname" crop="end" class="claimLabel" label="&cardmanager.surname;"  /><textbox class="claimText" id="surname"   value=""/></row>
+                            <row class="rowClass"><checkbox id="_streetAddress" crop="end" class="claimLabel" label="&cardmanager.streetaddress;"  /><textbox class="claimText" id="streetAddress"   value=""/></row>
+                            <row class="rowClass"><checkbox id="_locality" crop="end" class="claimLabel" label="&cardmanager.locality;"  /><textbox class="claimText" id="locality"   value=""/></row>
+                            <row class="rowClass"><checkbox id="_stateOrProvince" crop="end" class="claimLabel" label="&cardmanager.stateorprovince;"  /><textbox class="claimText" id="stateOrProvince"   value=""/></row>
+                            <row class="rowClass"><checkbox id="_postalCode" crop="end" class="claimLabel" label="&cardmanager.postalcode;"  /><textbox class="claimText" id="postalCode"   value=""/></row>
+                            <row class="rowClass"><checkbox id="_country" crop="end" class="claimLabel" label="&cardmanager.country;"  /><textbox class="claimText" id="country"   value=""/></row>
                         </rows>
                     </grid>
 
@@ -116,13 +125,13 @@
                     <grid id="editgrid1" class="editgrid_right" hidden="true">
                         <columns><column id="colText"/><column id="colData"/></columns>
                         <rows id="rows1">
-                            <row><label id="_email" class="claimText" value="&cardmanager.email;"  /><textbox id="email"   value=""/></row>
-                            <row><label id="_primaryPhone" class="claimText" value="&cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
-                            <row><label id="_mobilePhone" class="claimText" value="&cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
-                            <row><label id="_otherPhone" class="claimText" value="&cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
-                            <row><label id="_dateOfBirth" class="claimText" value="&cardmanager.dateofbirth;"    /><textbox id="dateOfBirth"     value=""/></row>
-                            <row><label id="_gender" class="claimText" value="&cardmanager.gender;"    /><textbox id="gender"     value=""/></row>
-                            <row><label class="claimText" value="&cardmanager.imgurl;"    /><textbox id="imgurl"     value=""/></row>
+                            <row class="rowClass"><checkbox id="_email" crop="end" class="claimLabel" label="&cardmanager.email;"  /><textbox class="claimText" id="email"   value=""/></row>
+                            <row class="rowClass"><checkbox id="_primaryPhone" crop="end" class="claimLabel" label="&cardmanager.primaryphone;"  /><textbox class="claimText" id="primaryPhone"   value=""/></row>
+                            <row class="rowClass"><checkbox id="_mobilePhone" crop="end" class="claimLabel" label="&cardmanager.mobilephone;" /><textbox class="claimText" id="mobilePhone"  value=""/></row>
+                            <row class="rowClass"><checkbox id="_otherPhone" crop="end" class="claimLabel" label="&cardmanager.otherphone;"    /><textbox class="claimText" id="otherPhone"     value=""/></row>
+                            <row class="rowClass"><checkbox id="_dateOfBirth" crop="end" class="claimLabel" label="&cardmanager.dateofbirth;"    /><textbox class="claimText" id="dateOfBirth"     value=""/></row>
+                            <row class="rowClass"><checkbox id="_gender" crop="end" class="claimLabel" label="&cardmanager.gender;"    /><textbox class="claimText" id="gender"     value=""/></row>
+                            <row class="rowClass"><label crop="end" class="claimLabel" value="&cardmanager.imgurl;"    /><textbox class="claimText" id="imgurl"     value=""/></row>
                         </rows>
                     </grid>
 
@@ -154,7 +163,7 @@
                 <hbox flex="0">
                     <spacer width="10"></spacer>
                 </hbox>
-            </hbox>
+            </scrollbox>
 
             <hbox id="controlarea">
 
