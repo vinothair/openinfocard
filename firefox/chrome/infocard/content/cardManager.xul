@@ -79,7 +79,7 @@
             <label class="lblTitle" id="cardname" value="" hidden="true"/>
         </hbox>
 
-        <hbox id="firstTimeVisitBox" class="firstTimeVisitBox" hidden="true">
+        <hbox id="firstTimeVisitBox" class="firstTimeVisitBox"  hidden="true">
             <label class="lblFirstTimeVisit" id="firstTimeVisit" value="" crop="end"/>
         </hbox>
 
