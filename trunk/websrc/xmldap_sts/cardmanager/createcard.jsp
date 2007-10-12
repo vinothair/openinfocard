@@ -12,7 +12,8 @@
 	String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
 	SupportedClaims supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
 	CardStorage storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
-	
+    String servletPath = properties.getProperty("servletPath");
+
 %>
 <!DOCTYPE html 
      PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -90,7 +91,7 @@
 %>
 
     <script type="text/javascript">
-        document.location = "/sts/cardmanager/";
+        document.location = <%=servletPath%>+"/cardmanager/";
     </script>
 
 
@@ -144,14 +145,7 @@
 
         storage.addCard(username, card);
 
-%>
-
-    
-    <script type="text/javascript">
-        document.location = "/sts/cardmanager/";
-    </script>
-
-<%
+        out.println("<script type=\"text/javascript\">document.location = \"/" + servletPath + "/cardmanager/\";</script>");
 
     }
 

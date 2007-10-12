@@ -12,7 +12,7 @@
 	String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
 	SupportedClaims supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
 	CardStorage storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
-	
+    String servletPath = properties.getProperty("servletPath");
 %>
 <!DOCTYPE html 
      PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -152,11 +152,11 @@
 
         String cardId = (String)iter.next();
         ManagedCard thisCard = storage.getCard(cardId);
-        out.println("<tr><td><a href=\"/sts/card/" + thisCard.getCardId() + ".crd\">" + thisCard.getCardName() + "</a></td></tr>");
+        out.println("<tr><td><a href=\"/" + servletPath + "/card/" + thisCard.getCardId() + ".crd\">" + thisCard.getCardName() + "</a></td></tr>");
 
     }
 
-    String backupfile = "/sts/backup/" + username + ".crds";
+    String backupfile = "/" + servletPath + "/backup/" + username + ".crds";
 
 
 %>

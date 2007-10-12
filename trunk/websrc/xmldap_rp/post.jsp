@@ -7,6 +7,7 @@
 <%@ page import="java.security.PrivateKey"%>
 <%@ page import="java.security.cert.X509Certificate"%>
 <%@ page import="org.xmldap.util.PropertiesManager"%>
+<%@ page import="java.security.interfaces.RSAPublicKey"%>
 
 
 <%
@@ -32,7 +33,7 @@
     
    String message="";
    EncryptedData encryptor = new EncryptedData(cert);
-   SelfIssuedToken token = new SelfIssuedToken(cert,cert,privateKey);
+   SelfIssuedToken token = new SelfIssuedToken((RSAPublicKey)cert.getPublicKey(),privateKey);
 
    token.setGivenName(givenName);
    token.setSurname(sureName);
