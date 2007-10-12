@@ -165,40 +165,75 @@
     </target>
 
 
-                <target name="dist_GEOPRIV_STS" depends="init">
+    <target name="dist_GEOPRIV_STS" depends="init">
 
 
-                    <mkdir dir="${build.dir}/geopriv_sts/"/>
-                    <copy todir="${build.dir}/geopriv_sts/${geopriv_stspath}/">
-                      <fileset dir="${websrc.dir}/geopriv_sts/"/>
-                    </copy>
-                    <property file="${websrc.dir}/geopriv_sts/WEB-INF/sts.properties"/>
+        <mkdir dir="${build.dir}/geopriv_sts/"/>
+        <copy todir="${build.dir}/geopriv_sts/${geopriv_stspath}/">
+          <fileset dir="${websrc.dir}/geopriv_sts/"/>
+        </copy>
+        <property file="${websrc.dir}/geopriv_sts/WEB-INF/sts.properties"/>
 
-                    <replace  file="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/web.xml">
-                     <replacefilter token="@keystore@" value="${keystore}"/>
-                        <replacefilter token="@key@" value="${key.name}"/>
-                        <replacefilter token="@keystore-password@" value="${keystore-password}"/>
-                        <replacefilter token="@key-password@" value="${key-password}"/>
-                        <replacefilter token="@domain@" value="${domain}"/>
-                        <replacefilter token="@mex-file@" value="${mex-file}"/>
-                        <replacefilter token="@image-file@" value="${image-file}"/>
-                        <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
-                    </replace>
+        <replace  file="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/web.xml">
+         <replacefilter token="@keystore@" value="${keystore}"/>
+            <replacefilter token="@key@" value="${key.name}"/>
+            <replacefilter token="@keystore-password@" value="${keystore-password}"/>
+            <replacefilter token="@key-password@" value="${key-password}"/>
+            <replacefilter token="@domain@" value="${domain}"/>
+            <replacefilter token="@mex-file@" value="${mex-file}"/>
+            <replacefilter token="@image-file@" value="${image-file}"/>
+            <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
+        </replace>
 
-                    <replace  dir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/" includes="mex*.xml">
-                        <replacefilter token="@domain@" value="${domain}"/>
-                        <replacefilter token="@sts@" value="${geopriv_stspath}"/>
-                    </replace>
+        <replace  dir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/" includes="mex*.xml">
+            <replacefilter token="@domain@" value="${domain}"/>
+            <replacefilter token="@sts@" value="${geopriv_stspath}"/>
+        </replace>
 
-                    <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
-                    <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
-                    <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
-                    <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
-                    <jar destfile="${build.dir}/geopriv_sts/geopriv_sts.war">
-                        <fileset dir="${build.dir}/geopriv_sts/${geopriv_stspath}/"/>
-                    </jar>
+        <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+        <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+        <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+        <jar destfile="${build.dir}/geopriv_sts/geopriv_sts.war">
+            <fileset dir="${build.dir}/geopriv_sts/${geopriv_stspath}/"/>
+        </jar>
 
-                </target>
+    </target>
+
+    <target name="dist_PAYMENTCARD_STS" depends="init">
+
+
+        <mkdir dir="${build.dir}/paymentCard_sts/"/>
+        <copy todir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/">
+          <fileset dir="${websrc.dir}/paymentCard_sts"/>
+        </copy>
+        <property file="${websrc.dir}/paymentCard_sts/WEB-INF/sts.properties"/>
+
+        <replace  file="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/web.xml">
+         <replacefilter token="@keystore@" value="${keystore}"/>
+            <replacefilter token="@key@" value="${key.name}"/>
+            <replacefilter token="@keystore-password@" value="${keystore-password}"/>
+            <replacefilter token="@key-password@" value="${key-password}"/>
+            <replacefilter token="@domain@" value="${domain}"/>
+            <replacefilter token="@mex-file@" value="${mex-file}"/>
+            <replacefilter token="@image-file@" value="${image-file}"/>
+            <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
+        </replace>
+
+        <replace  dir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/" includes="mex*.xml">
+            <replacefilter token="@domain@" value="${domain}"/>
+            <replacefilter token="@sts@" value="${paymentCard_stspath}"/>
+        </replace>
+
+        <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
+        <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
+        <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
+        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
+        <jar destfile="${build.dir}/paymentCard_sts/paymentCard_sts.war">
+            <fileset dir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/"/>
+        </jar>
+
+    </target>
 
 
     <target name="distFireFox"
@@ -302,6 +337,6 @@
     <target name="build_xmldap.org" depends="build_core, dist_XMLDAP_RP, dist_XMLDAP_STS"/>
     <target name="build_firefox" depends="build_core, distFireFox"/>
 
-    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS"/>
+    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_PAYMENTCARD_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS"/>
 
 </project>
