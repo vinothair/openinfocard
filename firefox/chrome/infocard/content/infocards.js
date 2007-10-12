@@ -744,6 +744,9 @@ function setCardSelf() {
 }
 
 function setCardManaged(requiredClaims, optionalClaims) {
+	debug("setCardManaged requiredClaims: " + requiredClaims);
+	debug("setCardManaged optionalClaims: " + optionalClaims);
+	
 		var managedRows = document.getElementById("managedRows0");
 		
 		// remove child rows before appending new ones
@@ -759,6 +762,7 @@ function setCardManaged(requiredClaims, optionalClaims) {
 		//alert(list[0]);
 		//alert("length:" + list.length());
 		//alert(list.toXMLString());
+		debug("number of supported claims: " + list.length());
 		var half = list.length() / 2;
 		var index=0;
 		for (; index<half; index++) {
@@ -943,12 +947,10 @@ function setCard(card){
         label.setAttribute("value", "Use OpenID with Identity URL: " + selectedCard.id);
 
 
+    } else  {
+    	alert("unsupported card type\n" + selectedCard.type);
+    	return;
     }
-
-
-
-
-
 }
 
 function handleCardChoice(event){
@@ -1138,8 +1140,19 @@ function newCard(){
 	
     var cardName = callback.cardName;
     var type = callback.type;
+    var cardId = "" + callback.cardId;
 
-
+    var cardFile = readCardStore();
+    for each (c in cardFile.infocard) {
+    	debug("newCard: cardId=" + typeof(c.id));
+    	if ("" + c.id == cardId) {
+    		alert("This card is already in the card store. Please delete it first.");
+    		return;
+    	} else {
+    		debug("newCard: cardId=" + cardId + "!=" + c.id);
+    	}
+	}
+	
     if ( type == "selfAsserted") {
 
         var card = new XML("<infocard/>");
