@@ -201,7 +201,7 @@ public class CardServlet extends HttpServlet {
     }
 
     protected String getPrivacyPolicyReference(String domainname) {
-        return "https://" + domainname + "/PrivacyPolicy.xml";
+        return "https://" + domainname + "/" + servletPath + "/PrivacyPolicy.xml";
     }
 
     protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert) {
