@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 public class CardStorageEmbeddedDBImpl implements CardStorage {
 
-	Logger log = Logger.getLogger("org.xmldap.sts.db.implCardStorageEmbeddedDBImpl");
+	Logger log = Logger.getLogger("org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl");
 	
 	public final String USERNAME_LEN = "255";
 	public final String PASSWORD_LEN = "255";
