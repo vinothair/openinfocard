@@ -113,6 +113,19 @@
 
     </target>
 
+    <target name="dist_PAYMENTCARD_RP" depends="init">
+
+        <mkdir dir="${build.dir}/paymentCard_rp/"/>
+        <copy todir="${build.dir}/paymentCard_rp/paymentCard_rp/">
+          <fileset dir="${websrc.dir}/paymentCard_rp/"/>
+        </copy>
+        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/paymentCard_rp/paymentCard_rp/WEB-INF/lib/"/>
+        <jar destfile="${build.dir}/paymentCard_rp/paymentCard_rp.war">
+            <fileset dir="${build.dir}/paymentCard_rp/paymentCard_rp/"/>
+        </jar>
+
+    </target>
+
         <target name="dist_GEOPRIV_RP" depends="init">
 
             <mkdir dir="${build.dir}/geopriv_rp/"/>
@@ -337,6 +350,6 @@
     <target name="build_xmldap.org" depends="build_core, dist_XMLDAP_RP, dist_XMLDAP_STS"/>
     <target name="build_firefox" depends="build_core, distFireFox"/>
 
-    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_PAYMENTCARD_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS"/>
+    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_PAYMENTCARD_RP, dist_PAYMENTCARD_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS"/>
 
 </project>
