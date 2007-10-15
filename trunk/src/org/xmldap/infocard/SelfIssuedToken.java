@@ -429,8 +429,8 @@ public class SelfIssuedToken implements Serializable {
 				token.setEmailAddress(value);
 			}
 		}
-		if (claims.indexOf("streetladdress") != -1) {
-			String value = getDataValue(data, "streetladdress");
+		if (claims.indexOf("streetaddress") != -1) {
+			String value = getDataValue(data, "streetaddress");
 			if ((value != null) && !value.equals("")) {
 				token.setStreetAddress(value);
 			}
