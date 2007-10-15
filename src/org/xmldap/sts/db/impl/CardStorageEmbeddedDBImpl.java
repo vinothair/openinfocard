@@ -379,12 +379,13 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
     	}
 
         ManagedCard card = null;
-        Statement s = null;
+        PreparedStatement pstmt = null;
         try {
-            s = conn.createStatement();
+        	pstmt = conn.prepareStatement("SELECT * FROM cards where cardid = ?");
             try {
-
-                ResultSet rs = s.executeQuery("SELECT * FROM cards where cardid = '" + cardid + "'");
+            	
+            	pstmt.setString(1, cardid);
+                ResultSet rs = pstmt.executeQuery();
                 while (rs.next()){
 
                     card = new ManagedCard(rs.getString(1));
@@ -395,15 +396,21 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
                     
                     List<DbSupportedClaim> dbSupportedClaims = supportedClaimsImpl.dbSupportedClaims();
                     for (int i=0; i<dbSupportedClaims.size(); i++) {
+                    	String uri = dbSupportedClaims.get(i).uri;
                     	String value = rs.getString(i+6);
-                    	if ((value != null) && (!"".equals(value)) && (!"null".equals(value))) {
-                    		System.out.println("cardId:"+cardid+" claim:"+value);
-                    		card.setClaim(dbSupportedClaims.get(i).uri, value);
+                    	if (uri.indexOf('?') > 0) {
+                    		System.out.println("cardId:"+cardid+" dynamic claim:"+value);
+                    		card.setClaim(uri, value);
+                    	} else {
+	                    	if ((value != null) && (!"".equals(value)) && (!"null".equals(value))) {
+	                    		System.out.println("cardId:"+cardid+" static claim:"+value);
+	                    		card.setClaim(uri, value);
+	                    	}
                     	}
                     }
                 }
                 rs.close();
-                s.close();
+                pstmt.close();
                 conn.commit();
             } catch (SQLException e) {
 
@@ -412,7 +419,7 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
                 e.printStackTrace();
 
             }finally {
-                s.close();
+            	pstmt.close();
                 conn.commit();
 
             }

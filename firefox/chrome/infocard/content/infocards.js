@@ -238,7 +238,7 @@ debug("isClaimChecked: is checked ");
 		   if ( uri === undefined ) {
 		     return "";
 		   } else {
-			 return "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+			 return uri;
 		   }
 		  } else {
 debug("isClaimChecked: is not checked ");
@@ -368,9 +368,9 @@ debug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
             
             rst = rst + "<wsid:CardVersion>" + xmlreplace(managedCard.version) + "</wsid:CardVersion>" + "</wsid:InformationCardReference>";
             
-            if ((requiredClaims == undefined) || (requiredClaims.length < 1)) {
-               debug("requiredClaims from RP are undefined");
-               // get all the claims from the managed card
+            {
+               var claims = requiredClaims + " " + optionalClaims;
+               var claimsArray = claims.split(/\s+/);
 	           var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
 			   var list = managedCard.carddata.managed.ic::SupportedClaimTypeList.ic::SupportedClaimType;
 			   var count=0;
@@ -380,34 +380,34 @@ debug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
 				 var uri = supportedClaim.@Uri;
 				 var claim = isClaimChecked("label_"+uri, uri);
 				 if (claim != null) {
-				  requestedClaims = requestedClaims + claim;
+				  var i = claim.indexOf("?");
+				  if (i > 0) { // dynamic claim. Uris starting with ? are not allowed
+				   debug("dynamic claim: " + claim);
+				   var prefix = claim.substr(0,i);
+				   var foundit = false;
+                   for (var index = 0; (index<claimsArray.length) && (foundit == false); index++) {
+                    var requestedUri = claimsArray[index];
+                    if (requestedUri.indexOf(prefix) == 0) {
+				     debug("dynamic claim match: " + requestedUri);
+				     requestedClaims = requestedClaims + "<wsid:ClaimType Uri=\"" + xmlreplace(requestedUri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+				     foundit = true;
+                    }
+                   }
+                   if (foundit == false) {
+                   	debug("dynamic claim: " + claim + " not found in " + claimsArray);
+                   }
+				  } else {
+				  	debug("static claim: " + claim);
+				  	requestedClaims = requestedClaims + "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+				  }
 				  count++;
+				 } else {
+				 	debug("claim is null: " + uri);
 				 }
                }
                if (count == 0) {
                 debug("no claims were requested!");
                }
-               rst = rst + "<wst:Claims>" + requestedClaims + "</wst:Claims>";
-            } else {
-               // TODO: check that requiredClaims are provided by the selected managed card
-               var claims = requiredClaims + " " + optionalClaims;
-               var claimsArray = claims.split(/\s+/);
-               debug("requiredClaims:" + requiredClaims);
-               debug("claimsArray:" + claimsArray);
-			   var count=0;
-			   var requestedClaims = "";
-               for (var index = 0; index<claimsArray.length; index++) {
-                 var uri = claimsArray[index];
-				 var claim = isClaimChecked("label_"+uri, uri);
-				 if (claim != null) {
-				  requestedClaims = requestedClaims + claim;
-				  count++;
-				 }
-                }
-               if (count == 0) {
-                debug("No claims were requested!!");
-               }
-               debug("requestedClaims:" + requestedClaims);
                rst = rst + "<wst:Claims>" + requestedClaims + "</wst:Claims>";
             }
             

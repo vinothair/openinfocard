@@ -141,8 +141,7 @@ public class STSServlet  extends HttpServlet {
             inStream.readFully(buf);
             requestXML = new String(buf);
 
-            log.finest("STS Request:");
-            log.finest(requestXML);
+            System.out.println("STS Request:\n" + requestXML);
 
         }
 

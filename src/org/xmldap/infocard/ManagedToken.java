@@ -157,9 +157,9 @@ public class ManagedToken implements Serializable {
 						name = uri;
 					}
 
-
-                    //TODO - this is a very dodgy fix for the attribute namespace bug.   Figure out how to do this upstream.   Fixing for interop.
-                    if (uri.indexOf(Constants.IC_NAMESPACE) == 0) uri = Constants.IC_NAMESPACE;
+// This does not make any sense and breaks any STS that has other claim than the self-issued ones. Axel 20071014
+//                    //TODO - this is a very dodgy fix for the attribute namespace bug.   Figure out how to do this upstream.   Fixing for interop.
+//                    if (uri.indexOf(Constants.IC_NAMESPACE) == 0) uri = Constants.IC_NAMESPACE;
                     Attribute attr = new Attribute(name, uri, value);
 					attributes.add(attr);
 				}
