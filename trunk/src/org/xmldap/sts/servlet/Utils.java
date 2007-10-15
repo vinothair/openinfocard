@@ -3,6 +3,8 @@ package org.xmldap.sts.servlet;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -141,7 +143,25 @@ public class Utils {
         
         Set<String> cardClaims = card.getClaims();
         for (String claim : cardClaims) {
-        	token.setClaim(claim, card.getClaim(claim));
+        	int qm = claim.indexOf('?');
+        	if (qm > 0) { // dynamic claim. ? at index 0 are not allowed
+        		System.out.println("found dynamic claim " + claim + "\n");
+        		List requestedClaims = requestElements.getValues("claim");
+        		Iterator iter = requestedClaims.iterator();
+        		while (iter.hasNext()) {
+        			String requestedXClaim = (String)iter.next();
+        			String requestedClaim = requestedXClaim.replace("%3F", "?");
+        			if (requestedClaim.startsWith(claim)) {
+                		System.out.println("requestedClaim " + requestedClaim + " starts with " + claim +"\n");
+                		token.setClaim(claim, requestedClaim + "&accepted");
+        			} else {
+        				System.out.println("requestedClaim " + requestedClaim + " does not starts with " + claim +"\n");
+        			}
+        		}
+        	} else {
+        		token.setClaim(claim, card.getClaim(claim));
+        		System.out.println("found static claim " + claim + "\n");
+        	}
         }
         
         token.setPrivatePersonalIdentifier(card.getPrivatePersonalIdentifier());
