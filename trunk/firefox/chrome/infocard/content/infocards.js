@@ -201,7 +201,12 @@ debug("managedCard.carddata.managed.mex: " + managedCard.carddata.managed.mex);
     req.setRequestHeader("accept-language", "en-us");
     req.setRequestHeader("User-Agent", "xmldap infocard stack");
     debug('mex xmlhttprequest send');
-    req.send(mex);
+    try {
+	    req.send(mex);
+    } catch (e) {
+    	debug("sending the mex request failed" + e);
+    	return null;
+    }
 debug("getMex: mex POST request status="+req.status);
     if(req.status == 200) {
 debug("getMex: mex POST request status 200");
