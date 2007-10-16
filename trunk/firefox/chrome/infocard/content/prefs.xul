@@ -1,49 +1,32 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
+<!DOCTYPE overlay>
 
-<overlay id="identityselector_preferences_overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="openinfocard_preferences_overlay" 
+ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+ xmlns:html="http://www.w3.org/1999/xhtml">
 
-    <script>
+ <html:script type="application/x-javascript">
+  <![CDATA[
      function prefsCallback() {
       var mgmtWindow = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome");
      }
-    </script>
+  ]]>
+ </html:script>
     
     <!-- Merge with the BrowserPreferences Window -->
-    <prefwindow id="BrowserPreferences"
-                title="IdentitySelector">
+    <prefwindow id="BrowserPreferences">
 
         <!-- Create a new pane. -->
-          <prefpane id="identitySelectorPane"
-                    label="IdentitySelector"
-                    image="chrome://infocard/content/img/icon.png">
+          <prefpane id="openInfocardPane"
+                    label="OpenInfocard"
+                    image="chrome://infocard/content/xmldap.png">
 
-              <!-- Intermediary between GUI and preferences system -->
-              <preferences>
-                  <preference id="identityselector"
-                              name="identityselector.contractid"
-                              type="string" />
-
-              </preferences>
-
-
-              <vbox id="selectorHeader">
-                <label>Identity Selector Preferences</label>
+              <vbox id="openinfocardSelectorHeader">
+                <label>OpenInfocard Id Selector Preferences</label>
               </vbox>
 
-              <separator id="selectorSeparator"/>
-
-              <vbox>
-                    <label value="Choose a Selector: "/>
-                    <menulist id="selector" preference="identityselector">
-                        <menupopup>
-                            <menuitem label="Microsoft CardSpace" value="@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1"/>
-                            <menuitem label="xmldap.org Identity Selector" value="@xmldap.org/identityselector;1"/>
-                        </menupopup>
-                    </menulist>
-              </vbox>
-
-              <separator id="selectorSeparator1"/>
+              <separator id="openinfocardSelectorSeparator"/>
 
               <vbox id="selectorManageCards">
                 <button label="Manage Cards" oncommand="prefsCallback();"/>
