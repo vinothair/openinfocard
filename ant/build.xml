@@ -52,6 +52,7 @@
         <javac srcdir="${src.dir}"
                 destdir="${build.classes.dir}"
                 debug="true"
+		target="1.5"
                 deprecation="true"
                 fork="true"
                 includeAntRuntime="false">
