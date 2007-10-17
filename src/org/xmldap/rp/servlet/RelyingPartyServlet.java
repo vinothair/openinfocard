@@ -94,7 +94,26 @@ public class RelyingPartyServlet extends HttpServlet {
     }
 
 
-
+    private static String escapeHtmlEntities(String html) {
+		StringBuffer result = new StringBuffer();
+		for (int i = 0; i < html.length(); i++) {
+			char ch = html.charAt(i);
+			if (ch == '<') {
+				result.append("&lt;");
+			} else if (ch == '>') {
+				result.append("&gt;");
+			} else if (ch == '\"') {
+				result.append("&quot;");
+			} else if (ch == '\'') {
+				result.append("&#039;");
+			} else if (ch == '&') {
+				result.append("&amp;");
+			} else {
+				result.append(ch);
+			}
+		}
+		return result.toString();
+	}
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -125,9 +144,9 @@ public class RelyingPartyServlet extends HttpServlet {
 	            
 	            out.println("<h2>Valid Signature: " + token.isSignatureValid() + "</h2>");
 	            out.println("<h2>Valid Conditions: " + token.isConditionsValid() + "</h2>");
-	            out.println("<h2>Confirmation method: " + token.getConfirmationMethod() + "</h2>");
+	            out.println("<h2>Confirmation method: " + escapeHtmlEntities(token.getConfirmationMethod()) + "</h2>");
 	            if (token.getAudience() != null) {
-	                out.println("<h2>Audience is restricted to: " + token.getAudience() + "</h2>");
+	                out.println("<h2>Audience is restricted to: " + escapeHtmlEntities(token.getAudience()) + "</h2>");
 	            } else {
 	                out.println("<h2>Audience is NOT restricted</h2>");
 	            }
@@ -151,7 +170,7 @@ public class RelyingPartyServlet extends HttpServlet {
 	            while (keyIter.hasNext()){
 	                String name = (String) keyIter.next();
 	                String value = (String) claims.get(name);
-	                out.println(name + ": " + value + "<br>");
+	                out.println(name + ": " + escapeHtmlEntities(value) + "<br>");
 	            }
 
         } catch (InfoCardProcessingException e) {
