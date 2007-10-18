@@ -74,6 +74,7 @@ function ok(){
         policy["type"] = "selfAsserted";
         policy["card"] = selectedCard.toString();
         //TRUE or FALSE on the second param enabled debug
+        setOptionalClaimsSelf(policy);
         tokenToReturn = processCard(policy,selectorDebugging);
         finish(tokenToReturn);
 		updateRPs();
@@ -201,12 +202,7 @@ debug("managedCard.carddata.managed.mex: " + managedCard.carddata.managed.mex);
     req.setRequestHeader("accept-language", "en-us");
     req.setRequestHeader("User-Agent", "xmldap infocard stack");
     debug('mex xmlhttprequest send');
-    try {
-	    req.send(mex);
-    } catch (e) {
-    	debug("sending the mex request failed" + e);
-    	return null;
-    }
+    req.send(mex);
 debug("getMex: mex POST request status="+req.status);
     if(req.status == 200) {
 debug("getMex: mex POST request status 200");
@@ -302,11 +298,17 @@ debug("processManagedCard::usercredential>>>" + usercredential);
 			if (!(usercredential.ic::UsernamePasswordCredential == undefined)) {
 	            var hint = usercredential.ic::DisplayCredentialHint;
 	            debug("hint:" + hint);
-	            var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+//	            var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+	            var prompts = Components.classes["@mozilla.org/network/default-auth-prompt;1"].getService(Components.interfaces.nsIAuthPrompt);
 	            username = {value:usercredential.ic::UsernamePasswordCredential.ic::Username};
 	            password = {value:""};
-	            var check = {value: false};
-	            okorcancel = prompts.promptUsernameAndPassword(window, 'Card Authentication', hint, username, password, null, check);
+//	            var check = {value: false};
+	            hint = hint + "("+ username.value + ")";
+//	            okorcancel = prompts.promptUsernameAndPassword(window, 'Card Authentication', hint, username, password, null, check);
+	            okorcancel = prompts.promptUsernameAndPassword('Card Authentication', hint, address, prompts.SAVE_PASSWORD_PERMANENTLY, username, password);
+	            if (okorcancel == false) {
+	            	return null;
+	            }
 	            var uid =  username.value;
 	            var pw =  password.value;
 
@@ -1359,25 +1361,19 @@ function deleteCard(){
 	reload();
 }
 
-function processCard(policy, enableDebug){
-
-    if (enableDebug) {
-        var jvm = Components.classes["@mozilla.org/oji/jvm-mgr;1"].getService(Components.interfaces.nsIJVMManager);
-        jvm.showJavaConsole();
-    }
-    
-    var optionalClaims = "";
+function setOptionalClaimsSelf(policy) {
+	    var optionalClaims = "";
     if (!(policy["optionalClaims"] == undefined)) {
      optionalClaims = policy["optionalClaims"];
      if (optionalClaims != null) {
-      debug("processCard optionalClaims: " + optionalClaims);
+      debug("setOptionalClaimsSelf optionalClaims: " + optionalClaims);
       var checkedClaims = null;
       var claims = optionalClaims.split(/\s+/);
-      debug("processCard claims: " + claims);
+      debug("setOptionalClaimsSelf claims: " + claims);
       var i;
       for (i in claims) {
        var claim = claims[i];
-      debug("processCard claim: " + claim);
+       debug("setOptionalClaimsSelf claim: " + claim);
        if (claim.indexOf("givenname") != -1) {
         if (isClaimChecked("_givenname") != null) {
          var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
@@ -1476,8 +1472,6 @@ function processCard(policy, enableDebug){
          } else {
           checkedClaims = checkedClaims + " " + uri;
          }
-        } else {
-debug("processCard _mobilePhone is not checked:" + claim);
         }
         continue;
        } else if(claim.indexOf("dateofbirth") != -1) {
@@ -1524,10 +1518,18 @@ debug("processCard _mobilePhone is not checked:" + claim);
         debug("processCard: claim not in list:" + claim);
        }
       }
-      debug("processCard checkedClaims: " + checkedClaims);
+      debug("setOptionalClaimsSelf checkedClaims: " + checkedClaims);
 	  policy["optionalClaims"] = checkedClaims;
      }
     }
+}
+function processCard(policy, enableDebug){
+
+    if (enableDebug) {
+        var jvm = Components.classes["@mozilla.org/oji/jvm-mgr;1"].getService(Components.interfaces.nsIJVMManager);
+        jvm.showJavaConsole();
+    }
+    
 
     var token;
     
