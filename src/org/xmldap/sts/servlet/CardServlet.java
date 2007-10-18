@@ -52,6 +52,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -103,7 +104,11 @@ public class CardServlet extends HttpServlet {
             if (servletPath == null) {
             	throw new ServletException("servletPath is null");
             }
-            base64ImageFile = getImageFileEncodedAsBase64(imageFilePathString);
+            
+            {
+            	java.io.InputStream fis = getServletContext().getResourceAsStream(imageFilePathString);
+                base64ImageFile = getImageFileEncodedAsBase64(fis);
+            }
             
         } catch (IOException e) {
             throw new ServletException(e);
@@ -274,6 +279,11 @@ public class CardServlet extends HttpServlet {
     protected String getImageFileEncodedAsBase64(String imageFilePathString) {
         String encodedFile;
         encodedFile = Base64.encodeFromFile(imageFilePathString);
+        return encodedFile;
+    }
+    protected String getImageFileEncodedAsBase64(InputStream ins) {
+        String encodedFile;
+        encodedFile = Base64.encodeFromInputStream(ins, 0);
         return encodedFile;
     }
 }

@@ -2,7 +2,12 @@
  String queryString = request.getQueryString();
  if ((queryString != null) && (queryString.indexOf("privacy") != -1)) {
 	 String contentType = request.getContentType();
-	 log("privacyStatement request content-Type: " + contentType);
+	 System.out.println("privacyStatement request content-Type: " + contentType);
+	 if (contentType == null) {
+		 contentType = "text/plain";
+	 } else if ("*/*".equals(contentType)) {
+		 contentType = "text/plain";
+	 }
 	 org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
 	 String privaceStatement = properties.getProperty("privacyStatement." + contentType); 
 	 if (privaceStatement == null) {
@@ -15,7 +20,9 @@
 		 }
 	 }
 	 response.setContentType(contentType);
-	 java.io.FileInputStream fis = new java.io.FileInputStream(privaceStatement);
+	 System.out.println("reading : " + privaceStatement);
+	 java.io.InputStream fis = getServletContext().getResourceAsStream(privaceStatement);
+//	 java.io.FileInputStream fis = new java.io.FileInputStream(privaceStatement);
 	 java.io.BufferedReader ins = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
 	 try {
 			while (fis.available() != 0) {

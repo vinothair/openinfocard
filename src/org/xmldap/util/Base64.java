@@ -1,5 +1,7 @@
 package org.xmldap.util;
 
+import java.io.FileNotFoundException;
+
 /**
  * Encodes and decodes to and from Base64 notation.
  * <p/>
@@ -918,7 +920,6 @@ public class Base64 {
         return decodedData;
     }   // end decodeFromFile
 
-
     /**
      * Convenience method for reading a binary file
      * and base64-encoding it.
@@ -928,30 +929,55 @@ public class Base64 {
      * @since 2.1
      */
     public static String encodeFromFile(String filename) {
+        java.io.File file = new java.io.File(filename);
+    	long fileLength = file.length();
+
+    	java.io.InputStream ins;
+		try {
+			ins = new java.io.FileInputStream(file);
+		} catch (FileNotFoundException e) {
+			System.out.println("Error opening file " + filename + e.getMessage());
+			return null;
+		}
+    	String encodedData = encodeFromInputStream(ins, fileLength);
+    	if (encodedData == null) {
+            System.err.println("Error encoding from file " + filename);
+    	}
+    	return encodedData;
+    }
+
+    public static String encodeFromInputStream(java.io.InputStream ins, long fileLength) {
         String encodedData = null;
         Base64.InputStream bis = null;
         try {
+        	if (fileLength <= 4096) {
+        		fileLength = 64*1024;
+        	}
             // Set up some useful variables
-            java.io.File file = new java.io.File(filename);
-            byte[] buffer = new byte[ (int) (file.length() * 1.4) ];
+            byte[] buffer = new byte[ (int) (fileLength * 1.4) ];
             int length = 0;
             int numBytes = 0;
 
             // Open a stream
             bis = new Base64.InputStream(
-                    new java.io.BufferedInputStream(
-                            new java.io.FileInputStream(file)), Base64.ENCODE);
+                    new java.io.BufferedInputStream(ins, Base64.ENCODE));
 
             // Read until done
-            while ((numBytes = bis.read(buffer, length, 4096)) >= 0)
+            while ((numBytes = bis.read(buffer, length, 4096)) >= 0) {
                 length += numBytes;
-
+                if (length+4096 > buffer.length) {
+                	byte[] newBuffer = new byte[buffer.length + 64*1024];
+                	System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
+                	buffer = newBuffer;
+                }
+            }
+            
             // Save in a variable to return
             encodedData = new String(buffer, 0, length, Base64.PREFERRED_ENCODING);
 
         }   // end try
         catch (java.io.IOException e) {
-            System.err.println("Error encoding from file " + filename);
+            System.err.println("Error encoding from file " + e.getMessage());
         }   // end catch: IOException
         finally {
             try {
