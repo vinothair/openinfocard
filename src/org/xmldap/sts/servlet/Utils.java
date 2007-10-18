@@ -152,15 +152,22 @@ public class Utils {
         			String requestedXClaim = (String)iter.next();
         			String requestedClaim = requestedXClaim.replace("%3F", "?");
         			if (requestedClaim.startsWith(claim)) {
-                		System.out.println("requestedClaim " + requestedClaim + " starts with " + claim +"\n");
-                		token.setClaim(claim, requestedClaim + "&accepted");
+                		System.out.println("requestedClaim " + requestedClaim + " starts with " + claim);
+                		token.setClaim(claim, requestedClaim.substring(qm));
         			} else {
-        				System.out.println("requestedClaim " + requestedClaim + " does not starts with " + claim +"\n");
+        				System.out.println("requestedClaim " + requestedClaim + " does not starts with " + claim);
         			}
         		}
         	} else {
-        		token.setClaim(claim, card.getClaim(claim));
-        		System.out.println("found static claim " + claim + "\n");
+        		List requestedClaims = requestElements.getValues("claim");
+        		Iterator iter = requestedClaims.iterator();
+        		while (iter.hasNext()) {
+        			String requestedClaim = (String)iter.next();
+        			if (claim.equals(requestedClaim)) {
+                		token.setClaim(claim, claim);
+                		System.out.println("found static claim " + claim + "\n");
+        			}
+        		}
         	}
         }
         
