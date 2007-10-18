@@ -58,7 +58,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
@@ -69,7 +68,6 @@ public class BackupServlet extends HttpServlet {
     private String base64ImageFile = null;
 
     private X509Certificate cert = null;
-    private PrivateKey privateKey = null;
     private String domainname = null;
     private String servletPath = null;
     private SupportedClaims supportedClaimsImpl = null;
@@ -83,15 +81,15 @@ public class BackupServlet extends HttpServlet {
 
             PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
             String keystorePath = properties.getProperty("keystore");
-            String keystorePassword = properties.getProperty("keystore-password");
-            String key = properties.getProperty("key-name");
-            String keyPassword = properties.getProperty("key-password");
+            String keystorePassword = properties.getProperty("keystore.password");
+            String key = properties.getProperty("key.name");
+//            String keyPassword = properties.getProperty("key-password");
             String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
             supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
             storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
             
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
-            privateKey = keystore.getPrivateKey(key,keyPassword);
+//            privateKey = keystore.getPrivateKey(key,keyPassword);
             cert = keystore.getCertificate(key);
             domainname = properties.getProperty("domain");
             servletPath = properties.getProperty("servletPath");
