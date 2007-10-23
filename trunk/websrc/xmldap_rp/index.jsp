@@ -91,6 +91,10 @@
 
     </style>
     <% 
+	 org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
+	 String requiredClaims = properties.getProperty("requiredClaims"); 
+	 String optionalClaims = properties.getProperty("optionalClaims"); 
+
      String servername = request.getServerName();
      if (servername != null) {
     	 if (servername.indexOf("xmldap.org") > 0) {
@@ -136,15 +140,13 @@
      onclick="infocard.submit()"/>
 
     <object type="application/x-informationCard" name="xmlToken">
-    <!-- Kevin's plugin expects privacyPolicy and privacyPolicyVersion instead of the correct privacyUrl and privacyVersion -->
 <%
-    			  out.println("<param name=\"privacyPolicy\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>");
+		out.println("<param name=\"privacyUrl\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>");
+    	out.println("<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>");
+    	out.println("<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>");
 %>
-    			  <param name="privacyPolicyVersion" value="1"/>
+    			  <param name="privacyVersion" value="1"/>
                   <param name="tokenType" value="urn:oasis:names:tc:SAML:1.0:assertion"/>
-                  <param name="requiredClaims" value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"/>
-                  <param name="optionalClaims"
-            value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender"/>
             </object>
 </form>
                     <br/>Click on the image above to login with and Infocard.<br/>
