@@ -33,6 +33,7 @@ import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.rp.Token;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.PropertiesManager;
+import org.xmldap.util.XSDDateTime;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -143,7 +145,13 @@ public class RelyingPartyServlet extends HttpServlet {
 	            }
 	            
 	            out.println("<h2>Valid Signature: " + token.isSignatureValid() + "</h2>");
-	            out.println("<h2>Valid Conditions: " + token.isConditionsValid() + "</h2>");
+	            boolean conditionsValid = token.isConditionsValid();
+	            if (conditionsValid) {
+	            	out.println("<h2>Valid Conditions: " +  conditionsValid + "</h2>");
+	            } else {
+	            	XSDDateTime dt = new XSDDateTime();
+	            	out.println("<h2>Valid Conditions: " +  conditionsValid + "</h2>&nbsp;Time on Server:&nbsp;" + dt.getDateTime());
+	            }
 	            out.println("<h2>Confirmation method: " + escapeHtmlEntities(token.getConfirmationMethod()) + "</h2>");
 	            if (token.getAudience() != null) {
 	                out.println("<h2>Audience is restricted to: " + escapeHtmlEntities(token.getAudience()) + "</h2>");
