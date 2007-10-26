@@ -208,8 +208,10 @@ debug("getMex: mex POST request status="+req.status);
 debug("getMex: mex POST request status 200");
 
         mexResponse = req.responseText;
+debug("getMex POST 200: " + mexResponse);
         return mexResponse;
     } else {
+debug("getMex POST " + req.status + ": " + req.responseText);
 	    req.open('GET', managedCard.carddata.managed.mex, false);
 	    debug('mex xmlhttprequest open');
 	    req.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
@@ -223,6 +225,8 @@ debug("getMex: mex GET request status="+req.status);
 debug("getMex: mex GET request status 200");
         mexResponse = req.responseText;
         return mexResponse;
+    } else {
+    	debug("getMex GET " + req.status + ": " + req.responseText);
     }
 	return null;
 }
@@ -1067,6 +1071,7 @@ function computeMatching(card, policy) {
    matchingTokenType = false;
   }
  } else { // RP does not require a special tokentype
+  matchingTokenType = true;
  }
  return matchingTokenType;
 }
