@@ -190,6 +190,14 @@
                        data += sstream.read(count);
                  }
 
+                 var stop;
+				 while ((stop = data.indexOf("?>")) > 0) {
+				  debug("import managed card: removing processing instructions" + stop);
+				  var newData = data.substring(stop+2);
+				  data = newData;
+				  debug("import managed card: " + data);
+				 }
+			     debug("Import managed card: " + data);
                  return data;
              } else {
                 return "";
@@ -199,6 +207,7 @@
 
 
           function parseCard(cardData) {
+ 		     debug("parseCard: " + cardData);
 
              var cardxml = new XML(cardData);
              var dsig = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
