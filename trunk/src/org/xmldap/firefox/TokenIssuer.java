@@ -475,10 +475,16 @@ public class TokenIssuer {
 	private static String generateRPPPID(
 			String cardId,
 			X509Certificate relyingPartyCert,
-			X509Certificate[] chain)
+			X509Certificate[] chain, 
+			String audience)
 		throws TokenIssuanceException {
+		byte[] rpIdentifierBytes = null;
 		try {
-			byte[] rpIdentifierBytes = sha256(rpIdentifier(relyingPartyCert, chain));
+			if (relyingPartyCert != null) {
+				rpIdentifierBytes = sha256(rpIdentifier(relyingPartyCert, chain));
+			} else {
+				rpIdentifierBytes = sha256(audience.getBytes("UTF-16LE"));
+			}
 			byte[] canonicalCardIdBytes = sha256(cardId.getBytes("UTF-8"));
 			byte[] bytes = new byte[rpIdentifierBytes.length+canonicalCardIdBytes.length];
 			System.arraycopy(rpIdentifierBytes, 0, bytes, 0, rpIdentifierBytes.length);
@@ -558,7 +564,9 @@ public class TokenIssuer {
 
             policy = new JSONObject(serializedPolicy);
             type = (String) policy.get("type");
-            der = (String) policy.get("cert");
+            if (policy.has("cert")) {
+            	der = (String) policy.get("cert");
+            }
             if (policy.has("url")) {
             	audience = (String) policy.get("url");
             }
@@ -566,35 +574,37 @@ public class TokenIssuer {
             throw new TokenIssuanceException(e);
         }
 
-
-        X509Certificate relyingPartyCert;
-		try {
-			relyingPartyCert = org.xmldap.util.CertsAndKeys.der2cert(der);
-		} catch (CertificateException e) {
-			throw new TokenIssuanceException(e);
-		}
-
-		int chainLength = 0;
-		try {
-			String chainLengthStr = (String) policy.get("chainLength");
-			chainLength = Integer.parseInt(chainLengthStr);
-		} catch (JSONException e) {
-			throw new TokenIssuanceException(e);
-		}
-		
-		X509Certificate[] chain = new X509Certificate[chainLength];
-		for (int i=0; i<chainLength; i++) {
+        X509Certificate[] chain = null;
+        X509Certificate relyingPartyCert = null;
+        if (der != null) {
 			try {
-				String chainDer = (String) policy.get("certChain"+i);
-				X509Certificate chainCert = org.xmldap.util.CertsAndKeys.der2cert(chainDer);
-				chain[i] = chainCert;
-			} catch (JSONException e) {
-				throw new TokenIssuanceException(e);
+				relyingPartyCert = org.xmldap.util.CertsAndKeys.der2cert(der);
 			} catch (CertificateException e) {
 				throw new TokenIssuanceException(e);
 			}
-		}
-		
+	
+			int chainLength = 0;
+			try {
+				String chainLengthStr = (String) policy.get("chainLength");
+				chainLength = Integer.parseInt(chainLengthStr);
+			} catch (JSONException e) {
+				throw new TokenIssuanceException(e);
+			}
+			
+			chain = new X509Certificate[chainLength];
+			for (int i=0; i<chainLength; i++) {
+				try {
+					String chainDer = (String) policy.get("certChain"+i);
+					X509Certificate chainCert = org.xmldap.util.CertsAndKeys.der2cert(chainDer);
+					chain[i] = chainCert;
+				} catch (JSONException e) {
+					throw new TokenIssuanceException(e);
+				} catch (CertificateException e) {
+					throw new TokenIssuanceException(e);
+				}
+			}
+        }
+        
         if (type.equals("selfAsserted")) {
     		String requiredClaims = null;
     		String optionalClaims = null;
@@ -704,7 +714,7 @@ public class TokenIssuer {
 
 
         // storeInfoCardAsCertificate(ppi, infocard);
-		ppi = generateRPPPID(cardId, relyingPartyCert, chain);
+		ppi = generateRPPPID(cardId, relyingPartyCert, chain, audience);
 //		ppi = generatePpiForThisRP(ppi, relyingPartyCert
 //		        .getSubjectX500Principal().getName());
 
@@ -740,7 +750,6 @@ public class TokenIssuer {
 			String audience,
 			String confirmationMethod) throws TokenIssuanceException 
 	{
-		EncryptedData encryptor = new EncryptedData(relyingPartyCert);
 		RSAPublicKey cardPublicKey = (RSAPublicKey)signingCert.getPublicKey();
 		PrivateKey cardPrivateKey = signingKey;
 		SelfIssuedToken token = new SelfIssuedToken(cardPublicKey, cardPrivateKey);
@@ -801,15 +810,20 @@ public class TokenIssuer {
 		    }
 		}
 
-		Element securityToken = null;
 		try {
-		    securityToken = token.serialize();
-System.out.println("saml assertion:" + securityToken.toXML());
-		    encryptor.setData(securityToken.toXML());
-		    issuedToken = encryptor.toXML();
+			if (relyingPartyCert != null) {
+				Element securityToken = null;
+				EncryptedData encryptor = new EncryptedData(relyingPartyCert);
+				securityToken = token.serialize();
+				System.out.println("saml assertion:" + securityToken.toXML());
+				encryptor.setData(securityToken.toXML());
+				issuedToken = encryptor.toXML();
 
+			} else {
+				issuedToken = token.serialize().toXML();
+			}
 		} catch (SerializationException e) {
-		    throw new TokenIssuanceException(e);
+			throw new TokenIssuanceException(e);
 		}
 		return issuedToken;
 	}
@@ -817,6 +831,9 @@ System.out.println("saml assertion:" + securityToken.toXML());
 	public String getIssuerLogoURL(String serializedPolicy) throws TokenIssuanceException {
 		try {
 			JSONObject policy = new JSONObject(serializedPolicy);
+			if (!policy.has("cert")) {
+				return null;
+			}
 			String der = (String) policy.get("cert");
 			X509Certificate cert = org.xmldap.util.CertsAndKeys.der2cert(der);
 			byte[] fromExtensionValue = cert
