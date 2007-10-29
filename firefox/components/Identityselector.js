@@ -57,7 +57,7 @@ Xmldapidentityselector.prototype = {
 
         var callback;
 
-        var policy = [];
+        var policy = {};
         policy["tokenType"] = tokenType;
         policy["issuer"] = issuer;
         policy["requiredClaims"] = requiredClaims;
@@ -69,22 +69,25 @@ Xmldapidentityselector.prototype = {
         var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
         var win = wm.getMostRecentWindow("navigator:browser");
 
-        policy["cert"] = getDer(serverCert,win);
-        policy["cn"] = serverCert.commonName;
+		if (serverCert != null) {
+	        policy["cert"] = getDer(serverCert,win);
+	        policy["cn"] = serverCert.commonName;
+
+		    var chain = serverCert.getChain();
+			debug('chain: ' + chain);
+			debug('chainLength: ' + chain.length);
+			debug('chain[0]: ' + chain.queryElementAt(0, nsIX509Cert));
+			
+			policy["chainLength"] = ""+chain.length;
+			for (var i = 0; i < chain.length; ++i) {
+			  var currCert = chain.queryElementAt(i, nsIX509Cert);
+			  policy["certChain"+i] = getDer(currCert,win);
+			}
+		}
+		
         // win.document.URL is undefined
         // win.document.location.href is chrome://.../browser.xul
 		policy["url"] = recipientURL; 
-
-	    var chain = serverCert.getChain();
-		debug('chain: ' + chain);
-		debug('chainLength: ' + chain.length);
-		debug('chain[0]: ' + chain.queryElementAt(0, nsIX509Cert));
-		
-		policy["chainLength"] = ""+chain.length;
-		for (var i = 0; i < chain.length; ++i) {
-		  var currCert = chain.queryElementAt(i, nsIX509Cert);
-		  policy["certChain"+i] = getDer(currCert,win);
-		}
 
         var cardManager = win.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome", policy, function (callbackData) { callback = callbackData;});
 
