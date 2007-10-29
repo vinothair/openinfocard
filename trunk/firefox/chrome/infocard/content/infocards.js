@@ -49,19 +49,21 @@ function xmlreplace(text) {
 function updateRPs() {
    	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
 	    var policy = window.arguments[0];
-		var relyingPartyCertB64 = policy["cert"];
-	    var rpIdentifier = hex_sha1(relyingPartyCertB64);
-	    var count = 0;
-	    for each (rpId in selectedCard.rpIds) {
-	     count++;
-debug(selectedCard.name + " rpId:" + rpId + " rpIdentifier:" + rpIdentifier);
-	     if (rpId == rpIdentifier) {
-	      // this RP is already in list of RPs
-	      return;
-	     }
+	    if (policy.hasOwnProperty("cert")) {
+			var relyingPartyCertB64 = policy["cert"];
+		    var rpIdentifier = hex_sha1(relyingPartyCertB64);
+		    var count = 0;
+		    for each (rpId in selectedCard.rpIds) {
+		     count++;
+	debug(selectedCard.name + " rpId:" + rpId + " rpIdentifier:" + rpIdentifier);
+		     if (rpId == rpIdentifier) {
+		      // this RP is already in list of RPs
+		      return;
+		     }
+		    }
+		    selectedCard.rpIds[count] = rpIdentifier;
+		    updateCard(selectedCard); // save to disk
 	    }
-	    selectedCard.rpIds[count] = rpIdentifier;
-	    updateCard(selectedCard); // save to disk
 	} // else nothing
 }
 
@@ -90,7 +92,10 @@ function ok(){
 		}
 		var url = policy["url"]; // RP url
 		var clientPseudonym = hex_sha1(url + selectedCard.id);
-		var relyingPartyCertB64 = policy["cert"];
+		var relyingPartyCertB64 = null;
+		if (policy.hasOwnProperty("cert")) {
+			relyingPartyCertB64 = policy["cert"];
+		}
         var assertion = processManagedCard(selectedCard, requiredClaims, optionalClaims, tokenType, clientPseudonym, url, relyingPartyCertB64);
         debug("assertion:" + assertion);
         if (assertion == null) {
@@ -553,8 +558,10 @@ function load(){
     var rpIdentifier = null;
    	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
 	    var policy = window.arguments[0];
-		var relyingPartyCertB64 = policy["cert"];
-	    rpIdentifier = hex_sha1(relyingPartyCertB64);
+	    if (policy.hasOwnProperty("cert")) {
+			var relyingPartyCertB64 = policy["cert"];
+		    rpIdentifier = hex_sha1(relyingPartyCertB64);
+	    }
 	}
 
     var cardFile = readCardStore();
@@ -1077,6 +1084,9 @@ function computeMatching(card, policy) {
 }
 
 function computeHasBeenSend(card, policy) {
+	if (!policy.hasOwnProperty("cert")) {
+		return false;
+	}
 	var relyingPartyCertB64 = policy["cert"];
     var rpIdentifier = hex_sha1(relyingPartyCertB64);
     var beenThere = false;
