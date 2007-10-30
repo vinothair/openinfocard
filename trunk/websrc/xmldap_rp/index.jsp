@@ -130,9 +130,6 @@
         <tr>
             <td>
 
-<%
- if (request.isSecure()) {
-%>
 <form name='infocard' method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
 <img src="./img/card_off.png"
      onmouseover="this.src='./img/card_on.png';"
@@ -151,13 +148,6 @@
 </form>
                     <br/>Click on the image above to login with and Infocard.<br/>
                     <br/><a href="/sts/cardmanager/">Click here to create a managed card.</a>
-<%
- } else {
-%>
-The infocard login will only work if you're on my secure site.  <p><a href="https://xmldap.org/relyingparty/">https://xmldap.org/relyingparty/</a>
-<%
- }
-%>
 
             </td>
         </tr>

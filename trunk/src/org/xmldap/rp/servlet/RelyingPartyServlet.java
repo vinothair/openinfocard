@@ -63,13 +63,23 @@ public class RelyingPartyServlet extends HttpServlet {
             
             PropertiesManager properties = new PropertiesManager(PropertiesManager.RELYING_PARTY, config.getServletContext());
             String keystorePath = properties.getProperty("keystore");
+            System.out.println("keystore: " + keystorePath);
             String keystorePassword = properties.getProperty("keystore-password");
+            System.out.println("keystore-password: " + keystorePassword);
             String key = properties.getProperty("key");
+            System.out.println("key: " + key);
             String keyPassword = properties.getProperty("key-password");
+            System.out.println("key-password: " + keyPassword);
 
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             privateKey = keystore.getPrivateKey(key,keyPassword);
+            if (privateKey == null) {
+            	throw new ServletException("the private key is null. alias=" + key);
+            }
             cert = keystore.getCertificate(key);
+            if (cert == null) {
+            	throw new ServletException("the cert is null. alias=" + key);
+            }
 
         } catch (IOException e) {
             throw new ServletException(e);

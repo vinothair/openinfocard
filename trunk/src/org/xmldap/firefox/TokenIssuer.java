@@ -476,14 +476,14 @@ public class TokenIssuer {
 			String cardId,
 			X509Certificate relyingPartyCert,
 			X509Certificate[] chain, 
-			String audience)
+			String rpName)
 		throws TokenIssuanceException {
 		byte[] rpIdentifierBytes = null;
 		try {
 			if (relyingPartyCert != null) {
 				rpIdentifierBytes = sha256(rpIdentifier(relyingPartyCert, chain));
 			} else {
-				rpIdentifierBytes = sha256(audience.getBytes("UTF-16LE"));
+				rpIdentifierBytes = sha256(rpName.getBytes("UTF-16LE"));
 			}
 			byte[] canonicalCardIdBytes = sha256(cardId.getBytes("UTF-8"));
 			byte[] bytes = new byte[rpIdentifierBytes.length+canonicalCardIdBytes.length];
