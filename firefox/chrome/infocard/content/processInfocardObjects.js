@@ -168,10 +168,16 @@ function processCert(){
     var browser = document.getElementById("content");
     var secureUi = browser.securityUI;
     var sslStatusProvider = secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
-    var sslStatus = sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
-    return sslStatus.serverCert;
-
-
+    if (sslStatusProvider.SSLStatus != null) {
+	    var sslStatus = sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+	    if (sslStatus != null) {
+		    return sslStatus.serverCert;
+		} else {
+			return null;
+		}
+    } else {
+    	return null;
+    }
 }
 
 function getDer(cert){
@@ -202,35 +208,45 @@ function invokeSelector(aEvent){
     }
     var policy = parseCard(form);
     var certificate = processCert();
-    var cert = getDer(certificate);
 
-    policy["cert"] = cert;
-    policy["cn"] = certificate.commonName;
-    debug(certificate.commonName);
-	policy["url"] = document.URL;
-	debug(document.URL);
+    if (certificate != null) {
+	    var cert = getDer(certificate);
+
+    	policy["cert"] = cert;
+	    policy["cn"] = certificate.commonName;
+    	debug(certificate.commonName);
+
+	    var browser = document.getElementById("content");
+	    var secureUi = browser.securityUI;
+	    var sslStatusProvider =
+	secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
+		if (sslStatusProvider.SSLStatus != null) {
+		    var sslStatus =
+		sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+		
+			if (sslStatus != null) {
+			    var chain = sslStatus.serverCert.getChain();
+			    debug('chain: ' + chain);
+			    debug('chainLength: ' + chain.length);
+			
+			    debug('chain[0]: ' + chain.queryElementAt(0, Components.interfaces.nsIX509Cert));
+			
+			    policy["chainLength"] = ""+chain.length;
+			    for (var i = 0; i < chain.length; ++i) {
+			        var currCert = chain.queryElementAt(i, Components.interfaces.nsIX509Cert);
+			        policy["certChain"+i] = getDer(currCert,win);
+			    }
+			}
+		}
+    }
 	
     var doc = form.ownerDocument;
     var win = doc.defaultView;
+	policy["url"] = win.location.host;
+	debug("policy['url']="+policy["url"]);
+	//debug("document.location="+document.location);
+	//debug("document.location.href="+document.location.href);
 
-    var browser = document.getElementById("content");
-    var secureUi = browser.securityUI;
-    var sslStatusProvider =
-secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
-    var sslStatus =
-sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
-
-    var chain = sslStatus.serverCert.getChain();
-    debug('chain: ' + chain);
-    debug('chainLength: ' + chain.length);
-
-    debug('chain[0]: ' + chain.queryElementAt(0, Components.interfaces.nsIX509Cert));
-
-    policy["chainLength"] = ""+chain.length;
-    for (var i = 0; i < chain.length; ++i) {
-        var currCert = chain.queryElementAt(i, Components.interfaces.nsIX509Cert);
-        policy["certChain"+i] = getDer(currCert,win);
-    }
 
     var callEvent = doc.createEvent("Events");
     callEvent.initEvent("CallIdentitySelector", true, true);

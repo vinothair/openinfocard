@@ -69,8 +69,11 @@ public class MexServlet extends HttpServlet {
 
             PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
             String keystorePath = properties.getProperty("keystore");
+            System.out.println("keystore: " + keystorePath);
             String keystorePassword = properties.getProperty("keystore.password");
+            System.out.println("keystore.password: " + keystorePassword);
             String key = properties.getProperty("key.name");
+            System.out.println("key.name: " + key);
 
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             X509Certificate certificate = keystore.getCertificate(key);
