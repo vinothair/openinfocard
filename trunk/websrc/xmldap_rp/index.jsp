@@ -44,7 +44,7 @@
 	<title>Java Based Relying Party</title>
 
 
-    <style>
+    <style type="text/css">
     BODY {background: #FFF url(./img/banner.png) repeat-x;
          color:#000;
          font-family: verdana, arial, sans-serif;}
@@ -126,17 +126,18 @@
 	<div class="container" id="relying_party">
 
 <h2>Login with an InfoCard</h2>
-    <table border=0>
+    <table border="0">
         <tr>
             <td>
 
-<form name='infocard' method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
-<img src="./img/card_off.png"
+<form method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
+<p>
+<img src="./img/card_off.png" alt=""
      onmouseover="this.src='./img/card_on.png';"
      onmouseout="this.src='./img/card_off.png';"
      onclick="infocard.submit()"/>
 
-    <object type="application/x-informationCard" name="xmlToken">
+    <object type="application/x-informationcard" name="xmlToken">
 <%
 		out.println("<param name=\"privacyUrl\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>");
     	out.println("<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>");
@@ -145,6 +146,7 @@
     			  <param name="privacyVersion" value="1"/>
                   <param name="tokenType" value="urn:oasis:names:tc:SAML:1.0:assertion"/>
             </object>
+</p>
 </form>
                     <br/>Click on the image above to login with and Infocard.<br/>
                     <br/><a href="/sts/cardmanager/">Click here to create a managed card.</a>
@@ -169,7 +171,7 @@
     <br/><br/>
     <h2>Curious about how it works...?</h2>
 
-        The Java Based Relying Party is a simple CardSpace RP implementation, written in 100% in Java and running on Linux. The RP provides the ability to request and accept information cards from Microsoft CardSpace (InfoCard), or other Identity Selectors, and displays information about the card that was submitted. It currently is only tested with self-asserted cards, and SAML 1.0 assertions<p>
+        The Java Based Relying Party is a simple CardSpace RP implementation, written in 100% in Java and running on Linux. The RP provides the ability to request and accept information cards from Microsoft CardSpace (InfoCard), or other Identity Selectors, and displays information about the card that was submitted. It currently is only tested with self-asserted cards, and SAML 1.0 assertions<p/>
 
         This RP developed from the ground up using protocol documentation, and was the first non-Microsoft affiliated relying party on a non-Windows platform.
 
