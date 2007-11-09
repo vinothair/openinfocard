@@ -36,7 +36,8 @@
 			ins.close();
 		}
  } else {
-  out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
+	String userAgent = request.getHeader("user-agent");
+	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 %>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -90,6 +91,7 @@
         #links A:hover {color: #FFF; text-decoration: underline}
 
     </style>
+    
     <% 
 	 org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
 	 String requiredClaims = properties.getProperty("requiredClaims"); 
@@ -99,6 +101,7 @@
      if (servername != null) {
     	 if (servername.indexOf("xmldap.org") > 0) {
     %>
+
     <script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
     </script>
     <script type="text/javascript">
@@ -135,7 +138,7 @@
 <img src="./img/card_off.png" alt=""
      onmouseover="this.src='./img/card_on.png';"
      onmouseout="this.src='./img/card_off.png';"
-     onclick="infocard.submit()"/>
+     onclick='var pf = document.getElementById("infocard"); pf.submit();'/>
 
     <object type="application/x-informationcard" name="xmlToken">
 <%
@@ -154,7 +157,6 @@
             </td>
         </tr>
     </table>
-
 
     <h2>Or, if you don't yet have CardSpace installed, I can make a security token for you...</h2>
 
@@ -179,12 +181,13 @@
     <br/>
     <a href="http://xmldap.blogspot.com/2006/03/how-to-consume-tokens-from-infocard.html">Here's a brief overview of what it's doing.</a>
 
+<%
+	if (userAgent != null) {
+		out.println("<p style=\"font-size:xx-small\">Your user agent is: " + userAgent + "</p>");
+	}
+%>
     </div>
     </div>
-
-
-
-
 
 </body>
 </html>
