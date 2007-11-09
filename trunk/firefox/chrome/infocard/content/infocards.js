@@ -96,7 +96,13 @@ function ok(){
 		if (policy.hasOwnProperty("cert")) {
 			relyingPartyCertB64 = policy["cert"];
 		}
-        var assertion = processManagedCard(selectedCard, requiredClaims, optionalClaims, tokenType, clientPseudonym, url, relyingPartyCertB64);
+		var issuerPolicy = null;
+		if (policy.hasOwnProperty("issuerPolicy")) {
+			issuerPolicy = policy["issuerPolicy"];
+		}
+        var assertion = processManagedCard(
+        	selectedCard, requiredClaims, optionalClaims, tokenType, 
+        	clientPseudonym, url, relyingPartyCertB64, issuerPolicy);
         debug("assertion:" + assertion);
         if (assertion == null) {
          return;
@@ -181,7 +187,14 @@ function finish(tokenToReturn) {
 
 }
 
-function getMex(managedCard) {
+function getMexForCard(managedCard) {
+	var to = xmlreplace(managedCard.carddata.managed.issuer);
+	var mexAddress = managedCard.carddata.managed.mex;
+	var mexResponse = getMex1(to, mexAddress);
+	return mexResponse;
+}
+
+function getMex1(to, mexAddress) {
     var messageIdInt = Math.floor(Math.random()*100000+1);
     var messageId = "urn:uuid:" + messageIdInt;
     var mex = "<s:Envelope " + 
@@ -193,14 +206,14 @@ function getMex(managedCard) {
     	 "<a:ReplyTo>" + 
     	  "<a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address>" + 
     	 "</a:ReplyTo>" + 
-    	 "<a:To s:mustUnderstand=\"1\">" + xmlreplace(managedCard.carddata.managed.issuer) + "</a:To>" + 
+    	 "<a:To s:mustUnderstand=\"1\">" + to + "</a:To>" + 
     	"</s:Header><s:Body/></s:Envelope>";
 
 debug("getMex: mex request: " + mex);
-debug("managedCard.carddata.managed.mex: " + managedCard.carddata.managed.mex);
+debug("managedCard.carddata.managed.mex: " + mexAddress);
 
     var req = new XMLHttpRequest();
-    req.open('POST', managedCard.carddata.managed.mex, false);
+    req.open('POST', mexAddress, false);
     debug('mex xmlhttprequest open');
     req.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
     req.setRequestHeader("Cache-Control", "no-cache");
@@ -217,7 +230,7 @@ debug("getMex POST 200: " + mexResponse);
         return mexResponse;
     } else {
 debug("getMex POST " + req.status + ": " + req.responseText);
-	    req.open('GET', managedCard.carddata.managed.mex, false);
+	    req.open('GET', mexAddress, false);
 	    debug('mex xmlhttprequest open');
 	    req.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
 	    req.setRequestHeader("Cache-Control", "no-cache");
@@ -229,6 +242,7 @@ debug("getMex: mex GET request status="+req.status);
     if(req.status == 200) {
 debug("getMex: mex GET request status 200");
         mexResponse = req.responseText;
+debug("getMex: " + mexResponse);
         return mexResponse;
     } else {
     	debug("getMex GET " + req.status + ": " + req.responseText);
@@ -264,10 +278,17 @@ debug("isClaimChecked: is not checked ");
 
 function processManagedCard(
 	managedCard, requiredClaims, optionalClaims, tokenType, clientPseudonym, 
-	relyingPartyURL, relyingPartyCertB64) {
+	relyingPartyURL, relyingPartyCertB64, issuerPolicy) {
 
+	if (issuerPolicy != null) {
+		var to = xmlreplace(mnagedCard.carddata.managed.issuer);
+		var mexAddress = issuerPolicy;
+		var issuerMex = getMex1(to, mexAddress);
+		debug("issuerMex=" + issuermex);
+	}
+	
     var tokenToReturn = null;
-    var mexResponse = getMex(managedCard);
+    var mexResponse = getMexForCard(managedCard);
 
     if(mexResponse != null) {
         //Start with TransportBinding support
@@ -598,7 +619,12 @@ function load(){
     	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
 	        var policy = window.arguments[0];
 	        var label = document.getElementById("notify");
-			var site = policy["cn"];
+			var site = "Unknown";
+			if (policy.hasOwnProperty("cn")) {
+				site = policy["cn"];
+			} else if (policy.hasOwnProperty("url")) {
+				site = policy["url"];
+			}
 	        var please = stringsBundle.getFormattedString('pleaseselectacard', [site]);
 	        label.setAttribute("value", please);
 	    } else {
@@ -637,7 +663,13 @@ function load(){
 	    }
 	}
 	if (!beenThere) {
-	 debug("never been here: " + policy["cn"]);
+	 if (policy.hasOwnProperty("cn")) {
+		 debug("never been here: " + policy["cn"]);
+	 } else if (policy.hasOwnProperty("url")) {
+	 	debug("never been here: " + policy["url"]);
+	 } else {
+	 	debug("never been here");
+	 }
 	 var firstTimeVisit = document.getElementById('firstTimeVisit');
 	 var labelText;
 	 try {
