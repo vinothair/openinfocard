@@ -93,6 +93,7 @@ public class RelyingPartyServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         PrintWriter out = response.getWriter();
+    	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 
         out.println("<html><title>Sample Relying Party</title><style>BODY {color:#000;font-family: verdana, arial, sans-serif;}</style>\n" +
                 "<body>\n" +
@@ -130,8 +131,9 @@ public class RelyingPartyServlet extends HttpServlet {
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         PrintWriter out = response.getWriter();
+        	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 
-            out.println("<html><title>Sample Relying Party</title><style>BODY {color:#000;font-family: verdana, arial, sans-serif;}</style><body>");
+            out.println("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\"><head><title>Sample Relying Party</title><style type=\"text/css\">BODY {color:#000;font-family: verdana, arial, sans-serif;}</style></head><body>");
 
             String encryptedXML = request.getParameter("xmlToken");
             if ((encryptedXML == null) || (encryptedXML.equals(""))) {
@@ -141,7 +143,7 @@ public class RelyingPartyServlet extends HttpServlet {
             }
 
             out.println("<h2>Here's what you posted:</h2>");
-            out.println("<p><textarea rows='10' cols='150'>" + encryptedXML + "</textarea></p>");
+            out.println("<p><textarea rows='10' cols='150' readonly='readonly'>" + escapeHtmlEntities(encryptedXML) + "</textarea></p>");
 
             try {
 
@@ -149,7 +151,7 @@ public class RelyingPartyServlet extends HttpServlet {
 	
 	            if (token.isEncrypted()) {
 		            out.println("<h2>And here's the decrypted token:</h2>");
-		            out.println("<p><textarea rows='10' cols='150'>" + token.getDecryptedToken() + "</textarea></p>");
+		            out.println("<p><textarea rows='10' cols='150' readonly='readonly'>" + escapeHtmlEntities(token.getDecryptedToken()) + "</textarea></p>");
 	            } else {
 		            out.println("<h2>The token is not encrypted!</h2>");
 	            }
@@ -188,9 +190,16 @@ public class RelyingPartyServlet extends HttpServlet {
 	            while (keyIter.hasNext()){
 	                String name = (String) keyIter.next();
 	                String value = (String) claims.get(name);
-	                out.println(name + ": " + escapeHtmlEntities(value) + "<br>");
+	                out.println("<p>" + escapeHtmlEntities(name) + ": " + escapeHtmlEntities(value) + "</p>");
+	            }
+	            
+	            String userAgent = request.getHeader("user-agent");
+	            if ((userAgent != null) && !"".equals(userAgent)) {
+	            	out.println("<h2>Your user agent is</h2>");
+	            	out.println("<p>" + escapeHtmlEntities(userAgent) + "</p>");
 	            }
 
+	            out.println("</body></html>");
         } catch (InfoCardProcessingException e) {
             e.printStackTrace();
             out.println("<h2>An error occured:</h2>");
