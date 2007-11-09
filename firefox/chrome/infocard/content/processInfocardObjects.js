@@ -31,12 +31,50 @@
  */
 
 function do_infocard(e) {
-
-
     var doc = e.originalTarget;
+	
+	var mimetype = navigator.mimeTypes["application/x-informationcard"];
+	if (mimetype) {
+		debug("have handler for mimeType: application/x-informationcard");
+	} else {
+		debug("don't have handler for mimeType: application/x-informationcard");
+	}
+	mimetype = navigator.mimeTypes["application/x-informationCard"];
+	if (mimetype) {
+		debug("have handler for mimeType: application/x-informationCard");
+	} else {
+		debug("don't have handler for mimeType: application/x-informationCard");
+	}
+	mimetype = navigator.mimeTypes["application/infocard"];
+	if (mimetype) {
+		debug("have handler for mimeType: application/infocard");
+	} else {
+		debug("don't have handler for mimeType: application/infocard");
+	}
+
+	{
+		var obj = document.evaluate("//object", doc, null, XPathResult.ANY_TYPE, null).iterateNext();
+		if (obj) {
+			debug("object " + obj.getAttribute("name") + " has type " + obj.getAttribute("type"));
+			debug("binding = " + obj.style.MozBinding);
+		} else {
+			debug("object not found ");
+		}
+	}
+
+	var perpetualMotionPluginCID = "@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1";
+	var perpetualMotionPluginClass = Components.classes[perpetualMotionPluginCID];
+	if (perpetualMotionPluginClass != undefined) {
+		// the perpetual motion plugin is installed. Leave the work to it.
+		debug("The Perpetual-Motion plugin is installed. Object handling terminated.");
+		return;
+	} else {
+		debug("The perpetual-motion plugin is not installed.");
+	}
+
     var icIter = document.evaluate("//object", doc, null, XPathResult.ANY_TYPE, null);
     var ic = icIter.iterateNext();
-    while (ic) {
+    if (ic) {
 
         var type = ic.getAttribute("type");
 
@@ -56,7 +94,7 @@ function do_infocard(e) {
             var formElm = doc.createElement("FORM");
             formElm.setAttribute("id", "firefox_infocard_form");
             formElm.setAttribute("method", "post");
-            formElm.setAttribute("action", parent.getAttribute("action"));
+            formElm.setAttribute("action", form.getAttribute("action"));
             var input = doc.createElement("INPUT");
             input.setAttribute("name",ic.getAttribute("name"));
             input.setAttribute("type","hidden");
@@ -112,7 +150,8 @@ function do_infocard(e) {
 
         }
 
-        ic = icIter.iterateNext();
+		// This does not work for multiple objects anyway
+        // Axel ic = icIter.iterateNext();
 
     }
 }
@@ -259,9 +298,11 @@ function invokeSelector(aEvent){
     win.dispatchEvent(closeEvent);
 
     //modal,,resizable=yes
-    if ( callback == null ) return;
-
-
+    if ( callback == null ) {
+    	debug("callback is null");
+    	return;
+	}
+debug("invokeSelector:0");
     var object = form.getElementsByTagName("object")[0];
 
     var body = form.parentNode;
@@ -270,6 +311,7 @@ function invokeSelector(aEvent){
         body = body.parentNode;
 
     }
+debug("invokeSelector:1");
 
     var infocardForm;
     var forms = body.getElementsByTagName("FORM");
@@ -279,6 +321,8 @@ function invokeSelector(aEvent){
             infocardForm = forms[i];
         }
     }
+debug("invokeSelector:2");
+debug("infocardForm.getAttribute('action')=" + infocardForm.getAttribute('action'));
 
     var inputIter = infocardForm.getElementsByTagName("input");
     var input = inputIter[0];
@@ -374,7 +418,7 @@ function findPos(obj)
 	if (obj.offsetParent) {
 		curleft = obj.offsetLeft
 		curtop = obj.offsetTop
-		while (obj = obj.offsetParent) {
+		while ((obj = obj.offsetParent)) {
 			curleft += obj.offsetLeft
 			curtop += obj.offsetTop
 		}
