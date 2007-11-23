@@ -50,6 +50,6 @@
   <RDF:li RDF:resource="chrome://browser/content/browser.xul"></RDF:li>
  </RDF:Seq>
  <RDF:Seq RDF:about="chrome://browser/content/browser.xul">
-  <RDF:li>chrome://infocard/content/browser.xul</RDF:li>
+  <RDF:li>chrome://infocard/content/InformationCard.xul</RDF:li>
  </RDF:Seq>
 </RDF:RDF>

@@ -1,40 +1,119 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
-<!DOCTYPE overlay>
+<?xml-stylesheet href="cards.css" type="text/css"?>
+<!DOCTYPE overlay SYSTEM "chrome://infocard/locale/prefs.dtd">
 
 <overlay id="openinfocard_preferences_overlay" 
  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
  xmlns:html="http://www.w3.org/1999/xhtml">
 
- <html:script type="application/x-javascript">
-  <![CDATA[
-     function prefsCallback() {
-      var mgmtWindow = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome");
-     }
-  ]]>
- </html:script>
-    
     <!-- Merge with the BrowserPreferences Window -->
-    <prefwindow id="BrowserPreferences">
-
-        <!-- Create a new pane. -->
+    <prefwindow id="BrowserPreferences" onpaneload="populateMenu();">
           <prefpane id="openInfocardPane"
                     label="OpenInfocard"
                     image="chrome://infocard/content/xmldap.png">
-
+			<preferences>
+  				<preference id="pref_cardStoreMasterPasswordEncryption" name="extensions.infocard.cardStoreMasterPasswordEncryption" type="bool"/>
+  				<preference id="pref_cardStoreCurrentProfile" name="extensions.infocard.cardStoreCurrentProfile" type="bool"/>
+  				<preference id="pref_cardStoreLocalFilePath" name="extensions.infocard.cardStoreLocalFilePath" type="unichar"/>
+  				<preference id="pref_cardStoreUrl" name="extensions.infocard.cardStoreUrl" type="unichar"/>
+			</preferences>
+			
               <vbox id="openinfocardSelectorHeader">
-                <label>OpenInfocard Id Selector Preferences</label>
+                <label>&infocard.prefs.title;</label>
               </vbox>
 
               <separator id="openinfocardSelectorSeparator"/>
 
               <vbox id="selectorManageCards">
-                <button label="Manage Cards" oncommand="prefsCallback();"/>
+                <button label="&infocard.prefs.manageCards;" oncommand="prefsCallback();"/>
               </vbox>
+              
+              <groupbox id="cardStorePrefsBox">
+                <caption label="&infocard.prefs.groupboxCaption;"/>
+                <checkbox id="cardStoreMasterPasswordEncryption" label="&infocard.prefs.encryption;" checked="true" preference="pref_cardStoreMasterPasswordEncryption"/>
+                <checkbox id="cardStoreCurrentProfile" label="&infocard.prefs.profile;" checked="true" preference="pref_cardStoreCurrentProfile"/>
+                <hbox>
+                 <label class="prefLabel" value="&infocard.prefs.localFile;" />
+                 <textbox class="prefText" flex="1" id="cardStoreLocalFilePath" preference="pref_cardStoreLocalFilePath" type="autocomplete" autocompletesearch="history"/>
+                 <button label="&infocard.prefs.filePicker;" oncommand="filePicker();"/>
+                </hbox>
+                <hbox>
+                 <label class="prefLabel" value="&infocard.prefs.URL;" />
+                 <textbox class="prefText" flex="1" id="cardStoreUrl" preference="pref_cardStoreUrl" type="autocomplete" autocompletesearch="history"/>
+                </hbox>
+              </groupbox>
+              <groupbox id="chooseSelectorGroupBox" hidden="false">
+                <caption label="&infocard.prefs.chooseSelector;"/>
+                    <menulist id="selector" preference="identityselector">
+                        <menupopup id="menupopup">
+                            <menuitem label="Microsoft CardSpace" value="@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1"/>
+                            <menuitem label="xmldap.org Identity Selector" value="@xmldap.org/identityselector;1"/>
+                        </menupopup>
+                    </menulist>
+              </groupbox>
 
           </prefpane>
 
+ <!-- beware of https://bugzilla.mozilla.org/show_bug.cgi?id=296418 -->
+ <html:script type="application/x-javascript">
+  <![CDATA[
+     function prefsCallback() {
+      var mgmtWindow = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome");
+     }
+     
+     function filePicker() {
 
-
-    </prefwindow>
+       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+       var nsIFilePicker = Components.interfaces.nsIFilePicker;
+       var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+       fp.init(window, "Select a File", nsIFilePicker.modeOpen);
+       fp.appendFilters( nsIFilePicker.filterAll );
+       var res = fp.show();
+       if (res == nsIFilePicker.returnOK) {
+	     var textbox = document.getElementById("cardStoreLocalFilePath");
+         textbox.value = fp.file.path;
+	     var pref = document.getElementById("pref_cardStoreLocalFilePath");
+	     pref.value = fp.file.path;
+       }
+     
+     }
+     
+     function debug(msg) {
+      var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+      debug.logStringMessage("openinfocard prefs: " + msg);
+     }
+     
+     // this does not work. onpaneload seems not to trigger us.
+     function populateMenu() {
+      var menuPopup = document.getElementById("menupopup");
+      try {
+       var obj = Components.classes("@xmldap.org/identityselector;1");
+       if (obj !== undefined) {
+        var menuitem = document.createElement("menuitem");
+        menuitem.label = "openinfocard identity selector";
+        menuitem.value = "@xmldap.org/identityselector;1";
+        menuPopup.appendChild(menuitem);
+       } else {
+        debug("openinfocard class is unknown");
+       }
+      }
+      catch (e) {}
+      try {
+       var obj = Components.classes("@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1");
+       if (obj !== undefined) {
+        var menuitem = document.createElement("menuitem");
+        menuitem.label = "Microsoft CardSpace";
+        menuitem.value = "@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1";
+        menuPopup.appendChild(menuitem);
+       } else {
+        debug("cardspace class is unknown");
+       }
+      }
+      catch (e) {}
+     }
+  ]]>
+ </html:script>
+    
+ </prefwindow>
 </overlay>

@@ -43,7 +43,8 @@ function Xmldapidentityselector() {}
 
 Xmldapidentityselector.prototype = {
 
-    GetBrowserToken: function (issuer , recipientURL, requiredClaims, optionalClaims , tokenType, privacyPolicy, privacyPolicyVersion, serverCert ) {
+    GetBrowserToken: function (
+     issuer , recipientURL, requiredClaims, optionalClaims , tokenType, privacyPolicy, privacyPolicyVersion, serverCert, issuerPolicy ) {
 
         debug('issuer: ' + issuer);
         debug('recipientURL: ' + recipientURL);
@@ -53,6 +54,7 @@ Xmldapidentityselector.prototype = {
         debug('privacyPolicy: ' + privacyPolicy);
         debug('privacyPolicyVersion: ' + privacyPolicyVersion);
         debug('serverCert: ' + serverCert);
+        debug('issuerPolicy: ' + issuerPolicy);
 
 
         var callback;
@@ -64,6 +66,7 @@ Xmldapidentityselector.prototype = {
         policy["optionalClaims"] = optionalClaims;
         policy["privacyUrl"] = privacyPolicy;
         policy["privacyVersion"] = privacyPolicyVersion;
+        policy["issuerPolicy"] = issuerPolicy;
 
         //get a handle on a window
         var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);

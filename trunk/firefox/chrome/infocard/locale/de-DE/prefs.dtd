@@ -1,0 +1,9 @@
+<!ENTITY infocard.prefs.chooseSelector "Bitte w&auml;hlen Sie einen ID selector" >
+<!ENTITY infocard.prefs.encryption "Kartenspeicher verschl&uuml;sseln" >
+<!ENTITY infocard.prefs.profile "current profile" >
+<!ENTITY infocard.prefs.title "OpenInfocard Id Selector Preferences" >
+<!ENTITY infocard.prefs.manageCards "managed cards" >
+<!ENTITY infocard.prefs.filePicker "..." >
+<!ENTITY infocard.prefs.URL "URL" >
+<!ENTITY infocard.prefs.localFile "local file" >
+<!ENTITY infocard.prefs.groupboxCaption "Cardstore Preferences" >

@@ -32,6 +32,9 @@
 .claimLabel{float:left; min-width:100px; max-width:100px;max-height:72px;font-family:trebuchet ms,verdana,helvetica;font-size:1.4em;text-align:left; color: white;}
 .cardcontrols{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
 
+.prefText{float:right; min-width:400px; text-align:left;}
+.prefLabel{float:left; min-width:100px; max-width:100px;text-align:left;}
+
 #colText{width:100px;}
 #colData{width:260px;}
 
