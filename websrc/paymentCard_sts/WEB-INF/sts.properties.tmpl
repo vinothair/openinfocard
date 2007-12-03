@@ -1,13 +1,19 @@
-keystore=/Users/cmort/xmldap_files/xmldap_org.jks
-keystore-password=password
-key-name=xmldap
-key-password=password
+#keystore=/Users/cmort/xmldap_files/xmldap_org.jks
+#keystore-password=password
+#key-name=xmldap
+#key-password=password
+keystore=C:\\Programme\\jboss-4.2.1.GA\\server\\default\\conf\\keystore.jks
+keystore.password=changeit
+key.name=tomcat
+key.password=changeit
 mex.file=/WEB-INF/mex.xml
 mexself.file=/WEB-INF/mex-self.xml
-domain=xmldap.org
+domain=axel.berkom.de:8443
+servletPath=paymentCard_sts
+supportedClaimsClass=org.xmldap.sts.db.PaymentCardSupportedClaims
 # image-file is the path to an image file, which is used as a card image
 # The mime type must be image/png.
-# image-file=/WEB-INF/milo.png
+# image-file=/usr/local/share/xmldap_sts/milo.png
 privacyStatement.text/plain=/WEB-INF/privacy.txt
 privacyStatement.text/html=/WEB-INF/privacy.html
 privacyStatement.text/pdf=/WEB-INF/privacy.pdf
