@@ -1,5 +1,5 @@
-<!ENTITY infocard.prefs.chooseSelector "Bitte w&auml;hlen Sie einen ID selector" >
-<!ENTITY infocard.prefs.encryption "Kartenspeicher verschl&uuml;sseln" >
+<!ENTITY infocard.prefs.chooseSelector "Bitte waehlen Sie einen ID selector" >
+<!ENTITY infocard.prefs.encryption "Kartenspeicher verschluesseln" >
 <!ENTITY infocard.prefs.profile "current profile" >
 <!ENTITY infocard.prefs.title "OpenInfocard Id Selector Preferences" >
 <!ENTITY infocard.prefs.manageCards "managed cards" >
