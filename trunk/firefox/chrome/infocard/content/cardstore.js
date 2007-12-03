@@ -160,7 +160,7 @@ function saveLocalFile(fileName, contents) {
 	                   .createInstance(Components.interfaces.nsIConverterOutputStream);
 		try {
 			converter.init(outputStream, charset, 0, 0x0000);
-			converter.writeString(fileContents);
+			converter.writeString(contents);
 		}
 		finally {
 			converter.close();
@@ -283,7 +283,7 @@ function readLocalFile(fileName) {
 	file.initWithPath( fileName );
 
     if ( file.exists() == false ) {
-
+		debug("readLocalFile: " + fileName + " not found.");
         return newDB();
 
 	} else {
