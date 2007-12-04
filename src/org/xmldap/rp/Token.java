@@ -169,7 +169,7 @@ public class Token {
             		throw new InfoCardProcessingException("This token does not have a certificate");
             	}
             } catch (CertificateExpiredException e) {
-                System.out.println("Certificate expired");
+                System.out.println("Certificate expired: " + e.getMessage());
                 certificateValid = false;
             } catch (CertificateNotYetValidException e) {
                 System.out.println("Certificate not yet valid");
