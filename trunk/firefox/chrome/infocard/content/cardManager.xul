@@ -53,6 +53,13 @@
     <script>
         TokenIssuer.initialize();
     </script>
+    
+    <keyset>
+  		<key id="cancel-key" keycode="VK_ESCAPE" oncommand="cancel();"/>
+  		<key id="insert-key" keycode="VK_INSERT" oncommand="newCard();"/>
+	</keyset>
+
+    <vbox style="overflow:auto;" id="mainScrollbox" flex="1">
         <hbox id="mainbar">
             <vbox>
                 <label id="mainlabel" value="&cardmanager.daylabel;"/>
@@ -75,8 +82,8 @@
 
 
         <hbox id="instructarea" class="instructarea">
-            <label class="lblTitle" id="notify" value="" crop="end"/>
-            <label class="lblTitle" id="cardname" value="" hidden="true"/>
+            <label class="notify" id="notify" value="" crop="end" float="left" flex="10"/>
+            <label class="cardname" id="cardname" value="" hidden="true" float="right" flex="1"/>
         </hbox>
 
         <hbox id="firstTimeVisitBox" class="firstTimeVisitBox"  hidden="true">
@@ -164,6 +171,7 @@
                     <spacer width="10"></spacer>
                 </hbox>
             </scrollbox>
+	</vbox>
 
             <hbox id="controlarea">
 
@@ -178,6 +186,7 @@
                 <hbox flex="1">
                     <spacer></spacer>
                 </hbox>
+
                 <hbox id="controls">
 
                     <vbox id="newCard">

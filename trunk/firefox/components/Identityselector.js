@@ -92,7 +92,7 @@ Xmldapidentityselector.prototype = {
         // win.document.location.href is chrome://.../browser.xul
 		policy["url"] = recipientURL; 
 
-        var cardManager = win.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome", policy, function (callbackData) { callback = callbackData;});
+        var cardManager = win.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome,resizable", policy, function (callbackData) { callback = callbackData;});
 
         var doc = win.document;
         var event = doc.createEvent("Events");
