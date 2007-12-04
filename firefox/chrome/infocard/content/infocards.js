@@ -220,7 +220,14 @@ debug("managedCard.carddata.managed.mex: " + mexAddress);
     req.setRequestHeader("accept-language", "en-us");
     req.setRequestHeader("User-Agent", "xmldap infocard stack");
     debug('mex xmlhttprequest send');
-    req.send(mex);
+    try {
+	    req.send(mex);
+    }
+    catch (e) {
+    	debug(e);
+    	alert("posting the MEX request failed." + e);
+    	return null;
+    }
 debug("getMex: mex POST request status="+req.status);
     if(req.status == 200) {
 debug("getMex: mex POST request status 200");
@@ -237,7 +244,14 @@ debug("getMex POST " + req.status + ": " + req.responseText);
 	    req.setRequestHeader("accept-language", "en-us");
 	    req.setRequestHeader("User-Agent", "xmldap infocard stack");
 	    debug('mex GET xmlhttprequest send');
-	    req.send(null);
+	    try {
+		    req.send(null);
+	    }
+	    catch (e) {
+	    	debug(e);
+    		alert("getting the MEX request failed." + e);
+    		return null;
+	    }
 debug("getMex: mex GET request status="+req.status);
     if(req.status == 200) {
 debug("getMex: mex GET request status 200");
@@ -471,7 +485,14 @@ debug("processManagedCard: request: " + rst);
             rstReq.setRequestHeader("Cache-Control", "no-cache");
             rstReq.setRequestHeader("accept-language", "en-us");
             rstReq.setRequestHeader("User-Agent", "xmldap infocard stack");
-            rstReq.send(rst);
+            try {
+	            rstReq.send(rst);
+            } 
+            catch (e) {
+				debug(e);
+				alert("posting the request to get the security tokens failed. " + e);
+				return null;            	
+            }
             if(rstReq.status == 200) {
 debug("processManagedCard: request status 200");
 
@@ -745,7 +766,10 @@ function indicateRequiredClaims(){
 }
 
 function setCardSelf() {
+	//debug("setCardSelf card= " + selectedCard);
+	debug("setCardSelf givenname: " + selectedCard.carddata.selfasserted.givenname);
         document.getElementById("givenname").value = selectedCard.carddata.selfasserted.givenname;
+	debug("setCardSelf: " + document.getElementById("givenname").value);
         document.getElementById("surname").value = selectedCard.carddata.selfasserted.surname;
         document.getElementById("email").value = selectedCard.carddata.selfasserted.emailaddress;
         document.getElementById("streetAddress").value = selectedCard.carddata.selfasserted.streetaddress;
@@ -1003,6 +1027,11 @@ function setCard(card){
     }
 }
 
+function dblclick(event) {
+	handleCardChoice(event);
+	ok();
+}
+
 function handleCardChoice(event){
 
     var choice = event.originalTarget;
@@ -1064,6 +1093,7 @@ function createItem(c, classStr){
     vbox.appendChild(labelVersion);
     hbox.appendChild(vbox);
     hbox.addEventListener("click", handleCardChoice, false);
+    hbox.addEventListener("dblclick", dblclick, false);
     debug ("Setting cardid " + hbox.getAttribute("cardid"));
     return hbox;
 

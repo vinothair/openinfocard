@@ -1,17 +1,17 @@
-#mainbar{background-color:#475059; min-height:72px; max-height:72px; min-width:800px; border: 5px solid white;}
+#mainbar{background-color:#475059; min-width:800px; border: 5px solid white;}
 
-#listarea{min-width:800px;max-width:800px;margin-left:auto;margin-right:auto;background-color:#a6a6a6; min-height: 155px; max-height: 155px;  border-left: 5px solid white;border-right: 5px solid white;}
-#cardselection{min-width:790px;max-width:790px;background-color:#a6a6a6; min-height: 155px; max-height: 155px;  border-left: 5px solid white;border-right: 5px solid white;}
-#instructarea{max-width:800px;border-top:5px solid white;background-color:#475059; min-height: 40px; max-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
-#firstTimeVisitBox{max-width:800px;border-top:5px solid white;background-color:#475059; min-height: 40px; max-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
-#editarea{padding:10px;background-color:#475059;min-height: 250px;  max-height: 250px;  border-left: 5px solid white;border-right: 5px solid white;}
-#controlarea{ padding: 5px; border-bottom:5px solid white;background-color:#475059; min-height: 40px; max-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
+#listarea{min-width:800px;margin-left:auto;margin-right:auto;background-color:#a6a6a6; min-height: 155px; max-height: 155px;  border-left: 5px solid white;border-right: 5px solid white;}
+#cardselection{background-color:#a6a6a6; min-height: 155px; max-height: 155px;  border-left: 5px solid white;border-right: 5px solid white;}
+#instructarea{border-top:5px solid white;background-color:#475059; min-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
+#firstTimeVisitBox{border-top:5px solid white;background-color:#475059; min-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
+#editarea{padding:10px;background-color:#475059;min-height: 250px; border-left: 5px solid white;border-right: 5px solid white;}
+#controlarea{ padding: 5px; border-bottom:5px solid white;background-color:#475059; min-height: 40px; border-left: 5px solid white;border-right: 5px solid white;}
 #controls{ min-width: 340px; }
 #cardselection{ margin-left:auto; margin-right:auto; }
 #managedClaims{ float:left; }
 #selfassertedClaims{ float:left; }
-#editgrid_left{min-width:390px;max-width:390px}
-#editgrid_right{min-width:390px;max-width:390px}
+#editgrid_left{min-width:390px;max-width:49%;}
+#editgrid_right{min-width:390px;max-width:49%;}
 #openid_iframe{width:100%; height:100px;}
 
 .cardClass{background-color:#FFFFFF; min-height:110px; max-height:110px; min-width:215px; max-width:215px; border: 1px solid #475059;}
@@ -24,20 +24,18 @@
 
 #mainlabel{padding:5px;font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:3.6em;text-align:left; color: white;}
 #select{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
-.lblTitle{max-width:780px; padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: white;}
-.lblFirstTimeVisit{max-width:780px; padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: #FF0000;}
-.lblText{max-width:780px;font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:right; color: white;}
-.rowClass{max-width:350px; max-height:72px}
-.claimText{float:right; max-width:200px;max-height:72px;font-family:trebuchet ms,verdana,helvetica;font-size:1.4em;text-align:left; color: black;}
-.claimLabel{float:left; min-width:100px; max-width:100px;max-height:72px;font-family:trebuchet ms,verdana,helvetica;font-size:1.4em;text-align:left; color: white;}
+.lblTitle{padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;color: white;}
+.notify{padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;color: white;}
+.cardname{padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;color: white;}
+.lblFirstTimeVisit{padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: #FF0000;}
+.lblText{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:right; color: white;}
+.rowClass{max-width:49%; max-height:72px;}
+.claimText{font-family:trebuchet ms,verdana,helvetica;font-size:1.4em;text-align:left; color: black;}
+.claimLabel{min-width:100px; font-family:trebuchet ms,verdana,helvetica;font-size:1.4em;text-align:left; color: white;}
 .cardcontrols{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
 
 .prefText{float:right; min-width:400px; text-align:left;}
-.prefLabel{float:left; min-width:100px; max-width:100px;text-align:left;}
+.prefLabel{float:left; min-width:100px; max-width:16%;text-align:left;}
 
-#colText{width:100px;}
-#colData{width:260px;}
-
-.rowClass{max-height:72px;}
-
-
+#colText{width:16%;}
+#colData{width:33%;}

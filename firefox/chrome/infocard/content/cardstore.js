@@ -296,26 +296,45 @@ function readLocalFile(fileName) {
         if (!output) {
         	output = newDB();
         } else {
-        	//var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].
-            //	getService(Components.interfaces.nsIWalletService);
-            //var decrypted = walletService.WALLET_Decrypt(output);
-            var sdr = Components.classes["@mozilla.org/security/sdr;1"]
-                            .getService(Components.interfaces.nsISecretDecoderRing);
-            var decrypted = "";
-            try {
-	    		decrypted = sdr.decryptString(output);
-            } catch (e) {
-            	try {
-            		debug("error decypting the cardstore: " + fileName);
-	            	return new XML(output);
-            	} catch (e) {
-            		debug("unencrypted cardstore is no valid xml: " + fileName);
-            		return newDB();
-            	}
-            }
+			var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                    getService(Components.interfaces.nsIPrefService);
+			prefs = prefs.getBranch("extensions.infocard.");
+        	var encrypt = prefs.getBoolPref("cardStoreMasterPasswordEncryption");
+			if (encrypt) {
+	            var sdr = Components.classes["@mozilla.org/security/sdr;1"]
+	                            .getService(Components.interfaces.nsISecretDecoderRing);
+	            var decrypted = "";
+	            try {
+		    		decrypted = sdr.decryptString(output);
+	            } catch (e) {
+	            	try {
+	            		debug("error decypting the cardstore: " + fileName);
+		            	return new XML(output);
+	            	} catch (e) {
+	            		debug("unencrypted cardstore is no valid xml: " + fileName);
+	            		return newDB();
+	            	}
+	            }
             
-            debug(decrypted);
-            return new XML(decrypted);
+            	debug(decrypted);
+            	return new XML(decrypted);
+			} else {
+				try {
+					return new XML(output);
+				}
+				catch (e) {
+					// try to decrypt
+		            var sdr = Components.classes["@mozilla.org/security/sdr;1"]
+		                            .getService(Components.interfaces.nsISecretDecoderRing);
+		            var decrypted = "";
+		            try {
+			    		decrypted = sdr.decryptString(output);
+		            } catch (e) {
+		            	debug("error decypting the cardstore: " + fileName);
+			            return newDB();
+		            }
+				}
+			}
         }
         var dbFile = new XML(output);
         return dbFile;
