@@ -59,7 +59,6 @@
   		<key id="insert-key" keycode="VK_INSERT" oncommand="newCard();"/>
 	</keyset>
 
-    <vbox style="overflow:auto;" id="mainScrollbox" flex="1">
         <hbox id="mainbar">
             <vbox>
                 <label id="mainlabel" value="&cardmanager.daylabel;"/>
@@ -74,12 +73,10 @@
 
         <hbox id="listarea">
             <hbox id="openID"></hbox>
-            <hbox>
-                <arrowscrollbox orient="horizontal" flex="1" id="cardselection">
-                </arrowscrollbox>
-            </hbox>
+            <arrowscrollbox flex="1" orient="horizontal" id="cardselection"></arrowscrollbox>
         </hbox>
 
+    <vbox style="overflow:auto;" id="mainScrollbox" flex="1">
 
         <hbox id="instructarea" class="instructarea">
             <label class="notify" id="notify" value="" crop="end" float="left" flex="10"/>

@@ -59,7 +59,7 @@
  <html:script type="application/x-javascript">
   <![CDATA[
      function prefsCallback() {
-      var mgmtWindow = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome");
+      var mgmtWindow = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome,resizable,width=800,height=640,centerscreen");
      }
      
      function filePicker() {
