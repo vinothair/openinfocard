@@ -215,7 +215,7 @@ function read(fileName) {
 	var useProfile = prefs.getBoolPref("cardStoreCurrentProfile");
 	if (useProfile) {
 	    fileName = getDir() + fileName;
-	    debug("using profile cardstore: " + filename);
+	    debug("using profile cardstore: " + fileName);
 		return readLocalFile(fileName);
 	}
 	
