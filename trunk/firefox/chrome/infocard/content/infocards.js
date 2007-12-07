@@ -612,6 +612,7 @@ function load(){
     var selectMe;
     var beenThere = false;
     var count = 0;
+    var scrolledIntoView = false;
     for each (c in cardFile.infocard) {
 	    var cardClass = "contact";
     	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
@@ -629,6 +630,11 @@ function load(){
 	       if (rpId == rpIdentifier) {
 	        debug("been there at: " + policy["cn"]);
             beenThere = true;
+            if (scrolledIntoView == false) {
+            	var xpcomInterface = cardArea.scrollBoxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+   				xpcomInterface.ensureElementIsVisible(latestCard);
+   	        	scrolledIntoView = true;
+            }
             break;
            }
           }
@@ -684,13 +690,16 @@ function load(){
 	    }
 	}
 	if (!beenThere) {
-	 if (policy.hasOwnProperty("cn")) {
-		 debug("never been here: " + policy["cn"]);
-	 } else if (policy.hasOwnProperty("url")) {
-	 	debug("never been here: " + policy["url"]);
-	 } else {
-	 	debug("never been here");
-	 }
+	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+		 var policy = window.arguments[0];
+		 if (policy.hasOwnProperty("cn")) {
+			 debug("never been here: " + policy["cn"]);
+		 } else if (policy.hasOwnProperty("url")) {
+		 	debug("never been here: " + policy["url"]);
+		 } else {
+		 	debug("never been here");
+		 }
+	}
 	 var firstTimeVisit = document.getElementById('firstTimeVisit');
 	 var labelText;
 	 try {
@@ -1020,6 +1029,12 @@ function setCard(card){
         var label = document.getElementById("notify");
         label.setAttribute("value", "Use OpenID with Identity URL: " + selectedCard.id);
 
+		var cardname = document.getElementById("cardname");
+        cardname.value = "";
+        cardname.hidden = true;
+
+        selfassertedClaims.setAttribute("hidden", "true");
+        managedClaims.setAttribute("hidden", "true");
 
     } else  {
     	alert("unsupported card type\n" + selectedCard.type);
@@ -1029,7 +1044,9 @@ function setCard(card){
 
 function dblclick(event) {
 	handleCardChoice(event);
-	ok();
+	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+		ok();
+	} // else cardManager.xul called from preferences
 }
 
 function handleCardChoice(event){
