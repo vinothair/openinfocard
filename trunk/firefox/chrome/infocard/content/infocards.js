@@ -868,18 +868,64 @@ function setCardManaged(requiredClaims, optionalClaims) {
  		 checkbox.setAttribute("crop", "end");
 	     checkbox.setAttribute("checked", "false");
  		 checkbox.setAttribute("disabled", "true");
+ 		 var value = "";
 		 if (optionalClaims != null) {
-		  if (optionalClaims.indexOf(uri) != -1) {
+		  var ui = optionalClaims.indexOf(uri);
+		  if (ui != -1) {
  		   checkbox.setAttribute("checked", "false");
  		   checkbox.setAttribute("disabled", "false");
 debug("optional claim:" + uri);
+ 		   var thisClaim = optionalClaims.substr(ui);
+ 		   var ws = thisClaim.indexOf(' '); // space
+ 		   if (ws == -1) {
+ 		   	ws = thisClaim.indexOf('	'); // tab
+ 		   	if (ws == -1) {
+ 		   		ws = thisClaim.indexOf(String.fromCharCode(10));  // line-feed
+ 		   		if (ws == -1) {
+ 		   			ws = thisClaim.indexOf(String.fromCharCode(13)); // carriage return
+ 		   		}
+ 		   	}
+ 		   }
+ 		   if (ws != -1) {
+ 		   	thisClaim = thisClaim.substring(0,ws);
+ 		   	debug("thisClaim: " + thisClaim);
+ 		   }
+		   var qi = thisClaim.indexOf('?');
+debug("qi claim:" + thisClaim + " " + qi);
+		   if (qi >= 0) {
+				value = thisClaim.substr(qi);
+				debug("variable claim value: " + value);	
+		   }
 		  }
 		 }
 		 if (requiredClaims != null) {
-		  if (requiredClaims.indexOf(uri) != -1) {
+		  var ui = requiredClaims.indexOf(uri);
+		  if (ui != -1) {
  		   checkbox.setAttribute("checked", "true");
  		   checkbox.setAttribute("disabled", "true");
-debug("required claim:" + uri);
+debug("requiredClaim claim:" + uri);
+ 		   var thisClaim = requiredClaims.substr(ui);
+debug("thisClaim=" + thisClaim);
+ 		   var ws = thisClaim.indexOf(' '); // space
+ 		   if (ws == -1) {
+ 		   	ws = thisClaim.indexOf('	'); // tab
+ 		   	if (ws == -1) {
+ 		   		ws = thisClaim.indexOf(String.fromCharCode(10));  // line-feed
+ 		   		if (ws == -1) {
+ 		   			ws = thisClaim.indexOf(String.fromCharCode(13)); // carriage return
+ 		   		}
+ 		   	}
+ 		   }
+ 		   if (ws != -1) {
+ 		   	thisClaim = thisClaim.substring(0,ws);
+ 		   	debug("thisClaim: " + thisClaim);
+ 		   }
+		   var qi = thisClaim.indexOf('?');
+debug("qi Claim:" + thisClaim + " " + qi);
+		   if (qi >= 0) {
+				value = thisClaim.substr(qi);
+				debug("variable Claim value: " + value);	
+		   }
 		  }
 		 }
 		 try {
@@ -893,7 +939,7 @@ debug("required claim:" + uri);
 		 var textbox = document.createElement("textbox");
 		 textbox.setAttribute("id", uri);
 		 textbox.setAttribute("class", "claimText");
-		 textbox.setAttribute("value", "");
+		 textbox.setAttribute("value", value);
 		 textbox.setAttribute("readonly", "true");
 		 row.appendChild(checkbox);
 		 row.appendChild(textbox);
@@ -929,20 +975,64 @@ debug("required claim:" + uri);
  		 checkbox.setAttribute("class", "claimLabel");
  		 checkbox.setAttribute("crop", "end");
  		 checkbox.setAttribute("checked", "false");
- 		 checkbox.setAttribute("checked", "false");
  		 checkbox.setAttribute("disabled", "true");
 		 if (optionalClaims != null) {
-		  if (optionalClaims.indexOf(uri) != -1) {
+		  var ui = optionalClaims.indexOf(uri);
+		  if (ui != -1) {
  		   checkbox.setAttribute("checked", "false");
  		   checkbox.setAttribute("disabled", "false");
 debug("optional claim:" + uri);
+ 		   var thisClaim = optionalClaims.substr(ui);
+ 		   var ws = thisClaim.indexOf(' '); // space
+ 		   if (ws == -1) {
+ 		   	ws = thisClaim.indexOf('	'); // tab
+ 		   	if (ws == -1) {
+ 		   		ws = thisClaim.indexOf(String.fromCharCode(10));  // line-feed
+ 		   		if (ws == -1) {
+ 		   			ws = thisClaim.indexOf(String.fromCharCode(13)); // carriage return
+ 		   		}
+ 		   	}
+ 		   }
+ 		   if (ws != -1) {
+ 		   	thisClaim = thisClaim.substring(0,ws);
+ 		   	debug("thisClaim: " + thisClaim);
+ 		   }
+		   var qi = thisClaim.indexOf('?');
+debug("qi claim:" + thisClaim + " " + qi);
+		   if (qi >= 0) {
+				value = thisClaim.substr(qi);
+				debug("variable claim value: " + value);	
+		   }
 		  }
 		 }
 		 if (requiredClaims != null) {
-		  if (requiredClaims.indexOf(uri) != -1) {
+		  var ui = requiredClaims.indexOf(uri);
+		  if (ui != -1) {
  		   checkbox.setAttribute("checked", "true");
  		   checkbox.setAttribute("disabled", "true");
-debug("required claim:" + uri);
+debug("requiredClaim claim:" + uri);
+ 		   var thisClaim = requiredClaims.substr(ui);
+debug("thisClaim=" + thisClaim);
+ 		   var ws = thisClaim.indexOf(' '); // space
+ 		   if (ws == -1) {
+ 		   	ws = thisClaim.indexOf('	'); // tab
+ 		   	if (ws == -1) {
+ 		   		ws = thisClaim.indexOf(String.fromCharCode(10));  // line-feed
+ 		   		if (ws == -1) {
+ 		   			ws = thisClaim.indexOf(String.fromCharCode(13)); // carriage return
+ 		   		}
+ 		   	}
+ 		   }
+ 		   if (ws != -1) {
+ 		   	thisClaim = thisClaim.substring(0,ws);
+ 		   	debug("thisClaim: " + thisClaim);
+ 		   }
+		   var qi = thisClaim.indexOf('?');
+debug("qi Claim:" + thisClaim + " " + qi);
+		   if (qi >= 0) {
+				value = thisClaim.substr(qi);
+				debug("variable Claim value: " + value);	
+		   }
 		  }
 		 }
 		 try {
@@ -956,7 +1046,7 @@ debug("required claim:" + uri);
 		 var textbox = document.createElement("textbox");
 		 textbox.setAttribute("id", uri);
 		 textbox.setAttribute("class", "claimText");
-		 textbox.setAttribute("value", "");
+		 textbox.setAttribute("value", value);
 		 textbox.setAttribute("readonly", "true");
 		 row.appendChild(checkbox);
 		 row.appendChild(textbox);
