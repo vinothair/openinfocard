@@ -8,15 +8,18 @@
  xmlns:html="http://www.w3.org/1999/xhtml">
 
     <!-- Merge with the BrowserPreferences Window -->
-    <prefwindow id="BrowserPreferences" onpaneload="populateMenu();">
+    <prefwindow id="BrowserPreferences">
           <prefpane id="openInfocardPane"
                     label="OpenInfocard"
-                    image="chrome://infocard/content/xmldap.png">
+                    image="chrome://infocard/content/xmldap.png"
+                    onpaneload="populateMenu();">
 			<preferences>
   				<preference id="pref_cardStoreMasterPasswordEncryption" name="extensions.infocard.cardStoreMasterPasswordEncryption" type="bool"/>
   				<preference id="pref_cardStoreCurrentProfile" name="extensions.infocard.cardStoreCurrentProfile" type="bool"/>
   				<preference id="pref_cardStoreLocalFilePath" name="extensions.infocard.cardStoreLocalFilePath" type="unichar"/>
   				<preference id="pref_cardStoreUrl" name="extensions.infocard.cardStoreUrl" type="unichar"/>
+  				<preference id="pref_identityselector" name="identityselector.contractid" type="unichar"/>
+  				<preference id="pref_advertiseSelector" name="identityselector.advertise" type="unichar"/>
 			</preferences>
 			
               <vbox id="openinfocardSelectorHeader">
@@ -45,10 +48,17 @@
               </groupbox>
               <groupbox id="chooseSelectorGroupBox" hidden="false">
                 <caption label="&infocard.prefs.chooseSelector;"/>
-                    <menulist id="selector" preference="identityselector">
-                        <menupopup id="menupopup">
-                            <menuitem label="Microsoft CardSpace" value="@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1"/>
-                            <menuitem label="xmldap.org Identity Selector" value="@xmldap.org/identityselector;1"/>
+                    <menulist id="selector" preference="pref_identityselector">
+                    	<menupopup id="menupopup" />
+                    </menulist>
+              </groupbox>
+              <groupbox id="advertiseSelectorGroupBox" hidden="false">
+                <caption label="&infocard.prefs.advertiseSelector;"/>
+                    <menulist id="advertiseSelector" preference="pref_advertiseSelector">
+                        <menupopup id="advselectorpopup">
+                            <menuitem label="&infocard.prefs.advertiseSelectorNO;" value="advertiseSelectorNO"/>
+                            <menuitem label="&infocard.prefs.advertiseSelectorInstallation;" value="advertiseSelectorInstallation"/>
+                            <menuitem label="&infocard.prefs.advertiseSelectorName;" value="advertiseSelectorName"/>
                         </menupopup>
                     </menulist>
               </groupbox>
@@ -80,37 +90,43 @@
      }
      
      function debug(msg) {
-      var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+      var debug = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
       debug.logStringMessage("openinfocard prefs: " + msg);
      }
      
-     // this does not work. onpaneload seems not to trigger us.
      function populateMenu() {
       var menuPopup = document.getElementById("menupopup");
       try {
-       var obj = Components.classes("@xmldap.org/identityselector;1");
+       var obj = Components.classes["@xmldap.org/identityselector;1"];
        if (obj !== undefined) {
         var menuitem = document.createElement("menuitem");
-        menuitem.label = "openinfocard identity selector";
-        menuitem.value = "@xmldap.org/identityselector;1";
+        menuitem.setAttribute("label", "openinfocard identity selector");
+        menuitem.setAttribute("value", "@xmldap.org/identityselector;1");
         menuPopup.appendChild(menuitem);
        } else {
         debug("openinfocard class is unknown");
        }
       }
-      catch (e) {}
+      catch (e) { debug("openinfocard extension is not installed. " + e); }
       try {
-       var obj = Components.classes("@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1");
+       var obj = Components.classes["@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1"];
        if (obj !== undefined) {
         var menuitem = document.createElement("menuitem");
-        menuitem.label = "Microsoft CardSpace";
-        menuitem.value = "@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1";
+        menuitem.setAttribute("label", "Microsoft CardSpace");
+        menuitem.setAttribute("value", "@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1");
         menuPopup.appendChild(menuitem);
        } else {
         debug("cardspace class is unknown");
        }
       }
-      catch (e) {}
+      catch (e) { debug("cardspace extension is not installed. " + e); }
+      
+	  {
+        var menuitem = document.createElement("menuitem");
+        menuitem.setAttribute("label", "digitalme");
+        menuitem.setAttribute("value", "digitalme");
+        menuPopup.appendChild(menuitem);
+      }
      }
   ]]>
  </html:script>
