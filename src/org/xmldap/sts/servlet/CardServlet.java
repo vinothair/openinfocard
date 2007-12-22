@@ -183,7 +183,7 @@ public class CardServlet extends HttpServlet {
         tokenList.addSupportedToken(token);
         card.setTokenList(tokenList);
 
-        SupportedClaimList claimList = getSupportedClaimList();
+        SupportedClaimList claimList = getSupportedClaimList(managedCard);
         card.setClaimList(claimList);
 
         card.setPrivacyPolicy(getPrivacyPolicyReference(domainname));
@@ -214,15 +214,18 @@ public class CardServlet extends HttpServlet {
         return tsr;
     }
 
-    protected SupportedClaimList getSupportedClaimList() {
+    protected SupportedClaimList getSupportedClaimList(ManagedCard managedCard) {
     	List<DbSupportedClaim> supportedClaims = supportedClaimsImpl.dbSupportedClaims();
         SupportedClaimList claimList = new SupportedClaimList();
         SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "your personal private identitfier");
         claimList.addSupportedClaim(supportedClaim);
     	for (DbSupportedClaim claim : supportedClaims) {
-    		// TODO: support description. Axel
-    		supportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri, "A Description");
-    		claimList.addSupportedClaim(supportedClaim);
+    		String value = managedCard.getClaim(claim.uri);
+    		if ((value != null) && !("".equals(value))) {
+	    		// TODO: support description. Axel
+	    		supportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri, "A Description");
+	    		claimList.addSupportedClaim(supportedClaim);
+    		}
     	}
 //        SupportedClaimList claimList = new SupportedClaimList();
 //        SupportedClaim given = new SupportedClaim("GivenName", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);

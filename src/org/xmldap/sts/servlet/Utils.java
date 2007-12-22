@@ -164,8 +164,11 @@ public class Utils {
         		while (iter.hasNext()) {
         			String requestedClaim = (String)iter.next();
         			if (claim.equals(requestedClaim)) {
-                		token.setClaim(claim, card.getClaim(claim));
-                		System.out.println("found static claim " + claim + "\n");
+        				String value = card.getClaim(claim);
+        				if ((value != null) && !("".equals(value))) {
+	                		token.setClaim(claim, value);
+	                		System.out.println("found static claim " + claim + "\n");
+        				}
         			}
         		}
         	}

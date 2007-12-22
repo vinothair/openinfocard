@@ -16,11 +16,25 @@
 //
 // Author: Andrew Hodgkinson <ahodgkinson@novell.com>
 // Contributor: Axel Nennker http://ignisvulpis.blogspot.com/
+//
 //------------------------------------------------------------------------------
 
-/****************************************************************************
-Desc:
-****************************************************************************/
+// **************************************************************************
+// Desc: Globals
+// **************************************************************************
+
+var gPrefService = Components.classes[ 
+		"@mozilla.org/preferences-service;1"].
+			getService( Components.interfaces.nsIPrefBranch);
+var gNavPlat = navigator.platform;
+var gbIsWin = ((gNavPlat.indexOf( "Win") > -1) ? true : false);
+var gbIsMac = ((gNavPlat.indexOf( "Mac") > -1) ? true : false);
+var gbIsLinux = ((gNavPlat.indexOf( "Linux") > -1) ? true : false);
+					
+// **************************************************************************
+// Desc:
+// **************************************************************************
+
 var ICProgressListener =
 {
 	QueryInterface : function( aIID)
@@ -37,84 +51,102 @@ var ICProgressListener =
 	
 	onStateChange : function( aProgress, aRequest, aFlag, aStatus)
 	{
+		var progListIFace = Components.interfaces.nsIWebProgressListener;
+		
+		// Log the flags
+		
+		IdentitySelector.logMessage( "onStateChange", "flags = " + aFlag);
+		
+		if( aFlag & progListIFace.STATE_IS_DOCUMENT)
+		{
+			IdentitySelector.logMessage( "onStateChange", "flag & document");
+		}
+			
+		if( aFlag & progListIFace.STATE_IS_WINDOW)
+		{
+			IdentitySelector.logMessage( "onStateChange", "flag & window");
+		}
+		
+		if( aFlag & progListIFace.STATE_START)
+		{
+			IdentitySelector.logMessage( "onStateChange", "flag & start");
+		}
+		
+		if( aFlag & progListIFace.STATE_STOP)
+		{
+			IdentitySelector.logMessage( "onStateChange", "flag & stop");
+		}
+		
+		// Process the document.  The 'STOP' state isn't reached until after
+		// the page is fully loaded and all onload events have completed.
+		// We need to re-process the page in case an onload event added
+		// information card elements or objects to the page.  An example of 
+		// a page that does this is login.live.com.
+		
+		if( aFlag & progListIFace.STATE_STOP)
+		{
+			if( aFlag & progListIFace.STATE_IS_WINDOW)
+			{
+				IdentitySelector.logMessage( "onStateChange", 
+					"stop status code = " + aStatus);
+					
+				if( aStatus == 0)
+				{
+					// Process any information card items
+					
+					IdentitySelector.processICardItems( 
+						aProgress.DOMWindow.document, true);
+				}
+			}
+		}
+		
+		return( 0);
 	},
 	
 	onLocationChange : function( aProgress, aRequest, aURI)
 	{
 		// This fires when a load event has been confirmed or when the
-		// user switches tabs.  At this point, Firefox allows content to be
-		// added into the document.  This is where we add a global submit
-		// intercept.
+		// user switches tabs.  At this point, Firefox has created a skeletal
+		// document into which the source document will be loaded.  This is 
+		// where we add a global submit intercept.
 		
 		try
 		{
-			var doc = aProgress.DOMWindow.content.document;
-			var headElm = doc.getElementsByTagName( "HEAD")[ 0];
-			
-			if( headElm != null)
-			{
-				if( doc.getElementById( "__identityselector__") == null)
-				{
-					var scriptNode = doc.createElement( "SCRIPT");
-					
-					scriptNode.appendChild( doc.createTextNode( "try"));
-					scriptNode.appendChild( doc.createTextNode( "{"));
-					scriptNode.appendChild( doc.createTextNode( "   document.__identityselector__ = new Object();"));
-					scriptNode.appendChild( doc.createTextNode( "   document.__identityselector__.data = new Object();"));
-					
-					scriptNode.appendChild( doc.createTextNode( "   document.__identityselector__.chainSubmit = HTMLFormElement.prototype.submit;"));
-					scriptNode.appendChild( doc.createTextNode( "   HTMLFormElement.prototype.submit = function()"));
-					scriptNode.appendChild( doc.createTextNode( "   {"));
-					scriptNode.appendChild( doc.createTextNode( "      var event = document.createEvent( 'Event');"));
-					scriptNode.appendChild( doc.createTextNode( "      event.initEvent( 'ICFormSubmit', true, true);"));
-					scriptNode.appendChild( doc.createTextNode( "      this.dispatchEvent( event);"));
-					scriptNode.appendChild( doc.createTextNode( "      document.__identityselector__.chainSubmit.apply( this);"));
-					scriptNode.appendChild( doc.createTextNode( "   };"));
-					
-					scriptNode.appendChild( doc.createTextNode( "   document.__identityselector__.valueGetter = function()"));
-					scriptNode.appendChild( doc.createTextNode( "   {"));
-					scriptNode.appendChild( doc.createTextNode( "      var event = document.createEvent( 'Event');"));
-					scriptNode.appendChild( doc.createTextNode( "      event.initEvent( 'ICGetTokenValue', true, true);"));
-					scriptNode.appendChild( doc.createTextNode( "      this.dispatchEvent( event);"));
-					scriptNode.appendChild( doc.createTextNode( "      return( this.__value);"));
-					scriptNode.appendChild( doc.createTextNode( "   };"));
-					scriptNode.appendChild( doc.createTextNode( "}"));
-					scriptNode.appendChild( doc.createTextNode( "catch( e)"));
-					scriptNode.appendChild( doc.createTextNode( "{"));
-					scriptNode.appendChild( doc.createTextNode( "   alert( e);"));
-					scriptNode.appendChild( doc.createTextNode( "}"));
-					scriptNode.setAttribute( "id", "__identityselector__");
-					
-					headElm.appendChild( scriptNode);
-				}
-			}
+			IdentitySelector.runInterceptScript( aProgress.DOMWindow.document);
 		}
 		catch( e)
 		{
 			IdentitySelector.reportError( "onLocationChange", e);
 		}
+		
+		return( 0);
 	},
 	
 	onProgressChange : function()
 	{
+		return( 0);
 	},
 	
 	onStatusChange : function()
 	{
+		return( 0);
 	},
 	
 	onSecurityChange : function()
 	{
+		return( 0);
 	},
 	
 	onLinkIconAvailable : function()
 	{
+		return( 0);
 	}
 };
 
-/****************************************************************************
-Desc:
-****************************************************************************/
+// **************************************************************************
+// Desc:
+// **************************************************************************
+
 var IdentitySelector = 
 {
 	// ***********************************************************************
@@ -149,70 +181,267 @@ var IdentitySelector =
 		consoleService.logStringMessage( "IdentitySelector:" + 
 			location + ": " + message);
 	},
+	
+	// ***********************************************************************
+	// Method: dumpConsoleToLogFile
+	// ***********************************************************************
+	
+	dumpConsoleLogToFile : function( filePath)
+	{
+		var consoleService = Components.classes[ 
+			"@mozilla.org/consoleservice;1"].getService( 
+			Components.interfaces.nsIConsoleService);
+		var messageArray = {};
+		var messageCount = {};
+		var logBuffer = "";
+		
+		try
+		{
+			consoleService.getMessageArray( messageArray, messageCount);
+			
+			for( var i = 0; i < messageCount.value; i++)
+			{
+				var messageStr = messageArray.value[ i].message;
+				
+				if( messageStr.indexOf( "IdentitySelector:") > -1)
+				{
+					logBuffer += messageStr + "\n";
+				}
+			}
+			
+			if( gbIsMac || gbIsLinux)
+			{
+				IdentitySelector.writeFile( "/tmp/icardxpi.log", logBuffer);
+			}
+		}
+		catch( e)
+		{
+			IdentitySelector.reportError( "dumpConsoleLogToFile", e);
+		}
+	},
 
+	// ***********************************************************************
+	// Method: logPlatformInfo
+	// ***********************************************************************
+	
+	logPlatformInfo : function()
+	{
+		try
+		{
+			IdentitySelector.logMessage( "logPlatformInfo", 
+				"platform = " + navigator.platform);
+				
+			IdentitySelector.logMessage( "logPlatformInfo", 
+				"appName = " + navigator.appName);
+				
+			IdentitySelector.logMessage( "logPlatformInfo", 
+				"appVersion = " + navigator.appVersion);
+				
+			IdentitySelector.logMessage( "logPlatformInfo", 
+				"product = " + navigator.product);
+				
+			IdentitySelector.logMessage( "logPlatformInfo", 
+				"productSub = " + navigator.productSub);
+				
+			IdentitySelector.logMessage( "logPlatformInfo", 
+				"userAgent = " + navigator.userAgent);
+				
+			IdentitySelector.logMessage( "logPlatformInfo", 
+				"oscpu = " + navigator.oscpu);
+		}
+		catch( e)
+		{
+		}
+	},
+			
 	// ***********************************************************************
 	// Method: onInstall
 	// ***********************************************************************
 	
 	onInstall : function( event)
 	{
-		// Remove the event listener
+		var handlerAlreadyInstalled = false;
 		
-		window.removeEventListener( "load", 
-			IdentitySelector.onInstall, true);
-			
-		var target = event ? event.target : this;
-		var doc;
-		
-		if( target.wrappedJSObject)
-		{
-			target = target.wrappedJSObject;
-		}
-		
-		doc = target;
 		try
 		{
-			if( doc.__identityselector__ == undefined) {
-				// Add event handlers
-				
-				addEventListener( "CallIdentitySelector",
-					IdentitySelector.onCallIdentitySelector, false, true);
+			// Remove the load event listener
 			
-				addEventListener( "IdentitySelectorAvailable",
+			window.removeEventListener( "load", 
+				IdentitySelector.onInstall, true);
+				
+			// Determine if another add-on or plug-in has registered to handle
+			// information cards
+			
+			if( navigator.mimeTypes && navigator.mimeTypes.length)
+			{
+				var mimeHandler = navigator.mimeTypes[ 
+											"application/x-informationcard"];
+				if( mimeHandler && mimeHandler.enabledPlugin)
+				{
+					handlerAlreadyInstalled = true;
+				}
+			}
+			
+			if( !handlerAlreadyInstalled)
+			{
+				var evnt = document.createEvent( "Event");
+
+				evnt.initEvent( "IdentitySelectorAvailable", true, true);
+				top.dispatchEvent( evnt);
+				
+				if( top.IdentitySelectorAvailable == true)
+				{
+					handlerAlreadyInstalled = true;
+				}
+			}
+			
+			if( !handlerAlreadyInstalled)
+			{
+				// Add event handlers.  The optional fourth parameter to
+				// addEventListener indicates that the listener is willing to
+				// accept untrusted events (such as those generated by web
+				// content).
+				
+				window.addEventListener( "IdentitySelectorAvailable",
 					IdentitySelector.onIdentitySelectorAvailable, false, true);
 		
-				addEventListener( "ICHideNotificationBox",
-					IdentitySelector.onHideNotificationBox, false, true);
+				window.addEventListener( "CallIdentitySelector",
+					IdentitySelector.onCallIdentitySelector, false, true);
 			
-				addEventListener( "ICObjectLoaded",
-					IdentitySelector.onICardObjectLoaded, false, true);
+				window.addEventListener( "ICHideNotificationBox",
+					IdentitySelector.onHideNotificationBox, false, false);
+			
+				window.addEventListener( "ICObjectLoaded",
+					IdentitySelector.onICardObjectLoaded, false, false);
 		
-				addEventListener( "ICElementLoaded",
-					IdentitySelector.onICardElementLoaded, false, true);
+				window.addEventListener( "ICElementLoaded",
+					IdentitySelector.onICardElementLoaded, false, false);
 					
-				addEventListener( "ICFormSubmit",
+				window.addEventListener( "ICFormSubmit",
 					IdentitySelector.onFormSubmit, false, true);
 					
-				addEventListener( "ICGetTokenValue",
+				window.addEventListener( "ICGetTokenValue",
 					IdentitySelector.onGetTokenValue, false, true);
 					
 				window.addEventListener( "DOMContentLoaded", 
-					IdentitySelector.onContentLoaded, false);
+					IdentitySelector.onContentLoaded, false, false);
 					
 				// Add a progress listener
 					
 				window.getBrowser().addProgressListener( ICProgressListener, 
 					Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-			} else {
-				IdentitySelector.reportError("onInstall", "Another identityselector is already handling informationcards. Backing out.")
 			}
-		} catch(e) {
-			IdentitySelector.throwError("onInstall", e);
+			else
+			{
+				IdentitySelector.logMessage( "onInstall", 
+					"Another identity selector is already installed.");
+			}
+		}
+		catch( e)
+		{
+			IdentitySelector.throwError( "onInstall", e);
 		}
 	},
 	
 	// ***********************************************************************
+	// Method: onUninstall
+	// ***********************************************************************
+	
+	onUninstall : function( event)
+	{
+		try
+		{
+			// Remove the event listeners
+			
+			window.removeEventListener( "load", 
+				IdentitySelector.onInstall, false);
+				
+			window.removeEventListener( "unload", 
+				IdentitySelector.onUninstall, false);
+				
+			window.removeEventListener( "CallIdentitySelector",
+				IdentitySelector.onCallIdentitySelector, false);
+		
+			window.removeEventListener( "IdentitySelectorAvailable",
+				IdentitySelector.onIdentitySelectorAvailable, false);
+	
+			window.removeEventListener( "ICHideNotificationBox",
+				IdentitySelector.onHideNotificationBox, false);
+		
+			window.removeEventListener( "ICObjectLoaded",
+				IdentitySelector.onICardObjectLoaded, false);
+	
+			window.removeEventListener( "ICElementLoaded",
+				IdentitySelector.onICardElementLoaded, false);
+				
+			window.removeEventListener( "ICFormSubmit",
+				IdentitySelector.onFormSubmit, false);
+				
+			window.removeEventListener( "ICGetTokenValue",
+				IdentitySelector.onGetTokenValue, false);
+				
+			window.removeEventListener( "DOMContentLoaded", 
+				IdentitySelector.onContentLoaded, false);
+					
+			// Remove progress listener
+					
+			window.getBrowser().removeProgressListener( ICProgressListener); 
+		}
+		catch( e)
+		{
+			IdentitySelector.throwError( "onUninstall", e);
+		}
+	},
+	
+	// ***********************************************************************
+	// Method: runInterceptScript
+	// ***********************************************************************
+	
+	runInterceptScript : function( doc)
+	{
+		if( doc.wrappedJSObject)
+		{
+			doc = doc.wrappedJSObject;
+		}
+		
+		if( doc.__identityselector__ === undefined)
+		{
+			eval( 
+				"try" +
+				"{" +
+				"   document.__identityselector__ = new Object();" +
+				"   document.__identityselector__.data = new Object();" +
+				"   document.__identityselector__.submitIntercepted = false;" +
+				
+				"   document.__identityselector__.chainSubmit = " +
+				"      HTMLFormElement.prototype.submit;" +
+				"   HTMLFormElement.prototype.submit = function()" +
+				"   {" +
+				"      var event = document.createEvent( 'Event');" +
+				"      event.initEvent( 'ICFormSubmit', true, true);" +
+				"      this.dispatchEvent( event);" +
+				"      document.__identityselector__.chainSubmit.apply( this);" +
+				"   };" +
+				
+				"   document.__identityselector__.valueGetter = function()" +
+				"   {" +
+				"      var event = document.createEvent( 'Event');" +
+				"      event.initEvent( 'ICGetTokenValue', true, true);" +
+				"      this.dispatchEvent( event);" +
+				"      return( this.__value);" +
+				"   };" +
+				"}" +
+				"catch( e)" +
+				"{" +
+				"   alert( e);" +
+				"}", doc);
+		}
+	},
+				
+	// ***********************************************************************
 	// Method: onContentLoaded
+	// Notes : This method is called after all of the DOM content has been
+	//         loaded, but before any 'onload' events have fired.
 	// ***********************************************************************
 	
 	onContentLoaded : function( event)
@@ -226,66 +455,130 @@ var IdentitySelector =
 		}
 		
 		doc = target;
+		
+		// Make sure the intercept script has been executed in the context
+		// of this document
+		
+		IdentitySelector.runInterceptScript( doc);
+		
+		// Sanity checks
+
 		try
 		{
-			if( doc.__identityselector__ !== undefined)
+			// If the intercept script was executed correctly, 
+			// __identityselector__ should be defined.
+			
+			if( doc.__identityselector__ === undefined)
 			{
-				doc.__identityselector__.contentLoaded = true;
+				// Since there are information card items on the page, warn
+				// the user that the identity selector was unable to insert
+				// itself properly.  This is most likely due to JavaScript being
+				// disabled.
 				
-				if( !doc.__identityselector__.submitIntercepted)
+				var jsEnabled = gPrefService.getBoolPref( "javascript.enabled");
+		
+				// Warn if JavaScript is disabled
+				
+				if( !jsEnabled)
 				{
-					// Process all of the information card objects in the document
-				
-					var objElems = doc.getElementsByTagName( "OBJECT");
-					var icardObjectCount = 0;
-					
-					for( var i = 0; i < objElems.length; i++) 
-					{
-						var objElem = objElems[ i];
-						var objTypeStr = objElem.getAttribute( "TYPE");
-						
-						if( objTypeStr == null || 
-							 objTypeStr.toLowerCase() !== 
-								"application/x-informationcard")
-						{
-							continue;
-						}
-						
-						var evnt = doc.createEvent( "Event");
-						evnt.initEvent( "ICObjectLoaded", true, true);
-						objElem.dispatchEvent( evnt);
-						
-						icardObjectCount++;
-					}
-					
-					IdentitySelector.logMessage( "onContentLoaded", "Found " + 
-						icardObjectCount + " ICard object(s) on " + doc.location);
-						
-					// Process all of the information card elements in the document
-					
-					var icardElems = doc.getElementsByTagName( "IC:INFORMATIONCARD");
-					var icardElementCount = 0;
-					
-					for( var i = 0; i < icardElems.length; i++) 
-					{
-						var icardElem = icardElems[ i];
-						
-						var evnt = doc.createEvent( "Event");
-						evnt.initEvent( "ICElementLoaded", true, true);
-						icardElem.dispatchEvent( evnt);
-						
-						icardElementCount++;
-					}
-					
-					IdentitySelector.logMessage( "onContentLoaded", "Found " + 
-						icardElementCount + " ICard element(s) on " + doc.location);
+					IdentitySelector.reportError( "onContentLoaded", 
+						"This page contains information card objects, but " +
+						"JavaScript is disabled.  The information card " +
+						"selector may not run properly.  To enable, go to " +
+						"Preferences->Content->Enable JavaScript.");
 				}
+				else
+				{
+					IdentitySelector.reportError( "onContentLoaded", 
+						"This page contains information card objects, but " +
+						"the information card selector was unable to fully " +
+						"process the page.");
+				}
+				
+				// Hide the notification box
+			
+				IdentitySelector.onHideNotificationBox();
+				
+				// Done
+				
+				return;
 			}
+			
+			// Process all of the information card objects and elements 
+			// in the document
+		
+			doc.__identityselector__.contentLoaded = true;
+			
+			if( !doc.__identityselector__.submitIntercepted)
+			{
+				IdentitySelector.processICardItems( doc, true);
+			}					
 		}
 		catch( e)
 		{
 			IdentitySelector.reportError( "onContentLoaded", e);
 		}
+	},
+	
+	// ***********************************************************************
+	// Method: processICardItems
+	// ***********************************************************************
+	
+	processICardItems : function( doc, dispatchEvents)
+	{
+		var itemCount = 0;
+		
+		// Process all of the information card objects in the document
+				
+		var objElems = doc.getElementsByTagName( "OBJECT");
+		var icardObjectCount = 0;
+		
+		for( var i = 0; i < objElems.length; i++) 
+		{
+			var objElem = objElems[ i];
+			var objTypeStr = objElem.getAttribute( "TYPE");
+			
+			if( objTypeStr == null || 
+				 objTypeStr.toLowerCase() !== 
+					"application/x-informationcard")
+			{
+				continue;
+			}
+			
+			if( dispatchEvents)
+			{
+				var event = doc.createEvent( "Event");
+				event.initEvent( "ICObjectLoaded", true, true);
+				objElem.dispatchEvent( event);
+			}
+			
+			icardObjectCount++;
+		}
+		
+		IdentitySelector.logMessage( "processICardItems", "Found " + 
+			icardObjectCount + " ICard object(s) on " + doc.location);
+			
+		// Process all of the information card elements in the document
+		
+		var icardElems = doc.getElementsByTagName( "IC:INFORMATIONCARD");
+		var icardElementCount = icardElems.length;
+		
+		if( dispatchEvents)
+		{
+			for( var i = 0; i < icardElems.length; i++) 
+			{
+				var icardElem = icardElems[ i];
+				
+				var event = doc.createEvent( "Event");
+				event.initEvent( "ICElementLoaded", true, true);
+				icardElem.dispatchEvent( event);
+			}
+		}
+		
+		IdentitySelector.logMessage( "processICardItems", "Found " + 
+			icardElementCount + " ICard element(s) on " + doc.location);
+			
+		return( icardObjectCount + icardElementCount);
 	},
 	
 	// ***********************************************************************
@@ -604,7 +897,6 @@ var IdentitySelector =
 				break;
 			}
 
-			case "privacypolicy":
 			case "privacyurl":
 			{
 				IdentitySelector.logMessage( "extractParameter", 
@@ -613,7 +905,6 @@ var IdentitySelector =
 				break;
 			}
 
-			case "privacypolicyversion":
 			case "privacyversion":
 			{
 				IdentitySelector.logMessage( "extractParameter", 
@@ -663,13 +954,13 @@ var IdentitySelector =
 			
 			if( objElem.__processed != undefined)
 			{
-				IdentitySelector.reportError( "onICardObjectLoaded", 
-					"ICard object has already been processed!");
+				IdentitySelector.logMessage( "onICardObjectLoaded", 
+					"ICard object has already been processed.");
 			}
 			else
 			{
 				delete objElem[ "value"];
-				objElem.__defineGetter__( 'value', 
+				objElem.__defineGetter__( "value", 
 					doc.__identityselector__.valueGetter);
 				
 				while( form != null) 
@@ -743,8 +1034,8 @@ var IdentitySelector =
 			
 			if( icardElem.__processed != undefined)
 			{
-				IdentitySelector.reportError( "onICardElementLoaded", 
-					"ICard element has already been processed!");
+				IdentitySelector.logMessage( "onICardElementLoaded", 
+					"ICard element has already been processed.");
 			}
 			else
 			{
@@ -859,6 +1150,187 @@ var IdentitySelector =
 	},
 	
 	// ***********************************************************************
+	// Method: getSecurityToken
+	// ***********************************************************************
+	
+	getSecurityToken : function( data) 
+	{
+		var exec = Components.classes[ "@mozilla.org/file/local;1"].
+						createInstance( Components.interfaces.nsILocalFile);
+		var pr = Components.classes[ "@mozilla.org/process/util;1"].
+						createInstance( Components.interfaces.nsIProcess);
+		var browser = document.getElementById( "content");
+		var secureUi = browser.securityUI;
+		var sslStatusProvider = null;
+		var sslStatus = null;
+		var args = new Array();
+		var identitySelectorExePath = IdentitySelector.findIdentitySelectorExe();
+		var exePath = identitySelectorExePath;
+		var iLoop;
+		var tokenFilePath = null;
+		var certFilePath = null;
+		var privFilePath = null;
+		var token = null;
+		var savedException = null;
+		
+		try
+		{
+			sslStatusProvider = secureUi.QueryInterface(
+							Components.interfaces.nsISSLStatusProvider);
+	
+			if( sslStatusProvider != null)
+			{
+				try
+				{
+					sslStatus = sslStatusProvider.SSLStatus.QueryInterface(
+								Components.interfaces.nsISSLStatus);
+				}
+				catch( e)
+				{
+					sslStatus = null;
+				}
+			}
+	
+			tokenFilePath = IdentitySelector.generateTmpFilePath();
+			
+			args.push( "--gettoken");
+			
+			if( data.issuer)
+			{
+				args.push( "--issuers=\"" + data.issuer + "\"");
+			}
+			
+			if( data.recipient)
+			{
+				args.push( "--recipient=\"" + data.recipient + "\"");
+			}
+			
+			if( data.requiredClaims)
+			{
+				args.push( "--reqclaims=\"" + data.requiredClaims + "\"");
+			}
+			
+			if( data.optionalClaims)
+			{
+				args.push( "--optclaims=\"" + data.optionalClaims + "\"");
+			}
+			
+			if( data.tokenType)
+			{
+				args.push( "--tokentype=\"" + data.tokenType + "\"");
+			}
+			
+			if( data.privacyUrl)
+			{
+				privFilePath = IdentitySelector.generateTmpFilePath();
+				IdentitySelector.writeFile( privFilePath, data.privacyUrl);
+				args.push( "--privfile=\"" + privFilePath + "\"");
+			}
+			
+			if( sslStatus != null && sslStatus.serverCert != undefined)
+			{
+				var certChain = sslStatus.serverCert.getChain();
+				var chainBytes = "";
+				
+				for( iLoop = 0; iLoop < certChain.length; iLoop++)
+				{
+					var cert = certChain.queryElementAt( iLoop, 
+										Components.interfaces.nsIX509Cert);
+					var length = {};
+					var rawDer = cert.getRawDER( length);
+					var derBytes = "";
+					
+					for( var iSubLoop = 0; iSubLoop < rawDer.length; iSubLoop++)
+					{
+						derBytes = derBytes + String.fromCharCode( rawDer[ iSubLoop]);
+					}
+					
+					chainBytes = chainBytes + derBytes;
+				}
+				
+				certFilePath = IdentitySelector.generateTmpFilePath();
+				sslStatus.serverCert.getChain();
+				IdentitySelector.writeFile( certFilePath, chainBytes);
+				args.push( "--certfile=\"" + certFilePath + "\"");
+			}
+			
+			args.push( "--tokenfile=\"" + tokenFilePath + "\"");
+			
+			// Log the arguments
+			
+			for( iLoop = 0; iLoop < args.length; iLoop++)
+			{
+				IdentitySelector.logMessage( "getSecurityToken", 
+						"arg[" + (iLoop + 1) + "] = " + args[ iLoop] + "\n");
+			}
+			
+			// Run the selector
+			
+			exec.initWithPath( exePath);
+			pr.init( exec);
+			pr.run( true, args, args.length);
+			
+			// Log the exit code
+			
+			IdentitySelector.logMessage( "getSecurityToken", 
+					"pr.exitValue == " + pr.exitValue);
+					
+			// Attach the returned token (if any) to the target element
+			
+			if( pr.exitValue === 0)
+			{
+				token = IdentitySelector.readFile( tokenFilePath);
+			}
+		}
+		catch( e)
+		{
+			savedException = e;
+		}
+		
+		// Clean up temporary files
+		
+		try
+		{
+			var file = Components.classes[
+							"@mozilla.org/file/local;1"].createInstance(
+								Components.interfaces.nsILocalFile);
+								
+			if( tokenFilePath !== null)
+			{
+				file.initWithPath( tokenFilePath);
+				file.remove( false);
+			}
+			
+			if( certFilePath !== null)
+			{
+				file.initWithPath( certFilePath);
+				file.remove( false);
+			}
+			
+			if( privFilePath !== null)
+			{
+				file.initWithPath( privFilePath);
+				file.remove( false);
+			}
+		}
+		catch( e)
+		{
+			IdentitySelector.throwError( "getSecurityToken", e);
+		}
+		
+		// Throw any saved exceptions
+		
+		if( savedException != null)
+		{
+			IdentitySelector.throwError( "getSecurityToken", savedException);
+		}
+		
+		// Done
+
+		return( token);
+	},
+	
+	// ***********************************************************************
 	// Method: onCallIdentitySelector
 	// ***********************************************************************
 	
@@ -869,7 +1341,6 @@ var IdentitySelector =
 		var data;
 		var result;
 		var identObject;
-		var tokenFilePath = null;
 		
 		IdentitySelector.logMessage( "onCallIdentitySelector", 
 			"Identity selector invoked.");
@@ -897,107 +1368,73 @@ var IdentitySelector =
 			}
 			
 			// Launch the card selector
-
-			var browser = document.getElementById( "content");
-			var secureUi = browser.securityUI;
-			var sslStatusProvider = null;
-			var sslCert = null;
-
-			sslStatusProvider = secureUi.QueryInterface(
-							Components.interfaces.nsISSLStatusProvider);
-
-			if( sslStatusProvider != null)
+		    var sslCert = null;
 			{
-				try
-				{
-					sslStatus = sslStatusProvider.SSLStatus.QueryInterface(
-								Components.interfaces.nsISSLStatus);
-					if( sslStatus != null && sslStatus.serverCert != undefined)
-					{
-						sslCert = sslStatus.serverCert
-					}
-				}
-				catch( e)
-				{
-					sslStatus = null;
-				}
-			}
-/**********
- * Collect arguments that are required by the selectors
- * Used when testing initial interface - here for reference now.
+			    var browser = document.getElementById( "content");
+			    var secureUi = browser.securityUI;
+			    var sslStatusProvider = null;
 
- 			var args = {};
-			args["issuer"] = data.issuer;
-			args["recipient"] = data.recipient;
-			args["requiredClaims"] = data.requiredClaims;
-			args["optionalClaims"] = data.optionalClaims;
-			args["tokenType"] = data.tokenType;
-			args["privacyUrl"] = data.privacyUrl;
-			args["privacyVersion"] = data.privacyVersion;
-			args["issuerPolicy"] = data.issuerPolicy;
-			args["recipientURL"] = document.location;
- *********/
- 			
-			if( sslStatus != null && sslStatus.serverCert != undefined)
-			{
-				sslCert = sslStatus.serverCert
-			}
+			    sslStatusProvider = secureUi.QueryInterface(
+							    Components.interfaces.nsISSLStatusProvider);
 
-/**********
- * This is where the callout to the specific selector would occur.
- * Not sure how a lookup to get access to the specific selector interface happens
- * Currently just using the function that was implemented in processInfocardObjects
- * Maybe better to use the getBrowserToken function signature from the perpetual motion plugin.
- *********/
+			    if( sslStatusProvider != null)
+			    {
+				    try
+				    {
+					    sslStatus = sslStatusProvider.SSLStatus.QueryInterface(
+								    Components.interfaces.nsISSLStatus);
+					    if( sslStatus != null && sslStatus.serverCert != undefined)
+					    {
+						    sslCert = sslStatus.serverCert
+					    }
+				    }
+				    catch( e)
+				    {
+					    sslStatus = null;
+				    }
+			    }
+            }
 
-			// var token = invokeSelector(doc, sslCert, args);
-			var token = null;
+            var cid = null;
+            {
+   			    // lookup class id from config.
+			    var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranch);
+			    cid = pbi.getCharPref("identityselector.contractid");
+            }
 
-			var obj = null;
+            if (cid == "digitalme") {
+    			identObject.targetElem.token = 
+	    			IdentitySelector.getSecurityToken( data);
+	    	} else {
+	    	    var obj = null;
+			    try {
+				    var cidClass = Components.classes[cid];
+				    if (cidClass != undefined) { 
+					    obj = cidClass.createInstance();
+					    obj = obj.QueryInterface(Components.interfaces.IIdentitySelector);
+				    } else {
+					    IdentitySelector.reportError("onCallIdentitySelector", "the class " + cid + " is not installed");
+					    return;
+				    }
+			    }
+			    catch (e) {
+				    IdentitySelector.throwError( "onCallIdentitySelector:", e);
+			    }
+                /* Make the call to the selector */
+			    identObject.targetElem.token = obj.GetBrowserToken(
+			     data.issuer , 
+			     data.recipient, 
+			     data.requiredClaims,
+			     data.optionalClaims, 
+			     data.tokenType,
+			     data.privacyUrl, 
+			     data.privacyVersion, 
+			     sslCert, 
+                 data.issuerPolicy );
 
-			// lookup class id from config.
-			var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-			var pbi = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
-
-			var cid = pbi.getCharPref("identityselector.contractid");
-
-			//var cid = "@xmldap.org/identityselector;1";
-			try {
-				var cidClass = Components.classes[cid];
-				if (cidClass != undefined) { 
-					obj = cidClass.createInstance();
-					obj = obj.QueryInterface(Components.interfaces.IIdentitySelector);
-				} else {
-					IdentitySelector.reportError("onCallIdentitySelector", "the class " + cid + " is not installed");
-					return;
-				}
-			}
-			catch (e) {
-				IdentitySelector.throwError( "onCallIdentitySelector", e);
-			}
-			
-/* Make the call to the selector */
-			token = obj.GetBrowserToken(
-			 data.issuer , 
-			 data.recipient, 
-			 data.requiredClaims,
-			 data.optionalClaims, 
-			 data.tokenType,
-			 data.privacyUrl, 
-			 data.privacyVersion, 
-			 sslCert, 
-             data.issuerPolicy );
-
-			IdentitySelector.logMessage( "onCallIdentitySelector", 
-					"returned token == " + token);
-			
-			if( token != null)
-			{
-				if( identObject.targetElem)
-				{
-					identObject.targetElem.token = token;
-				}
-			}
+			    IdentitySelector.logMessage( "onCallIdentitySelector", 
+					    "returned token == " + identObject.targetElem.token);
+	    	}
 		}
 		catch( e)
 		{
@@ -1033,7 +1470,6 @@ var IdentitySelector =
 		}
 		catch( e)
 		{
-			IdentitySelector.reportError( "onHideNotificationBox", e);
 		}
 	},
 	
@@ -1085,6 +1521,8 @@ var IdentitySelector =
 	findIdentitySelectorExe : function()
 	{
 		var exePath = null;
+		var bFound = false;
+		var bSetExePref = false;
 		
 		try
 		{
@@ -1100,50 +1538,132 @@ var IdentitySelector =
 			var dirService = Components.classes[
 							"@mozilla.org/file/directory_service;1"].getService(
 								Components.interfaces.nsIProperties);
-			var bFound = false;
 			var exeName = null;
 			var path = null;
 			var userHome = null;
-			var navplat = navigator.platform;
-			var bIsWin = ((navplat.indexOf( 'Win') > -1) ? true : false);
-			var bIsMac = ((navplat.indexOf( 'Mac') > -1) ? true : false);
-			var bIsLinux = ((navplat.indexOf( 'Linux') > -1) ? true : false);
 			var iLoop;
 			
-			userHome = Components.classes["@mozilla.org/file/directory_service;1"].
-							getService(Components.interfaces.nsIProperties).
-							get("Home", Components.interfaces.nsIFile).path;
+			// Log information about the browser and platform
 			
-			for( ;;)
+			IdentitySelector.logPlatformInfo();
+			
+			// See if a preference exists for the path
+			
+			if( (exePath = IdentitySelector.getStringPref( "exe.path")) != null)
 			{
-				// Search the path
-				
-				try 
+				try
 				{
-					if( bIsWin)
+					file.initWithPath( exePath);
+					if( file.exists()) 
 					{
-						path = userEnvironment.get( "PATH").split( ";");
+						bFound = true;
 					}
-					else
+				}
+				catch( e)
+				{
+					bSetExePref = true;
+				}
+			}
+			else
+			{
+				bSetExePref = true;
+			}
+			
+			if( !bFound)
+			{
+				// User's home directory
+					
+				userHome = Components.classes[ 
+					"@mozilla.org/file/directory_service;1"].getService( 
+						Components.interfaces.nsIProperties).get( "Home", 
+							Components.interfaces.nsIFile).path;
+				
+				IdentitySelector.logMessage( "findIdentitySelectorExe", 
+					"User's home directory: " + userHome);
+					
+				// Executable name
+					
+				if( gbIsMac)
+				{
+					exeName = "DigitalMe";
+				}
+				else if( gbIsWin)
+				{
+					exeName = "digitalme.exe";
+				}
+				else
+				{
+					exeName = "digitalme";
+				}
+						
+				IdentitySelector.logMessage( "findIdentitySelectorExe", 
+					"Executable name: " + exeName);
+					
+				for( ;;)
+				{
+					// Search the path
+					
+					try 
 					{
-						path = userEnvironment.get( "PATH").split( ":");
+						if( gbIsWin)
+						{
+							path = userEnvironment.get( "PATH").split( ";");
+						}
+						else
+						{
+							path = userEnvironment.get( "PATH").split( ":");
+						}
+						
+						for( iLoop = 0; iLoop < path.length; iLoop++) 
+						{
+							IdentitySelector.logMessage( "findIdentitySelectorExe", 
+								"Looking for " + exeName + " in " + 
+								path[ iLoop] + " ...");
+							
+							file.initWithPath( path[ iLoop]);
+							file.appendRelativePath( exeName);
+							
+							if( file.exists()) 
+							{
+								bFound = true;
+								exePath = file.path;
+								break;
+							}
+						}
+					} 
+					catch( e1)
+					{
+						IdentitySelector.logMessage( "findIdentitySelectorExe", e1);
 					}
 					
-					if( bIsMac)
+					if( bFound)
 					{
-						exeName = "DigitalMe";
+						break;
 					}
-					else if( bIsWin)
+					
+					// Look in other "standard" locations
+					
+					if( gbIsMac)
 					{
-						exeName = "digitalme.exe";
+						path = [
+							userHome + "/Desktop/DigitalMe.app/Contents/MacOS",
+							"/Applications/DigitalMe.app/Contents/MacOS",
+							"/Applications/Utilities/DigitalMe.app/Contents/MacOS"];
 					}
-					else
+					else if( !gbIsWin)
 					{
-						exeName = "digitalme";
+						path = [
+							"/usr/local/lib/digitalme/bin",
+							"/usr/lib/digitalme/bin",
+							userHome + "/digitalme/bin",
+							userHome + "/Desktop/digitalme/bin"];
 					}
 					
 					for( iLoop = 0; iLoop < path.length; iLoop++) 
 					{
+						IdentitySelector.logMessage( "findIdentitySelectorExe", 
+							"Looking for " + exeName + " in " + path[ iLoop] + " ...");
+	
 						file.initWithPath( path[ iLoop]);
 						file.appendRelativePath( exeName);
 						
@@ -1154,77 +1674,44 @@ var IdentitySelector =
 							break;
 						}
 					}
-				} 
-				catch( e1)
-				{
-					IdentitySelector.logMessage( "findIdentitySelectorExe", e1);
-				}
-				
-				if( bFound)
-				{
-					break;
-				}
-				
-				// Look in other "standard" locations
-				
-				if( bIsMac)
-				{
-					path = [
-						userHome + "/Desktop/DigitalMe.app/Contents/MacOS",
-						"/Applications/DigitalMe.app/Contents/MacOS",
-						"/Applications/Utilities/DigitalMe.app/Contents/MacOS"];
-				}
-				else if( !bIsWin)
-				{
-					path = [
-						"/usr/local/lib/digitalme/bin",
-						"/usr/lib/digitalme/bin",
-						userHome + "/digitalme/bin"];
-				}
-				
-				for( iLoop = 0; iLoop < path.length; iLoop++) 
-				{
-					file.initWithPath( path[ iLoop]);
-					file.appendRelativePath( exeName);
 					
-					if( file.exists()) 
-					{
-						bFound = true;
-						exePath = file.path;
-						break;
-					}
-				}
-				
-				break;
-			}
-						
-			if( !bFound) 
-			{
-				if( bIsMac)
-				{
-					IdentitySelector.reportError( "findIdentitySelectorExe",
-						"Unable to locate an identity selector.  " + 
-						"Please make sure one is installed " +
-						"on your desktop, in the Applications folder, or in the " +
-						"Utilities folder.");
-				}
-				else
-				{
-					IdentitySelector.reportError( "findIdentitySelectorExe",
-						"Unable to locate an identity selector.  " +
-						"Please make sure one is installed.");
+					break;
 				}
 			}
 		}
 		catch( e2) 
 		{
-			IdentitySelector.reportError( "findIdentitySelectorExe",
-				"Unable to locate an identity selector.  " + 
-				"Please make sure one is installed.");
+			IdentitySelector.reportError( "findIdentitySelectorExe", e2);
 		}
 	
-		IdentitySelector.logMessage( "findIdentitySelectorExe", 
-			"IdentitySelector EXE = " + exePath);
+		if( !bFound) 
+		{
+			if( gbIsMac)
+			{
+				IdentitySelector.throwError( "findIdentitySelectorExe",
+					"Unable to locate an identity selector.  " + 
+					"Please make sure one is installed " +
+					"on your desktop, in the Applications folder, or in the " +
+					"Utilities folder.");
+			}
+			else
+			{
+				IdentitySelector.throwError( "findIdentitySelectorExe",
+					"Unable to locate an identity selector.  " +
+					"Please make sure one is installed.");
+			}
+		}
+		else
+		{
+			IdentitySelector.logMessage( "findIdentitySelectorExe", 
+				"IdentitySelector executable found: " + exePath);
+				
+			if( bSetExePref)
+			{
+				IdentitySelector.setStringPref( "exe.path", exePath);
+			}
+		}
+
 		return( exePath);
 	},
 	
@@ -1351,11 +1838,184 @@ var IdentitySelector =
 		{
 			IdentitySelector.throwError( "writeFile", "Unable to write file.");
 		}
+	},
+	
+	// ***********************************************************************
+	// Method: getStringPref
+	// ***********************************************************************
+	
+	getStringPref : function( prefId)
+	{
+		var fullPrefId = "extensions.digitalme." + prefId;
+		
+		if( gPrefService.getPrefType( fullPrefId) == gPrefService.PREF_STRING)
+		{
+			return( gPrefService.getCharPref( fullPrefId));
+		}
+		
+		return( null);
+	},
+	
+	// ***********************************************************************
+	// Method: setStringPref
+	// ***********************************************************************
+	
+	setStringPref : function( prefId, prefValue)
+	{
+		gPrefService.setCharPref( "extensions.digitalme." + prefId, prefValue);
+	},
+	
+	// ***********************************************************************
+	// Method: getStringPref
+	// ***********************************************************************
+	
+	getBooleanPref : function( prefId)
+	{
+		var fullPrefId = "extensions.digitalme." + prefId;
+		
+		if( gPrefService.getPrefType( fullPrefId) == gPrefService.PREF_BOOL)
+		{
+			return( gPrefService.getBoolPref( fullPrefId));
+		}
+		
+		return( false);
+	},
+	
+	// ***********************************************************************
+	// Method: setStringPref
+	// ***********************************************************************
+	
+	setBooleanPref : function( prefId, prefValue)
+	{
+		gPrefService.setBoolPref( "extensions.digitalme." + prefId, prefValue);
 	}
+};
+
+var httpRequestObserver =
+{
+  observe: function(subject, topic, data)
+  {
+    if (topic == "http-on-modify-request") {
+      var httpChannel = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
+      
+      var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranch);
+      
+      var advertise = pbi.getCharPref("identityselector.advertise");
+
+      if (advertise == "advertiseSelectorName") {
+		  var cid = pbi.getCharPref("identityselector.contractid");
+		  var name = "";
+	      switch (cid) {
+	      	case "@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1":
+	      	 name = "CardSpace";
+	      	 break;
+	      	case "digitalme":
+	      	 name = "digitalme";
+	      	 break;
+	      	case "@xmldap.org/identityselector;1":
+	      	 name = "openinfocard";
+	      	 break;
+	      	default:
+	      	 name = cid?cid:"null";
+	      }
+	      httpChannel.setRequestHeader("X-ID-Selector", name, false);
+      } else {
+      	if (advertise == "advertiseSelectorInstallation") {
+	      httpChannel.setRequestHeader("X-ID-Selector", "anon", false);
+      	} else {
+      	  IdentitySelector.logMessage( "httpRequestObserver", "advertise: " + advertise);
+        }
+      } 
+	      
+    }
+  },
+
+  get observerService() {
+    return Components.classes["@mozilla.org/observer-service;1"]
+                     .getService(Components.interfaces.nsIObserverService);
+  },
+
+  register: function()
+  {
+    this.observerService.addObserver(this, "http-on-modify-request", false);
+  },
+
+  unregister: function()
+  {
+    this.observerService.removeObserver(this, "http-on-modify-request");
+  }
 };
 
 /****************************************************************************
 Desc:
 ****************************************************************************/
-window.addEventListener( "load",
-	IdentitySelector.onInstall, true);
+
+httpRequestObserver.register();
+
+// **************************************************************************
+// Desc: observe identityselector.contractid
+// **************************************************************************
+
+var myPrefObserver =
+{
+  register: function()
+  {
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService);
+    this._branch = prefService.getBranch("identityselector.");
+    this._branch.QueryInterface(Components.interfaces.nsIPrefBranch2);
+    this._branch.addObserver("", this, false);
+  },
+
+  unregister: function()
+  {
+    if(!this._branch) return;
+    this._branch.removeObserver("", this);
+  },
+
+  observe: function(aSubject, aTopic, aData)
+  {
+    if(aTopic != "nsPref:changed") return;
+    // aSubject is the nsIPrefBranch we're observing (after appropriate QI)
+    // aData is the name of the pref that's been changed (relative to aSubject)
+    switch (aData) {
+      case "contractid":
+        // identityselector.contractid was changed
+        {
+         var value = gPrefService.getCharPref("identityselector.contractid");
+         IdentitySelector.logMessage( "myPrefObserver", 
+				"contractid pref changed: " + value);
+        }
+        break;
+      case "advertise":
+        // identityselector.advertise was changed
+        {
+         var value = gPrefService.getCharPref("identityselector.advertise");
+         IdentitySelector.logMessage( "myPrefObserver", 
+				"advertise pref changed: " + value);
+        }
+        break;
+      default:
+       IdentitySelector.logMessage( "myPrefObserver", 
+				"unobserved pref changed: " + aData);
+    }
+  }
+}
+
+myPrefObserver.register();
+
+// **************************************************************************
+// Desc:
+// **************************************************************************
+try
+{
+	window.addEventListener( "load",
+		IdentitySelector.onInstall, false);
+		
+	window.addEventListener( "unload", 
+		IdentitySelector.onUninstall, false);
+}
+catch( e)
+{
+	IdentitySelector.reportError( "window.addEventListener", e);
+}
