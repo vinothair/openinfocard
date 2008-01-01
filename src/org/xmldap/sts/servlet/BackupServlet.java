@@ -58,6 +58,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
@@ -120,7 +121,7 @@ public class BackupServlet extends HttpServlet {
         }
 
         System.out.println("Building backup file for " + username);
-        EncryptedStore encryptedStore = new EncryptedStore();
+        EncryptedStore encryptedStore = null;
         RoamingStore store = new RoamingStore();
 
         List<String> cards = storage.getCards(username);
@@ -176,7 +177,7 @@ public class BackupServlet extends HttpServlet {
         ServletOutputStream out = response.getOutputStream();
 
         try {
-            encryptedStore.encryptStore(store, "password", out);
+            encryptedStore = new EncryptedStore(store, "password", (OutputStream)out);
         } catch (Exception e) {
             e.printStackTrace();
         }

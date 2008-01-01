@@ -107,20 +107,27 @@ public class XmlFileUtil {
 
 
 
-    /**
-     * Read an XML file into a Document considering Byte Order Marks
-     *
-     * @param stream
-     *
-     * @return XML Document
-     *
-     * @throws IOException
-     * @throws ValidityException
-     * @throws ParsingException
-     */
-    public static Document readXml(InputStream stream) throws IOException, ValidityException, ParsingException
-    {
-        String encoding = getEncoding(stream);
+	    public static Document readXml(InputStream stream) throws IOException, ValidityException, ParsingException
+	    {
+	        String encoding = getEncoding(stream);
+		    return readXml(encoding, stream);
+		}
+
+
+
+	    /**
+	     * Read an XML file into a Document considering Byte Order Marks
+	     *
+	     * @param stream
+	     *
+	     * @return XML Document
+	     *
+	     * @throws IOException
+	     * @throws ValidityException
+	     * @throws ParsingException
+	     */
+	    public static Document readXml(String encoding, InputStream stream) throws IOException, ValidityException, ParsingException
+	    {
         if (encoding == null) {
             // read some bytes but where not able to determine BO
             // have to reset stream
