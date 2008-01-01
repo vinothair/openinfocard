@@ -47,7 +47,7 @@ import java.io.PrintWriter;
 
 public class Update extends HttpServlet {
 
-	StringBuffer updateRdfBuffer = new StringBuffer();
+	String updateRdfBuffer = null;
 
     public void init(ServletConfig config) throws ServletException {
 
@@ -59,19 +59,14 @@ public class Update extends HttpServlet {
     		ServletContext application = getServletConfig().getServletContext();
     		InputStream in = application.getResourceAsStream(filename);
 
-    		updateRdfBuffer = new StringBuffer();
     		BufferedReader ins = new BufferedReader(new InputStreamReader(in));
-    		try {
-
-    			while (in.available() != 0) {
-    				updateRdfBuffer.append(ins.readLine());
-    			}
-    		} 
-    		finally {
-    			in.close();
-    			ins.close();
-    		}
-
+    		int len = in.available();
+    		char[] charBuf = new char[len];
+    		ins.read(charBuf, 0, len);
+    		in.close();
+    		ins.close();
+    		updateRdfBuffer = new String(charBuf);
+    		System.out.println("update.rdf: length=" + updateRdfBuffer.length());
         } catch (IOException e) {
             throw new ServletException(e);
         }
@@ -87,9 +82,8 @@ public class Update extends HttpServlet {
 		response.setContentLength(updateRdfBuffer.length());
 
 		PrintWriter out = response.getWriter();
-
         try {
-    		out.println(updateRdfBuffer);
+    		out.print(new String(updateRdfBuffer));
         } 
         finally {
     		out.flush();

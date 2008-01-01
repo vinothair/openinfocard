@@ -8,9 +8,8 @@
         <description>UpdateServlet</description>
         <servlet-class>org.xmldap.update.Update</servlet-class>
     </servlet>
-    <servlet>
     <servlet-mapping>
         <servlet-name>UpdateServlet</servlet-name>
-        <url-pattern>/update/*</url-pattern>
+        <url-pattern>/openinfocard</url-pattern>
     </servlet-mapping>
 </web-app>

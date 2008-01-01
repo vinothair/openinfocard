@@ -2,12 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="rdf:#$i0.9.9.20071229"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="1.5"
+                   em:maxVersion="2.0.0.*"
+                   em:updateLink="http://openinfocard.googlecode.com/files/xmldap-0.9.9.20071229.xpi"
+                   em:updateInfoURL="http://ignisvulpis.blogspot.com/2007/12/update_rdf.html" />
+  <em:updateHash RDF:about="rdf:#$LgMP42" />
+  <em:updateHash RDF:about="rdf:#$MgMP42" />
   <RDF:Seq RDF:about="rdf:#$e8XK.2">
     <RDF:li RDF:resource="rdf:#$f8XK.2"/>
+    <RDF:li RDF:resource="rdf:#0.9.9.20071229"/>
   </RDF:Seq>
-  <RDF:Description RDF:about="rdf:#$f8XK.2"
-                   em:version="0.9.9.20071221">
-    <em:targetApplication RDF:resource="rdf:#$i8XK.2"/>
+  <RDF:Description RDF:about="rdf:#0.9.9.20071229"
+                   em:version="0.9.9.20071229">
+    <em:targetApplication RDF:resource="rdf:#$i0.9.9.20071229"/>
   </RDF:Description>
   <RDF:Description RDF:about="rdf:#$i8XK.2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
@@ -15,9 +24,12 @@
                    em:maxVersion="2.0.0.*"
                    em:updateLink="http://openinfocard.googlecode.com/files/xmldap-0.9.9.20071222.xpi"
                    em:updateInfoURL="http://ignisvulpis.blogspot.com/2007/12/id-selector-advertising.html" />
-  <em:updateHash>sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
-  <RDF:Description RDF:about="urn:mozilla:extension:foobar@developer.mozilla.org"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAM0FBocWgAy8PTgXGVcmUrlbobswGXRdc0/dS/gxOa8qgyvSjut8DoeDrLzxPHH1XJIfOAwxrUTKnyEElZcq8LeKQMXjCri8ULGadVhTyD9Pd3pqyGaZO0we3sWQJmb6oIAkkRrPYyu4LYa/Gw9gsfTQ81/fdkjamXMJ0VfvVVX/">
+  <RDF:Description RDF:about="urn:mozilla:extension:infoacard@developer.mozilla.org"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAG0NaQ/hKJuIQRsm14SeUvIF+96JAf4jFROT4tFzrKvAujroV0x1A2zGwxPsnmcEdKTNBXrcLCRukqabwrsbWxJtd9KieUk4qWvmM202+71/fPLgQC0T8cu3Q8GLa0tRHoPivJD+AipbukYgMK2UOQmU0ab/B97oF/Vh4545fKV8">
     <em:updates RDF:resource="rdf:#$e8XK.2"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$f8XK.2"
+                   em:version="0.9.9.20071221">
+    <em:targetApplication RDF:resource="rdf:#$i8XK.2"/>
   </RDF:Description>
 </RDF:RDF>
