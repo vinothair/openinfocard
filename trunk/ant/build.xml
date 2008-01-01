@@ -72,7 +72,7 @@
 
 
 
-    <target name="doc">
+    <target name="doc" depends="build">
 
         <mkdir dir="${build.doc.dir}"/>
         <mkdir dir="${build.doc.api.dir}"/>
@@ -136,6 +136,19 @@
             <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_rp/geopriv_rp/WEB-INF/lib/"/>
             <jar destfile="${build.dir}/geopriv_rp/geopriv_rp.war">
                 <fileset dir="${build.dir}/geopriv_rp/geopriv_rp/"/>
+            </jar>
+
+        </target>
+
+        <target name="dist_UPDATE" depends="init">
+
+            <mkdir dir="${build.dir}/openinfocard/"/>
+            <copy todir="${build.dir}/openinfocard/openinfocard/">
+              <fileset dir="${websrc.dir}/update/"/>
+            </copy>
+            <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/openinfocard/openinfocard/WEB-INF/lib/"/>
+            <jar destfile="${build.dir}/openinfocard/update.war">
+                <fileset dir="${build.dir}/openinfocard/openinfocard/"/>
             </jar>
 
         </target>
@@ -347,10 +360,10 @@
 
     <target name="test" depends="clean, prepjars, build, unitTest" description="runs a clean build and runs unit tests"/>
 
-    <target name="build_core" depends="clean, prepjars, build, doc, dist_samples"/>
+    <target name="build_core" depends="clean, prepjars, build, dist_samples"/>
     <target name="build_xmldap.org" depends="build_core, dist_XMLDAP_RP, dist_XMLDAP_STS"/>
     <target name="build_firefox" depends="build_core, distFireFox"/>
 
-    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_PAYMENTCARD_RP, dist_PAYMENTCARD_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS"/>
+    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_PAYMENTCARD_RP, dist_PAYMENTCARD_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS, dist_UPDATE"/>
 
 </project>
