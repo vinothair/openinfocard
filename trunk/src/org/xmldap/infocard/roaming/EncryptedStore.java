@@ -66,41 +66,74 @@ public class EncryptedStore {
 
     private static byte[] bom = {(byte)0xEF, (byte)0xBB, (byte)0xBF};
 
+    String roamingStoreString = null;
+    String encryptedStoreString = null;
+    
+    public String getRoamingStoreString() {
+    	return roamingStoreString;
+    }
+    
+    public String getEncryptedStoreString() {
+    	return encryptedStoreString;
+    }
+    
+//    public EncryptedStore(String encryptedStoreString, String password) throws CryptoException, ParsingException{
+//
+//        int index = encryptedStoreString.indexOf("<?xml");
+//        String data = encryptedStoreString.substring(index);
+//
+//        Builder parser = new Builder();
+//        Document encryptedStore = null;
+//        try {
+//            encryptedStore = parser.build(data, "");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            throw new ParsingException("Error parsing", e);
+//        }
+//
+//        roamingStore = decryptStore(encryptedStore, password);
+//
+//    }
 
-    public Document decryptStore(String encryptedStoreString, String password) throws CryptoException, ParsingException{
-
-        int index = encryptedStoreString.indexOf("<?xml");
-        String data = encryptedStoreString.substring(index);
-
+    public String getParsedRoamingStore() {
+        //let's make a doc
         Builder parser = new Builder();
-        Document encryptedStore = null;
+        Document roamingStore = null;
         try {
-            encryptedStore = parser.build(data, "");
+            roamingStore = parser.build(roamingStoreString, "");
+        } catch (ParsingException e) {
+            e.printStackTrace();
+
         } catch (IOException e) {
             e.printStackTrace();
-            throw new ParsingException("Error parsing", e);
         }
 
-        return decryptStore(encryptedStore, password);
-
+        return roamingStore.toXML();
+    }
+    
+    public EncryptedStore(InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
+    	roamingStoreString = decryptStore(null, encryptedStoreStream, password);
     }
 
 
-    public Document decryptStore(InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
+    public EncryptedStore(String encoding, InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
+    	roamingStoreString = decryptStore(encoding, encryptedStoreStream, password);
+    }
+
+
+    private String decryptStore(String encoding, InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
 
         Document encryptedStore = null;
         try {
-            encryptedStore = XmlFileUtil.readXml(encryptedStoreStream);
+            encryptedStore = XmlFileUtil.readXml(encoding, encryptedStoreStream);
         } catch (IOException e) {
             throw new ParsingException("Error parsing EncryptedStore", e);
         }
 
         return decryptStore(encryptedStore, password);
-
-
     }
 
-    public Document decryptStore(Document encryptedStore, String password) throws CryptoException, ParsingException{
+    private static String decryptStore(Document encryptedStore, String password) throws CryptoException, ParsingException{
 
 
 
@@ -115,26 +148,13 @@ public class EncryptedStore {
         Element cipherValueElm = (Element) cipherValueNodes.get(0);
 
 
-        String roamingStoreString =  decrypt(cipherValueElm.getValue(), password, saltElm.getValue());
+        return decrypt(cipherValueElm.getValue(), password, saltElm.getValue());
 
-        //let's make a doc
-        Builder parser = new Builder();
-        Document roamingStore = null;
-        try {
-            roamingStore = parser.build(roamingStoreString, "");
-        } catch (ParsingException e) {
-            e.printStackTrace();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return roamingStore;
 
     }
 
 
-    private String decrypt(String cipherText, String password, String salt) throws CryptoException{
+    private static String decrypt(String cipherText, String password, String salt) throws CryptoException{
 
 
         EncryptedStoreKeys keys = new EncryptedStoreKeys(password,Base64.decode(salt));
@@ -184,7 +204,7 @@ public class EncryptedStore {
     }
 
 
-    public void encryptStore(RoamingStore roamingStore, String password, OutputStream output) throws CryptoException {
+    public EncryptedStore(RoamingStore roamingStore, String password, OutputStream output) throws CryptoException {
 
 
         Element encryptedStore = new Element("EncryptedStore", WSConstants.INFOCARD_NAMESPACE);
@@ -202,7 +222,8 @@ public class EncryptedStore {
         encryptedStore.appendChild(encryptedData);
         encryptedData.appendChild(cipherData);
         cipherData.appendChild(cipherValue);
-        cipherValue.appendChild(encrypt(roamingStore, password, salt));
+        EncryptedStore encryptedRoamingStore = new EncryptedStore(roamingStore, password, salt);
+        cipherValue.appendChild(encryptedRoamingStore.getEncryptedStoreString());
 
         try {
             output.write(bom);
@@ -216,7 +237,7 @@ public class EncryptedStore {
     }
 
 
-    public String encrypt(RoamingStore roamingStore, String password, byte[] salt) throws CryptoException{
+    public EncryptedStore(RoamingStore roamingStore, String password, byte[] salt) throws CryptoException{
 
 
         EncryptedStoreKeys keys = new EncryptedStoreKeys(password,salt);
@@ -277,13 +298,13 @@ public class EncryptedStore {
         System.arraycopy(cipherText, 0, blob, 48, cipherText.length);
 
         //Base64 encode and return
-        return Base64.encodeBytesNoBreaks(blob);
+        encryptedStoreString = Base64.encodeBytesNoBreaks(blob);
     }
 
 
 
 
-    private byte[] getHashedIntegrityCode(byte[] iv, byte[] integrityKey,  String clearText) {
+    private static byte[] getHashedIntegrityCode(byte[] iv, byte[] integrityKey,  String clearText) {
 
         byte[] clearBytes = new byte[0];
         try {
@@ -318,15 +339,14 @@ public class EncryptedStore {
 
         String  password = "password";
 
-        EncryptedStore encryptedStore = new EncryptedStore();
-        Document roamingStore = null;
+        EncryptedStore encryptedStore = null;
         try {
             InputStream stream =  new FileInputStream("/Users/cmort/Desktop/Infocard/CardBackups/backup.crds");
-            roamingStore = encryptedStore.decryptStore(stream, password);
+            encryptedStore = new EncryptedStore(stream, password);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(roamingStore.toXML());
+        System.out.println(encryptedStore.getParsedRoamingStore());
 
         RoamingStore store = new RoamingStore();
 
@@ -389,17 +409,16 @@ public class EncryptedStore {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream("/Users/cmort/Desktop/Infocard/CardBackups/ManualBackup.crds");
-            encryptedStore.encryptStore(store, password, fos);
+            encryptedStore = new EncryptedStore(store, password, fos);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
 
-        EncryptedStore encryptedStore1 = new EncryptedStore();
-        Document roamingStore1 = null;
+        EncryptedStore encryptedStore1 = null;
         try {
             InputStream stream =  new FileInputStream("/Users/cmort/Desktop/Infocard/CardBackups/ManualBackup.crds");
-            roamingStore1 = encryptedStore1.decryptStore(stream, password);
+            encryptedStore1 = new EncryptedStore(stream, password);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (ParsingException e) {
@@ -407,7 +426,7 @@ public class EncryptedStore {
         } catch (CryptoException e) {
             e.printStackTrace();
         }
-        System.out.println(roamingStore1.toXML());
+        System.out.println(encryptedStore1.getParsedRoamingStore());
 
     }
 
