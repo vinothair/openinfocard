@@ -193,7 +193,7 @@ public class BackupServlet extends HttpServlet {
 
     protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert, String username) {
         TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
-        tsr.setUserName(username);
+        tsr.setAuthType(TokenServiceReference.USERNAME, username);
         return tsr;
     }
 

@@ -110,7 +110,8 @@ public class TokenServiceReference implements Serializable {
         return ppi;
     }
 
-    public void setPPI(String ppi) {
+    // use public void setAuthType(TokenServiceReference.SELF_ISSUED, String value)
+    private void setPPI(String ppi) {
         this.ppi = ppi;
     }
 
@@ -118,7 +119,8 @@ public class TokenServiceReference implements Serializable {
         return kerberosServicePrincipalName;
     }
 
-    public void setKerberosServicePrincipalName(String kerberosServicePrincipalName) {
+    // use public void setAuthType(TokenServiceReference.KERB, String value)
+    private void setKerberosServicePrincipalName(String kerberosServicePrincipalName) {
         this.kerberosServicePrincipalName = kerberosServicePrincipalName;
     }
 
@@ -126,7 +128,8 @@ public class TokenServiceReference implements Serializable {
         return x509Hash;
     }
 
-    public void setX509Hash(String x509Hash) {
+    // use public void setAuthType(TokenServiceReference.X509, String value)
+    private void setX509Hash(String x509Hash) {
         this.x509Hash = x509Hash;
     }
 
@@ -134,7 +137,8 @@ public class TokenServiceReference implements Serializable {
         return userName;
     }
 
-    public void setUserName(String userName) {
+    // use public void setAuthType(TokenServiceReference.USERNAME, String value)
+    private void setUserName(String userName) {
         this.userName = userName;
     }
 
@@ -142,9 +146,9 @@ public class TokenServiceReference implements Serializable {
         return cert;
     }
 
-    public void setCert(X509Certificate cert) {
-        this.cert = cert;
-    }
+//    public void setCert(X509Certificate cert) {
+//        this.cert = cert;
+//    }
 
 
     private Element getTokenServiceReference() throws SerializationException {
@@ -211,10 +215,9 @@ public class TokenServiceReference implements Serializable {
 	        displayCredentialHint.appendChild("Choose a certificate");
 	        userCredential.appendChild(displayCredentialHint);
 	
-	        // <ic:KerberosV5Credential />
 	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":X509V3Credential", WSConstants.INFOCARD_NAMESPACE);
 	        Element x509Data = new Element(WSConstants.DSIG_PREFIX + ":X509Data", WSConstants.DSIG_NAMESPACE);
-	        Element keyIdentifier = new Element(WSConstants.WSSE_PREFIX + ":KeyIdentifier", WSConstants.WSSE_NAMESPACE_OASIS_11);
+	        Element keyIdentifier = new Element(WSConstants.WSSE_PREFIX + ":KeyIdentifier", WSConstants.WSSE_NAMESPACE_OASIS_10);
 	        Attribute valueType = new Attribute("ValueType", WSConstants.WSSE_OASIS_XX_THUMBPRINTSHA1);
 	        Attribute encodingType = new Attribute("EncodingType", WSConstants.WSSE_OASIS_XX_BASE64BINARY);
 	        keyIdentifier.addAttribute(valueType);

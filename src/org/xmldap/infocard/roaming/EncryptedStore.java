@@ -380,7 +380,7 @@ public class EncryptedStore {
         card.setTimeExpires(expires.getDateTime());
 
         TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
-        tsr.setUserName("cmort");
+        tsr.setAuthType(TokenServiceReference.USERNAME, "cmort");
         card.setTokenServiceReference(tsr);
 
 
