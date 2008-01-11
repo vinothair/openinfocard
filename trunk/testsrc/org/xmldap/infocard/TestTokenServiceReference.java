@@ -3,7 +3,10 @@ package org.xmldap.infocard;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import junit.framework.TestCase;
+
+import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.SerializationException;
+import org.xmldap.util.Base64;
 
 /**
  * XSDDateTime Tester.
@@ -18,7 +21,7 @@ public class TestTokenServiceReference extends TestCase {
 		super.setUp();
 	}
 
-	public void testPad() throws Exception {
+	public void testUserNamePasswordAuthenticate() throws Exception {
         X509Certificate cert = null;
         try {
             cert = org.xmldap.util.XmldapCertsAndKeys.getXmldapCert();
@@ -31,7 +34,7 @@ public class TestTokenServiceReference extends TestCase {
         String mexURL = "https://xmldap.org/sts/mex";
         String userName = "cmort";
         TokenServiceReference tsr = new TokenServiceReference(tsURL, mexURL, cert);
-        tsr.setUserName(userName);
+        tsr.setAuthType(TokenServiceReference.USERNAME, userName);
         
         String actual = null;
         String expected = "<ic:TokenServiceList xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" + 
@@ -60,6 +63,57 @@ public class TestTokenServiceReference extends TestCase {
         		"</ic:DisplayCredentialHint><ic:UsernamePasswordCredential><ic:Username>" +
         		userName + "</ic:Username>" + 
         		"</ic:UsernamePasswordCredential></ic:UserCredential></ic:TokenService></ic:TokenServiceList>";
+        try {
+            actual = tsr.toXML();
+        } catch (SerializationException e) {
+            e.printStackTrace();
+            assertFalse(e.getMessage(), true);
+        }
+        
+        assertEquals(expected, actual);
+    }
+	
+	public void testX509V3Authenticate() throws Exception {
+        X509Certificate cert = null;
+        try {
+            cert = org.xmldap.util.XmldapCertsAndKeys.getXmldapCert();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+            assertFalse(e.getMessage(), true);
+        }
+        if (cert == null) {
+        	throw new Exception("oops");
+        }
+        
+        String tsURL = "https://xmldap.org/sts/tokenservice"; 
+        String mexURL = "https://xmldap.org/sts/mex";
+        X509Certificate userCert = org.xmldap.util.XmldapCertsAndKeys.getXmldapCert1();
+        String userCertHash = CryptoUtils.digest(userCert.getEncoded());
+        TokenServiceReference tsr = new TokenServiceReference(tsURL, mexURL, cert);
+        tsr.setAuthType(TokenServiceReference.X509, userCertHash);
+        
+        String actual = null;
+        String expected = "<ic:TokenServiceList xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
+        		"<ic:TokenService><wsa:EndpointReference xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">" +
+        		"<wsa:Address>" + tsURL + "</wsa:Address><wsa:Metadata>" +
+        		"<mex:Metadata xmlns:mex=\"http://schemas.xmlsoap.org/ws/2004/09/mex\">" +
+        		"<mex:MetadataSection><mex:MetadataReference>" +
+        		"<wsa:Address>" + mexURL + "</wsa:Address>" + 
+        		"</mex:MetadataReference></mex:MetadataSection></mex:Metadata></wsa:Metadata>" +
+        		"<wsid:Identity xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\">" +
+        		"<ds:KeyInfo xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">" +
+        		"<ds:X509Data>" + 
+        		"<ds:X509Certificate>" + Base64.encodeBytesNoBreaks(cert.getEncoded()) + "</ds:X509Certificate>" +
+        		"</ds:X509Data></ds:KeyInfo></wsid:Identity></wsa:EndpointReference>" +
+        		"<ic:UserCredential><ic:DisplayCredentialHint>Choose a certificate</ic:DisplayCredentialHint>" +
+        		"<ic:X509V3Credential>" +
+        		"<ds:X509Data xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">" +
+        		"<wsse:KeyIdentifier xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" " +
+        		"ValueType=\"http://docs.oasis-open.org/wss/2004/xx/oasis-2004xx-wss-soap-message-security-1.1#ThumbprintSHA1\" " +
+        		"EncodingType=\"http://docs.oasis-open.org/wss/2004/xx/oasis-2004xx-wss-soap-message-security-1.1#Base64Binary\">" +
+        		userCertHash +
+        		"</wsse:KeyIdentifier>" +
+        		"</ds:X509Data></ic:X509V3Credential></ic:UserCredential></ic:TokenService></ic:TokenServiceList>";
         try {
             actual = tsr.toXML();
         } catch (SerializationException e) {
