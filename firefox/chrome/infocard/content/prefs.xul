@@ -95,32 +95,49 @@
      }
      
      function populateMenu() {
+      var cid = null;
+      {
+   		// lookup class id from config.
+		var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+		var pbi = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
+
+		cid = pbi.getCharPref("identityselector.contractid");
+      }
+	  debug("selected selector " + cid);
+	  
       var menuPopup = document.getElementById("menupopup");
-      try {
-       var obj = Components.classes["@xmldap.org/identityselector;1"];
-       if (obj !== undefined) {
-        var menuitem = document.createElement("menuitem");
-        menuitem.setAttribute("label", "openinfocard identity selector");
-        menuitem.setAttribute("value", "@xmldap.org/identityselector;1");
-        menuPopup.appendChild(menuitem);
-       } else {
-        debug("openinfocard class is unknown");
+
+	  const CATMAN_CONTRACTID = "@mozilla.org/categorymanager;1";
+	  const nsICategoryManager = Components.interfaces.nsICategoryManager;
+	  var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager)
+	  const IIDENTITYSELECTOR_IID_STR = "ddd9bc02-c964-4bd5-b5bc-943e483c6c57";
+
+	  var selectors = catman.enumerateCategory ( IIDENTITYSELECTOR_IID_STR );
+	  for (;selectors.hasMoreElements(); ) {
+	   var clasz = selectors.getNext().QueryInterface(Components.interfaces.nsISupportsCString).data;
+	   debug("clasz=" + clasz);
+       var contractid = catman.getCategoryEntry(IIDENTITYSELECTOR_IID_STR, clasz);
+	   debug("contractid=" + contractid);
+
+       try {
+        var obj = Components.classes[contractid];
+        if (obj !== undefined) {
+         var menuitem = document.createElement("menuitem");
+         menuitem.setAttribute("label", clasz);
+         menuitem.setAttribute("value", contractid);
+         menuPopup.appendChild(menuitem);
+         if (contractid && (contractid == cid)) {
+          debug("selecting " + clasz);
+          menuPopup.selectedItem = menuitem;
+         }
+        } else {
+         debug("the class " + clasz + " class is unknown");
+        }
        }
-      }
-      catch (e) { debug("openinfocard extension is not installed. " + e); }
-      try {
-       var obj = Components.classes["@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1"];
-       if (obj !== undefined) {
-        var menuitem = document.createElement("menuitem");
-        menuitem.setAttribute("label", "Microsoft CardSpace");
-        menuitem.setAttribute("value", "@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1");
-        menuPopup.appendChild(menuitem);
-       } else {
-        debug("cardspace class is unknown");
-       }
-      }
-      catch (e) { debug("cardspace extension is not installed. " + e); }
-      
+       catch (e) { debug("selector " + clasz + " is not installed. " + e); }
+
+	  }
+	  
 	  {
         var menuitem = document.createElement("menuitem");
         menuitem.setAttribute("label", "digitalme");
@@ -128,6 +145,7 @@
         menuPopup.appendChild(menuitem);
       }
      }
+
   ]]>
  </html:script>
     

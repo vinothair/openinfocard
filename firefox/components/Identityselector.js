@@ -33,11 +33,16 @@
 const nsISupports = Components.interfaces.nsISupports;
 const IIdentitySelector = Components.interfaces.IIdentitySelector;
 
+const IIDENTITYSELECTOR_IID_STR = "ddd9bc02-c964-4bd5-b5bc-943e483c6c57";
+
 const CLASS_ID = Components.ID("72e894fd-0d6c-484d-abe8-5903b5f8bf3b");
-const CLASS_NAME = "The xmldap.org identity selector";
+const CLASS_NAME = "The openinfocard identity selector";
 const CONTRACT_ID = "@xmldap.org/identityselector;1";
 
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
+
+const CATMAN_CONTRACTID = "@mozilla.org/categorymanager;1";
+const nsICategoryManager = Components.interfaces.nsICategoryManager;
 
 function Xmldapidentityselector() {}
 
@@ -147,14 +152,37 @@ var XmldapidentityselectorFactory = {
 var XmldapidentityselectorModule = {
   registerSelf: function(aCompMgr, aFileSpec, aLocation, aType)
   {
+  	debug("registerSelf");
     aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
+    
+    var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
+
+    catman.addCategoryEntry(IIDENTITYSELECTOR_IID_STR,
+                            CLASS_NAME,
+                            CONTRACT_ID,
+                            true,
+                            true);
+    var selectors = catman.enumerateCategory ( IIDENTITYSELECTOR_IID_STR );
+	for (;selectors.hasMoreElements(); ) {
+	   var clasz = selectors.getNext().QueryInterface(Components.interfaces.nsISupportsCString).data;
+	   debug("clasz=" + clasz);
+       var contractid = catman.getCategoryEntry(IIDENTITYSELECTOR_IID_STR, clasz);
+	   debug("contractid=" + contractid);
+	}
+	debug("registerSelf end");
   },
 
   unregisterSelf: function(aCompMgr, aLocation, aType)
   {
+  	debug("unregisterSelf");
     aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);
+    
+    var catman = Components.classes[CATMAN_CONTRACTID].
+                            getService(nsICategoryManager);
+
+    catman.deleteCategoryEntry(IIDENTITYSELECTOR_IID_STR, CLASS_NAME);
   },
 
   getClassObject: function(aCompMgr, aCID, aIID)
