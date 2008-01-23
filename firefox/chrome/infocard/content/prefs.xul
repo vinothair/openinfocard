@@ -104,7 +104,7 @@
 		cid = pbi.getCharPref("identityselector.contractid");
       }
 	  debug("selected selector " + cid);
-	  
+      var menuList = document.getElementById("selector");
       var menuPopup = document.getElementById("menupopup");
 
 	  const CATMAN_CONTRACTID = "@mozilla.org/categorymanager;1";
@@ -128,7 +128,7 @@
          menuPopup.appendChild(menuitem);
          if (contractid && (contractid == cid)) {
           debug("selecting " + clasz);
-          menuPopup.selectedItem = menuitem;
+          menuList.selectedItem = menuitem;
          }
         } else {
          debug("the class " + clasz + " class is unknown");
