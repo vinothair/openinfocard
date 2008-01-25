@@ -52,14 +52,16 @@ public class SupportedClaim {
         Element supportedClaimType = new Element(WSConstants.INFOCARD_PREFIX + ":SupportedClaimType", WSConstants.INFOCARD_NAMESPACE);
         Attribute URI = new Attribute("Uri", uri);
         supportedClaimType.addAttribute(URI);
-        Element displayTag = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
-        displayTag.appendChild(displayName);
-        supportedClaimType.appendChild(displayTag);
-
-        Element descriptionE = new Element(WSConstants.INFOCARD_PREFIX + ":Description", WSConstants.INFOCARD_NAMESPACE);
-        descriptionE.appendChild(description);
-        supportedClaimType.appendChild(descriptionE);
-
+        if (displayName != null) {
+	        Element displayTag = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayTag", WSConstants.INFOCARD_NAMESPACE);
+	        displayTag.appendChild(displayName);
+	        supportedClaimType.appendChild(displayTag);
+        }
+        if (description != null) {
+	        Element descriptionE = new Element(WSConstants.INFOCARD_PREFIX + ":Description", WSConstants.INFOCARD_NAMESPACE);
+	        descriptionE.appendChild(description);
+	        supportedClaimType.appendChild(descriptionE);
+        }
         return supportedClaimType;
 
     }
