@@ -44,9 +44,13 @@ public class Reference implements Serializable {
     private Element data = null;
     private String id = null;
     private boolean enveloped = true;
-
+    String inclusiveNamespacePrefixes = null;
 
     public Reference(Element data, String id) {
+    	this(data, id, null);
+    }
+    
+    public Reference(Element data, String id, String inclusiveNamespacePrefixes) {
     	if (data == null) {
     		throw new IllegalArgumentException("Parameter data must not be null");
     	}
@@ -55,7 +59,7 @@ public class Reference implements Serializable {
     		throw new IllegalArgumentException("Parameter id must not be null");
     	}
         this.id = id;
-
+        this.inclusiveNamespacePrefixes = inclusiveNamespacePrefixes;
     }
 
     //TODO - shouldn't be boolean if we want to support all types
@@ -102,6 +106,14 @@ public class Reference implements Serializable {
         String method = Canonicalizer.EXCLUSIVE_XML_CANONICALIZATION;
         Attribute transformDsigAlgorithm = new Attribute("Algorithm", method);
         transformDsig.addAttribute(transformDsigAlgorithm);
+        if (inclusiveNamespacePrefixes != null) {
+        	// <ec:InclusiveNamespaces PrefixList="dsig soap #default" xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+        	Element inclusiveNamespacePrefixesE = new Element("ec:InclusiveNamespaces","http://www.w3.org/2001/10/xml-exc-c14n#");
+        	Attribute prefixList = new Attribute("PrefixList", inclusiveNamespacePrefixes);
+        	inclusiveNamespacePrefixesE.addAttribute(prefixList);
+        	transformDsig.appendChild(inclusiveNamespacePrefixesE);
+        }
+
         transforms.appendChild(transformDsig);
 
 

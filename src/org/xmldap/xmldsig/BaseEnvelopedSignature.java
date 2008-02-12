@@ -76,7 +76,28 @@ public class BaseEnvelopedSignature {
 	public Element sign(Element xml) throws SigningException {
         Element signThisOne = (Element) xml.copy();
 
-        String idVal = signThisOne.getAttributeValue("Id", WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
+        String prefixes = null;
+        {
+        	StringBuilder sb = null;
+	        for (int i=0; i<signThisOne.getNamespaceDeclarationCount(); i++) {
+	        	String prefix = signThisOne.getNamespacePrefix(i);
+	        	if ("".equals(prefix)) {
+	        		prefix ="#default";
+	        	}
+	        	if (sb == null) {
+	        		sb = new StringBuilder();
+	        		sb.append(prefix);
+	        	} else {
+	        		sb.append(" ");
+	        		sb.append(prefix);
+	        	}
+	        }
+	        if (sb != null) {
+	        	prefixes = sb.toString();
+	        }
+        }
+        
+	    String idVal = signThisOne.getAttributeValue("Id", WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
         if (idVal == null) {
             //let's see if its a SAML assertions
             Attribute assertionID = signThisOne.getAttribute("AssertionID");
@@ -87,7 +108,7 @@ public class BaseEnvelopedSignature {
         if (idVal == null) {
         	throw new IllegalArgumentException("BaseEnvelopedSignature: Element to sign does not have an id-ttribute");
         }
-		Reference reference = new Reference(signThisOne, idVal);
+		Reference reference = new Reference(signThisOne, idVal, prefixes);
 		
         //Get SignedInfo for reference
         SignedInfo signedInfo = new SignedInfo(reference);
