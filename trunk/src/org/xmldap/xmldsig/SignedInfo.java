@@ -54,16 +54,30 @@ public class SignedInfo implements Canonicalizable {
     //TODO - support multiple C14n types
     List references = null;
 
+    String inclusiveNamespacePrefixes = null;
+    
     public SignedInfo(List references) {
         this.references = references;
+    }
+
+    public SignedInfo(Reference reference, String inclusiveNamespacePrefixes) {
+        this.references = new ArrayList();
+        references.add(reference);
+        this.inclusiveNamespacePrefixes = inclusiveNamespacePrefixes;
     }
 
     public SignedInfo(Reference reference) {
         this.references = new ArrayList();
         references.add(reference);
+        this.inclusiveNamespacePrefixes = null;
     }
 
     protected SignedInfo() {}
+    
+    public void setInclusiveNamespacePrefixList(String inclusiveNamespacePrefixes) 
+    {
+    	this.inclusiveNamespacePrefixes = inclusiveNamespacePrefixes;
+    }
     
     public Element getSignedInfo() throws SerializationException {
 
@@ -80,6 +94,13 @@ public class SignedInfo implements Canonicalizable {
         Element canonicalizationMethod = new Element("dsig:CanonicalizationMethod", "http://www.w3.org/2000/09/xmldsig#");
         Attribute canonAlgorithm = new Attribute("Algorithm", defaultCanonicalizationMethod);
         canonicalizationMethod.addAttribute(canonAlgorithm);
+        if (inclusiveNamespacePrefixes != null) {
+        	// <ec:InclusiveNamespaces PrefixList="dsig soap #default" xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+        	Element inclusiveNamespacePrefixesE = new Element("ec:InclusiveNamespaces","http://www.w3.org/2001/10/xml-exc-c14n#");
+        	Attribute prefixList = new Attribute("PrefixList", inclusiveNamespacePrefixes);
+        	inclusiveNamespacePrefixesE.addAttribute(prefixList);
+        	canonicalizationMethod.appendChild(inclusiveNamespacePrefixesE);
+        }
         signedInfo.appendChild(canonicalizationMethod);
 
         Element signatureMethod = new Element("dsig:SignatureMethod", "http://www.w3.org/2000/09/xmldsig#");
