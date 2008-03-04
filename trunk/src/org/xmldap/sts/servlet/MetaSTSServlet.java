@@ -32,6 +32,7 @@ import nu.xom.*;
 
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.TokenIssuanceException;
@@ -326,8 +327,14 @@ public class MetaSTSServlet  extends HttpServlet {
 
         Locale clientLocale = request.getLocale();
         String cardIssuer = "https://" + domain + servletPath;
-        String stsResponse = Utils.issue(
-        		card, requestElements, clientLocale, cert, key, cardIssuer, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
+        String stsResponse;
+		try {
+			stsResponse = Utils.issue(
+					card, requestElements, clientLocale, cert, key, cardIssuer, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
+		} catch (CryptoException e) {
+			//TODO - SOAP Fault
+			throw new ServletException(e);
+		}
 
         response.setContentType("application/soap+xml; charset=\"utf-8\"");
         response.setContentLength(stsResponse.length());
