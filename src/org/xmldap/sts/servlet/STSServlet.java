@@ -29,6 +29,8 @@
 package org.xmldap.sts.servlet;
 
 import nu.xom.*;
+
+import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.util.*;
@@ -213,9 +215,17 @@ public class STSServlet  extends HttpServlet {
 
         Locale clientLocale = request.getLocale();
         String issuer = "https://" + domain + servletPath;
-        String stsResponse = Utils.issue(
-        		card, requestElements, clientLocale, cert, key, 
-        		issuer, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
+        String stsResponse;
+		try {
+			stsResponse = Utils.issue(
+					card, requestElements, clientLocale, cert, key, 
+					issuer, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
+		} catch (CryptoException e) {
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            e.printStackTrace();
+            //TODO - SOAP Fault
+            return;
+		}
 
         response.setContentType("application/soap+xml; charset=\"utf-8\"");
         response.setContentLength(stsResponse.length());

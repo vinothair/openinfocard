@@ -145,7 +145,7 @@ public class BaseEnvelopedSignatureTest extends TestCase {
 		Element signature = signedXML.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
 		ParsedSignature parsedSignature = new ParsedSignature(signature);
 		String signatureValueB64 = parsedSignature.getSignatureValue();
-		String expectedSignatureValueB64 = "ET36dtNhCKAgEurRgZwk+moCE7E1e5GPDBiLr3tGriynQtcinmK4cKrJKUvWx3E2tIWuYFHdoP4BQ/zFIr983p8iC4CXAUf4W8+jRcIJDjj0F7XLyQvC/utEUPhMDcF1to4bSQnVRiaVa0+/oVQHUm5ijKHRBXzKyRINwD2qVPTYyILuatnGEPRCcUBARnJhN0BYArQK5g4Cvdwyn8YA2GRKBwSugGdEFXj857sCD5gf9E3HQ+aA88ru10/kkztX6TBGvFI8+uQiKY0nZz3JiNGUxPVaPG8+GqcbUE9QxgJ1At5t9xnDOW9p1JTDvPLB6IRgokvw5oVfB4hqljfSkA==";
+		String expectedSignatureValueB64 = "AELmgznEGzXVB7482qIddFzl+gUEbmV+mEdgu1w0S9DYNATiG4FB5xkbCMrZR2Z5nynqFL42bpsjtsTZZsDNXx5Lr1LwQY00tcMamRBqkPxLLz9QKb4mpdv5Z1QOLz+d7IXPpWxI09egMAF52HQ1LMuNeam9kP928K8VznLLwOKiqzrz/6ZXdSZsfWPS5viG1kp3osO6xQVBWQ3jN9xSCKbzWPxB+f+DkFYSLswtFQE/k4sbCVeC54i7aBpT6K1J6c/BWe9EwzJvLfxRjN4iWoVZd4iztWdjfGSe9DGbHJpFfgfDF13msfDhXAUYvbFdQXK/DrUS+nrYwXXBAoI2HQ==";
 		assertEquals(expectedSignatureValueB64, signatureValueB64);
 		assertEquals(344, signatureValueB64.length());
 		byte[] signatureValue = Base64.decode(expectedSignatureValueB64);
@@ -158,19 +158,7 @@ public class BaseEnvelopedSignatureTest extends TestCase {
 		
 		byte[] digest = parsedSignature.getParsedSignedInfo().getCanonicalBytes();
 		// System.out.println(signedXML.toXML());
-		String expected = "<dsig:SignedInfo " +
-		"xmlns:dsig=\"http://www.w3.org/2000/09/xmldsig#\">" +
-		"<dsig:CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\">" +
-		"</dsig:CanonicalizationMethod>" +
-		"<dsig:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\">" +
-		"</dsig:SignatureMethod><dsig:Reference URI=\"#urn:guid:58824342-832F-C99B-925B-CB0E858E5D65\">" +
-		"<dsig:Transforms>" +
-		"<dsig:Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\">" +
-		"</dsig:Transform><dsig:Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\">" +
-		"</dsig:Transform></dsig:Transforms>" +
-		"<dsig:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\"></dsig:DigestMethod>" +
-		"<dsig:DigestValue>8xRvuAvdu90P9qcwm3kaUNSh4/c=</dsig:DigestValue>" +
-		"</dsig:Reference></dsig:SignedInfo>";
+		String expected = "<dsig:SignedInfo xmlns:dsig=\"http://www.w3.org/2000/09/xmldsig#\"><dsig:CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\"></dsig:CanonicalizationMethod><dsig:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\"></dsig:SignatureMethod><dsig:Reference URI=\"#urn:guid:58824342-832F-C99B-925B-CB0E858E5D65\"><dsig:Transforms><dsig:Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"></dsig:Transform><dsig:Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\"><ec:InclusiveNamespaces xmlns:ec=\"http://www.w3.org/2001/10/xml-exc-c14n#\" PrefixList=\"wsu xmldap\"></ec:InclusiveNamespaces></dsig:Transform></dsig:Transforms><dsig:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\"></dsig:DigestMethod><dsig:DigestValue>8xRvuAvdu90P9qcwm3kaUNSh4/c=</dsig:DigestValue></dsig:Reference></dsig:SignedInfo>";
 		assertEquals(expected, new String(digest));
 
 	}

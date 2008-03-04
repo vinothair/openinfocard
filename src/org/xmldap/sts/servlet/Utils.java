@@ -1,6 +1,7 @@
 package org.xmldap.sts.servlet;
 
 import java.io.IOException;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Iterator;
@@ -17,6 +18,9 @@ import nu.xom.Element;
 import nu.xom.Nodes;
 import nu.xom.XPathContext;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.xmldap.crypto.CryptoUtils;
+import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.ManagedToken;
@@ -90,6 +94,26 @@ public class Utils {
         log.finest("tokenType: " + tokenType);
         requestElements.put("tokenType", tokenType);
 
+        {
+//            <ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">
+//        	   <PPID>gibberish</PPID>
+//        	  </ClientPseudonym>
+        	Nodes nodes = requestXML.query("//PPID",context);
+        	if ((nodes != null) && (nodes.size() > 0)) {
+        		Element one = (Element)nodes.get(0);
+        		String ppid = one.getValue();
+        		log.finest("PPID:" + ppid);
+        		requestElements.put("PPID", ppid);
+        	}
+
+        }
+        
+        {
+        	Nodes nodes = requestXML.query("//wsp:AppliesTo",context);
+        	if ((nodes != null) && (nodes.size() > 0)) {
+        		
+        	}
+        }
         return requestElements;
 
 
@@ -100,7 +124,7 @@ public class Utils {
     		X509Certificate cert, RSAPrivateKey key,
     		String issuer,
     		SupportedClaims supportedClaimsImpl,
-    		String restrictedTo, String relyingPartyCertB64) throws IOException {
+    		String restrictedTo, String relyingPartyCertB64) throws IOException, CryptoException {
 
 
         Element envelope = new Element(WSConstants.SOAP_PREFIX + ":Envelope", WSConstants.SOAP12_NAMESPACE);
@@ -174,7 +198,41 @@ public class Utils {
         	}
         }
         
-        token.setPrivatePersonalIdentifier(card.getPrivatePersonalIdentifier());
+        String ppid = null;
+        {
+        	List ppids = requestElements.getValues("PPID");
+        	if ((ppids != null) && (ppids.size() > 0)) {
+        		ppid = (String)ppids.get(0);
+        	}
+        }
+        if (ppid != null) {
+        	token.setPrivatePersonalIdentifier(ppid);
+        } else {
+        	String cardPPID = card.getPrivatePersonalIdentifier();
+        	// String restrictedTo, String relyingPartyCertB64
+        	if (relyingPartyCertB64 != null) {
+        		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        		baos.write(cardPPID.getBytes());
+        		// the PPID changes if the relyingpartyCertB64 changes
+        		// that is unconvenient for the user
+        		// TODO: maybe change this to use only the cert issuer and subject
+        		// instead of the whole certB64
+        		baos.write(relyingPartyCertB64.getBytes());
+        		String digest = CryptoUtils.digest(baos.toByteArray());
+        		token.setPrivatePersonalIdentifier(digest);
+        	} else if (restrictedTo != null) {
+        		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        		baos.write(restrictedTo.getBytes());
+        		baos.write(cardPPID.getBytes());
+        		String digest = CryptoUtils.digest(baos.toByteArray());
+        		token.setPrivatePersonalIdentifier(digest);
+        	} else {
+        		// TODO Axel what now?
+        		// this make the ppid linkable
+        		token.setPrivatePersonalIdentifier(cardPPID);
+        	}
+        	
+        }
         token.setValidityPeriod(-3, 10);
         token.setIssuer(issuer);
         
