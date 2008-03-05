@@ -51,6 +51,28 @@
         </init-param>
     </servlet>
     <servlet>
+        <servlet-name>ProxySTS</servlet-name>
+        <display-name>ProxySTS</display-name>
+        <description>ProxySTS</description>
+        <servlet-class>org.xmldap.sts.servlet.ProxySTS</servlet-class>
+        <init-param>
+            <param-name>keystore</param-name>
+            <param-value>@keystore@</param-value>
+        </init-param>
+        <init-param>
+            <param-name>keystore-password</param-name>
+            <param-value>@keystore-password@</param-value>
+        </init-param>
+        <init-param>
+            <param-name>key</param-name>
+            <param-value>@key@</param-value>
+        </init-param>
+        <init-param>
+            <param-name>key-password</param-name>
+            <param-value>@key-password@</param-value>
+        </init-param>
+    </servlet>
+    <servlet>
         <servlet-name>Card</servlet-name>
         <display-name>Card</display-name>
         <description>Card</description>
@@ -95,6 +117,10 @@
     <servlet-mapping>
         <servlet-name>MexServlet</servlet-name>
         <url-pattern>/mex/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProxySTS</servlet-name>
+        <url-pattern>/proxySTS</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>STSServlet</servlet-name>
