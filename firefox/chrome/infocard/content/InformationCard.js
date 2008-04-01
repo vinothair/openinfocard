@@ -284,10 +284,10 @@ var IdentitySelector =
 			
 			if( !handlerAlreadyInstalled)
 			{
-				var evnt = document.createEvent( "Event");
+				var event = document.createEvent( "Event");
 
-				evnt.initEvent( "IdentitySelectorAvailable", true, true);
-				top.dispatchEvent( evnt);
+				event.initEvent( "IdentitySelectorAvailable", true, true);
+				top.dispatchEvent( event);
 				
 				if( top.IdentitySelectorAvailable == true)
 				{
@@ -325,6 +325,18 @@ var IdentitySelector =
 					
 				window.addEventListener( "DOMContentLoaded", 
 					IdentitySelector.onContentLoaded, false, false);
+					
+//				document.documentElement.addEventListener( "DOMSubtreeModified", 
+//					IdentitySelector.onSomethingChanged, false, false);
+//					
+//				document.documentElement.addEventListener( "DOMNodeInsertedIntoDocument", 
+//					IdentitySelector.onSomethingChanged, false, false);
+//					
+//				document.documentElement.addEventListener( "DOMAttrModified", 
+//					IdentitySelector.onSomethingChanged, false, false);
+//					
+//				document.documentElement.addEventListener( "DOMNodeInserted", 
+//					IdentitySelector.onSomethingChanged, false, false);
 					
 				// Add a progress listener
 					
@@ -382,7 +394,19 @@ var IdentitySelector =
 				
 			window.removeEventListener( "DOMContentLoaded", 
 				IdentitySelector.onContentLoaded, false);
-					
+				
+//			document.removeEventListener( "DOMNodeInserted", 
+//					IdentitySelector.onSomethingChanged, false);
+//					
+//			document.removeEventListener( "DOMSubtreeModified", 
+//					IdentitySelector.onSomethingChanged, false);
+//					
+//			document.removeEventListener( "DOMNodeInsertedIntoDocument", 
+//					IdentitySelector.onSomethingChanged, false);
+//					
+//			document.removeEventListener( "DOMAttrModified", 
+//					IdentitySelector.onSomethingChanged, false);
+
 			// Remove progress listener
 					
 			window.getBrowser().removeProgressListener( ICProgressListener); 
@@ -437,7 +461,38 @@ var IdentitySelector =
 				"}", doc);
 		}
 	},
-				
+		
+	onSomethingChanged : function(event)
+	{
+	    if (event) {
+		 var target = event.target;
+		
+		 if( target.wrappedJSObject)
+		 {
+			target = target.wrappedJSObject;
+		 }
+		
+		 if (target instanceof HTMLObjectElement) {
+     		 var doc;
+
+		     doc = target.ownerDocument;
+    		
+		     IdentitySelector.logMessage( "onSomethingChanged", "event: " + 
+			    event.type + " location: " + doc.location);
+    		 
+    		 delete target.__processed;
+    		 
+		     IdentitySelector.processICardItems( doc, true);
+		     
+
+		  } else {
+		   //IdentitySelector.logMessage( "onSomethingChanged", "non HTMLObjectElement " + target.tagName);
+		  }
+	    } else {
+	     IdentitySelector.logMessage( "onSomethingChanged", "event " + event);
+	    }
+	},
+
 	// ***********************************************************************
 	// Method: onContentLoaded
 	// Notes : This method is called after all of the DOM content has been
@@ -456,6 +511,18 @@ var IdentitySelector =
 		
 		doc = target;
 		
+		doc.addEventListener( "DOMSubtreeModified", 
+					IdentitySelector.onSomethingChanged, false, false);
+					
+		doc.addEventListener( "DOMNodeInsertedIntoDocument", 
+					IdentitySelector.onSomethingChanged, false, false);
+					
+		doc.addEventListener( "DOMAttrModified", 
+					IdentitySelector.onSomethingChanged, false, false);
+					
+		doc.addEventListener( "DOMNodeInserted", 
+					IdentitySelector.onSomethingChanged, false, false);
+					
 		// Make sure the intercept script has been executed in the context
 		// of this document
 		
@@ -605,7 +672,7 @@ var IdentitySelector =
 
 			// tokenType
 			
-			if( objElem.tokenType != undefined && objElem.tokenType != null)
+			if( objElem.tokenType != undefined && objElem.tokenType != null && objElem.tokenType != "")
 			{
 				data.tokenType = objElem.tokenType;
 			}
@@ -617,7 +684,8 @@ var IdentitySelector =
 			// optionalClaims
 			
 			if( objElem.optionalClaims != undefined && 
-				objElem.optionalClaims != null)
+				objElem.optionalClaims != null &&
+				objElem.optionalClaims != "")
 			{
 				data.optionalClaims = objElem.optionalClaims;
 			}
@@ -629,7 +697,8 @@ var IdentitySelector =
 			// requiredClaims
 			
 			if( objElem.requiredClaims != undefined && 
-				objElem.requiredClaims != null)
+				objElem.requiredClaims != null &&
+				objElem.requiredClaims != "")
 			{
 				data.requiredClaims = objElem.requiredClaims;
 			}
@@ -640,7 +709,7 @@ var IdentitySelector =
 			
 			// issuer
 			
-			if( objElem.issuer != undefined && objElem.issuer != null)
+			if( objElem.issuer != undefined && objElem.issuer != null && objElem.issuer != "")
 			{
 				data.issuer = objElem.issuer;
 			}
@@ -651,7 +720,7 @@ var IdentitySelector =
 			
 			// issuerPolicy
 			
-			if( objElem.issuerPolicy != undefined && objElem.issuerPolicy != null)
+			if( objElem.issuerPolicy != undefined && objElem.issuerPolicy != null && objElem.issuerPolicy != "")
 			{
 				data.issuerPolicy = objElem.issuerPolicy;
 			}
@@ -663,7 +732,8 @@ var IdentitySelector =
 			// privacyUrl
 			
 			if( objElem.privacyUrl != undefined && 
-				objElem.privacyUrl != null)
+				objElem.privacyUrl != null && 
+				objElem.privacyUrl != "")
 			{
 				data.privacyUrl = objElem.privacyUrl;
 			}
@@ -675,7 +745,8 @@ var IdentitySelector =
 			// privacyVersion
 	
 			if( objElem.privacyVersion != undefined && 
-				objElem.privacyVersion != null)
+				objElem.privacyVersion != null && 
+				objElem.privacyVersion != "")
 			{
 				data.privacyVersion = objElem.privacyVersion;
 			}
@@ -723,9 +794,9 @@ var IdentitySelector =
 				
 				if( !doc.__identityselector__.contentLoaded)
 				{
-					var evnt = doc.createEvent( "Event");
-					evnt.initEvent( "ICObjectLoaded", true, true);
-					objElem.dispatchEvent( evnt);
+					var event = doc.createEvent( "Event");
+					event.initEvent( "ICObjectLoaded", true, true);
+					objElem.dispatchEvent( event);
 				}
 				
 				// If the embedded ICard object doesn't have a token attached to
@@ -736,10 +807,10 @@ var IdentitySelector =
 					IdentitySelector.logMessage( "onFormSubmit", 
 						"Submit encountered in-line");
 					
-					var evnt = doc.createEvent( "Event");
-					evnt.initEvent( "CallIdentitySelector", true, true);
+					var event = doc.createEvent( "Event");
+					event.initEvent( "CallIdentitySelector", true, true);
 					doc.__identityselector__.targetElem = objElem;
-					doc.dispatchEvent( evnt);
+					doc.dispatchEvent( event);
 					
 					// If a token was retrieved, add it as a hidden field of
 					// the form
@@ -767,9 +838,9 @@ var IdentitySelector =
 				
 				if( !doc.__identityselector__.contentLoaded)
 				{
-					var evnt = doc.createEvent( "Event");
-					evnt.initEvent( "ICElementLoaded", true, true);
-					icardElem.dispatchEvent( evnt);
+					var event = doc.createEvent( "Event");
+					event.initEvent( "ICElementLoaded", true, true);
+					icardElem.dispatchEvent( event);
 				}
 				
 				// If the embedded ICard element doesn't have a token attached to
@@ -780,10 +851,10 @@ var IdentitySelector =
 					IdentitySelector.logMessage( "onFormSubmit", 
 						"Submit encountered in-line");
 					
-					var evnt = doc.createEvent( "Event");
-					evnt.initEvent( "CallIdentitySelector", true, true);
+					var event = doc.createEvent( "Event");
+					event.initEvent( "CallIdentitySelector", true, true);
 					doc.__identityselector__.targetElem = icardElem;
-					doc.dispatchEvent( evnt);
+					doc.dispatchEvent( event);
 					
 					// If a token was retrieved, add it as a hidden field of
 					// the form
@@ -836,10 +907,10 @@ var IdentitySelector =
 			
 			if( targetElem.__value == undefined)
 			{
-				var evnt = doc.createEvent( "Event");
-				evnt.initEvent( "CallIdentitySelector", true, true);
+				var event = doc.createEvent( "Event");
+				event.initEvent( "CallIdentitySelector", true, true);
 				doc.__identityselector__.targetElem = targetElem;
-				doc.dispatchEvent( evnt);
+				doc.dispatchEvent( event);
 				targetElem.__value = targetElem.token;
 			}
 		}
@@ -1398,7 +1469,9 @@ var IdentitySelector =
             var cid = null;
             {
    			    // lookup class id from config.
-			    var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranch);
+			    var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+			    var pbi = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
+
 			    cid = pbi.getCharPref("identityselector.contractid");
             }
 
@@ -1897,36 +1970,7 @@ var httpRequestObserver =
   {
     if (topic == "http-on-modify-request") {
       var httpChannel = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
-      
-      var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranch);
-      
-      var advertise = pbi.getCharPref("identityselector.advertise");
-
-      if (advertise == "advertiseSelectorName") {
-		  var cid = pbi.getCharPref("identityselector.contractid");
-		  var name = "";
-	      switch (cid) {
-	      	case "@perpetual-motion.com/IdentitySelector/CardSpaceIdentitySelector;1":
-	      	 name = "CardSpace";
-	      	 break;
-	      	case "digitalme":
-	      	 name = "digitalme";
-	      	 break;
-	      	case "@xmldap.org/identityselector;1":
-	      	 name = "openinfocard";
-	      	 break;
-	      	default:
-	      	 name = cid?cid:"null";
-	      }
-	      httpChannel.setRequestHeader("X-ID-Selector", name, false);
-      } else {
-      	if (advertise == "advertiseSelectorInstallation") {
-	      httpChannel.setRequestHeader("X-ID-Selector", "anon", false);
-      	} else {
-      	  IdentitySelector.logMessage( "httpRequestObserver", "advertise: " + advertise);
-        }
-      } 
-	      
+      httpChannel.setRequestHeader("X-ID-Selector", "openinfocard", false);
     }
   },
 
@@ -1952,57 +1996,6 @@ Desc:
 
 httpRequestObserver.register();
 
-// **************************************************************************
-// Desc: observe identityselector.contractid
-// **************************************************************************
-
-var myPrefObserver =
-{
-  register: function()
-  {
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefService);
-    this._branch = prefService.getBranch("identityselector.");
-    this._branch.QueryInterface(Components.interfaces.nsIPrefBranch2);
-    this._branch.addObserver("", this, false);
-  },
-
-  unregister: function()
-  {
-    if(!this._branch) return;
-    this._branch.removeObserver("", this);
-  },
-
-  observe: function(aSubject, aTopic, aData)
-  {
-    if(aTopic != "nsPref:changed") return;
-    // aSubject is the nsIPrefBranch we're observing (after appropriate QI)
-    // aData is the name of the pref that's been changed (relative to aSubject)
-    switch (aData) {
-      case "contractid":
-        // identityselector.contractid was changed
-        {
-         var value = gPrefService.getCharPref("identityselector.contractid");
-         IdentitySelector.logMessage( "myPrefObserver", 
-				"contractid pref changed: " + value);
-        }
-        break;
-      case "advertise":
-        // identityselector.advertise was changed
-        {
-         var value = gPrefService.getCharPref("identityselector.advertise");
-         IdentitySelector.logMessage( "myPrefObserver", 
-				"advertise pref changed: " + value);
-        }
-        break;
-      default:
-       IdentitySelector.logMessage( "myPrefObserver", 
-				"unobserved pref changed: " + aData);
-    }
-  }
-}
-
-myPrefObserver.register();
 
 // **************************************************************************
 // Desc:
