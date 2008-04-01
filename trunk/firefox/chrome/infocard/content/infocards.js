@@ -28,7 +28,7 @@
 
 var selectedCard;
 
-var selectorDebugging = true;
+var selectorDebugging = false;
 
 function xmlreplace(text) {
  var str;

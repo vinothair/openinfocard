@@ -202,7 +202,14 @@ TokenComponent.prototype.initialize = function (java, trace) {
         /*
          *  Create a sample Java object
          */
-        this._test = this._packages.getClass("org.xmldap.firefox.TokenIssuer").n(extensionPath);
+        var tokenIssuerWrapper = this._packages.getClass("org.xmldap.firefox.TokenIssuer");
+        if (tokenIssuerWrapper == null) {
+        	throw "Error loading org.xmldap.firefox.TokenIssuer!";
+        }
+        this._test = tokenIssuerWrapper.n(extensionPath);
+        if (this._test == null) {
+        	throw "Error calling constructor for org.xmldap.firefox.TokenIssuer! (" + extensionPath + ")";
+        }
          
         this._initialized = true;
     } catch (e) {
@@ -226,7 +233,7 @@ TokenComponent.prototype.getPackages = function() {
  *  Returns the Test object instantiated by default.
  */
 TokenComponent.prototype.getTokenIssuer = function() {
-    this._trace("TokenComponent.getTokenIssuer");
+    this._trace("TokenComponent.getTokenIssuer: " + this._test);
     return this._test;
 };
 
@@ -250,14 +257,21 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
     }
     
     this._trace("TokenComponent._bootstrapClassLoader {");
+//    this._trace("TokenComponent extensionPath=" + extensionPath);
     
     var firefoxClassLoaderURL = 
         new java.net.URL(extensionPath + "components/firefoxClassLoader.jar");
     
+    var urlArray = java.lang.reflect.Array.newInstance(java.net.URL, 1);
+    urlArray[0] = firefoxClassLoaderURL;
+    
     /*
      *  Step 1. Load the bootstraping firefoxClassLoader.jar.
      */
-    var bootstrapClassLoader = java.net.URLClassLoader.newInstance([ firefoxClassLoaderURL ]);
+    var bootstrapClassLoader = java.net.URLClassLoader.newInstance(urlArray);
+    if (!(bootstrapClassLoader instanceof java.net.URLClassLoader)) {
+    	_printToJSConsole("Error: java.net.URLClassLoader.newInstance failed! " + bootstrapClassLoader);
+    }
     
     /*
      *  Step 2. Instantiate a URLSetPolicy object from firefoxClassLoader.jar.
@@ -267,6 +281,16 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
         true,
         bootstrapClassLoader
     );
+    if (policyClass == null) {
+	   	_printToJSConsole("Error: edu.mit.simile.firefoxClassLoader.URLSetPolicy is null! " + bootstrapClassLoader);
+    	throw "Error: edu.mit.simile.firefoxClassLoader.URLSetPolicy is null! " + bootstrapClassLoader;
+    }
+//    _printToJSConsole("debug: policyClass.getName()=" + policyClass.getName());
+    if ("edu.mit.simile.firefoxClassLoader.URLSetPolicy" != policyClass.getName()) {
+    	_printToJSConsole("Error: edu.mit.simile.firefoxClassLoader.URLSetPolicy not loaded! " + bootstrapClassLoader);
+    	throw "Error: edu.mit.simile.firefoxClassLoader.URLSetPolicy not loaded! " + bootstrapClassLoader;
+    }
+
     var policy = policyClass.newInstance();
     
     /*
@@ -298,13 +322,18 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
       
     policy.addURL(firefoxClassLoaderURL);
     
+    var claszLoader = java.net.URLClassLoader.newInstance(urlArray);
+    
     var firefoxClassLoaderPackages = new WrappedPackages(
         java,
-        java.net.URLClassLoader.newInstance([ firefoxClassLoaderURL ])
+        claszLoader
     );
     var tracingClassLoaderClass = 
         firefoxClassLoaderPackages.getClass("edu.mit.simile.firefoxClassLoader.TracingClassLoader");
-
+	if (tracingClassLoaderClass == null) {
+		throw "tracingClassLoaderClass == null";
+	}
+	
     /*
      *  That's it. These are the only 3 things we
      *  need for loading more code.
@@ -428,19 +457,40 @@ function WrappedPackages(java, classLoader) {
     ).newInstance();
     
     var argumentsToArray = function(args) {
-        var a = [];
+        var a = java.lang.reflect.Array.newInstance(java.lang.Object, args.length);
         for (var i = 0; i < args.length; i++) {
             a[i] = args[i];
         }
         return a;
+//        var a = [];
+//        for (var i = 0; i < args.length; i++) {
+//            a[i] = args[i];
+//        }
+//        return a;
     }
 
     this.getClass = function(className) {
         var classWrapper = packages.getClass(className);
         if (classWrapper) {
             return {
+                a : function(aString) { // call a constructor with one String argument
+                	var argsArray = java.lang.reflect.Array.newInstance(java.lang.String, 1);
+    				argsArray[0] = aString;
+                    return classWrapper.callConstructor(argsArray);
+                },
                 n : function() {
-                    return classWrapper.callConstructor(argumentsToArray(arguments));
+                	try {
+                		var c = classWrapper.callConstructor(argumentsToArray(arguments));
+                		if (c == null) {
+                			_printToJSConsole("TokenComponents.WrappedPackages.n: Failed to construct " + className + "(" + arguments + ")");
+                		} else {
+                			_printToJSConsole("TokenComponents.WrappedPackages.n: construct " + c);
+                		}
+	                    return c;
+                	} catch (e) {
+                		_printToJSConsole("TokenComponents.WrappedPackages.n: failed to construct " + className + "(" + arguments + ")");
+                		return null;
+                	}
                 },
                 f : function(fieldName) {
                     return classWrapper.getField(fieldName);
@@ -452,6 +502,7 @@ function WrappedPackages(java, classLoader) {
                 }
             };
         } else {
+        	_printToJSConsole("TokenComponents.WrappedPackages.getClass: failed to load " + className);
             return null;
         }
     };
