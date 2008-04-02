@@ -56,7 +56,7 @@ public interface WSConstants {
     static final String WSU_PREFIX = "wsu";
     static final String WSU_NAMESPACE = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd";
 
-    public final static String POLICY_NAMESPACE_02_12 = "http://schemas.xmlsoap.org/ws/2002/12/policy";
+//    public final static String POLICY_NAMESPACE_02_12 = "http://schemas.xmlsoap.org/ws/2002/12/policy";
     public final static String POLICY_NAMESPACE_04_09 = "http://schemas.xmlsoap.org/ws/2004/09/policy";
     public final static String POLICY_PREFIX = "wsp";
 

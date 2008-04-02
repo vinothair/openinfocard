@@ -315,9 +315,9 @@ public class Utils {
         context.addNamespace("a", WSConstants.WSA_NAMESPACE_05_08);
         context.addNamespace("wst", "http://schemas.xmlsoap.org/ws/2005/02/trust");
         context.addNamespace("wsid","http://schemas.xmlsoap.org/ws/2005/05/identity");
-        context.addNamespace("o","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
-        context.addNamespace("u","http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
-        context.addNamespace("p", WSConstants.POLICY_NAMESPACE_04_09);
+        context.addNamespace(WSConstants.WSSE_PREFIX, WSConstants.WSSE_NAMESPACE_OASIS_10);
+        context.addNamespace(WSConstants.WSU_PREFIX, WSConstants.WSU_NAMESPACE);
+        context.addNamespace(WSConstants.POLICY_PREFIX, WSConstants.POLICY_NAMESPACE_04_09);
 		return context;
 	}
 
@@ -325,14 +325,14 @@ public class Utils {
 
         Bag tokenElements = new Bag();
 
-        Nodes uns = tokenXML.query("//o:Username",context);
+        Nodes uns = tokenXML.query("//" + WSConstants.WSSE_PREFIX + ":Username",context);
         Element un = (Element) uns.get(0);
         String userName = un.getValue();
         log.finest("username: " + userName);
         tokenElements.put("username", userName);
 
 
-        Nodes pws = tokenXML.query("//o:Password",context);
+        Nodes pws = tokenXML.query("//" + WSConstants.WSSE_PREFIX + ":Password",context);
         Element pw = (Element) pws.get(0);
         String password = pw.getValue();
         tokenElements.put("password", password);
@@ -360,7 +360,7 @@ public class Utils {
 	 */
 	static boolean authenticate(CardStorage storage, Document req, XPathContext context) throws org.xmldap.exceptions.ParsingException {
         Bag tokenElements = null;
-        Nodes tokenElm = req.query("//o:UsernameToken",context);
+        Nodes tokenElm = req.query("//" + WSConstants.WSSE_PREFIX + ":UsernameToken",context);
         if (tokenElm.size() > 0) {
 	        Element token = (Element) tokenElm.get(0);
 	        log.finest("UsernameToken:" + token.toXML());
@@ -379,7 +379,7 @@ public class Utils {
     {
 		Bag appliesToBag = new Bag();
 		
-    	Nodes rsts = req.query("//p:AppliesTo",context);
+    	Nodes rsts = req.query("//" + WSConstants.POLICY_PREFIX + ":AppliesTo",context);
     	if (rsts.size() >0) {
     		Element appliesTo = (Element)rsts.get(0);
     		Element endpointReference = appliesTo.getFirstChildElement("EndpointReference", WSConstants.WSA_NAMESPACE_05_08);

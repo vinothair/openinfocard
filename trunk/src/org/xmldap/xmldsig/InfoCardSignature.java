@@ -43,11 +43,22 @@ import java.util.Vector;
 public class InfoCardSignature {
 
 
-    private X509Certificate cert;
+    private X509Certificate[] certChain;
     private PrivateKey privateKey;
 
     public InfoCardSignature(X509Certificate cert, PrivateKey privateKey) {
-        this.cert = cert;
+        this.certChain = new X509Certificate[]{cert};
+        this.privateKey = privateKey;
+    }
+
+    public InfoCardSignature(X509Certificate[] certChain, PrivateKey privateKey) {
+    	if (certChain == null) {
+    		throw new IllegalArgumentException("InfoCardSignature: certCain == null");
+    	}
+    	if (certChain.length == 0) {
+    		throw new IllegalArgumentException("InfoCardSignature: certCain.size() == 0");
+    	}
+        this.certChain = certChain;
         this.privateKey = privateKey;
     }
 
@@ -75,7 +86,7 @@ public class InfoCardSignature {
 
         //Get AsymmetricKeyInfo
         //InfocardKeyInfo keyInfo = new InfocardKeyInfo(cert);
-        SimpleKeyInfo keyInfo = new SimpleKeyInfo(cert);
+        SimpleKeyInfo keyInfo = new SimpleKeyInfo(certChain);
 
 
         //Create the signature block
