@@ -42,12 +42,12 @@ import java.security.PrivateKey;
 public class DecryptUtil {
 
 	Document xml = null;
-	PrivateKey key = null;
+//	PrivateKey key = null;
 	
     static XPathContext context = null;
 
 
-	public DecryptUtil(String encryptedXML, PrivateKey key) throws CryptoException {
+	public DecryptUtil(String encryptedXML) throws CryptoException {
 		if (context == null) {
 			context = new XPathContext();
 		    context.addNamespace("enc", WSConstants.ENC_NAMESPACE);
@@ -59,19 +59,19 @@ public class DecryptUtil {
             xml = XmlUtils.parse(encryptedXML);
         } catch (ParsingException e) {
             System.err.println("ERROR encrypted xml: " + encryptedXML);
-            System.err.println("ERROR PrivateKey: " + key.toString());
+//            System.err.println("ERROR PrivateKey: " + key.toString());
 
             throw new CryptoException("Error buidling a XOM Document out of encrypted token", e);
         } catch (IOException e) {
             System.err.println("ERROR encrypted xml: " + encryptedXML);
-            System.err.println("ERROR PrivateKey: " + key.toString());
+//            System.err.println("ERROR PrivateKey: " + key.toString());
 
             throw new CryptoException("Error buidling a XOM Document out of encrypted token", e);
         }
-		this.key = key;
+//		this.key = key;
 	}
 	
-	public String decryptToken() throws CryptoException {
+	public String decryptToken(PrivateKey key) throws CryptoException {
 		return decryptToken( xml, key);
 	}
 	

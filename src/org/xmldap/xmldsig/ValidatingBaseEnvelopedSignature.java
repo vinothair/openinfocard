@@ -6,13 +6,11 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
-import java.util.ArrayList;
 import java.util.List;
 
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
-import nu.xom.Elements;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.XPathContext;
@@ -128,6 +126,9 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		Element root = xmlDoc.getRootElement();
 		try {
 			Element signature = root.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
+			if (signature == null) {
+				throw new CryptoException("Document contains no Signature element");
+			}
 			parsedSignature = new ParsedSignature(signature);
 		} catch (IOException e) {
 			throw new CryptoException(e);
