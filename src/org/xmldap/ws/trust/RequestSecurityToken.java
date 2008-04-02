@@ -167,7 +167,8 @@ public class RequestSecurityToken implements Serializable {
         }
 
         if (appliesTo != null) {
-            Element element = new Element(WSConstants.POLICY_PREFIX + ":AppliesTo", WSConstants.POLICY_NAMESPACE_02_12);
+//Axel20080402            Element element = new Element(WSConstants.POLICY_PREFIX + ":AppliesTo", WSConstants.POLICY_NAMESPACE_02_12);
+            Element element = new Element(WSConstants.POLICY_PREFIX + ":AppliesTo", WSConstants.POLICY_NAMESPACE_04_09);
             element.appendChild(appliesTo);
             rst.appendChild(element);
         }

@@ -367,7 +367,7 @@ public class EncryptedStore {
         }
 
 
-        InfoCard card = new InfoCard();
+        InfoCard card = new InfoCard(); // no cert -> unsigned
         card.setCardId("https://xmldap.org/cards/123456");
         card.setCardName("Custom card");
         card.setCardVersion(1);
@@ -399,10 +399,6 @@ public class EncryptedStore {
         card.setClaimList(claimList);
 
         card.setPrivacyPolicy("https://xmldap.org/PrivacyPolicy.xml");
-
-        //Don't want the sig
-        card.setSignCard(false);
-
 
         RoamingInformationCard ric = new RoamingInformationCard(card);
         store.addRoamingInformationCard(ric);

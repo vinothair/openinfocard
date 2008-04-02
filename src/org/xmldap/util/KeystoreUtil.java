@@ -28,8 +28,10 @@
 
 package org.xmldap.util;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.xmldap.exceptions.KeyStoreException;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -37,10 +39,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 
@@ -128,6 +134,33 @@ public class KeystoreUtil {
 
     }
 
+
+    public X509Certificate[] getCertificateChain(String alias) throws KeyStoreException {
+    	Certificate[] chain = null;
+        X509Certificate[] x509Chain = null;
+        try {
+        	chain = keystore.getCertificateChain(alias);
+        } catch (java.security.KeyStoreException e) {
+            throw new KeyStoreException("Error fetching certificate chain: " + alias, e);
+        }
+        if (chain == null) {
+        	return null;
+        }
+        try {
+    		Provider provider = new BouncyCastleProvider();
+			CertificateFactory cf = CertificateFactory.getInstance("X.509", provider);
+			x509Chain = new X509Certificate[chain.length];
+			for (int i=0; i<chain.length; i++) {
+				X509Certificate tmpcert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(
+						chain[i].getEncoded()));
+				x509Chain[i] = tmpcert;
+			}
+		} catch (CertificateException e) {
+			throw new KeyStoreException("getCertificateChain: Error creating X509 certificate factory. ", e);
+		}
+        return x509Chain;
+
+    }
 
     public PrivateKey getPrivateKey(String alias, String password) throws KeyStoreException {
 

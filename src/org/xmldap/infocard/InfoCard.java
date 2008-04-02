@@ -48,9 +48,7 @@ import java.security.cert.X509Certificate;
  */
 public class InfoCard implements Serializable {
 
-
-    private boolean signCard = true;
-    private X509Certificate cert;
+    private X509Certificate[] certChain;
     private PrivateKey privateKey;
     private String cardName;
     private String cardId;
@@ -69,11 +67,22 @@ public class InfoCard implements Serializable {
 
 
     public InfoCard() {
-        this.signCard = false;
+        this.certChain = null;
     }
 
-    public InfoCard(X509Certificate cert, PrivateKey privateKey) {
-        this.cert = cert;
+//    public InfoCard(X509Certificate cert, PrivateKey privateKey) {
+//        this.certChain = new X509Certificate[]{cert};
+//        this.privateKey = privateKey;
+//    }
+
+    public InfoCard(X509Certificate[] certChain, PrivateKey privateKey) {
+    	if (certChain == null) {
+    		throw new IllegalArgumentException("InfoCard: certCain == null");
+    	}
+    	if (certChain.length == 0) {
+    		throw new IllegalArgumentException("InfoCard: certCain.size() == 0");
+    	}
+        this.certChain = certChain;
         this.privateKey = privateKey;
     }
 
@@ -81,13 +90,13 @@ public class InfoCard implements Serializable {
         this.requireAppliesTo = requireAppliesTo;
     }
 
-    public boolean signCard() {
-        return signCard;
-    }
-
-    public void setSignCard(boolean signCard) {
-        this.signCard = signCard;
-    }
+//    public boolean signCard() {
+//        return signCard;
+//    }
+//
+//    public void setSignCard(boolean signCard) {
+//        this.signCard = signCard;
+//    }
 
     public String getIssuer() {
         return issuer;
@@ -270,10 +279,10 @@ public class InfoCard implements Serializable {
         infoCard.appendChild(ppElm);
 
 
-        if (signCard()) {
+        if (certChain != null && certChain.length > 0) {
             System.out.println("SigningCArd");
             //Get the signing util
-            InfoCardSignature signer = new InfoCardSignature(cert,privateKey);
+            InfoCardSignature signer = new InfoCardSignature(certChain,privateKey);
 
             Element signedCard = null;
 

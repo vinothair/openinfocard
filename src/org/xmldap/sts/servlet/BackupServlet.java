@@ -132,7 +132,7 @@ public class BackupServlet extends HttpServlet {
             String tokenServiceEndpoint = "https://" + domainname + servletPath + "tokenservice";
             String mexEndpoint = "https://" + domainname + servletPath + "mex";
 
-            InfoCard card = new InfoCard();
+            InfoCard card = new InfoCard(); // no cert -> unsigned card
             card.setCardId("https://" + domainname + servletPath + "card/" + managedCard.getCardId());
             card.setCardName(managedCard.getCardName());
             card.setCardVersion(1);
@@ -166,7 +166,6 @@ public class BackupServlet extends HttpServlet {
             card.setClaimList(claimList);
             */
             card.setPrivacyPolicy(getPrivacyPolicyReference(domainname));
-            card.setSignCard(false);
 
             RoamingInformationCard ric = new RoamingInformationCard(card);
             store.addRoamingInformationCard(ric);
