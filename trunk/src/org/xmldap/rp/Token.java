@@ -84,10 +84,10 @@ public class Token {
         this.tokenStr = tokenStr;
 
         try {
-           DecryptUtil decryptUtil = new DecryptUtil(tokenStr, privateKey);
+           DecryptUtil decryptUtil = new DecryptUtil(tokenStr);
            isEncrypted = decryptUtil.isEncrypted();
            if (isEncrypted) {
-        	   decryptedToken = decryptUtil.decryptToken();
+        	   decryptedToken = decryptUtil.decryptToken(privateKey);
                if (decryptedToken == null) {
                    throw new InfoCardProcessingException("Result of token decryption was null");
                }

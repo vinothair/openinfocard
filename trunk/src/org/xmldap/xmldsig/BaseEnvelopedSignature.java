@@ -246,7 +246,10 @@ public class BaseEnvelopedSignature {
 		return signature;
 	}
 
-	protected static byte[] getAssertionCanonicalBytes(Element root) throws IOException {
+	protected static byte[] getAssertionCanonicalBytes(Element r00t) throws IOException {
+		// make a deep copy because we don not want to modify the parameter
+		Element root = (Element)r00t.copy();
+		
 		// REMOVE the siganture element
 		Element signature = root.getFirstChildElement("Signature",
 				WSConstants.DSIG_NAMESPACE);
