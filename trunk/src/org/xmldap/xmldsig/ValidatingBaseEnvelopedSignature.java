@@ -87,7 +87,8 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		Document assertion = null;
 		try {
 			assertion = parser.build(toValidate, "");
-			return validate(assertion);
+			BigInteger modulus = validate(assertion);
+			return (modulus != null);
 		} catch (ParsingException e) {
 			throw new CryptoException(e);
 		} catch (IOException e) {
@@ -113,7 +114,7 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 //		return true;
 //	}
 
-	public static boolean validate(Document xmlDoc) throws CryptoException {
+	public static BigInteger validate(Document xmlDoc) throws CryptoException {
 
 		XPathContext thisContext = new XPathContext();
 		thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
@@ -185,7 +186,8 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		if (references.size() == 1) {
 			ParsedReference parsedReference = references.get(0);
 			digest = parsedReference.getDigestValue();
-			return validateRSA(root, signedInfoCanonicalBytes, signatureValue, modulus, exponent, digest);
+			boolean valid = validateRSA(root, signedInfoCanonicalBytes, signatureValue, modulus, exponent, digest);
+			return (valid) ? modulus : null;
 		} else {
 			throw new CryptoException("not implemented");
 		}

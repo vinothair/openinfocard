@@ -34,15 +34,18 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
+import java.security.interfaces.RSAPublicKey;
 
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.InfoCardProcessingException;
 import org.xmldap.exceptions.CryptoException;
+import org.xmldap.xmldsig.ParsedSignature;
 import org.xmldap.xmldsig.ValidatingBaseEnvelopedSignature;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.saml.Conditions;
@@ -186,7 +189,7 @@ public class Token {
         if ( ! haveValidatedSignature ) {
 
             try {
-                signatureValid = ValidatingBaseEnvelopedSignature.validate(getDoc());
+                signatureValid = (ValidatingBaseEnvelopedSignature.validate(getDoc()) != null);
             } catch (CryptoException e) {
                 throw new InfoCardProcessingException("Error validating signature", e);
             }
@@ -280,21 +283,9 @@ public class Token {
     }
 
     public String getClientDigest() throws InfoCardProcessingException, CryptoException {
-    	X509Certificate cert = getCertificateOrNull();
-    	if (cert != null) {
-    		certificate = cert;
-    		PublicKey publicKey = certificate.getPublicKey();
-    		String sha1 = CryptoUtils.digest(publicKey.getEncoded());
-    		return sha1;
-    	} else {
-    		String modulus = getModulusOrNull();
-    		if (modulus != null) {
-    			String sha1 = CryptoUtils.digest(modulus.getBytes());
-    			return sha1;
-    		} else {
-    			throw new InfoCardProcessingException("could not find neither certificate nor modulus");
-    		}
-    	}
+    	BigInteger modulus = ValidatingBaseEnvelopedSignature.validate(getDoc());
+ 		String sha1 = CryptoUtils.digest(modulus.toByteArray());
+		return sha1;
     }
 
 	public String getModulusOrNull() throws InfoCardProcessingException {

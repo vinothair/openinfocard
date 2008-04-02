@@ -69,6 +69,13 @@ public class TokenTest extends TestCase {
 
 	}
 
+	public void testGetClientDigest() throws InfoCardProcessingException, CryptoException {
+		Token token = new Token(selfIssuedTokenStr, xmldapKey);
+		String digest = token.getClientDigest();
+		
+		assertEquals("Di8/RScn6chI6xtbQhLXZQNJTiE=",digest);
+	}
+	
 	public void testSelfIssuedToken() throws InfoCardProcessingException {
 		Token token = new Token(selfIssuedTokenStr, xmldapKey);
 		assertFalse(token.isEncrypted());
