@@ -33,6 +33,7 @@ import nu.xom.*;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.ParsingException;
+import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.util.*;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.sts.db.CardStorage;
@@ -215,7 +216,7 @@ public class STSServlet  extends HttpServlet {
 
         Locale clientLocale = request.getLocale();
         String issuer = "https://" + domain + servletPath;
-        String stsResponse;
+        String stsResponse = "";
 		try {
 			stsResponse = Utils.issue(
 					card, requestElements, clientLocale, cert, key, 
@@ -225,6 +226,9 @@ public class STSServlet  extends HttpServlet {
             e.printStackTrace();
             //TODO - SOAP Fault
             return;
+		} catch (TokenIssuanceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
         response.setContentType("application/soap+xml; charset=\"utf-8\"");

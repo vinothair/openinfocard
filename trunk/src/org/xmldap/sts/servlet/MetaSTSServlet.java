@@ -327,13 +327,16 @@ public class MetaSTSServlet  extends HttpServlet {
 
         Locale clientLocale = request.getLocale();
         String cardIssuer = "https://" + domain + servletPath;
-        String stsResponse;
+        String stsResponse = "";
 		try {
 			stsResponse = Utils.issue(
 					card, requestElements, clientLocale, cert, key, cardIssuer, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
 		} catch (CryptoException e) {
 			//TODO - SOAP Fault
 			throw new ServletException(e);
+		} catch (TokenIssuanceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
         response.setContentType("application/soap+xml; charset=\"utf-8\"");
