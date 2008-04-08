@@ -23,7 +23,9 @@ import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
+import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.infocard.ManagedToken;
+import org.xmldap.saml.Subject;
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.DbSupportedClaim;
 import org.xmldap.sts.db.ManagedCard;
@@ -124,7 +126,7 @@ public class Utils {
     		X509Certificate cert, RSAPrivateKey key,
     		String issuer,
     		SupportedClaims supportedClaimsImpl,
-    		String restrictedTo, String relyingPartyCertB64) throws IOException, CryptoException {
+    		String restrictedTo, String relyingPartyCertB64) throws IOException, CryptoException, TokenIssuanceException {
 
 
         Element envelope = new Element(WSConstants.SOAP_PREFIX + ":Envelope", WSConstants.SOAP12_NAMESPACE);
@@ -195,6 +197,29 @@ public class Utils {
         				}
         			}
         		}
+        	}
+        }
+        
+        String keyType = null;
+        {
+        	List keyTypes = requestElements.getValues("keyType");
+        	if ((keyTypes != null) && (keyTypes.size() > 0)) {
+        		keyType = (String)keyTypes.get(0);
+        	}
+        }
+        if (keyType != null) {
+        	log.log(java.util.logging.Level.INFO, "keyType " + keyType);
+        	if ("http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey".equals(keyType)) {
+            	token.setConfirmationMethod(Subject.BEARER);
+        	} else if ("http://schemas.xmlsoap.org/ws/2005/02/trust/SymmetricKey".equals(keyType)) {
+            	log.log(java.util.logging.Level.SEVERE, "keyType " + keyType + "is not supported"); // TODO
+            	throw new TokenIssuanceException("keyType " + keyType + "is not supported");
+        	} else if ("http://schemas.xmlsoap.org/ws/2005/02/trust/PublicKey".equals(keyType)) {
+            	log.log(java.util.logging.Level.SEVERE, "keyType " + keyType + "is not supported"); // TODO
+            	throw new TokenIssuanceException("keyType " + keyType + "is not supported");
+        	} else {
+        		// holder-of-key is the default if other than NoProofKey. What key?
+        		// TODO Axel 20080406
         	}
         }
         
