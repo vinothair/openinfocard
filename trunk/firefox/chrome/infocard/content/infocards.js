@@ -83,12 +83,9 @@ function ok(){
     } else if (selectedCard.type == "managedCard"){
 		var requiredClaims = policy["requiredClaims"];
 		var optionalClaims = policy["optionalClaims"];
-		var tokenType;
-		try {
-		 tokenType = policy["tokenType"];
-		}
-		catch (e) {
-		 tokenType = null;
+		var tokenType = null;
+		if (policy.hasOwnProperty("tokenType")) {
+			tokenType = policy["tokenType"];
 		}
 		var url = policy["url"]; // RP url
 		var clientPseudonym = hex_sha1(url + selectedCard.id);
@@ -295,10 +292,10 @@ function processManagedCard(
 	relyingPartyURL, relyingPartyCertB64, issuerPolicy) {
 
 	if (issuerPolicy != null) {
-		var to = xmlreplace(mnagedCard.carddata.managed.issuer);
+		var to = xmlreplace(managedCard.carddata.managed.issuer);
 		var mexAddress = issuerPolicy;
 		var issuerMex = getMex1(to, mexAddress);
-		debug("issuerMex=" + issuermex);
+		debug("issuerMex=" + issuerMex);
 	}
 	
     var tokenToReturn = null;
@@ -1210,13 +1207,12 @@ function createItem(c, classStr){
 // if something unexcpected happens then return false
 function computeMatching(card, policy) {
  var matchingTokenType = false;
- var tokenType;
- try {
+ var tokenType = null;
+ tokenType = null;
+ if (policy.hasOwnProperty("tokenType")) {
   tokenType = policy["tokenType"];
  }
- catch (e) {
-  tokenType = null;
- }
+
  if (tokenType != null) {
   debug("tokenType: " + tokenType + " card:" + card.name);
   if (card.type == "managedCard") {
