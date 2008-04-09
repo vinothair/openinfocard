@@ -185,7 +185,7 @@ function finish(tokenToReturn) {
 }
 
 function getMexForCard(managedCard) {
-	var to = xmlreplace(managedCard.carddata.managed.issuer);
+	var to = xmlreplace(managedCard.carddata.managed.mex);
 	var mexAddress = managedCard.carddata.managed.mex;
 	var mexResponse = getMex1(to, mexAddress);
 	return mexResponse;
