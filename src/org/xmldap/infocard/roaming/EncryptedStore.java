@@ -48,6 +48,8 @@ import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.engines.AESLightEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 
 import java.io.*;
@@ -68,6 +70,7 @@ public class EncryptedStore {
 
     String roamingStoreString = null;
     String encryptedStoreString = null;
+    byte[] salt = null;
     
     public String getRoamingStoreString() {
     	return roamingStoreString;
@@ -112,7 +115,13 @@ public class EncryptedStore {
     }
     
     public EncryptedStore(InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
-    	roamingStoreString = decryptStore(null, encryptedStoreStream, password);
+    	String encoding = null;
+    	try {
+			encoding = XmlFileUtil.getEncoding(encryptedStoreStream);
+		} catch (IOException e) {
+			throw new CryptoException(e);
+		}
+    	roamingStoreString = decryptStore(encoding, encryptedStoreStream, password);
     }
 
 
@@ -203,15 +212,9 @@ public class EncryptedStore {
 
     }
 
-
-    public EncryptedStore(RoamingStore roamingStore, String password, OutputStream output) throws CryptoException {
-
-
+    public void toStream(OutputStream output) {
         Element encryptedStore = new Element("EncryptedStore", WSConstants.INFOCARD_NAMESPACE);
         Element storeSalt = new Element("StoreSalt", WSConstants.INFOCARD_NAMESPACE);
-        Random rand = new Random();
-        byte[] salt = new byte[16];
-        rand.nextBytes(salt);
 
         storeSalt.appendChild(Base64.encodeBytesNoBreaks(salt));
         encryptedStore.appendChild(storeSalt);
@@ -222,8 +225,7 @@ public class EncryptedStore {
         encryptedStore.appendChild(encryptedData);
         encryptedData.appendChild(cipherData);
         cipherData.appendChild(cipherValue);
-        EncryptedStore encryptedRoamingStore = new EncryptedStore(roamingStore, password, salt);
-        cipherValue.appendChild(encryptedRoamingStore.getEncryptedStoreString());
+        cipherValue.appendChild(getEncryptedStoreString());
 
         try {
             output.write(bom);
@@ -236,58 +238,84 @@ public class EncryptedStore {
 
     }
 
-
-    public EncryptedStore(RoamingStore roamingStore, String password, byte[] salt) throws CryptoException{
-
-
-        EncryptedStoreKeys keys = new EncryptedStoreKeys(password,salt);
-
+    public EncryptedStore(RoamingStore roamingStore, String password) throws CryptoException{
         Random rand = new Random();
+        byte[] salt = new byte[16];
+        rand.nextBytes(salt);
         byte[] iv = new byte[16];
         rand.nextBytes(iv);
+    	init(roamingStore, password, salt, iv);
+    }
 
-        String dataString = null;
+    public EncryptedStore(RoamingStore roamingStore, String password, byte[] salt, byte[] iv) throws CryptoException{
+    	init(roamingStore, password, salt, iv);
+    }
+
+    void init(RoamingStore roamingStore, String password, byte[] salt, byte[] iv) throws CryptoException{
+
+    	this.salt = salt;
+        EncryptedStoreKeys keys = new EncryptedStoreKeys(password,salt);
+
         try {
-            dataString = roamingStore.toXML();
+        	roamingStoreString = roamingStore.toXML();
         } catch (SerializationException e) {
             throw new CryptoException("Error getting RoamingStore XML", e);
         }
-
-        byte[] integrityCode = getHashedIntegrityCode(iv, keys.getIntegrityKey(),dataString);
+        byte[] integrityCode = getHashedIntegrityCode(iv, keys.getIntegrityKey(),roamingStoreString);
 
         ByteArrayOutputStream dataBytes = new ByteArrayOutputStream();
         try {
             dataBytes.write(bom);
-            dataBytes.write(dataString.getBytes("UTF8"));
+            dataBytes.write(roamingStoreString.getBytes("UTF8"));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
 
         //encrypt
+        AESLightEngine aes = new AESLightEngine();
+        CBCBlockCipher cbc = new CBCBlockCipher(aes);
+        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(cbc);
+        KeyParameter key = new KeyParameter(keys.getEncryptionKey());
+        ParametersWithIV paramWithIV = new ParametersWithIV(key, iv);
+        byte inputBuffer[] = new byte[16];
+        byte outputBuffer[] = new byte[16];
+        int bytesProcessed = 0;
+        cipher.init(true, paramWithIV);
+        int bytesRead = 0;
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(dataBytes.toByteArray());
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
-            AESLightEngine aes = new AESLightEngine();
-            CBCBlockCipher cbc = new CBCBlockCipher(aes);
-            BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(cbc);
-            KeyParameter key = new KeyParameter(keys.getEncryptionKey());
-            ParametersWithIV paramWithIV = new ParametersWithIV(key, iv);
-            byte inputBuffer[] = new byte[16];
-            byte outputBuffer[] = new byte[16];
-            int bytesProcessed = 0;
-            cipher.init(true, paramWithIV);
-            int bytesRead = 0;
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(dataBytes.toByteArray());
-            while((bytesRead = inputStream.read(inputBuffer)) > 0)  {
-                bytesProcessed = cipher.processBytes(inputBuffer, 0, bytesRead, outputBuffer, 0);
-                if(bytesProcessed > 0)  outputStream.write(outputBuffer, 0, bytesProcessed);
-            }
-            bytesProcessed = cipher.doFinal(outputBuffer, 0);
-            if(bytesProcessed > 0) outputStream.write(outputBuffer, 0, bytesProcessed);
-        } catch(Exception e) {
-            throw new CryptoException ("Error encrypting data", e);
-        }
+			while((bytesRead = inputStream.read(inputBuffer)) > 0)  {
+				int outsize = cipher.getUpdateOutputSize(bytesRead);
+				if (outputBuffer.length < outsize) {
+					outputBuffer = new byte[outputBuffer.length * 2];
+				}
+			    bytesProcessed = cipher.processBytes(inputBuffer, 0, bytesRead, outputBuffer, 0);
+			    if(bytesProcessed > 0)  outputStream.write(outputBuffer, 0, bytesProcessed);
+			}
+		} catch (DataLengthException e) {
+			throw new CryptoException(e);
+		} catch (IllegalStateException e) {
+			throw new CryptoException(e);
+		} catch (IOException e) {
+			throw new CryptoException(e);
+		}
+        try {
+        	int outsize = cipher.getOutputSize(0);
+			if (outputBuffer.length < outsize) {
+				outputBuffer = new byte[outsize];
+			}
+			bytesProcessed = cipher.doFinal(outputBuffer, 0);
+		} catch (DataLengthException e) {
+			throw new CryptoException(e);
+		} catch (IllegalStateException e) {
+			throw new CryptoException(e);
+		} catch (InvalidCipherTextException e) {
+			throw new CryptoException(e);
+		}
 
+	    if(bytesProcessed > 0) outputStream.write(outputBuffer, 0, bytesProcessed);
         byte[] cipherText = outputStream.toByteArray();
 
 
@@ -405,7 +433,8 @@ public class EncryptedStore {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream("/Users/cmort/Desktop/Infocard/CardBackups/ManualBackup.crds");
-            encryptedStore = new EncryptedStore(store, password, fos);
+            encryptedStore = new EncryptedStore(store, password);
+            encryptedStore.toStream(fos);
         } catch (Exception e) {
             e.printStackTrace();
         }

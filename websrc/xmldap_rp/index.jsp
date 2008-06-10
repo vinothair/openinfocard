@@ -1,6 +1,32 @@
+<%!
+
+	String escapeHtmlEntities(String html) {
+		StringBuffer result = new StringBuffer();
+		for (int i = 0; i < html.length(); i++) {
+			char ch = html.charAt(i);
+			if (ch == '<') {
+				result.append("&lt;");
+			} else if (ch == '>') {
+				result.append("&gt;");
+			} else if (ch == '\"') {
+				result.append("&quot;");
+			} else if (ch == '\'') {
+				result.append("&#039;");
+			} else if (ch == '&') {
+				result.append("&amp;");
+			} else {
+				result.append(ch);
+			}
+		}
+		return result.toString();
+	}
+%>
 <%
+
  String queryString = request.getQueryString();
- if ((queryString != null) && (queryString.indexOf("privacy") != -1)) {
+ if (queryString != null) {
+ 	if (queryString.indexOf("privacy") == 0) {
+	 System.out.println("queryString.indexOf(\"privacy\") = " + queryString.indexOf("privacy"));
 	 String contentType = request.getContentType();
 	 System.out.println("privacyStatement request content-Type: " + contentType);
 	 if (contentType == null) {
@@ -22,6 +48,11 @@
 	 response.setContentType(contentType);
 	 System.out.println("reading : " + privaceStatement);
 	 java.io.InputStream fis = getServletContext().getResourceAsStream(privaceStatement);
+	 if (fis == null) {
+	 	System.out.println("could not find resource: " + privaceStatement);
+	 	// TODO send HTTP not found
+	 	return;
+	 }
 //	 java.io.FileInputStream fis = new java.io.FileInputStream(privaceStatement);
 	 java.io.BufferedReader ins = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
 	 try {
@@ -35,6 +66,32 @@
 			fis.close();
 			ins.close();
 		}
+   } else  if (queryString.indexOf("xmldap_rp.xrds") == 0) {
+	 System.out.println("queryString.indexOf(\"xmldap_rp.xrds\") = " + queryString.indexOf("xmldap_rp.xrds"));
+	 org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
+	 String xrds = properties.getProperty("xrds"); 
+	 if (xrds != null) {
+		 response.setContentType("application/xml+xrds");
+		 System.out.println("reading xrds : " + xrds);
+		 java.io.InputStream fis = getServletContext().getResourceAsStream(xrds);
+	//	 java.io.FileInputStream fis = new java.io.FileInputStream(xrds);
+		 java.io.BufferedReader ins = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+		 try {
+				while (fis.available() != 0) {
+					out.println(ins.readLine());
+				}
+			} catch (java.io.IOException e) {
+				throw new ServletException(e);
+			}
+			finally {
+				fis.close();
+				ins.close();
+			}
+	} else {
+		System.out.println("ERROR: resource not found: xrds");
+		// TODO return HTTP not found
+	}
+  }
  } else {
 	String userAgent = request.getHeader("user-agent");
 	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
@@ -43,7 +100,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Java Based Relying Party</title>
-
+	<link rel="xrds.metadata" href="xmldap_rp.xrds"/>
 
     <style type="text/css">
     BODY {background: #FFF url(./img/banner.png) repeat-x;
@@ -183,7 +240,7 @@
 
 <%
 	if (userAgent != null) {
-		out.println("<p style=\"font-size:xx-small\">Your user agent is: " + userAgent + "</p>");
+		out.println("<p style=\"font-size:xx-small\">Your user agent is: " + escapeHtmlEntities(userAgent) + "</p>");
 	}
 %>
     </div>

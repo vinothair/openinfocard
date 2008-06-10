@@ -563,8 +563,26 @@ function showPrivacyStatement() {
     window.open(privacyUrl, "privacyStatement");
 }
 
-function cancel(){
+function disable(){
+	var prefService = Components.classes[ 
+		"@mozilla.org/preferences-service;1"].
+			getService( Components.interfaces.nsIPrefBranch);
+	var disabled = prefService.getBoolPref( "identityselector.disabled");
+	debug("disabled=" + disabled);
+	prefService.setBoolPref( "identityselector.disabled", true);
+	disabled = prefService.getBoolPref( "identityselector.disabled");
+	debug("disabled=" + disabled);
 
+    var doc = window.document;
+    var event = doc.createEvent("Events");
+    event.initEvent("DisableIdentitySelector", true, true);
+    window.dispatchEvent(event);
+
+	cancel();
+}
+
+function cancel(){
+	debug("cancel");
     var doc = window.document;
     var event = doc.createEvent("Events");
     event.initEvent("CancelIdentitySelector", true, true);
@@ -623,9 +641,9 @@ function load(){
         if (!beenThere) {
          if (rpIdentifier != null) {
 	      for each (rpId in c.rpIds) {
-           debug("RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
+           //debug("RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
 	       if (rpId == rpIdentifier) {
-	        debug("been there at: " + policy["cn"]);
+	        //debug("been there at: " + policy["cn"]);
             beenThere = true;
             if (scrolledIntoView == false) {
             	var xpcomInterface = cardArea.scrollBoxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
@@ -719,7 +737,7 @@ function indicateRequiredClaim(requiredClaims, optionalClaims, claim){
   return;
  }
  if (requiredClaims.indexOf(claim.toLowerCase()) != -1) {
-    debug("required claim " + claim + " found in " + requiredClaims);
+    //debug("required claim " + claim + " found in " + requiredClaims);
     element.checked = true;
     element.disabled = true;
     return;
@@ -727,14 +745,14 @@ function indicateRequiredClaim(requiredClaims, optionalClaims, claim){
 
  if (optionalClaims != null) {
   if (optionalClaims.indexOf(claim.toLowerCase()) != -1) {
-    debug("optional claim " + claim + " found in " + optionalClaims);
+    //debug("optional claim " + claim + " found in " + optionalClaims);
     element.checked = false;
     element.disabled = false;
     return;
   }
  } 
   
- debug("claim " + claim + " not found");
+ //debug("claim " + claim + " not found");
  element.checked = false;
  element.disabled = true;
 }
@@ -1081,7 +1099,7 @@ function setCard(card){
     selectedCard = card;
 
     debug("TYPE: " + selectedCard.type);
-    debug(selectedCard);
+//    debug(selectedCard);
 
     var selfassertedClaims = document.getElementById('selfassertedClaims');
     var managedClaims = document.getElementById('managedClaims');

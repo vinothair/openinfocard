@@ -48,21 +48,21 @@ import java.security.cert.X509Certificate;
  */
 public class InfoCard implements Serializable {
 
-    private X509Certificate[] certChain;
-    private PrivateKey privateKey;
-    private String cardName;
-    private String cardId;
-    private int cardVersion = 1;
+    private X509Certificate[] certChain = null;
+    private PrivateKey privateKey = null;
+    private String cardName = null;
+    private String cardId = null; // required
+    private int cardVersion = 1; // required
     private String base64BinaryCardImage;
-    private String issuer;
-    private String issuerName;
-    private String timeIssued;
-    private String timeExpires;
-    private String privacyPolicy;
-    private TokenServiceReference tokenServiceReference;
-    private SupportedTokenList tokenList;
-    private SupportedClaimList claimList;
-    private String userName;
+    private String issuer = null;
+    private String issuerName = null;
+    private String timeIssued = null;
+    private String timeExpires = null;
+    private String privacyPolicy = null;
+    private TokenServiceReference tokenServiceReference = null;
+    private SupportedTokenList tokenList = null;
+    private SupportedClaimList claimList = null;
+    private String userName = null;
     private boolean requireAppliesTo = false;
 
 
@@ -219,18 +219,23 @@ public class InfoCard implements Serializable {
 
         Element infoCardReference = new Element(WSConstants.INFOCARD_PREFIX + ":InformationCardReference", WSConstants.INFOCARD_NAMESPACE);
         Element cardIdElm = new Element(WSConstants.INFOCARD_PREFIX + ":CardId", WSConstants.INFOCARD_NAMESPACE);
-        cardIdElm.appendChild(cardId);
+        if (cardId != null) {
+        	cardIdElm.appendChild(cardId);
+        } else {
+        	throw new SerializationException("cardId is null but required");
+        }
         infoCardReference.appendChild(cardIdElm);
         Element cardVersionElm = new Element(WSConstants.INFOCARD_PREFIX + ":CardVersion", WSConstants.INFOCARD_NAMESPACE);
-        Integer ver = new Integer(cardVersion);
+        Integer ver = new Integer(cardVersion); // required defaults to 1
         cardVersionElm.appendChild(ver.toString());
         infoCardReference.appendChild(cardVersionElm);
         infoCard.appendChild(infoCardReference);
 
-        Element cardNameElm = new Element(WSConstants.INFOCARD_PREFIX + ":CardName", WSConstants.INFOCARD_NAMESPACE);
-        cardNameElm.appendChild(cardName);
-        infoCard.appendChild(cardNameElm);
-
+        if (cardName != null) { // optional
+	        Element cardNameElm = new Element(WSConstants.INFOCARD_PREFIX + ":CardName", WSConstants.INFOCARD_NAMESPACE);
+	        cardNameElm.appendChild(cardName);
+	        infoCard.appendChild(cardNameElm);
+        }
 
         Element cardImageElm = new Element(WSConstants.INFOCARD_PREFIX + ":CardImage", WSConstants.INFOCARD_NAMESPACE);
         if (base64BinaryCardImage == null) {
@@ -242,29 +247,45 @@ public class InfoCard implements Serializable {
         cardImageElm.addAttribute(mime);
         infoCard.appendChild(cardImageElm);
 
-        Element issuerElm = new Element(WSConstants.INFOCARD_PREFIX + ":Issuer", WSConstants.INFOCARD_NAMESPACE);
-        issuerElm.appendChild(issuer);
-        infoCard.appendChild(issuerElm);
-
-        Element issuerNameElm = new Element(WSConstants.INFOCARD_PREFIX + ":IssuerName", WSConstants.INFOCARD_NAMESPACE);
-        issuerNameElm.appendChild(issuerName);
+        if (issuer != null) {
+	        Element issuerElm = new Element(WSConstants.INFOCARD_PREFIX + ":Issuer", WSConstants.INFOCARD_NAMESPACE);
+	        issuerElm.appendChild(issuer);
+	        infoCard.appendChild(issuerElm);
+        } else {
+        	throw new SerializationException("issuer is null but required");
+        }
+        //Element issuerNameElm = new Element(WSConstants.INFOCARD_PREFIX + ":IssuerName", WSConstants.INFOCARD_NAMESPACE);
+        //issuerNameElm.appendChild(issuerName);
         //TODO - Remove this for RC1
         //infoCard.appendChild(issuerNameElm);
 
-        Element timeIssuedElm = new Element(WSConstants.INFOCARD_PREFIX + ":TimeIssued", WSConstants.INFOCARD_NAMESPACE);
-        timeIssuedElm.appendChild(timeIssued);
-        //timeIssuedElm.appendChild("2006-09-04T19:39:19.6053152Z");
-        infoCard.appendChild(timeIssuedElm);
-
+        if (timeIssued != null) {
+	        Element timeIssuedElm = new Element(WSConstants.INFOCARD_PREFIX + ":TimeIssued", WSConstants.INFOCARD_NAMESPACE);
+	        timeIssuedElm.appendChild(timeIssued);
+	        //timeIssuedElm.appendChild("2006-09-04T19:39:19.6053152Z");
+	        infoCard.appendChild(timeIssuedElm);
+        } else {
+        	throw new SerializationException("timeIssued is null but required");
+        }
         Element timeExpiresElm = new Element(WSConstants.INFOCARD_PREFIX + ":TimeExpires", WSConstants.INFOCARD_NAMESPACE);
         //timeExpiresElm.appendChild(timeExpires);
         timeExpiresElm.appendChild("9999-12-31T23:59:59.9999999Z");
         infoCard.appendChild(timeExpiresElm);
 
-        infoCard.appendChild(tokenServiceReference.serialize());
-        infoCard.appendChild(tokenList.serialize());
-        infoCard.appendChild(claimList.serialize());
-
+        if (tokenServiceReference != null) {
+        	infoCard.appendChild(tokenServiceReference.serialize());
+        } // else optional 
+        if (tokenList != null) {
+        	infoCard.appendChild(tokenList.serialize());
+        } else {
+        	throw new SerializationException("SupportedTokenList is null but required");
+        }
+        if (claimList != null) {
+        	infoCard.appendChild(claimList.serialize());
+        } else {
+        	throw new SerializationException("SupportedClaimList is null but required");
+        }
+        
         if (requireAppliesTo) {
 
             Element requireAppliesToElm = new Element(WSConstants.INFOCARD_PREFIX + ":RequireAppliesTo", WSConstants.INFOCARD_NAMESPACE);
@@ -274,10 +295,11 @@ public class InfoCard implements Serializable {
 
         }
 
-        Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNotice", WSConstants.INFOCARD_NAMESPACE);
-        ppElm.appendChild(privacyPolicy);
-        infoCard.appendChild(ppElm);
-
+        if (privacyPolicy != null) {
+	        Element ppElm = new Element(WSConstants.INFOCARD_PREFIX + ":PrivacyNotice", WSConstants.INFOCARD_NAMESPACE);
+	        ppElm.appendChild(privacyPolicy);
+	        infoCard.appendChild(ppElm);
+        } // else optional
 
         if (certChain != null && certChain.length > 0) {
             System.out.println("SigningCArd");

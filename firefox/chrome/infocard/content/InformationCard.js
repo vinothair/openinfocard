@@ -26,6 +26,7 @@
 var gPrefService = Components.classes[ 
 		"@mozilla.org/preferences-service;1"].
 			getService( Components.interfaces.nsIPrefBranch);
+
 var gNavPlat = navigator.platform;
 var gbIsWin = ((gNavPlat.indexOf( "Win") > -1) ? true : false);
 var gbIsMac = ((gNavPlat.indexOf( "Mac") > -1) ? true : false);
@@ -96,6 +97,7 @@ var ICProgressListener =
 					
 					IdentitySelector.processICardItems( 
 						aProgress.DOMWindow.document, true);
+					IdentitySelector.processHtmlLinkElements( aProgress.DOMWindow.document, true); // process "LINK rel" too
 				}
 			}
 		}
@@ -149,6 +151,8 @@ var ICProgressListener =
 
 var IdentitySelector = 
 {
+	disabled : false,
+	
 	// ***********************************************************************
 	// Method: reportError
 	// ***********************************************************************
@@ -262,6 +266,16 @@ var IdentitySelector =
 	{
 		var handlerAlreadyInstalled = false;
 		
+		{
+			//var prefService = Components.classes[ 
+			//	"@mozilla.org/preferences-service;1"].
+			//	getService( Components.interfaces.nsIPrefBranch);
+			this.disabled = gPrefService.getBoolPref( "identityselector.disabled");
+			if (this.disabled == true) {
+				IdentitySelector.logMessage("onInstall", " ID selector is disabled. Exiting");
+				return;
+			}
+		}
 		try
 		{
 			// Remove the load event listener
@@ -308,6 +322,12 @@ var IdentitySelector =
 				window.addEventListener( "CallIdentitySelector",
 					IdentitySelector.onCallIdentitySelector, false, true);
 			
+				window.addEventListener( "DisableIdentitySelector",
+					IdentitySelector.onDisableIdentitySelector, false, false);
+			
+				window.addEventListener( "EnableIdentitySelector",
+					IdentitySelector.onEnableIdentitySelector, false, false);
+			
 				window.addEventListener( "ICHideNotificationBox",
 					IdentitySelector.onHideNotificationBox, false, false);
 			
@@ -353,6 +373,28 @@ var IdentitySelector =
 		{
 			IdentitySelector.throwError( "onInstall", e);
 		}
+	},
+	
+	// ***********************************************************************
+	// Method: onEnableIdentitySelector
+	// ***********************************************************************
+	
+	onEnableIdentitySelector : function( event)
+	{
+		IdentitySelector.logMessage("onEnableIdentitySelector", " received");
+		this.disabled = false;
+		//onInstall(event);
+	},
+	
+	// ***********************************************************************
+	// Method: onDisableIdentitySelector
+	// ***********************************************************************
+	
+	onDisableIdentitySelector : function( event)
+	{
+		IdentitySelector.logMessage("onDisableIdentitySelector", " received");
+		this.disabled = true;
+		//onUninstall(event);
 	},
 	
 	// ***********************************************************************
@@ -464,6 +506,11 @@ var IdentitySelector =
 		
 	onSomethingChanged : function(event)
 	{
+		if (this.disabled == true) {
+			IdentitySelector.logMessage("onSomethingChanged", " ID selector is disabled. Exiting");
+			return;
+		}
+
 	    if (event) {
 		 var target = event.target;
 		
@@ -473,6 +520,12 @@ var IdentitySelector =
 		 }
 		
 		 if (target instanceof HTMLObjectElement) {
+		 	this.disabled = gPrefService.getBoolPref( "identityselector.disabled");
+			if (this.disabled == true) {
+				IdentitySelector.logMessage("onSomethingChanged", " Id selector is disabled. Exiting");
+				return;
+			}
+		 	
      		 var doc;
 
 		     doc = target.ownerDocument;
@@ -485,8 +538,11 @@ var IdentitySelector =
 		     IdentitySelector.processICardItems( doc, true);
 		     
 
+		  } if (target instanceof HTMLLinkElement) {
+		  	IdentitySelector.logMessage( "onSomethingChanged", "HTMLLinkElement " + target.tagName);
+		  	IdentitySelector.processHtmlLinkElements( doc, true); // process "LINK rel" too
 		  } else {
-		   //IdentitySelector.logMessage( "onSomethingChanged", "non HTMLObjectElement " + target.tagName);
+		   IdentitySelector.logMessage( "onSomethingChanged", "non HTMLObjectElement " + target.tagName);
 		  }
 	    } else {
 	     IdentitySelector.logMessage( "onSomethingChanged", "event " + event);
@@ -579,6 +635,7 @@ var IdentitySelector =
 			if( !doc.__identityselector__.submitIntercepted)
 			{
 				IdentitySelector.processICardItems( doc, true);
+				IdentitySelector.processHtmlLinkElements( doc, true); // process "LINK rel" too
 			}					
 		}
 		catch( e)
@@ -588,11 +645,47 @@ var IdentitySelector =
 	},
 	
 	// ***********************************************************************
+	// Method: processHtmlLinkElements
+	// ***********************************************************************
+	
+	processHtmlLinkElements : function( doc, dispatchEvents)
+	{
+		if (this.disabled == true) {
+			IdentitySelector.logMessage("processHtmlLinkElements", " ID selector is disabled. Exiting");
+			return;
+		}
+		var linkElems = doc.getElementsByTagName( "LINK");
+		for( var i = 0; i < linkElems.length; i++) 
+		{
+			var linkElem = linkElems[ i];
+			var relStr = linkElem.getAttribute( "REL");
+			if( (relStr != null) && (relStr == "xrds.metadata")) {
+				var hrefStr = linkElem.getAttribute( "HREF");
+				if (hrefStr == null) {
+					continue;
+				} else {
+					IdentitySelector.logMessage("processHtmlLinkElements: href=", hrefStr);
+					var data = doc.__identityselector__.data;
+					data.xrds_metadata_href = hrefStr;
+					return hrefStr;
+				}
+			} else {
+				continue;
+			}
+		}
+	},
+	
+	// ***********************************************************************
 	// Method: processICardItems
 	// ***********************************************************************
 	
 	processICardItems : function( doc, dispatchEvents)
 	{
+		if (this.disabled == true) {
+			IdentitySelector.logMessage("processICardItems", " ID selector is disabled. Exiting");
+			return;
+		}
+		
 		var itemCount = 0;
 		
 		// Process all of the information card objects in the document
@@ -1407,6 +1500,12 @@ var IdentitySelector =
 	
 	onCallIdentitySelector : function( event) 
 	{
+	 	this.disabled = gPrefService.getBoolPref( "identityselector.disabled");
+		if (this.disabled == true) {
+			IdentitySelector.logMessage("onCallIdentitySelector", " Id selector is disabled. Exiting");
+			return;
+		}
+
 		var target = event ? event.target : this;
 		var doc;
 		var data;
@@ -1964,6 +2063,11 @@ var IdentitySelector =
 	}
 };
 
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+
 var httpRequestObserver =
 {
   observe: function(subject, topic, data)
@@ -1996,6 +2100,63 @@ Desc:
 
 httpRequestObserver.register();
 
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+var prefObserver =
+{
+  prefs: null,
+	
+  observe: function(subject, topic, data)
+   {
+   	 IdentitySelector.logMessage("prefObserver:observe", "subject=" + subject + " topic=" + topic + " data=" + data);
+     if (topic != "nsPref:changed")
+     {
+       return;
+     }
+ 
+     switch(data)
+     {
+       case "disabled":
+         var disabled = prefs.getBoolPref( "disabled" );
+         if (disable == true) {
+         	IdentitySelector.onUninstall();
+         } else {
+         	IdentitySelector.onInstall();
+         }
+         break;
+     }
+   },
+
+  register: function()
+  {
+ 	IdentitySelector.logMessage("prefObserver:", "register");
+  	this.prefs = Components.classes["@mozilla.org/preferences-service;1"]
+         .getService(Components.interfaces.nsIPrefService)
+         .getBranch("identityselector.");
+     this.prefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
+     this.prefs.addObserver("", this, false);
+  },
+
+  unregister: function()
+  {
+    this.prefs.removeObserver("", this);
+  }
+};
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+
+try
+{
+	prefObserver.register();
+}
+catch( e)
+{
+	IdentitySelector.reportError( "prefObserver.register()", e);
+}
 
 // **************************************************************************
 // Desc:

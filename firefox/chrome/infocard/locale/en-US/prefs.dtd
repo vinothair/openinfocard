@@ -12,3 +12,4 @@
 <!ENTITY infocard.prefs.advertiseSelectorName "Avertise id selector name" >
 <!ENTITY infocard.prefs.advertiseSelectorNameAndVersion "Avertise id selector name and version" >
 <!ENTITY infocard.prefs.advertiseSelector "Advertise id selector" >
+<!ENTITY infocard.prefs.enabled "ID Selector Disabled" >
