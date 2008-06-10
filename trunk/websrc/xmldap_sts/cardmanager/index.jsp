@@ -6,13 +6,37 @@
 <%@ page import="org.xmldap.exceptions.StorageException"%>
 <%@ page import="org.xmldap.util.PropertiesManager"%>
 <%@ page import="org.xmldap.sts.db.SupportedClaims"%>
+<%!
+	String escapeHtmlEntities(String html) {
+		StringBuffer result = new StringBuffer();
+		for (int i = 0; i < html.length(); i++) {
+			char ch = html.charAt(i);
+			if (ch == '<') {
+				result.append("&lt;");
+			} else if (ch == '>') {
+				result.append("&gt;");
+			} else if (ch == '\"') {
+				result.append("&quot;");
+			} else if (ch == '\'') {
+				result.append("&#039;");
+			} else if (ch == '&') {
+				result.append("&amp;");
+			} else {
+				result.append(ch);
+			}
+		}
+		return result.toString();
+	}
+%>
 <%
-
 	PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, getServletContext());
 	String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
 	SupportedClaims supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
 	CardStorage storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
-    String servletPath = properties.getProperty("servletPath");
+	String servletPath = properties.getProperty("servletPath");
+	String requiredClaims = properties.getProperty("requiredClaims"); 
+	String optionalClaims = properties.getProperty("optionalClaims"); 
+
 %>
 <!DOCTYPE html 
      PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -136,7 +160,7 @@
 
 %>
 
-     <b>Welcome, <%= username %></b>  <br/><br/>
+     <b>Welcome, <%= escapeHtmlEntities(username) %></b>  <br/><br/>
 
 <p>Here you can create and download managed cards.</p>
 <br/><br/>
@@ -156,7 +180,7 @@
 
     }
 
-    String backupfile = "/" + servletPath + "/backup/" + username + ".crds";
+    String backupfile = "/" + servletPath + "/backup/" + escapeHtmlEntities(username) + ".crds";
 
 
 %>
@@ -167,7 +191,27 @@
 <p style="font-style:bold">Operations:</p><br/>
 <blockquote>
 <a href="<%= backupfile %>">Download all your cards as a Cardspace Backup file</a><br/>
-<a href="./createcard.jsp">Create a new card</a><br/>
+<a href="./createcard.jsp">Create a new card backed by your username and password</a><br/>
+
+<form method='post' action='./createcard.jsp' id='infocard' enctype='application/x-www-form-urlencoded'>
+<p>
+<img src="./img/card_off.png" alt=""
+     onmouseover="this.src='./img/card_on.png';"
+     onmouseout="this.src='./img/card_off.png';"
+     onclick='var pf = document.getElementById("infocard"); pf.submit();'/>
+
+    <object type="application/x-informationcard" name="xmlToken">
+<%
+		out.println("<param name=\"privacyUrl\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>");
+    	out.println("<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>");
+    	out.println("<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>");
+%>
+    			  <param name="privacyVersion" value="1"/>
+                  <param name="tokenType" value="urn:infocard:managed:x509"/>
+            </object>
+</p>
+</form>
+
 </blockquote>
 
 

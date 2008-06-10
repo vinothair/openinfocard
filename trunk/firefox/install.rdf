@@ -2,7 +2,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest">
    <em:name>openinfocard Identity Selector</em:name>
    <em:id>{211DBAEA-CE99-11DA-8254-96BEC52F3316}</em:id>
-   <em:version>0.9.9.20080401</em:version>
+   <em:version>0.9.9.200805160448</em:version>
    <em:description>adds selector support to firefox</em:description>
    <em:creator>charliemortimore at gmail.com</em:creator>
    <em:homepageURL>http://xmldap.org</em:homepageURL>

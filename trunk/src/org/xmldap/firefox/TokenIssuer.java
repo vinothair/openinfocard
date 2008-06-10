@@ -357,7 +357,7 @@ public class TokenIssuer {
 		}
 	}
 	
-	private static String orgIdString(X509Certificate relyingpartyCert)
+	static String orgIdString(X509Certificate relyingpartyCert)
 	throws TokenIssuanceException {
 		X500Principal principal = relyingpartyCert.getSubjectX500Principal();
 		String dn = principal.getName();
@@ -472,7 +472,7 @@ public class TokenIssuer {
 		return digest;
 	}
 	
-	private static String generateRPPPID(
+	static String generateRPPPID(
 			String cardId,
 			X509Certificate relyingPartyCert,
 			X509Certificate[] chain, 

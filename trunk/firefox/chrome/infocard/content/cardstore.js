@@ -316,7 +316,7 @@ function readLocalFile(fileName) {
 	            	}
 	            }
             
-            	debug(decrypted);
+            	//debug(decrypted);
             	return new XML(decrypted);
 			} else {
 				try {

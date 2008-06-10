@@ -56,6 +56,8 @@
     
     <keyset>
   		<key id="cancel-key" keycode="VK_ESCAPE" oncommand="cancel();"/>
+  		<key id="disable-key" keycode="VK_ESCAPE" modifiers="shift" oncommand="disable();"/>
+  		<key id="disable-key-Q" keycode="D" modifiers="accel" oncommand="disable();"/>
   		<key id="insert-key" keycode="VK_INSERT" oncommand="newCard();"/>
 	</keyset>
 

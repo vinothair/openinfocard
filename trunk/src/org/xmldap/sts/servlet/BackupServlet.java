@@ -61,6 +61,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Random;
 
 
 public class BackupServlet extends HttpServlet {
@@ -176,7 +177,8 @@ public class BackupServlet extends HttpServlet {
         ServletOutputStream out = response.getOutputStream();
 
         try {
-            encryptedStore = new EncryptedStore(store, "password", (OutputStream)out);
+            encryptedStore = new EncryptedStore(store, "password");
+            encryptedStore.toStream(out);
         } catch (Exception e) {
             e.printStackTrace();
         }
