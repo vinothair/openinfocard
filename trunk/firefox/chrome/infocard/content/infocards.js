@@ -1320,9 +1320,11 @@ function computeCardClass(card) {
 function saveCard(card){
     storeCard(card);
     var cardArea = document.getElementById("cardselection");
-    var cardClass = computeCardClass(card);
-    cardArea.appendChild(createItem(card, cardClass));
-    setCard(card);
+    if (cardArea) {
+	    var cardClass = computeCardClass(card);
+	    cardArea.appendChild(createItem(card, cardClass));
+	    setCard(card);
+    } // else called from cardWizard and not from cardManager!
     return true;
 
 }
@@ -1333,7 +1335,11 @@ function newCard(){
     var callback;
     var cardWiz = window.openDialog("chrome://infocard/content/cardWizard.xul","Card Wizard", "modal,chrome,resizable=yes,width=640,height=480",
                                     null, function (callbackData) { callback = callbackData;});
+	digestNewCard(callback);
+}
 
+function digestNewCard(callback) {
+	
 	if (callback == undefined) {
 	 alert("no new card was imported");
 	 return;

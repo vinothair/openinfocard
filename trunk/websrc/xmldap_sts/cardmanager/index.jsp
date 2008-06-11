@@ -36,7 +36,7 @@
 	String servletPath = properties.getProperty("servletPath");
 	String requiredClaims = properties.getProperty("requiredClaims"); 
 	String optionalClaims = properties.getProperty("optionalClaims"); 
-
+    
 %>
 <!DOCTYPE html 
      PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -46,7 +46,7 @@
 	<title>XMLDAP Card Manager</title>
 
 
-    <style>
+    <style type="text/css">
     BODY {background: #FFFFFF;
          color:#000;
          font-family: verdana, arial, sans-serif;}
@@ -92,15 +92,7 @@
         #links A:hover {color: #FFF; text-decoration: underline}
 
     </style>
-    <script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
-    </script>
-    <script type="text/javascript">
-    _uacct = "UA-147402-2";
-    urchinTracker();
-    </script>
-
-
-
+    
 </head>
 <body>
 <%
@@ -142,14 +134,14 @@
 
 %>
 
-<b>Please Login or Create an Account:</b><br/><br/>
+<p style="font-weight:bold">Please Login or Create an Account:</p>
 <form action="" method="post">
     <table border="0" cellpadding="5">
     <tr><td>Username: </td><td><input type="text" name="uid" class="forminput"/> </td></tr>
     <tr><td>Password: </td><td><input type="password" name="password" class="forminput"/> </td></tr>
     </table>
-                                                                          <br/>
-    <input type="submit" value="Login or Create a New Account"/>                     <br/>
+                                                                          
+    <input type="submit" value="Login or Create a New Account"/>                     
 </form>
 
 
@@ -160,12 +152,10 @@
 
 %>
 
-     <b>Welcome, <%= escapeHtmlEntities(username) %></b>  <br/><br/>
+     <p style="font-weight:bold">Welcome, <%= escapeHtmlEntities(username) %></p>
 
 <p>Here you can create and download managed cards.</p>
-<br/><br/>
-
-<b>Your Cards:</b><br/>
+<p style="font-weight:bold">Your Cards:</p>
 
 <table  border="0" cellpadding="5">
 <%
@@ -176,7 +166,29 @@
 
         String cardId = (String)iter.next();
         ManagedCard thisCard = storage.getCard(cardId);
-        out.println("<tr><td><a href=\"/" + servletPath + "/card/" + thisCard.getCardId() + ".crd\">" + thisCard.getCardName() + "</a></td></tr>");
+        String href = "/" + servletPath + "/card/" + thisCard.getCardId() + ".crd";
+        String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+href;
+        out.println("<tr><td><a href=\"" + href + "\">" + thisCard.getCardName() + "</a></td><td>");
+        out.println("<form method='post' action='' id='form" + thisCard.getCardId() + "' enctype='application/x-www-form-urlencoded'>");
+        %>
+		<p>
+		<img src="../img/click_me_card.png" alt="" width="72" height="37"
+		     onmouseover="this.src='../img/card.png';"
+		     onmouseout="this.src='../img/click_me_card.png';"
+		     <%
+		     out.println("onclick='var pf = document.getElementById(\"form" + thisCard.getCardId() + "\"); pf.submit();'/>");
+		     %>
+        <object type="application/x-informationcard" name="xmlToken">
+		<%
+		    out.println("<param name=\"issuer\" value=\"" + basePath + "\">");
+		%>
+		    <param name="tokenType" value="urn:oasis:names:tc:IC:1.0:managedcard"/>
+		
+            </object>
+		</p>
+		</form>
+        <%
+        out.println("</td></tr>");
 
     }
 
@@ -186,33 +198,14 @@
 %>
 
 </table>
-<br/>
-<br/>
-<p style="font-style:bold">Operations:</p><br/>
-<blockquote>
-<a href="<%= backupfile %>">Download all your cards as a Cardspace Backup file</a><br/>
-<a href="./createcard.jsp">Create a new card backed by your username and password</a><br/>
 
-<form method='post' action='./createcard.jsp' id='infocard' enctype='application/x-www-form-urlencoded'>
+
+<p style="font-style:bold">Operations:</p>
 <p>
-<img src="./img/card_off.png" alt=""
-     onmouseover="this.src='./img/card_on.png';"
-     onmouseout="this.src='./img/card_off.png';"
-     onclick='var pf = document.getElementById("infocard"); pf.submit();'/>
-
-    <object type="application/x-informationcard" name="xmlToken">
-<%
-		out.println("<param name=\"privacyUrl\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>");
-    	out.println("<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>");
-    	out.println("<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>");
-%>
-    			  <param name="privacyVersion" value="1"/>
-                  <param name="tokenType" value="urn:infocard:managed:x509"/>
-            </object>
+<a href="<%= backupfile %>">Download all your cards as a Cardspace Backup file</a></p>
+<p>
+<a href="./createcard.jsp">Create a new card backed by your username and password</a>
 </p>
-</form>
-
-</blockquote>
 
 
 <%

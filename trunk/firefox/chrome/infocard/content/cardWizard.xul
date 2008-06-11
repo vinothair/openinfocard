@@ -37,17 +37,20 @@
  %cardwizardDTD;
 ]>
 <wizard id="card-window" title="&cardwizard.title;" onwizardfinish=""
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="loadCardWizard();">
     <stringbundleset id="stringbundleset">
      <stringbundle id="string-bundle" src="chrome://infocard/locale/infocards.properties"/>
     </stringbundleset>
 
+  <script src="chrome://infocard/content/json.js"/>
+  <script src="chrome://infocard/content/cardstore.js"/>
   <script src="chrome://infocard/content/infocards.js"/>
 
   <wizardpage pageid="type" onpageadvanced="next();">
 
-      <script>
-
+      <script type="application/x-javascript">
+		<![CDATA[
            function next() {
 
              var menu = document.getElementById('cardType');
@@ -59,10 +62,7 @@
              return false;
 
           }
-
-
-
-
+		]]>
        </script>
 
     <description>
@@ -79,7 +79,8 @@
   </wizardpage>
 
   <wizardpage description="&cardwizard.carddetails;" pageid="selfAsserted" onpageadvanced="selfAssertedCallback();">
-     <script>
+      <script type="application/x-javascript">
+		<![CDATA[
      function selfAssertedCallback() {
 
          var callbackdata = {};
@@ -106,8 +107,9 @@
 
 
      }
-     </script>
-    <label value="&cardwizard.selfasserted;"/>
+		]]>
+       </script>
+     <label value="&cardwizard.selfasserted;"/>
       <vbox id="editarea" flex="1">
         <grid>
             <columns><column id="colText"/><column id="colData"/></columns>
@@ -133,15 +135,68 @@
   </wizardpage>
 
 
-  <wizardpage description="&cardwizard.carddetails;" pageid="managedCard" onpageadvanced="parseCard(theData);">
+  <wizardpage description="&cardwizard.carddetails;" pageid="managedCard" onpageshow="onPageShowManagedCard();" onpageadvanced="parseCard(theData);">
 
-      <script>
+      <script type="application/x-javascript">
+		<![CDATA[
 
 
          var theCard = "";
          var theFile;
-          var theData;
+         var theData;          
+		
+		function onProgress(e) {
+			var loadingStatus = document.getElementById("loadingStatus");
+			var percentComplete = 0;
+			if (e.totalSize > 0) {
+			  percentComplete = (e.position / e.totalSize)*100;
+			  loadingStatus.value = "loaded: " + percentComplete +"%";
+			} else {
+				// blinking 
+				if (loadingStatus.value.indexOf("loading") > 0) {
+					loadingStatus.value = "";
+				} else {
+					loadingStatus.value = "loading";
+				}
+			}
+		}
 
+		function loadCardFromURL(url) {
+			var req = new XMLHttpRequest();
+			req.open('GET', url, true);
+			req.onprogress = onProgress;
+			req.onreadystatechange = function (aEvt) {
+			  if (req.readyState == 4) {
+				  var loadingStatus = document.getElementById("loadingStatus");
+				  if(req.status == 200) {
+				   loadingStatus.value = "loaded: 100%";
+				   theData = req.responseText;
+				  } else {
+				   loadingStatus.value = "Error loading page: " + req.status;
+				   debug(req.responseText);
+				  }
+			  }
+			};
+			req.send(null); 
+		}
+		
+		function onPageShowManagedCard() {
+			if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+			    var policy = window.arguments[0];
+			    if (policy.hasOwnProperty("tokenType")) {
+					var tokenType = policy["tokenType"];
+					if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
+						if (policy.hasOwnProperty("issuer")) {
+							var textbox = document.getElementById("cardfile");
+							textbox.value = policy["issuer"];
+							textbox.setAttribute("readOnly", true);
+							loadCardFromURL(textbox.value);
+						}
+					}
+			    }
+			}
+		}
+		
          function pickFile() {
 
           var textbox = document.getElementById("cardfile");
@@ -302,9 +357,19 @@
 	              callbackdata["requireAppliesTo"] = requireAppliesTo;
               }
               
+				if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+				    var policy = window.arguments[0];
+				    if (policy.hasOwnProperty("tokenType")) {
+						var tokenType = policy["tokenType"];
+						if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
+							digestNewCard(callbackdata);
+						}
+				    }
+				}
+				
               window.arguments[1](callbackdata);
 
-               document.getElementById('card-window').cancel();
+              document.getElementById('card-window').cancel();
 
 
           }
@@ -312,8 +377,9 @@
 
 
 
-      </script>
-
+		]]>
+       </script>
+      <label id="loadingStatus" value=""/>
       <label value="Please load your managed card:"/>
 
       <textbox id="cardfile"/>
@@ -326,7 +392,8 @@
 
 
     <wizardpage description="&cardwizard.carddetails;" pageid="openid" onpageadvanced="openidCallback();">
-       <script>
+       <script type="application/x-javascript">
+		<![CDATA[
        function openidCallback() {
 
            var callbackdata = {};
@@ -339,6 +406,7 @@
            document.getElementById('card-window').cancel();
 
        }
+		]]>
        </script>
         <vbox id="editarea" flex="1">
           <grid>
@@ -350,6 +418,21 @@
       </vbox>
     </wizardpage>
 
-
+<script type="application/x-javascript">
+<![CDATA[
+function loadCardWizard(){
+	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+	    var policy = window.arguments[0];
+	    if (policy.hasOwnProperty("tokenType")) {
+			var tokenType = policy["tokenType"];
+			if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
+				document.getElementById('card-window').goTo('managedCard');
+			}
+	    }
+	}
+	
+}
+]]>
+</script>
 
 </wizard>
