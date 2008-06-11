@@ -97,14 +97,19 @@ Xmldapidentityselector.prototype = {
         // win.document.location.href is chrome://.../browser.xul
 		policy["url"] = recipientURL; 
 
-        var cardManager = win.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome,resizable,width=800,height=640,centerscreen", policy, function (callbackData) { callback = callbackData;});
-
-        var doc = win.document;
-        var event = doc.createEvent("Events");
-        event.initEvent("CloseIdentitySelector", true, true);
-        win.dispatchEvent(event);
-
-        debug('Token: ' + callback);
+		if ("urn:oasis:names:tc:IC:1.0:managedcard" == tokenType) {
+			var cardWiz = win.openDialog("chrome://infocard/content/cardWizard.xul","Card Wizard", "modal,chrome,resizable=yes,width=640,height=480",
+                policy, function (callbackData) { callback = callbackData;});
+			
+		} else {
+	        var cardManager = win.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome,resizable,width=800,height=640,centerscreen", policy, function (callbackData) { callback = callbackData;});
+	        var doc = win.document;
+	        var event = doc.createEvent("Events");
+	        event.initEvent("CloseIdentitySelector", true, true);
+	        win.dispatchEvent(event);
+	
+	        debug('Token: ' + callback);
+		}
 
         return callback;
 

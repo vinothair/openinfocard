@@ -650,9 +650,16 @@ var IdentitySelector =
 	
 	processHtmlLinkElements : function( doc, dispatchEvents)
 	{
+		if( doc.wrappedJSObject)
+		{
+			doc = doc.wrappedJSObject;
+		}
 		if (this.disabled == true) {
 			IdentitySelector.logMessage("processHtmlLinkElements", " ID selector is disabled. Exiting");
 			return;
+		}
+		if( doc.__identityselector__ === undefined) {
+			IdentitySelector.runInterceptScript(doc);
 		}
 		var linkElems = doc.getElementsByTagName( "LINK");
 		for( var i = 0; i < linkElems.length; i++) 
