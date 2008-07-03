@@ -53,23 +53,57 @@ public class Update extends HttpServlet {
 
         super.init(config);
 
-        try {
-            String filename = "/WEB-INF/update.rdf";
+        String filename = "/WEB-INF/update.rdf";
             
-    		ServletContext application = getServletConfig().getServletContext();
-    		InputStream in = application.getResourceAsStream(filename);
+		ServletContext application = getServletConfig().getServletContext();
+		InputStream in = application.getResourceAsStream(filename);
 
-    		BufferedReader ins = new BufferedReader(new InputStreamReader(in));
-    		int len = in.available();
-    		char[] charBuf = new char[len];
-    		ins.read(charBuf, 0, len);
-    		in.close();
-    		ins.close();
-    		updateRdfBuffer = new String(charBuf);
-    		System.out.println("update.rdf: length=" + updateRdfBuffer.length());
+		BufferedReader ins = new BufferedReader(new InputStreamReader(in));
+		
+		StringBuffer sb = new StringBuffer();
+        try {
+    		int c = -1;
+    		char[] charBuf = null;
+    		while (true) {
+	    		int len = in.available();
+	    		if (len > 0) {
+	    			if (charBuf == null) {
+	    				charBuf = new char[len];
+	    			} else {
+	    				if (len > charBuf.length) {
+	    					charBuf = new char[len];
+	    				}
+	    			}
+	    		} else {
+	    			// available is not always relyable
+	    			if (charBuf == null) {
+	    				charBuf = new char[2048];
+	    			} else {
+	    				if (2048 > charBuf.length) {
+	    					charBuf = new char[2048];
+	    				}
+	    			}
+	    		}
+	    		c = ins.read(charBuf, 0, charBuf.length);
+	    		if (c == -1) {
+	    			break;
+	    		} else {
+	    			sb.append(charBuf, 0, c);
+	    		}
+    		}
         } catch (IOException e) {
             throw new ServletException(e);
+        } finally {
+	    	try {
+				in.close();
+			} catch (IOException e) {}
+    		try {
+				ins.close();
+			} catch (IOException e) {}
         }
+   		updateRdfBuffer = new String(sb.toString());
+		System.out.println("update.rdf: length=" + updateRdfBuffer.length());
+
     }
 
 
