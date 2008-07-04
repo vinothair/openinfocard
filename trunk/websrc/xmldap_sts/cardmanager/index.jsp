@@ -36,6 +36,24 @@
 	String servletPath = properties.getProperty("servletPath");
 	String requiredClaims = properties.getProperty("requiredClaims"); 
 	String optionalClaims = properties.getProperty("optionalClaims"); 
+	String basePath = "";
+	if ("https".equals(request.getScheme())) {
+		if (443==request.getServerPort()) {
+	    	basePath = "https://"+request.getServerName();
+	    } else {
+	    	basePath = "https://"+request.getServerName()+":"+request.getServerPort();
+	    }
+	 } else {
+	 	if ("http".equals(request.getScheme())) {
+	 		if (80==request.getServerPort()) {
+	 			basePath = "http://"+request.getServerName();
+	 		} else {
+	 			basePath = "http://"+request.getServerName()+":"+request.getServerPort();
+	 		}
+	 	} else {
+	 		basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort();
+	 	}
+	 }
     
 %>
 <!DOCTYPE html 
@@ -45,6 +63,13 @@
 <head>
 	<title>XMLDAP Card Manager</title>
 
+	<script  type="text/javascript">
+		if (typeof(navigator.registerContentHandler) != 'undefined') {
+<%
+		out.println("\t\tnavigator.registerContentHandler(\"application/x-informationcard\", \"" + basePath + "/sts/?url=%s\", \"" + request.getServerName()+ " Information Card\");");
+%>
+		}
+	</script>
 
     <style type="text/css">
     BODY {background: #FFFFFF;
@@ -57,7 +82,7 @@
         h4 { color:#000;
          font-family: verdana, arial, sans-serif;}
 
-        .forminput{position:relative;size:300;background-color: #ffffff;border: 1px solid #666666;}
+        .forminput{position:relative;size:300px;background-color: #ffffff;border: 1px solid #666666;}
 
 
         A {color: #657485; font-family:verdana, arial, sans-serif; text-decoration: none}
@@ -69,22 +94,22 @@
            margin: 10px;
            font-family:verdana, arial, sans-serif;
             position:relative;
-              left:0;
-              top:25;
+              left:0px;
+              top:25px;
             width: 95%;
            }
 
 
         #title {color: #FFF; font-weight:bold; font-size:250%; font-family:arial; text-decoration: none;
             position:relative;
-              left:10;
-              top:42;
+              left:10px;
+              top:42px;
         }
 
         #links {
             position:relative;
-              left:-5;
-              top:11;
+              left:-5px;
+              top:11px;
         text-align: right;
         }
 
@@ -167,7 +192,6 @@
         String cardId = (String)iter.next();
         ManagedCard thisCard = storage.getCard(cardId);
         String href = "/" + servletPath + "/card/" + thisCard.getCardId() + ".crd";
-        String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+href;
         out.println("<tr><td><a href=\"" + href + "\">" + thisCard.getCardName() + "</a></td><td>");
         out.println("<form method='post' action='' id='form" + thisCard.getCardId() + "' enctype='application/x-www-form-urlencoded'>");
         %>
@@ -180,7 +204,7 @@
 		     %>
         <object type="application/x-informationcard" name="xmlToken">
 		<%
-		    out.println("<param name=\"issuer\" value=\"" + basePath + "\">");
+		    out.println("<param name=\"issuer\" value=\"" + basePath + href + "\">");
 		%>
 		    <param name="tokenType" value="urn:oasis:names:tc:IC:1.0:managedcard"/>
 		
