@@ -10,9 +10,11 @@ import nu.xom.Document;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 public class XmlFileUtil {
 	/**
@@ -144,5 +146,49 @@ public class XmlFileUtil {
         return encryptedStoreDoc;
     }
 
+	public String doRead(InputStream in) throws IOException {
+		BufferedReader ins = new BufferedReader(new InputStreamReader(in));
+		
+		StringBuilder sb = new StringBuilder();
+        try {
+    		int c = -1;
+    		char[] charBuf = null;
+    		while (true) {
+	    		int len = in.available();
+	    		if (len > 0) {
+	    			if (charBuf == null) {
+	    				charBuf = new char[len];
+	    			} else {
+	    				if (len > charBuf.length) {
+	    					charBuf = new char[len];
+	    				}
+	    			}
+	    		} else {
+	    			// available is not always relyable
+	    			if (charBuf == null) {
+	    				charBuf = new char[2048];
+	    			} else {
+	    				if (2048 > charBuf.length) {
+	    					charBuf = new char[2048];
+	    				}
+	    			}
+	    		}
+	    		c = ins.read(charBuf, 0, charBuf.length);
+	    		if (c == -1) {
+	    			break;
+	    		} else {
+	    			sb.append(charBuf, 0, c);
+	    		}
+    		}
+        } finally {
+	    	try {
+				in.close();
+			} catch (IOException e) {}
+    		try {
+				ins.close();
+			} catch (IOException e) {}
+        }
+        return sb.toString();
+	}
 
 }
