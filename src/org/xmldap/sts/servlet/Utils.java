@@ -1,6 +1,7 @@
 package org.xmldap.sts.servlet;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
@@ -10,6 +11,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import nu.xom.Attribute;
@@ -32,6 +34,7 @@ import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.SupportedClaims;
 import org.xmldap.util.Bag;
 import org.xmldap.util.RandomGUID;
+import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
 
@@ -452,4 +455,119 @@ public class Utils {
     	
         return appliesToBag;
 	}
+	
+    public static void soapFault(HttpServletRequest request, HttpServletResponse response, String faultCode, String subcode, String reasonText) throws IOException {
+    	// <s:Envelope 
+    	//  xmlns:s="http://www.w3.org/2003/05/soap-envelope"  
+    	//  xmlns:a="http://www.w3.org/2005/08/addressing"  
+    	//  xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"> 
+    	//   <s:Header> 
+    	//    <a:Action s:mustUnderstand="1">http://www.w3.org/2005/08/addressing/soap/fault</a:Action> 
+    	//    <o:Security s:mustUnderstand="1" xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"> 
+    	//     <u:Timestamp u:Id="_0"> 
+    	//      <u:Created>2008-07-03T15:31:57.480Z</u:Created> 
+    	//      <u:Expires>2008-07-03T15:36:57.480Z</u:Expires> 
+    	//     </u:Timestamp>
+    	//    </o:Security> 
+    	//   </s:Header> 
+    	//  <s:Body> 
+    	//    <s:Fault> 
+    	//     <s:Code><s:Value>s:Sender</s:Value> 
+    	//      <s:Subcode><s:Value>a:DestinationUnreachable</s:Value></s:Subcode> 
+    	//     </s:Code> 
+    	//     <s:Reason> 
+    	//      <s:Text xml:lang="en-US">The message with To '' cannot be processed at the receiver, due to an AddressFilter mismatch at the EndpointDispatcher.  Check that the sender and receiver's EndpointAddresses agree.</s:Text> 
+    	//     </s:Reason> 
+    	//    </s:Fault> 
+    	//   </s:Body> 
+    	//  </s:Envelope>
+    	Element envelope = new Element(WSConstants.SOAP_PREFIX + ":Envelope", WSConstants.SOAP12_NAMESPACE);
+        envelope.addNamespaceDeclaration(WSConstants.WSA_PREFIX, WSConstants.WSA_NAMESPACE_05_08);
+        envelope.addNamespaceDeclaration(WSConstants.WSU_PREFIX, WSConstants.WSU_NAMESPACE);
+        envelope.addNamespaceDeclaration(WSConstants.WSSE_PREFIX, WSConstants.WSSE_NAMESPACE_OASIS_10);
+//        envelope.addNamespaceDeclaration(WSConstants.TRUST_PREFIX, WSConstants.TRUST_NAMESPACE_05_02);
+//        envelope.addNamespaceDeclaration("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+
+        Element header = new Element(WSConstants.SOAP_PREFIX + ":Header", WSConstants.SOAP12_NAMESPACE);
+        {
+        	{
+	        	Element actionE = new Element(WSConstants.WSA_PREFIX + ":Action", WSConstants.WSA_NAMESPACE_05_08);
+	        	Attribute mustUnderstandA = new Attribute(WSConstants.SOAP_PREFIX + ":mustUnderstand", WSConstants.SOAP12_NAMESPACE);
+	        	mustUnderstandA.setValue("1");
+	        	actionE.addAttribute(mustUnderstandA);
+	        	actionE.appendChild("http://www.w3.org/2005/08/addressing/soap/fault");
+	        	header.appendChild(actionE);
+        	}
+        	{
+	        	Element securityE = new Element(WSConstants.WSSE_PREFIX + ":Security", WSConstants.WSSE_NAMESPACE_OASIS_10);
+	        	Element timestampE = new Element(WSConstants.WSU_PREFIX + ":Timestamp", WSConstants.WSU_NAMESPACE);
+	        	Attribute uId = new Attribute(WSConstants.WSU_PREFIX + ":Id", WSConstants.WSU_NAMESPACE);
+	        	uId.setValue("_0");
+	        	timestampE.addAttribute(uId);
+	        	Element createdE = new Element(WSConstants.WSU_PREFIX + ":Created", WSConstants.WSU_NAMESPACE);
+	        	createdE.appendChild(new XSDDateTime(-1).getDateTime());
+	        	timestampE.appendChild(createdE);
+	        	Element expiresE = new Element(WSConstants.WSU_PREFIX + ":Expires", WSConstants.WSU_NAMESPACE);
+	        	expiresE.appendChild(new XSDDateTime(1).getDateTime());
+	        	timestampE.appendChild(expiresE);
+	        	securityE.appendChild(timestampE);
+	        	header.appendChild(securityE);
+        	}        	
+        }
+        Element body = new Element(WSConstants.SOAP_PREFIX + ":Body", WSConstants.SOAP12_NAMESPACE);
+
+
+        envelope.appendChild(header);
+        envelope.appendChild(body);
+
+    	//    <s:Fault> 
+    	//     <s:Code><s:Value>s:Sender</s:Value> 
+    	//      <s:Subcode><s:Value>a:DestinationUnreachable</s:Value></s:Subcode> 
+    	//     </s:Code> 
+    	//     <s:Reason> 
+    	//      <s:Text xml:lang="en-US">The message with To '' cannot be processed at the receiver, due to an AddressFilter mismatch at the EndpointDispatcher.  Check that the sender and receiver's EndpointAddresses agree.</s:Text> 
+    	//     </s:Reason> 
+    	//    </s:Fault> 
+        Element faultE = new Element(WSConstants.SOAP_PREFIX + ":Fault", WSConstants.SOAP12_NAMESPACE);
+        {
+        	{
+		        Element codeE = new Element(WSConstants.SOAP_PREFIX + ":Code", WSConstants.SOAP12_NAMESPACE);
+		        codeE.appendChild(faultCode);
+		        Element subcodeE = new Element(WSConstants.SOAP_PREFIX + ":Subcode", WSConstants.SOAP12_NAMESPACE);
+		        subcodeE.appendChild(subcode);
+		        codeE.appendChild(subcodeE);
+		        faultE.appendChild(codeE);
+        	}
+        	{
+		        Element reasonE = new Element(WSConstants.SOAP_PREFIX + ":Reason", WSConstants.SOAP12_NAMESPACE);
+		        Element reasonTextE = new Element(WSConstants.SOAP_PREFIX + ":Text", WSConstants.SOAP12_NAMESPACE);
+		        reasonTextE.appendChild(reasonText);
+		        reasonE.appendChild(reasonTextE);
+		        faultE.appendChild(reasonE);
+        	}
+        }        
+        
+        body.appendChild(faultE);
+        
+    	request.setCharacterEncoding("utf-8");
+    	
+        PrintWriter out = response.getWriter();
+//        String encoding = response.getCharacterEncoding();
+//        if (encoding == null) {
+//        	encoding = "ISO-8859-1";
+//        }
+//        String encoding = "utf-8";
+//    	String msg = "<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>" + 
+//    	"<soap:Fault>" + 
+//    	   "<faultcode>" + faultCode + "</faultcode>" +
+//    	   "<faultstring>" + faultString + "</faultstring>" +
+//    	   "<detail>" + detail + "</detail>" +
+//    	"</soap:Fault>";
+        response.setContentType("application/soap+xml"); // charset is ignored here
+//        response.setContentType("application/soap+xml; charset=\"" + encoding + "\"");
+        out.print(envelope.toXML());
+        out.flush();
+        out.close();
+    }
+
 }

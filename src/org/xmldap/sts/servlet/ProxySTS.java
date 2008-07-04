@@ -31,12 +31,24 @@ package org.xmldap.sts.servlet;
 
 import nu.xom.*;
 
+import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.exceptions.SerializationException;
+import org.xmldap.infocard.Constants;
+import org.xmldap.infocard.InfoCard;
+import org.xmldap.infocard.TokenServiceReference;
+import org.xmldap.infocard.policy.SupportedClaim;
+import org.xmldap.infocard.policy.SupportedClaimList;
+import org.xmldap.infocard.policy.SupportedToken;
+import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.util.*;
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.SupportedClaims;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
 
+import com.sun.security.auth.X500Principal;
+
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
@@ -45,8 +57,14 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.PrivateKey;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.logging.Logger;
@@ -59,9 +77,14 @@ public class ProxySTS  extends HttpServlet {
     X509Certificate cert = null;
     String domain = null;
     private String servletPath = null;
+    private X509Certificate[] certChain = null;
 
     CardStorage storage = null;
     SupportedClaims supportedClaimsImpl = null;
+
+    String pathToSslCert = null;
+//    String issuer = "CN=VeriSign Class 3 Code Signing 2004 CA,OU=Terms of use at https://www.verisign.com/rpa (c)04,OU=VeriSign Trust Network,O=VeriSign\\, Inc.,C=US";
+    String issuer = null;
 
     public void init(ServletConfig config) throws ServletException {
 
@@ -104,6 +127,23 @@ public class ProxySTS  extends HttpServlet {
 
             key = (RSAPrivateKey) keystore.getPrivateKey(keyname,keypassword);
 
+            certChain = keystore.getCertificateChain(keyname);
+            if (certChain == null) {
+            	throw new ServletException("certChain is null");
+            }
+            if (certChain.length == 0) {
+            	throw new ServletException("certChain.length is zero");
+            }
+
+            pathToSslCert = properties.getProperty("pathToSslCert");
+            if (pathToSslCert == null) {
+            	throw new ServletException("pathToSslCert is null");
+            }
+
+            issuer = properties.getProperty("issuer");
+            if (issuer == null) {
+            	throw new ServletException("issuer is null");
+            }
 
         } catch (IOException e) {
             throw new ServletException(e);
@@ -121,52 +161,281 @@ public class ProxySTS  extends HttpServlet {
 
     }
 
+//  <register><cardId>1873F8A0-503B-2618-C2B2-90D662198B51</cardId><cert>MIIE1jCCA76
+//  gAwIBAgIQG5t/GM10hgvEMeYewFYfOzANBgkqhkiG9w0BAQUFADCBtDELMAkGA1UEBhMCVVMxFzAVBgN
+//  VBAoTDlZlcmlTaWduLCBJbmMuMR8wHQYDVQQLExZWZXJpU2lnbiBUcnVzdCBOZXR3b3JrMTswOQYDVQQ
+//  LEzJUZXJtcyBvZiB1c2UgYXQgaHR0cHM6Ly93d3cudmVyaXNpZ24uY29tL3JwYSAoYykwNDEuMCwGA1U
+//  EAxMlVmVyaVNpZ24gQ2xhc3MgMyBDb2RlIFNpZ25pbmcgMjAwNCBDQTAeFw0wNzAzMTYwMDAwMDBaFw0
+//  wODAzMTUyMzU5NTlaMIGnMQswCQYDVQQGEwJERTEPMA0GA1UECBMGQmVybGluMQ8wDQYDVQQHEwZCZXJ
+//  saW4xKzApBgNVBAoUIlQtU3lzdGVtcyBFbnRlcnByaXNlIFNlcnZpY2VzIEdtYkgxHDAaBgNVBAsUE1N
+//  5c3RlbXMgSW50ZWdyYXRpb24xKzApBgNVBAMUIlQtU3lzdGVtcyBFbnRlcnByaXNlIFNlcnZpY2VzIEd
+//  tYkgwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAK0FJv9g3xIFUFYMSZ7wfrX3N+X4UHlrWVDsdKQ
+//  3DJ2tXdnY9OaocSMp4lb5UqjPZxQvHUo5ogJs8jgSB2yp5OWH6DCYfIR6rxxuKI5evNhOwX3nuoyd5L/
+//  S2NmPHLig384XdPKjFBSjZUbOpWvofHMwcRvs380LdUe2K99hnuEHAgMBAAGjggFxMIIBbTAJBgNVHRM
+//  EAjAAMA4GA1UdDwEB/wQEAwIHgDBABgNVHR8EOTA3MDWgM6Axhi9odHRwOi8vQ1NDMy0yMDA0LWNybC5
+//  2ZXJpc2lnbi5jb20vQ1NDMy0yMDA0LmNybDBEBgNVHSAEPTA7MDkGC2CGSAGG+EUBBxcDMCowKAYIKwY
+//  BBQUHAgEWHGh0dHBzOi8vd3d3LnZlcmlzaWduLmNvbS9ycGEwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCs
+//  GAQUFBwMDMHUGCCsGAQUFBwEBBGkwZzAkBggrBgEFBQcwAYYYaHR0cDovL29jc3AudmVyaXNpZ24uY29
+//  tMD8GCCsGAQUFBzAChjNodHRwOi8vQ1NDMy0yMDA0LWFpYS52ZXJpc2lnbi5jb20vQ1NDMy0yMDA0LWF
+//  pYS5jZXIwHwYDVR0jBBgwFoAUCPVR6Pv+PT1kNnxoz1t4qN+5xTcwEQYJYIZIAYb4QgEBBAQDAgQQMA0
+//  GCSqGSIb3DQEBBQUAA4IBAQBGd+ZCppyQvEPvedj7FMl/nwUa/alEsr8XdOP1MzaueUsZeUAykg1uGow
+//  9Cey4pbw7NNTg1C8nKHvf652gSixMJjsESpfXqbkSRnPNZl/bu4zm8yWcg1G89ZaxndKqLdr+ww5jmHC
+//  sQyRh6Nurj6bTZNtXGdo2VMFpUWqZbCZjD0PsQa4ObZuyoIC4UTy2oTl3paKJhsaoBZLD/P2v6X6+R34
+//  GU/dz0QaT1ChlrwMrWJXYCLb4eL1YSIu44r7u5yKhLZBCWFGgDpZjh8tWJihOrq93tWE+yoO9c4eabNT
+//  8d3T4stxUo82pN140om64bgVU6Y8A6ZhrLJ5C/Fzqfdf+</cert></register>
+  
+    private void handlePoll(Element root, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    	ServletContext serletContext = request.getSession().getServletContext();
+    	String rst = (String)serletContext.getAttribute("rst");
+    	if (rst != null) {
+	        response.setContentType("application/soap+xml; charset=\"utf-8\"");
+	        response.setContentLength(rst.length());
+	        PrintWriter out = response.getWriter();
+	        out.println(rst);
+	        out.flush();
+	        out.close();
+    	}
+    }
+    
+    private void handleLopp(Element root, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    	ServletContext serletContext = request.getSession().getServletContext();
+    	Elements kids = root.getChildElements();
+    	if (kids.size() == 1) {
+    		serletContext.setAttribute("token", kids.get(0).toXML());
+    	}
+    }
+    
+    private void handleRegister(Element root, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    		Element certElement = root.getFirstChildElement("cert");
+    		String b64EncodedX509Certificate = certElement.getValue();
+    		try {
+				X509Certificate portableSTScert = org.xmldap.crypto.CryptoUtils.X509fromB64(b64EncodedX509Certificate);
+//				try {
+//					portableSTScert.checkValidity();
+//				} catch (CertificateExpiredException e) {
+//					response.sendError(javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE, e.getMessage());
+//					e.printStackTrace();
+//				} catch (CertificateNotYetValidException e) {
+//					response.sendError(javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE, e.getMessage());
+//					e.printStackTrace();
+//				}
+				javax.security.auth.x500.X500Principal issuerPrincipal = portableSTScert.getIssuerX500Principal();
+				System.out.println("issuer principal: " + issuerPrincipal.getName());
+				if (issuer.equals(issuerPrincipal.getName())) {
+					javax.security.auth.x500.X500Principal subjectPrincipal = portableSTScert.getSubjectX500Principal();
+					System.out.println("register subject principal: " + subjectPrincipal.getName());
+					request.getSession(true).getServletContext().setAttribute(subjectPrincipal.getName(), b64EncodedX509Certificate);
+				} else {
+					System.out.println("wrong issuer principal: " + issuerPrincipal.getName());
+					System.out.println("expec issuer principal: " + issuer);
+					response.sendError(javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE, "wrong issuer");
+				}
+			} catch (CryptoException e) {
+				response.sendError(javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE, e.getMessage());
+				e.printStackTrace();
+			}
+    }
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void handleUnregister(Element root, HttpServletRequest request, HttpServletResponse response) throws IOException {
+		Element certElement = root.getFirstChildElement("cert");
+		String b64EncodedX509Certificate = certElement.getValue();
+		try {
+			X509Certificate portableSTScert = org.xmldap.crypto.CryptoUtils.X509fromB64(b64EncodedX509Certificate);
+			javax.security.auth.x500.X500Principal issuerPrincipal = portableSTScert.getIssuerX500Principal();
+			System.out.println("issuer principal: " + issuerPrincipal.getName());
+			if (issuer.equals(issuerPrincipal.getName())) {
+				javax.security.auth.x500.X500Principal subjectPrincipal = portableSTScert.getSubjectX500Principal();
+				System.out.println("unregister subject principal: " + subjectPrincipal.getName());
+				request.getSession(true).getServletContext().setAttribute(subjectPrincipal.getName(), null);
+			} else {
+				response.sendError(javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE, "wrong issuer");
+			}
+		} catch (CryptoException e) {
+			response.sendError(javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE, e.getMessage());
+			e.printStackTrace();
+		}
+    }
 
-    	HttpSession session = request.getSession();
-    	session.getServletContext().log("proxySTS Servlet got a request");
-    	
-    	log.finest("proxySTS got a request");
-        int contentLen = request.getContentLength();
+    protected void getCard(HttpServletResponse response) throws ServletException {
+    	InfoCard card = new InfoCard(certChain, key);
+    	String cardId = "0";
+        card.setCardId("https://" + domain + "/" + servletPath + "/" + "proxySTS/" + cardId);
+        card.setCardName(domain);
+        card.setCardVersion(1);
+        card.setIssuerName(domain);
 
-        String requestXML = null;
-        if (contentLen > 0) {
-
-            DataInputStream inStream = new DataInputStream(request.getInputStream());
-            byte[] buf = new byte[contentLen];
-            inStream.readFully(buf);
-            requestXML = new String(buf);
-
-            System.out.println("proxySTS Request:\n" + requestXML);
-
-        }
-
-        //let's make a doc
-        Builder parser = new Builder();
-        Document req = null;
-        try {
-            req = parser.build(requestXML, "");
-        } catch (nu.xom.ParsingException e) {
-            e.printStackTrace();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        XPathContext context = Utils.buildRSTcontext();
-
-        log.finest("We have a doc");
-
-        String stsResponse = "not implemented";
+        String tokenServiceEndpoint = "https://" + domain + "/" + servletPath + "/" + "proxySTS";
+        String mexEndpoint = "https://" + domain + "/" + servletPath + "/" + "mex" + "/" + "proxySTS";
+        card.setIssuer(tokenServiceEndpoint);
+        XSDDateTime issued = new XSDDateTime();
+        card.setTimeIssued(issued.getDateTime());
+        TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, certChain[0]);
+        String username = "username";
+        tsr.setAuthType(TokenServiceReference.USERNAME, username);
+        card.setTokenServiceReference(tsr);
         
-        response.setContentType("application/soap+xml; charset=\"utf-8\"");
-        response.setContentLength(stsResponse.length());
-        log.finest("STS Response:\n " + stsResponse);
-        PrintWriter out = response.getWriter();
-        out.println(stsResponse);
-        out.flush();
-        out.close();
+
+        SupportedTokenList tokenList = new SupportedTokenList();
+        SupportedToken token = new SupportedToken(SupportedToken.SAML11);
+        tokenList.addSupportedToken(token);
+        card.setTokenList(tokenList);
+
+        SupportedClaimList claimList = new SupportedClaimList();
+        claimList.addSupportedClaim(new SupportedClaim(Constants.IC_GIVENNAME, Constants.IC_NS_GIVENNAME, "Your givenname"));
+        claimList.addSupportedClaim(new SupportedClaim(Constants.IC_SURNAME, Constants.IC_NS_SURNAME, "Your surname"));
+        claimList.addSupportedClaim(new SupportedClaim(Constants.IC_EMAILADDRESS, Constants.IC_NS_EMAILADDRESS, "Your email address"));
+        claimList.addSupportedClaim(new SupportedClaim(Constants.IC_PRIVATEPERSONALIDENTIFIER, Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "RP PPID"));
+        card.setClaimList(claimList);
+
+        card.setPrivacyPolicy("https://" + domain + "/" + servletPath + "/PrivacyPolicy.xml");
+
+		try {
+			PrintWriter out = response.getWriter();
+	        String cardStr = card.toXML();
+	        response.setContentType("application/x-informationcard");
+	        response.setContentLength(cardStr.length());
+			out.print(cardStr);
+		} catch (java.io.IOException e) {
+			throw new ServletException(e);
+		} catch (SerializationException e) {
+			throw new ServletException(e);
+		} 
+
+    }
+    
+    protected void doGet(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+    	getCard(response);
+
+	}
+
+	private void getCert(HttpServletResponse response)
+			throws FileNotFoundException, ServletException, IOException {
+		response.setContentType("application/x-x509-ca-cert");
+System.out.println("proxySTS doGET reading " + pathToSslCert);
+		java.io.InputStream fis = new FileInputStream(pathToSslCert);
+		// java.io.FileInputStream fis = new
+		// java.io.FileInputStream(privaceStatement);
+//		java.io.BufferedReader ins = new java.io.BufferedReader(
+//				new java.io.InputStreamReader(fis));
+		try {
+			PrintWriter out = response.getWriter();
+			while (true) {
+				int c = fis.read();
+				if (c != -1) {
+					out.write(c);
+				} else {
+					break;
+				}
+			}
+		} catch (EOFException eof) {
+			// nothing
+		} catch (java.io.IOException e) {
+			throw new ServletException(e);
+		} finally {
+			fis.close();
+//			ins.close();
+		}
+	}
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException {
+    	try {
+	    	HttpSession session = request.getSession();
+	    	session.getServletContext().log("proxySTS Servlet got a request");
+	    	
+	    	log.finest("proxySTS got a request");
+	        int contentLen = request.getContentLength();
+	
+	        String requestXML = null;
+	        if (contentLen > 0) {
+	
+	            DataInputStream inStream = new DataInputStream(request.getInputStream());
+	            byte[] buf = new byte[contentLen];
+	            inStream.readFully(buf);
+	            requestXML = new String(buf);
+	
+	            System.out.println("proxySTS Request:\n" + requestXML);
+	
+	        } else {
+	        	Utils.soapFault(request, response, "soap:Client", "empty request", "");
+	        	return;
+	        }
+	
+	        //let's make a doc
+	        Builder parser = new Builder();
+	        Document req = null;
+	        try {
+	            req = parser.build(requestXML, "");
+	        } catch (nu.xom.ParsingException e) {
+	            e.printStackTrace();
+	            Utils.soapFault(request, response, "soap:Client", "nu.xom.ParsingException", e.getMessage());
+	            return;
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            Utils.soapFault(request, response, "soap:Server", "IOException", e.getMessage());
+	            return;
+	        }
+	
+	        XPathContext context = Utils.buildRSTcontext();
+	
+	        log.finest("We have a doc");
+	        {
+	        	Nodes rsts = req.query("//wst:RequestSecurityToken",context);
+	        	if (rsts.size() > 0) {
+	        		Element rst = (Element) rsts.get(0);
+	                log.finest("proxySTS RST: " + rst.toXML());
+	                ServletContext serletContext = request.getSession().getServletContext();
+	                serletContext.setAttribute("rst", rst.toXML());
+	                serletContext.setAttribute("token", null);
+					int count = 0;
+					try {
+						while (count++ < 5) {
+			                try {
+								Thread.sleep(5000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+								Utils.soapFault(request, response, "soap:Server", "InterruptedException", e.getMessage());
+								return;
+							}
+							String token = (String)serletContext.getAttribute("token");
+							if (token != null) {
+						        response.setContentType("application/soap+xml");
+						        response.setContentLength(token.length());
+						        log.finest("proxySTS Response:\n " + token);
+						        PrintWriter out = response.getWriter();
+						        out.println(token);
+						        out.flush();
+						        out.close();
+						        return;
+							}
+						}
+						Utils.soapFault(request, response, "soap:Server", "timeout", "");
+					} finally {
+		                serletContext.setAttribute("rst", null);
+		                serletContext.setAttribute("token", null);
+					}
+	        	} else {
+	                Element root = req.getRootElement();
+	                if ("register".equals(root.getLocalName())) {
+	                	handleRegister(root, request, response);
+	                } else if ("unregister".equals(root.getLocalName())) {
+	                	handleUnregister(root, request, response);
+	                } else if ("poll".equals(root.getLocalName())) {
+	                	handlePoll(root, request, response);
+	                } else if ("llop".equals(root.getLocalName())) {
+	                	handleLopp(root, request, response);
+	                } else {
+	                	Utils.soapFault(request, response, "soap:Client", "The root element must be 'register' or 'unregister' or 'poll' not " + root.getLocalName(), "");
+	                }
+	        	}
+	        }
+    	} catch (IOException e) {
+    		try {
+				Utils.soapFault(request, response, "soap:Server", "IOException", e.getMessage());
+			} catch (IOException e1) {
+				throw new ServletException(e);
+			}
+    	}
 
     }
 

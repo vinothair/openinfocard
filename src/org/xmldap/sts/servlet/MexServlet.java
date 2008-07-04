@@ -100,6 +100,8 @@ public class MexServlet extends HttpServlet {
 		String filename = null;
 		if (url.indexOf("symmetric-binding") > 0) { // this is experimental and works only for my environment. Axel
 			filename = "WEB-INF/mex-pwd-symmetric-binding-get.xml";
+		} else if (url.endsWith("proxySTS")) {
+			filename = "WEB-INF/mex-proxy-get.xml";
 		} else if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
 			filename = "WEB-INF/mex-pwd-get.xml";
 		} else if (url.endsWith(TokenServiceReference.SELF_ISSUED)) {
@@ -112,24 +114,36 @@ public class MexServlet extends HttpServlet {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, "no mex data is associated with this url " + url);
 			return;
 		}
-		System.out.println("MEX reading file " + filename);
-		InputStream in = application.getResourceAsStream(filename);
-
+		
 		StringBuffer mexBuff = new StringBuffer();
-		BufferedReader ins = new BufferedReader(new InputStreamReader(in));
-		try {
-
-			while (in.available() != 0) {
-				mexBuff.append(ins.readLine());
+		{
+			System.out.println("MEX reading file " + filename);
+			InputStream in = application.getResourceAsStream(filename);
+	
+			BufferedReader ins = new BufferedReader(new InputStreamReader(in));
+			char[] cbuf = new char[2048];
+			try {
+				while (true) {
+					int c = ins.read(cbuf, 0, cbuf.length);
+					if (c != -1) {
+						mexBuff.append(cbuf, 0, c);
+					} else {
+						break;
+					}
+				}
+	
+	//			while (in.available() != 0) {
+	//				mexBuff.append(ins.readLine());
+	//			}
+	
+			} catch (IOException e) {
+				throw new ServletException(e);
+			} finally {
+				in.close();
+				ins.close();
 			}
-
-			in.close();
-			ins.close();
-
-		} catch (IOException e) {
-			throw new ServletException(e);
 		}
-
+		
 		String[] args = { cert };
 		MessageFormat mexResponse = new MessageFormat(mexBuff.toString());
 
@@ -184,6 +198,8 @@ public class MexServlet extends HttpServlet {
 		String filename = null;
 		if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
 			filename = "WEB-INF/mex-pwd-post.xml";
+		} else if (url.endsWith("proxySTS")) {
+			filename = "WEB-INF/mex-proxy-post.xml";
 		} else if (url.endsWith(TokenServiceReference.SELF_ISSUED)) {
 			filename = "WEB-INF/mex-self-post.xml";
 		} else if (url.endsWith(TokenServiceReference.X509)) {
@@ -205,10 +221,19 @@ public class MexServlet extends HttpServlet {
         BufferedReader ins = new BufferedReader(new InputStreamReader(in));
         try {
             System.out.println("MEX reading file");
-
-            while (in.available() !=0) {
-                mexBuff.append(ins.readLine());
-            }
+            char[] cbuf = new char[2048];
+			while (true) {
+				int c = ins.read(cbuf, 0, cbuf.length);
+				if (c != -1) {
+					mexBuff.append(cbuf, 0, c);
+				} else {
+					break;
+				}
+			}
+            
+//            while (in.available() !=0) {
+//                mexBuff.append(ins.readLine());
+//            }
 
             in.close();
             ins.close();
