@@ -29,27 +29,49 @@
 package org.xmldap.infocard.policy;
 
 import nu.xom.Element;
+import nu.xom.Elements;
+
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 
 
 public class SupportedTokenList implements Serializable {
 
 
-    Vector supportedTokens = new Vector();
+    List<SupportedToken> supportedTokens = null;
 
+    public SupportedTokenList(Element supportedTokenList) throws ParsingException {
+    	Elements elts = supportedTokenList.getChildElements("TokenType", WSConstants.TRUST_NAMESPACE_05_02);
+    	if (elts.size() == 0) {
+    		throw new ParsingException("missing TokenType elements in SupportedTokenTypeList");
+    	} else {
+    		for (int i=0; i<elts.size(); i++) {
+    			Element elt = elts.get(i);
+    			SupportedToken supportedToken = new SupportedToken(elt);
+    			addSupportedToken(supportedToken);
+    		}
+    	}
+    }
+    
+    public SupportedTokenList(List<SupportedToken> supportedTokenList) {
+    	this.supportedTokens = supportedTokenList;
+    }
+    
     public void addSupportedToken(SupportedToken token) {
-
+    	if (supportedTokens == null) {
+    		supportedTokens = new ArrayList<SupportedToken>();
+    	}
         supportedTokens.add(token);
 
     }
 
-    public List getSupportedTokens() {
+    public List<SupportedToken> getSupportedTokens() {
         return supportedTokens;
     }
 
@@ -60,7 +82,7 @@ public class SupportedTokenList implements Serializable {
         Element supportedTokenTypeList = new Element(WSConstants.INFOCARD_PREFIX + ":SupportedTokenTypeList", WSConstants.INFOCARD_NAMESPACE);
 
 
-        Iterator tokens = getSupportedTokens().iterator();
+        Iterator<SupportedToken> tokens = getSupportedTokens().iterator();
         while (tokens.hasNext()) {
 
             SupportedToken token = (SupportedToken) tokens.next();

@@ -29,27 +29,57 @@
 package org.xmldap.infocard.policy;
 
 import nu.xom.Element;
+import nu.xom.Elements;
+
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 
 
 public class SupportedClaimList implements Serializable {
 
-    Vector supportedClaims = new Vector();
+    List<SupportedClaim> supportedClaims = new ArrayList<SupportedClaim>();
 
-    public void addSupportedClaim(SupportedClaim claim) {
+//    <ic:SupportedClaimTypeList> 
+//     (<ic:SupportedClaimType Uri=”xs:anyURI”> 
+//       <ic:DisplayTag> xs:string </ic:DisplayTag> ? 
+//       <ic:Description> xs:string </ic:Description> ? 
+//      </ic:SupportedClaimType>) + 
+//      </ic:SupportedClaimTypeList>
+	public SupportedClaimList(Element supportedClaimsElement) throws ParsingException {
+		Elements elts = supportedClaimsElement.getChildElements("SupportedClaimType", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() > 1) {
+			for (int index=0; index<elts.size(); index++) {
+				Element elt = elts.get(index);
+				SupportedClaim supportedClaim = new SupportedClaim(elt);
+				supportedClaims.add(supportedClaim);
+			}
+		} else {
+			throw new ParsingException("expected SupportedClaimType child elements in SupportedClaimTypeList");
+		}
+
+	}
+	public SupportedClaimList() {
+		
+	}
+	
+	public SupportedClaimList(List<SupportedClaim> list) {
+		supportedClaims = list;
+	}
+	
+	public void addSupportedClaim(SupportedClaim claim) {
 
         supportedClaims.add(claim);
 
     }
 
 
-    public List getSupportedClaims() {
+    public List<SupportedClaim> getSupportedClaims() {
         return supportedClaims;
     }
 
@@ -59,7 +89,7 @@ public class SupportedClaimList implements Serializable {
 
         Element supportedClaimTypeList = new Element(WSConstants.INFOCARD_PREFIX + ":SupportedClaimTypeList", WSConstants.INFOCARD_NAMESPACE);
 
-        Iterator claims = getSupportedClaims().iterator();
+        Iterator<?> claims = getSupportedClaims().iterator();
         while (claims.hasNext()) {
 
             SupportedClaim claim = (SupportedClaim) claims.next();

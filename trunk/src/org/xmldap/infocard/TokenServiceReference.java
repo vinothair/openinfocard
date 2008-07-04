@@ -71,6 +71,10 @@ public class TokenServiceReference implements Serializable {
         this.cert = cert;
     }
 
+    public TokenServiceReference(Element tokenServiceReference) {
+    	
+    }
+    
     public String getMexAddress() {
         return mexAddress;
     }
@@ -154,7 +158,6 @@ public class TokenServiceReference implements Serializable {
     private Element getTokenServiceReference() throws SerializationException {
 
         //TODO - support all the reference types
-        Element tokenServiceList = new Element(WSConstants.INFOCARD_PREFIX + ":TokenServiceList", WSConstants.INFOCARD_NAMESPACE);
         Element tokenService = new Element(WSConstants.INFOCARD_PREFIX + ":TokenService", WSConstants.INFOCARD_NAMESPACE);
         IdentityEnabledEndpointReference iepr = new IdentityEnabledEndpointReference(address, mexAddress, cert);
         tokenService.appendChild(iepr.serialize());
@@ -230,8 +233,7 @@ public class TokenServiceReference implements Serializable {
         	throw new SerializationException("unsupported authentication type:" + authType);
         }
         tokenService.appendChild(userCredential);
-        tokenServiceList.appendChild(tokenService);
-        return tokenServiceList;
+        return tokenService;
 
     }
 
