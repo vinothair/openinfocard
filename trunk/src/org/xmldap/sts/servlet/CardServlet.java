@@ -159,7 +159,44 @@ public class CardServlet extends HttpServlet {
     //  x509Certificate2.appendChild("MIIEQTCCA6qgAwIBAgICAQQwDQYJKoZIhvcNAQEFBQAwgbsxJDAiBgNVBAcTG1ZhbGlDZXJ0IFZhbGlkYXRpb24gTmV0d29yazEXMBUGA1UEChMOVmFsaUNlcnQsIEluYy4xNTAzBgNVBAsTLFZhbGlDZXJ0IENsYXNzIDIgUG9saWN5IFZhbGlkYXRpb24gQXV0aG9yaXR5MSEwHwYDVQQDExhodHRwOi8vd3d3LnZhbGljZXJ0LmNvbS8xIDAeBgkqhkiG9w0BCQEWEWluZm9AdmFsaWNlcnQuY29tMB4XDTA0MDExNDIxMDUyMVoXDTI0MDEwOTIxMDUyMVowgewxCzAJBgNVBAYTAlVTMRAwDgYDVQQIEwdBcml6b25hMRMwEQYDVQQHEwpTY290dHNkYWxlMSUwIwYDVQQKExxTdGFyZmllbGQgVGVjaG5vbG9naWVzLCBJbmMuMTAwLgYDVQQLEydodHRwOi8vd3d3LnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkxMTAvBgNVBAMTKFN0YXJmaWVsZCBTZWN1cmUgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxKjAoBgkqhkiG9w0BCQEWG3ByYWN0aWNlc0BzdGFyZmllbGR0ZWNoLmNvbTCBnTANBgkqhkiG9w0BAQEFAAOBiwAwgYcCgYEA2xFDa9zRaXhZSehudBQIdBFsfrcqqCLYQjx6z59QskaupmcaIyK+D7M0+6yskKpbKMJw9raKgCrgm5xS4JGocqAW4cROfREJs5651POyUMRtSAi9vCqXDG2jimo8ms9KNNwe3upaJsChooKpSvuGIhKQOrKC1JKRn6lFn8Ok2/sCAQOjggEhMIIBHTAMBgNVHRMEBTADAQH/MAsGA1UdDwQEAwIBBjBKBgNVHR8EQzBBMD+gPaA7hjlodHRwOi8vY2VydGlmaWNhdGVzLnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkvcm9vdC5jcmwwTwYDVR0gBEgwRjBEBgtghkgBhvhFAQcXAzA1MDMGCCsGAQUFBwIBFidodHRwOi8vd3d3LnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkwOQYIKwYBBQUHAQEELTArMCkGCCsGAQUFBzABhh1odHRwOi8vb2NzcC5zdGFyZmllbGR0ZWNoLmNvbTAdBgNVHQ4EFgQUrFXet+oT6/yYaOJTYB7xJT6M7ucwCQYDVR0jBAIwADANBgkqhkiG9w0BAQUFAAOBgQB+HJi+rQONJYXufJCIIiv+J/RCsux/tfxyaAWkfZHvKNF9IDk7eQg3aBhS1Y8D0olPHhHR6aV0S/xfZ2WEcYR4WbfWydfXkzXmE6uUPI6TQImMwNfy5wdS0XCPmIzroG3RNlOQoI8WMB7ew79/RqWVKvnI3jvbd/TyMrEzYaIwNQ==");
     //  x509Certificate3.appendChild("MIIC5zCCAlACAQEwDQYJKoZIhvcNAQEFBQAwgbsxJDAiBgNVBAcTG1ZhbGlDZXJ0IFZhbGlkYXRpb24gTmV0d29yazEXMBUGA1UEChMOVmFsaUNlcnQsIEluYy4xNTAzBgNVBAsTLFZhbGlDZXJ0IENsYXNzIDIgUG9saWN5IFZhbGlkYXRpb24gQXV0aG9yaXR5MSEwHwYDVQQDExhodHRwOi8vd3d3LnZhbGljZXJ0LmNvbS8xIDAeBgkqhkiG9w0BCQEWEWluZm9AdmFsaWNlcnQuY29tMB4XDTk5MDYyNjAwMTk1NFoXDTE5MDYyNjAwMTk1NFowgbsxJDAiBgNVBAcTG1ZhbGlDZXJ0IFZhbGlkYXRpb24gTmV0d29yazEXMBUGA1UEChMOVmFsaUNlcnQsIEluYy4xNTAzBgNVBAsTLFZhbGlDZXJ0IENsYXNzIDIgUG9saWN5IFZhbGlkYXRpb24gQXV0aG9yaXR5MSEwHwYDVQQDExhodHRwOi8vd3d3LnZhbGljZXJ0LmNvbS8xIDAeBgkqhkiG9w0BCQEWEWluZm9AdmFsaWNlcnQuY29tMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDOOnHK5avIWZJV16vYdA757tn2VUdZZUcOBVXc65g2PFxTXdMwzzjsvUGJ7SVCCSRrCl6zfN1SLUzm1NZ9WlmpZdRJEy0kTRxQb7XBhVQ7/nHk01xC+YDgkRoKWzk2Z/M/VXwbP7RfZHM047QSv4dk+NoS/zcnwbNDu+97bi5p9wIDAQABMA0GCSqGSIb3DQEBBQUAA4GBADt/UG9vUJSZSWI4OB9L+KXIPqeCgfYrx+jFzug6EILLGACOTb2oWH+heQC1u+mNr0HZDzTuIYEZoDJJKPTEjlbVUjP9UNV+mWwD5MlM/Mtsq2azSiGM5bUMMj4QssxsodyamEwCW/POuZ6lcg5Ktz885hZo+L7tdEy8W9ViH0Pd");
 
-        InfoCard card = new InfoCard(certChain, privateKey);
+    	List<DbSupportedClaim> supportedClaims = supportedClaimsImpl.dbSupportedClaims();
+        InfoCard card = buildCard(username, managedCard, userCredential,
+				tokenServiceEndpoint, mexEndpoint, domainname,
+				servletPath,
+				base64ImageFile,
+				supportedClaims, 
+				certChain, privateKey);
+
+
+        PrintWriter out = response.getWriter();
+        response.setContentType("application/soap+xml; charset=utf-8");
+
+        try {
+            out.println(card.toXML());
+        } catch (SerializationException e) {
+            throw new ServletException(e);
+        }
+
+        out.flush();
+        out.close();
+        return;
+
+
+    }
+
+
+	private static InfoCard buildCard(
+			String username, ManagedCard managedCard,
+			String userCredential, String tokenServiceEndpoint,
+			String mexEndpoint,
+			String domainname,
+			String servletPath,
+			String base64ImageFile,
+			List<DbSupportedClaim> supportedClaims,
+			X509Certificate[] certChain, 
+			PrivateKey privateKey
+			) {
+		InfoCard card = new InfoCard(certChain, privateKey);
         card.setCardId("https://" + domainname + "/" + servletPath + "/" + "card/" + managedCard.getCardId());
         card.setCardName(managedCard.getCardName());
         card.setCardVersion(1);
@@ -189,39 +226,23 @@ public class CardServlet extends HttpServlet {
         tokenList.addSupportedToken(token);
         card.setTokenList(tokenList);
 
-        SupportedClaimList claimList = getSupportedClaimList(managedCard);
+        SupportedClaimList claimList = getSupportedClaimList(supportedClaims, managedCard);
         card.setClaimList(claimList);
 
-        card.setPrivacyPolicy(getPrivacyPolicyReference(domainname));
+        card.setPrivacyPolicy(getPrivacyPolicyReference(domainname, servletPath));
+		return card;
+	}
 
-
-        PrintWriter out = response.getWriter();
-        response.setContentType("application/soap+xml; charset=utf-8");
-
-        try {
-            out.println(card.toXML());
-        } catch (SerializationException e) {
-            throw new ServletException(e);
-        }
-
-        out.flush();
-        out.close();
-        return;
-
-
-    }
-
-    protected String getPrivacyPolicyReference(String domainname) {
+    static protected String getPrivacyPolicyReference(String domainname, String servletPath) {
         return "https://" + domainname + "/" + servletPath + "/PrivacyPolicy.xml";
     }
 
-    protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert) {
+    static protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert) {
         TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
         return tsr;
     }
 
-    protected SupportedClaimList getSupportedClaimList(ManagedCard managedCard) {
-    	List<DbSupportedClaim> supportedClaims = supportedClaimsImpl.dbSupportedClaims();
+    static protected SupportedClaimList getSupportedClaimList(List<DbSupportedClaim> supportedClaims, ManagedCard managedCard) {
         SupportedClaimList claimList = new SupportedClaimList();
         SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "your personal private identitfier");
         claimList.addSupportedClaim(supportedClaim);
