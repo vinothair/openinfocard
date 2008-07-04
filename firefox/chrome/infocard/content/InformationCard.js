@@ -450,8 +450,10 @@ var IdentitySelector =
 //					IdentitySelector.onSomethingChanged, false);
 
 			// Remove progress listener
-					
-			window.getBrowser().removeProgressListener( ICProgressListener); 
+			var browser = window.getBrowser(); 
+			if (broswer != undefined) {
+				browser.removeProgressListener( ICProgressListener);
+			} 
 		}
 		catch( e)
 		{
