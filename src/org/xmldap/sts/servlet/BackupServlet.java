@@ -37,6 +37,8 @@ import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.infocard.roaming.EncryptedStore;
+import org.xmldap.infocard.roaming.InformationCardMetaData;
+import org.xmldap.infocard.roaming.SelfIssuedInformationCardPrivateData;
 import org.xmldap.infocard.roaming.RoamingInformationCard;
 import org.xmldap.infocard.roaming.RoamingStore;
 import org.xmldap.sts.db.CardStorage;
@@ -48,6 +50,7 @@ import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.PropertiesManager;
 import org.xmldap.util.XSDDateTime;
+import org.xmldap.ws.WSConstants;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
@@ -58,10 +61,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 
 public class BackupServlet extends HttpServlet {
@@ -74,6 +77,7 @@ public class BackupServlet extends HttpServlet {
     private String servletPath = null;
     private SupportedClaims supportedClaimsImpl = null;
 
+    long privacyPolicyVersion = 1; // TODO make this a property
 
     public void init(ServletConfig config) throws ServletException {
 
@@ -134,9 +138,8 @@ public class BackupServlet extends HttpServlet {
             String mexEndpoint = "https://" + domainname + servletPath + "mex";
 
             InfoCard card = new InfoCard(); // no cert -> unsigned card
-            card.setCardId("https://" + domainname + servletPath + "card/" + managedCard.getCardId());
+            card.setCardId("https://" + domainname + servletPath + "card/" + managedCard.getCardId(), 1);
             card.setCardName(managedCard.getCardName());
-            card.setCardVersion(1);
             card.setIssuerName(domainname);
             card.setIssuer(tokenServiceEndpoint);
 
@@ -147,13 +150,18 @@ public class BackupServlet extends HttpServlet {
             card.setTimeExpires(expires.getDateTime());
 
             TokenServiceReference tsr = getTokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert, username);
-            card.setTokenServiceReference(tsr);
+            ArrayList<TokenServiceReference>tokenServiceReferenceList = new ArrayList<TokenServiceReference>();
+            tokenServiceReferenceList.add(tsr);
+            card.setTokenServiceReference(tokenServiceReferenceList);
 
-            SupportedTokenList tokenList = new SupportedTokenList();
-            SupportedToken token = new SupportedToken(SupportedToken.SAML11);
-            tokenList.addSupportedToken(token);
-            card.setTokenList(tokenList);
-
+            {
+	            SupportedToken token = new SupportedToken(WSConstants.SAML11_NAMESPACE);
+	            ArrayList<SupportedToken> list = new ArrayList<SupportedToken>();
+	            list.add(token);
+	            SupportedTokenList tokenList = new SupportedTokenList(list);
+	            card.setTokenList(tokenList);
+            }
+            
             SupportedClaimList claimList = getSupportedClaimList();
             card.setClaimList(claimList);
             /*
@@ -166,9 +174,16 @@ public class BackupServlet extends HttpServlet {
             claimList.addSupportedClaim(email);
             card.setClaimList(claimList);
             */
-            card.setPrivacyPolicy(getPrivacyPolicyReference(domainname));
+            
+            try {
+				card.setPrivacyPolicy(getPrivacyPolicyReference(domainname), privacyPolicyVersion);
+			} catch (URISyntaxException e) {
+				throw new ServletException("Error setting PrivacyNotice", e);
+			}
 
-            RoamingInformationCard ric = new RoamingInformationCard(card);
+            InformationCardMetaData informationCardMetaData = new InformationCardMetaData(card);
+            SelfIssuedInformationCardPrivateData informationCardPrivateData = new SelfIssuedInformationCardPrivateData();
+            RoamingInformationCard ric = new RoamingInformationCard(informationCardMetaData, informationCardPrivateData);
             store.addRoamingInformationCard(ric);
 
         }

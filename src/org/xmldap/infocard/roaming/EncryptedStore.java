@@ -30,19 +30,10 @@ package org.xmldap.infocard.roaming;
 
 import org.xmldap.util.Base64;
 import org.xmldap.util.XmlFileUtil;
-import org.xmldap.util.XSDDateTime;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.crypto.EncryptedStoreKeys;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.exceptions.*;
-import org.xmldap.infocard.policy.SupportedToken;
-import org.xmldap.infocard.policy.SupportedClaimList;
-import org.xmldap.infocard.policy.SupportedTokenList;
-import org.xmldap.infocard.policy.SupportedClaim;
-import org.xmldap.infocard.TokenServiceReference;
-import org.xmldap.infocard.InfoCard;
-import org.xmldap.infocard.Constants;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.engines.AESLightEngine;
@@ -57,7 +48,6 @@ import java.util.Random;
 import java.util.Arrays;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 
 import net.sourceforge.lightcrypto.SafeObject;
 import nu.xom.*;
@@ -114,6 +104,12 @@ public class EncryptedStore {
         return roamingStore.toXML();
     }
     
+    public EncryptedStore(byte[] bytes, String password) throws CryptoException, ParsingException{
+    	String encoding = XmlFileUtil.getEncoding(bytes);
+    	int offset = XmlFileUtil.getBomLength(bytes);
+    	roamingStoreString = decryptStore(encoding, bytes, offset, password);
+    }
+    
     public EncryptedStore(InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
     	String encoding = null;
     	try {
@@ -127,6 +123,18 @@ public class EncryptedStore {
 
     public EncryptedStore(String encoding, InputStream encryptedStoreStream, String password) throws CryptoException, ParsingException{
     	roamingStoreString = decryptStore(encoding, encryptedStoreStream, password);
+    }
+
+
+    private String decryptStore(String encoding, byte[] bytes, int offset, String password) throws CryptoException, ParsingException{
+        Document encryptedStore = null;
+        try {
+            encryptedStore = XmlFileUtil.readXml(encoding, bytes, offset);
+        } catch (IOException e) {
+            throw new ParsingException("Error parsing EncryptedStore", e);
+        }
+
+        return decryptStore(encryptedStore, password);
     }
 
 
@@ -363,96 +371,96 @@ public class EncryptedStore {
     }
 
 
-    public static void main(String[] args) {
-
-        String  password = "password";
-
-        EncryptedStore encryptedStore = null;
-        try {
-            InputStream stream =  new FileInputStream("/Users/cmort/Desktop/Infocard/CardBackups/backup.crds");
-            encryptedStore = new EncryptedStore(stream, password);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println(encryptedStore.getParsedRoamingStore());
-
-        RoamingStore store = new RoamingStore();
-
-
-        //Get my keystore
-        KeystoreUtil keystore = null;
-        try {
-            keystore = new KeystoreUtil("/Users/cmort/xmldap_files/xmldap_org.jks", "password");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-        X509Certificate cert = null;
-        try {
-            cert = keystore.getCertificate("tomcat");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-
-        InfoCard card = new InfoCard(); // no cert -> unsigned
-        card.setCardId("https://xmldap.org/cards/123456");
-        card.setCardName("Custom card");
-        card.setCardVersion(1);
-        card.setIssuerName("xmldap.org");
-        card.setIssuer("http://xmldap.org/");
-        XSDDateTime issued = new XSDDateTime();
-        XSDDateTime expires = new XSDDateTime(525600);
-
-        card.setTimeIssued(issued.getDateTime());
-        card.setTimeExpires(expires.getDateTime());
-
-        TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
-        tsr.setAuthType(TokenServiceReference.USERNAME, "cmort");
-        card.setTokenServiceReference(tsr);
-
-
-        SupportedTokenList tokenList = new SupportedTokenList();
-        SupportedToken token = new SupportedToken(SupportedToken.SAML11);
-        tokenList.addSupportedToken(token);
-        card.setTokenList(tokenList);
-
-        SupportedClaimList claimList = new SupportedClaimList();
-        SupportedClaim given = new SupportedClaim("GivenName", Constants.IC_NAMESPACE_PREFIX + "givenname", "Your given name.");
-        SupportedClaim sur = new SupportedClaim("Surname", Constants.IC_NAMESPACE_PREFIX + "surname", "Your surname.");
-        SupportedClaim email = new SupportedClaim("EmailAddress", Constants.IC_NAMESPACE_PREFIX + "emailaddress", "Your Email-Address");
-        claimList.addSupportedClaim(given);
-        claimList.addSupportedClaim(sur);
-        claimList.addSupportedClaim(email);
-        card.setClaimList(claimList);
-
-        card.setPrivacyPolicy("https://xmldap.org/PrivacyPolicy.xml");
-
-        RoamingInformationCard ric = new RoamingInformationCard(card);
-        store.addRoamingInformationCard(ric);
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream("/Users/cmort/Desktop/Infocard/CardBackups/ManualBackup.crds");
-            encryptedStore = new EncryptedStore(store, password);
-            encryptedStore.toStream(fos);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        EncryptedStore encryptedStore1 = null;
-        try {
-            InputStream stream =  new FileInputStream("/Users/cmort/Desktop/Infocard/CardBackups/ManualBackup.crds");
-            encryptedStore1 = new EncryptedStore(stream, password);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (ParsingException e) {
-            e.printStackTrace();
-        } catch (CryptoException e) {
-            e.printStackTrace();
-        }
-        System.out.println(encryptedStore1.getParsedRoamingStore());
-
-    }
+//    public static void main(String[] args) {
+//
+//        String  password = "password";
+//
+//        EncryptedStore encryptedStore = null;
+//        try {
+//            InputStream stream =  new FileInputStream("/Users/cmort/Desktop/Infocard/CardBackups/backup.crds");
+//            encryptedStore = new EncryptedStore(stream, password);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        System.out.println(encryptedStore.getParsedRoamingStore());
+//
+//        RoamingStore store = new RoamingStore();
+//
+//
+//        //Get my keystore
+//        KeystoreUtil keystore = null;
+//        try {
+//            keystore = new KeystoreUtil("/Users/cmort/xmldap_files/xmldap_org.jks", "password");
+//        } catch (KeyStoreException e) {
+//            e.printStackTrace();
+//        }
+//
+//        X509Certificate cert = null;
+//        try {
+//            cert = keystore.getCertificate("tomcat");
+//        } catch (KeyStoreException e) {
+//            e.printStackTrace();
+//        }
+//
+//
+//        InfoCard card = new InfoCard(); // no cert -> unsigned
+//        card.setCardId("https://xmldap.org/cards/123456");
+//        card.setCardName("Custom card");
+//        card.setCardVersion(1);
+//        card.setIssuerName("xmldap.org");
+//        card.setIssuer("http://xmldap.org/");
+//        XSDDateTime issued = new XSDDateTime();
+//        XSDDateTime expires = new XSDDateTime(525600);
+//
+//        card.setTimeIssued(issued.getDateTime());
+//        card.setTimeExpires(expires.getDateTime());
+//
+//        TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
+//        tsr.setAuthType(TokenServiceReference.USERNAME, "cmort");
+//        card.setTokenServiceReference(tsr);
+//
+//
+//        SupportedTokenList tokenList = new SupportedTokenList();
+//        SupportedToken token = new SupportedToken(SupportedToken.SAML11);
+//        tokenList.addSupportedToken(token);
+//        card.setTokenList(tokenList);
+//
+//        SupportedClaimList claimList = new SupportedClaimList();
+//        SupportedClaim given = new SupportedClaim("GivenName", Constants.IC_NAMESPACE_PREFIX + "givenname", "Your given name.");
+//        SupportedClaim sur = new SupportedClaim("Surname", Constants.IC_NAMESPACE_PREFIX + "surname", "Your surname.");
+//        SupportedClaim email = new SupportedClaim("EmailAddress", Constants.IC_NAMESPACE_PREFIX + "emailaddress", "Your Email-Address");
+//        claimList.addSupportedClaim(given);
+//        claimList.addSupportedClaim(sur);
+//        claimList.addSupportedClaim(email);
+//        card.setClaimList(claimList);
+//
+//        card.setPrivacyPolicy("https://xmldap.org/PrivacyPolicy.xml");
+//
+//        RoamingInformationCard ric = new RoamingInformationCard(card);
+//        store.addRoamingInformationCard(ric);
+//        FileOutputStream fos = null;
+//        try {
+//            fos = new FileOutputStream("/Users/cmort/Desktop/Infocard/CardBackups/ManualBackup.crds");
+//            encryptedStore = new EncryptedStore(store, password);
+//            encryptedStore.toStream(fos);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//
+//        EncryptedStore encryptedStore1 = null;
+//        try {
+//            InputStream stream =  new FileInputStream("/Users/cmort/Desktop/Infocard/CardBackups/ManualBackup.crds");
+//            encryptedStore1 = new EncryptedStore(stream, password);
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (ParsingException e) {
+//            e.printStackTrace();
+//        } catch (CryptoException e) {
+//            e.printStackTrace();
+//        }
+//        System.out.println(encryptedStore1.getParsedRoamingStore());
+//
+//    }
 
 }

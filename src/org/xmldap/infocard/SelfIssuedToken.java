@@ -53,34 +53,8 @@ public class SelfIssuedToken implements Serializable {
 
 	private String claimsNamespace = null;
 
-	private String givenName;
-
-	private String surname;
-
-	private String emailAddress;
-
-	private String streetAddress;
-
-	private String locality;
-
-	private String stateOrProvince;
-
-	private String postalCode;
-
-	private String country;
-
-	private String primaryPhone;
-
-	private String otherPhone;
-
-	private String mobilePhone;
-
-	private String dateOfBirth;
-
-	private String privatePersonalIdentifier;
-
-	private String gender;
-
+	SelfIssuedClaims selfIssuedClaims = new SelfIssuedClaims();
+	
 	private RSAPublicKey proofKey;
 	
 	private RSAPublicKey cardPublicKey;
@@ -127,115 +101,115 @@ public class SelfIssuedToken implements Serializable {
 	}
 
 	public String getGivenName() {
-		return givenName;
+		return selfIssuedClaims.getGivenName();
 	}
 
 	public void setGivenName(String givenName) {
-		this.givenName = givenName;
+		this.selfIssuedClaims.setGivenName(givenName);
 	}
 
 	public String getSurname() {
-		return surname;
+		return selfIssuedClaims.getSurname();
 	}
 
 	public void setSurname(String surname) {
-		this.surname = surname;
+		this.selfIssuedClaims.setSurname(surname);
 	}
 
 	public String getEmailAddress() {
-		return emailAddress;
+		return selfIssuedClaims.getEmailAddress();
 	}
 
 	public void setEmailAddress(String emailAddress) {
-		this.emailAddress = emailAddress;
+		this.selfIssuedClaims.setEmailAddress(emailAddress);
 	}
 
 	public String getStreetAddress() {
-		return streetAddress;
+		return selfIssuedClaims.getStreetAddress();
 	}
 
 	public void setStreetAddress(String streetAddress) {
-		this.streetAddress = streetAddress;
+		this.selfIssuedClaims.setStreetAddress(streetAddress);
 	}
 
 	public String getLocality() {
-		return locality;
+		return selfIssuedClaims.getLocality();
 	}
 
 	public void setLocality(String locality) {
-		this.locality = locality;
+		this.selfIssuedClaims.setLocality(locality);
 	}
 
 	public String getStateOrProvince() {
-		return stateOrProvince;
+		return selfIssuedClaims.getStateOrProvince();
 	}
 
 	public void setStateOrProvince(String stateOrProvince) {
-		this.stateOrProvince = stateOrProvince;
+		this.selfIssuedClaims.setStateOrProvince(stateOrProvince);
 	}
 
 	public String getPostalCode() {
-		return postalCode;
+		return selfIssuedClaims.getPostalCode();
 	}
 
 	public void setPostalCode(String postalCode) {
-		this.postalCode = postalCode;
+		this.selfIssuedClaims.setPostalCode(postalCode);
 	}
 
 	public String getCountry() {
-		return country;
+		return selfIssuedClaims.getCountry();
 	}
 
 	public void setCountry(String country) {
-		this.country = country;
+		this.selfIssuedClaims.setCountry(country);
 	}
 
 	public String getPrimaryPhone() {
-		return primaryPhone;
+		return selfIssuedClaims.getPrimaryPhone();
 	}
 
 	public void setPrimaryPhone(String primaryPhone) {
-		this.primaryPhone = primaryPhone;
+		this.selfIssuedClaims.setPrimaryPhone(primaryPhone);
 	}
 
 	public String getOtherPhone() {
-		return otherPhone;
+		return selfIssuedClaims.getOtherPhone();
 	}
 
 	public void setOtherPhone(String otherPhone) {
-		this.otherPhone = otherPhone;
+		this.selfIssuedClaims.setOtherPhone(otherPhone);
 	}
 
 	public String getMobilePhone() {
-		return mobilePhone;
+		return selfIssuedClaims.getMobilePhone();
 	}
 
 	public void setMobilePhone(String mobilePhone) {
-		this.mobilePhone = mobilePhone;
+		this.selfIssuedClaims.setMobilePhone(mobilePhone);
 	}
 
 	public String getDateOfBirth() {
-		return dateOfBirth;
+		return selfIssuedClaims.getDateOfBirth();
 	}
 
 	public void setDateOfBirth(String dateOfBirth) {
-		this.dateOfBirth = dateOfBirth;
+		this.selfIssuedClaims.setDateOfBirth(dateOfBirth);
 	}
 
 	public String getPrivatePersonalIdentifier() {
-		return privatePersonalIdentifier;
+		return selfIssuedClaims.getPrivatePersonalIdentifier();
 	}
 
 	public void setPrivatePersonalIdentifier(String privatePersonalIdentifier) {
-		this.privatePersonalIdentifier = privatePersonalIdentifier;
+		this.selfIssuedClaims.setPrivatePersonalIdentifier(privatePersonalIdentifier);
 	}
 
 	public String getGender() {
-		return gender;
+		return selfIssuedClaims.getGender();
 	}
 
 	public void setGender(String gender) {
-		this.gender = gender;
+		this.selfIssuedClaims.setGender(gender);
 	}
 
 //	public void useAsymmetricKey() {
@@ -343,20 +317,20 @@ public class SelfIssuedToken implements Serializable {
 
 		Vector attributes = new Vector();
 
-		addAttribute(attributes, "givenname", claimsNamespace, givenName);
-		addAttribute(attributes, "surname", claimsNamespace, surname);
-		addAttribute(attributes, "emailaddress", claimsNamespace, emailAddress);
-		addAttribute(attributes, "streetaddress", claimsNamespace, streetAddress);
-		addAttribute(attributes, "locality", claimsNamespace, locality);
-		addAttribute(attributes, "stateorprovince", claimsNamespace, stateOrProvince);
-		addAttribute(attributes, "postalcode", claimsNamespace,	postalCode);
-		addAttribute(attributes, "country", claimsNamespace, country);
-		addAttribute(attributes, "primaryphone", claimsNamespace, primaryPhone);
-		addAttribute(attributes, "otherphone", claimsNamespace,otherPhone);
-		addAttribute(attributes, "mobilephone",	claimsNamespace, mobilePhone);
-		addAttribute(attributes, "dateofbirth",	claimsNamespace, dateOfBirth);
-		addAttribute(attributes, "privatepersonalidentifier", claimsNamespace,privatePersonalIdentifier);
-		addAttribute(attributes, "gender", claimsNamespace, gender);
+		addAttribute(attributes, "givenname", claimsNamespace, selfIssuedClaims.getGivenName());
+		addAttribute(attributes, "surname", claimsNamespace, selfIssuedClaims.getSurname());
+		addAttribute(attributes, "emailaddress", claimsNamespace, selfIssuedClaims.getEmailAddress());
+		addAttribute(attributes, "streetaddress", claimsNamespace, selfIssuedClaims.getStreetAddress());
+		addAttribute(attributes, "locality", claimsNamespace, selfIssuedClaims.getLocality());
+		addAttribute(attributes, "stateorprovince", claimsNamespace, selfIssuedClaims.getStateOrProvince());
+		addAttribute(attributes, "postalcode", claimsNamespace,	selfIssuedClaims.getPostalCode());
+		addAttribute(attributes, "country", claimsNamespace, selfIssuedClaims.getCountry());
+		addAttribute(attributes, "primaryphone", claimsNamespace, selfIssuedClaims.getPrimaryPhone());
+		addAttribute(attributes, "otherphone", claimsNamespace,selfIssuedClaims.getOtherPhone());
+		addAttribute(attributes, "mobilephone",	claimsNamespace, selfIssuedClaims.getMobilePhone());
+		addAttribute(attributes, "dateofbirth",	claimsNamespace, selfIssuedClaims.getDateOfBirth());
+		addAttribute(attributes, "privatepersonalidentifier", claimsNamespace,selfIssuedClaims.getPrivatePersonalIdentifier());
+		addAttribute(attributes, "gender", claimsNamespace, selfIssuedClaims.getGender());
 
 		AttributeStatement statement = new AttributeStatement();
 		statement.setSubject(subject);

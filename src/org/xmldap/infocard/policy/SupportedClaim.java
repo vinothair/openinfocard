@@ -30,6 +30,9 @@ package org.xmldap.infocard.policy;
 
 import nu.xom.Attribute;
 import nu.xom.Element;
+import nu.xom.Elements;
+
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
 
@@ -46,7 +49,34 @@ public class SupportedClaim {
         this.description = description;
     }
 
-
+// <ic:SupportedClaimType Uri=”xs:anyURI”> 
+//  <ic:DisplayTag> xs:string </ic:DisplayTag> ? 
+//  <ic:Description> xs:string </ic:Description> ? 
+// </ic:SupportedClaimType> 
+    public SupportedClaim(Element supportedClaim) throws ParsingException {
+    	if ("SupportedClaimType".equals(supportedClaim.getLocalName())) {
+    		uri = supportedClaim.getAttributeValue("Uri");
+    		Elements displayNameElements = supportedClaim.getChildElements("DisplayTag", WSConstants.INFOCARD_NAMESPACE);
+    		if (displayNameElements.size() == 1) {
+    			displayName = displayNameElements.get(0).getValue();
+    		} else {
+    			if (displayNameElements.size() > 0) {
+    				throw new ParsingException("Expected one DisplayTag but found " + displayNameElements.size());
+    			}
+    		}
+    		Elements descriptionElements = supportedClaim.getChildElements("Description", WSConstants.INFOCARD_NAMESPACE);
+    		if (descriptionElements.size() == 1) {
+    			description = descriptionElements.get(0).getValue();
+    		} else {
+    			if (descriptionElements.size() > 0) { 
+    				throw new ParsingException("Expected one Description but found " + descriptionElements.size());
+    			}
+    		}
+    	} else {
+    		throw new ParsingException("Expected SupportedClaimType");
+    	}
+    }
+    
     private Element getSupportedClaim() {
 
         Element supportedClaimType = new Element(WSConstants.INFOCARD_PREFIX + ":SupportedClaimType", WSConstants.INFOCARD_NAMESPACE);

@@ -36,37 +36,20 @@ import org.xmldap.xml.Serializable;
 
 public class SupportedToken implements Serializable {
 
-    public static final int SAML11 = 11;
-    public static final int SAML20 = 20;
+    private String tokenType = null;
 
-    private int tokenType = 11;
-
-    public SupportedToken() {
-    }
-
-    public SupportedToken(int tokenType) {
+    public SupportedToken(String tokenType) {
         this.tokenType = tokenType;
     }
 
-
+    public SupportedToken(Element supportedToken) {
+    	tokenType = supportedToken.getValue();
+    }
+    
     private Element getSupportedToken() {
-
         Element tokenTypeElm = new Element(WSConstants.TRUST_PREFIX + ":TokenType", WSConstants.TRUST_NAMESPACE_05_02);
-
-
-        if (tokenType == SAML11) {
-
-            tokenTypeElm.appendChild(WSConstants.SAML11_NAMESPACE);
-
-        } else if (tokenType == SAML20) {
-
-            //TODO - someday support SAML 2
-            tokenTypeElm.appendChild(WSConstants.SAML11_NAMESPACE);
-
-        }
-
+        tokenTypeElm.appendChild(tokenType);
         return tokenTypeElm;
-
     }
 
     public String toXML() throws SerializationException {

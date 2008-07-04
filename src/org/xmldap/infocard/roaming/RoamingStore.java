@@ -29,24 +29,75 @@
 package org.xmldap.infocard.roaming;
 
 import org.xmldap.exceptions.SerializationException;
+import org.xmldap.util.XmlFileUtil;
 import org.xmldap.ws.WSConstants;
-import nu.xom.Element;
 
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Elements;
+import nu.xom.ParsingException;
+import nu.xom.ValidityException;
+
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.List;
 import java.util.Vector;
 import java.util.Iterator;
 
+//<ic:RoamingStore>
+//<ic:RoamingInformationCard> +
+//  <ic:InformationCardMetaData>
+//    [Information Card]
+//    <ic:IsSelfIssued> xs:boolean </ic:IsSelfIssued>
+//    <ic:PinDigest> xs:base64Binary </ic:PinDigest> ?
+//    <ic:HashSalt> xs:base64Binary </ic:HashSalt>
+//    <ic:TimeLastUpdated> xs:dateTime </ic:TimeLastUpdated>
+//    <ic:IssuerId> xs:base64Binary </ic:IssuerId>
+//    <ic:IssuerName> xs:string </ic:IssuerName>
+//    <ic:BackgroundColor> xs:int </ic:BackgroundColor>
+//  </ic:InformationCardMetaData>
+//  <ic:InformationCardPrivateData> ?
+//    <ic:MasterKey> xs:base64Binary </ic:MasterKey>
+//    <ic:ClaimValueList> ?
+//      <ic:ClaimValue Uri="xs:anyURI" ...> +
+//        <ic:Value> xs:string </ic:Value>
+//      </ic:ClaimValue>
+//    </ic:ClaimValueList>
+//  </ic:InformationCardPrivateData>
+//</ic:RoamingInformationCard>
+//</ic:RoamingStore>
 
 public class RoamingStore implements org.xmldap.xml.Serializable {
 
-    private List roamingInformationCards;
+    private List<RoamingInformationCard> roamingInformationCards = null;
 
     public RoamingStore() {
-        roamingInformationCards = new Vector();
+        roamingInformationCards = new Vector<RoamingInformationCard>();
     }
 
-    public RoamingStore(List roamingInformationCards) {
+    public RoamingStore(List<RoamingInformationCard> roamingInformationCards) {
         this.roamingInformationCards = roamingInformationCards;
+    }
+
+    public RoamingStore(String roamingStoreStr) throws ValidityException, IOException, ParsingException, org.xmldap.exceptions.ParsingException {
+    	this(XmlFileUtil.readXml(new StringReader(roamingStoreStr)));
+    }
+
+    public RoamingStore(Document roamingStoreDoc) throws IOException, org.xmldap.exceptions.ParsingException, ParsingException {
+    	Element root = roamingStoreDoc.getRootElement();
+    	if ("RoamingStore".equals(root.getLocalName())) {
+    		Elements roamingCardsElts = root.getChildElements("RoamingInformationCard", WSConstants.INFOCARD_NAMESPACE);
+    		for (int i=0; i<roamingCardsElts.size(); i++) {
+    			Element roamingCardElt = roamingCardsElts.get(i);
+    			if (roamingInformationCards == null) {
+    				roamingInformationCards = new Vector<RoamingInformationCard>();
+    			}
+    			RoamingInformationCard roamingInformationCard = new RoamingInformationCard(roamingCardElt);
+    			roamingInformationCards.add(roamingInformationCard);
+    		}
+    	} else {
+    		throw new ParsingException("RoamingStore expected: " + root.getLocalName());
+    	}
     }
 
     public void addRoamingInformationCard(RoamingInformationCard ric) {
@@ -55,7 +106,7 @@ public class RoamingStore implements org.xmldap.xml.Serializable {
 
     }
 
-    public List getRoamingInformationCards() {
+    public List<RoamingInformationCard> getRoamingInformationCards() {
 
         return roamingInformationCards;
 
@@ -68,7 +119,7 @@ public class RoamingStore implements org.xmldap.xml.Serializable {
         }
 
         Element roamingStore = new Element("RoamingStore", WSConstants.INFOCARD_NAMESPACE);
-        Iterator cards = roamingInformationCards.iterator();
+        Iterator<RoamingInformationCard> cards = roamingInformationCards.iterator();
         while (cards.hasNext()) {
             RoamingInformationCard card  = (RoamingInformationCard) cards.next();
             roamingStore.appendChild(card.serialize());
