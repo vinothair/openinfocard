@@ -28,211 +28,111 @@
 
 package org.xmldap.infocard;
 
-import nu.xom.Attribute;
 import nu.xom.Element;
+import nu.xom.Elements;
+
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
+import org.xmldap.ws.soap.headers.addressing.EndpointReference;
 import org.xmldap.ws.soap.headers.addressing.IdentityEnabledEndpointReference;
 import org.xmldap.xml.Serializable;
 
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class TokenServiceReference implements Serializable {
 
-    public static final String USERNAME = "UserNamePasswordAuthenticate";
-    public static final String SELF_ISSUED = "SelfIssuedAuthenticate";
-    public static final String X509 = "X509V3Authenticate";
-    public static final String KERB = "KerberosV5Authenticate";
+//    private String address;
+//    private String mexAddress;
 
+    UserCredential userCredential = null;
 
-    private String authType = USERNAME;
-    private String address;
-    private String mexAddress;
-    
-    private String userName = null;
-    private String ppi = null;
-    private String x509Hash = null;
-    private String kerberosServicePrincipalName = null;
-    
-    private X509Certificate cert;
+//    private X509Certificate cert;
 
-    public TokenServiceReference() {
-    }
+    private List<IdentityEnabledEndpointReference> epList = null;
+
+//    public TokenServiceReference() {
+//    }
 
     public TokenServiceReference(String address, String mexAddress) {
-        this.address = address;
-        this.mexAddress = mexAddress;
+    	IdentityEnabledEndpointReference epr = new IdentityEnabledEndpointReference(address, mexAddress);
+    	epList = new ArrayList<IdentityEnabledEndpointReference>(1);
+    	epList.add(epr);
     }
 
     public TokenServiceReference(String address, String mexAddress, X509Certificate cert) {
-        this.address = address;
-        this.mexAddress = mexAddress;
-        this.cert = cert;
+    	IdentityEnabledEndpointReference epr = new IdentityEnabledEndpointReference(address, mexAddress, cert);
+    	epList = new ArrayList<IdentityEnabledEndpointReference>(1);
+    	epList.add(epr);
     }
 
-    public TokenServiceReference(Element tokenServiceReference) {
-    	
+    public TokenServiceReference(Element tokenServiceReference) throws ParsingException {
+    	String name = tokenServiceReference.getLocalName();
+    	if ("TokenService".equals(name)) {
+    		Elements elts = tokenServiceReference.getChildElements("EndpointReference", WSConstants.WSA_NAMESPACE_05_08);
+    		if (elts.size() == 1) {
+    			Element elt = elts.get(0);
+    			EndpointReference epr = new EndpointReference(elt);
+    		} else {
+    			throw new ParsingException("Expected one occurence of EndpointReference but found: " + elts.size());
+    		}
+    		elts = tokenServiceReference.getChildElements("UserCredential", WSConstants.INFOCARD_NAMESPACE);
+    		if (elts.size() == 1) {
+    			Element elt = elts.get(0);
+    			UserCredential epr = new UserCredential(elt);
+    		} else {
+    			throw new ParsingException("Expected one occurence of UserCredential but found: " + elts.size());
+    		}
+    	} else {
+    		throw new ParsingException("Expected TokenService but found: " + name);
+    	}
     }
     
     public String getMexAddress() {
-        return mexAddress;
+    	IdentityEnabledEndpointReference epr = epList.get(0);
+    	return epr.getMexAddress();
     }
 
     public void setMexAddress(String mexAddress) {
-        this.mexAddress = mexAddress;
-    }
-
-    public String getAuthType() {
-        return authType;
-    }
-
-    public void setAuthType(String authType, String value) {
-    	if (USERNAME.equals(authType)) {
-    		setUserName(value);
-    	} else if (KERB.equals(authType)) {
-    		setKerberosServicePrincipalName(value);
-    	} else if (SELF_ISSUED.equals(authType)) {
-    		setPPI(value);
-    	} else if (X509.equals(authType)) {
-    		setX509Hash(value);
-    	} else {
-    		throw new IllegalArgumentException("undefined authentication type (" + authType + ")");
-    	}
-		this.authType = authType;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getPPI() {
-        return ppi;
-    }
-
-    // use public void setAuthType(TokenServiceReference.SELF_ISSUED, String value)
-    private void setPPI(String ppi) {
-        this.ppi = ppi;
-    }
-
-    public String getKerberosServicePrincipalName() {
-        return kerberosServicePrincipalName;
-    }
-
-    // use public void setAuthType(TokenServiceReference.KERB, String value)
-    private void setKerberosServicePrincipalName(String kerberosServicePrincipalName) {
-        this.kerberosServicePrincipalName = kerberosServicePrincipalName;
-    }
-
-    public String getX509Hash() {
-        return x509Hash;
-    }
-
-    // use public void setAuthType(TokenServiceReference.X509, String value)
-    private void setX509Hash(String x509Hash) {
-        this.x509Hash = x509Hash;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    // use public void setAuthType(TokenServiceReference.USERNAME, String value)
-    private void setUserName(String userName) {
-        this.userName = userName;
+    	IdentityEnabledEndpointReference epr = epList.get(0);
+    	epr.setMexAddress(mexAddress);
     }
 
     public X509Certificate getCert() {
-        return cert;
+    	IdentityEnabledEndpointReference epr = epList.get(0);
+        return epr.getCert();
     }
 
-//    public void setCert(X509Certificate cert) {
-//        this.cert = cert;
-//    }
+    public String getAddress() {
+    	IdentityEnabledEndpointReference epr = epList.get(0);
+        return epr.getAddress();
+    }
 
+    public void setAddress(String address) {
+    	IdentityEnabledEndpointReference epr = epList.get(0);
+        epr.setAddress(address);
+    }
 
+    public void setAuthType(String authType, String value) {
+    	userCredential = new UserCredential(authType, value);
+    }
+    
+    public UserCredential getUserCredential() {
+    	return userCredential;
+    }
+    
     private Element getTokenServiceReference() throws SerializationException {
 
         //TODO - support all the reference types
         Element tokenService = new Element(WSConstants.INFOCARD_PREFIX + ":TokenService", WSConstants.INFOCARD_NAMESPACE);
-        IdentityEnabledEndpointReference iepr = new IdentityEnabledEndpointReference(address, mexAddress, cert);
+        IdentityEnabledEndpointReference iepr = epList.get(0);
         tokenService.appendChild(iepr.serialize());
 
-        Element userCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UserCredential", WSConstants.INFOCARD_NAMESPACE);
-        if (USERNAME.equals(authType)) {
-	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-	        displayCredentialHint.appendChild("Enter your username and password");
-	        userCredential.appendChild(displayCredentialHint);
-	
-	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":UsernamePasswordCredential", WSConstants.INFOCARD_NAMESPACE);
-	        Element username = new Element(WSConstants.INFOCARD_PREFIX + ":Username", WSConstants.INFOCARD_NAMESPACE);
-	        username.appendChild(userName);
-	        credential.appendChild(username);
-	        userCredential.appendChild(credential);
-        } else if (KERB.equals(authType)) {
-	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-	        displayCredentialHint.appendChild("Enter your kerberos credentials");
-	        userCredential.appendChild(displayCredentialHint);
-	        // <ic:KerberosV5Credential />
-	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":KerberosV5Credential", WSConstants.INFOCARD_NAMESPACE);
-	        userCredential.appendChild(credential);
-	        /* To enable the service requester to obtain a Kerberos v5 service ticket for the IP/STS, the endpoint reference of the IP/STS 
-	         * in the information card or in the metadata retrieved from it must include a 'service principal name' identity claim under 
-	         * the wsid:Identity tag as defined in [Addressing-Ext]. http://www.w3.org/TR/2005/CR-ws-addr-core-20050817/
-	         */
-        } else if (SELF_ISSUED.equals(authType)) {
-	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-	        displayCredentialHint.appendChild("Choose a self-asserted card");
-	        userCredential.appendChild(displayCredentialHint);
-        	/*
-	        	  <ic:SelfIssuedCredential>
-	        	    <ic:PrivatePersonalIdentifier>
-	        	      xs:base64Binary 
-	        	    </ic:PrivatePersonalIdentifier>
-	        	  </ic:SelfIssuedCredential>
-        	 */
-	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":SelfIssuedCredential", WSConstants.INFOCARD_NAMESPACE);
-	        Element credentialValue = new Element(WSConstants.INFOCARD_PREFIX + ":PrivatePersonalIdentifier", WSConstants.INFOCARD_NAMESPACE);
-	        credentialValue.appendChild(ppi);
-	        credential.appendChild(credentialValue);
-	        userCredential.appendChild(credential);
-	        System.out.println(userCredential.toXML());
-        } else if (X509.equals(authType)) {
-        	/*
-  				  <ic:DisplayCredentialHint> xs:string </ic:DisplayCredentialHint>
-  				  <ic:X509V3Credential>
-				    <ds:X509Data>
-				      <wsse:KeyIdentifier
-				        ValueType="http://docs.oasis-open.org/wss/2004/xx/oasis-2004xx-wss-soap-message-security-1.1#ThumbprintSHA1"
-				        EncodingType="http://docs.oasis-open.org/wss/2004/xx/oasis-2004xx-wss-soap-message-security-1.1#Base64Binary">
-				        xs:base64binary
-				      </wsse:KeyIdentifier>
-				    </ds:X509Data>
-				  </ic:X509V3Credential>
-        	 */
-	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-	        displayCredentialHint.appendChild("Choose a certificate");
-	        userCredential.appendChild(displayCredentialHint);
-	
-	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":X509V3Credential", WSConstants.INFOCARD_NAMESPACE);
-	        Element x509Data = new Element(WSConstants.DSIG_PREFIX + ":X509Data", WSConstants.DSIG_NAMESPACE);
-	        Element keyIdentifier = new Element(WSConstants.WSSE_PREFIX + ":KeyIdentifier", WSConstants.WSSE_NAMESPACE_OASIS_10);
-	        Attribute valueType = new Attribute("ValueType", WSConstants.WSSE_OASIS_XX_THUMBPRINTSHA1);
-	        Attribute encodingType = new Attribute("EncodingType", WSConstants.WSSE_OASIS_XX_BASE64BINARY);
-	        keyIdentifier.addAttribute(valueType);
-	        keyIdentifier.addAttribute(encodingType);
-	        keyIdentifier.appendChild(x509Hash);
-	        x509Data.appendChild(keyIdentifier);
-	        credential.appendChild(x509Data);
-	        userCredential.appendChild(credential);
-        } else {
-        	throw new SerializationException("unsupported authentication type:" + authType);
-        }
-        tokenService.appendChild(userCredential);
+        Element userCredentialElt = userCredential.serialize();
+        tokenService.appendChild(userCredentialElt);
         return tokenService;
 
     }

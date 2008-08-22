@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
 import java.util.List;
 
 import nu.xom.Builder;
@@ -127,10 +130,12 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		try {
 			Element signature = root.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
 			if (signature == null) {
-				throw new CryptoException("Document contains no Signature element");
+				throw new CryptoException("Document contains no Signature element\n" + xmlDoc.toXML());
 			}
 			parsedSignature = new ParsedSignature(signature);
 		} catch (IOException e) {
+			throw new CryptoException(e);
+		} catch (org.xmldap.exceptions.ParsingException e) {
 			throw new CryptoException(e);
 		}
 
@@ -140,24 +145,11 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 			signedInfoCanonicalBytes = parsedSignature.getSignedInfoCanonicalBytes();
 			
 			ParsedKeyInfo parsedKeyInfo = parsedSignature.getParsedKeyInfo();
-			ParsedX509Data x509Data = parsedKeyInfo.getParsedX509Data();
-			if (x509Data != null) {
-				String b64EncodedX509Certificate = x509Data.getCertificateB64();
-				X509Certificate cert = CryptoUtils.X509fromB64(b64EncodedX509Certificate);
-				PublicKey publicKey = cert.getPublicKey();
-				RSAPublicKey rsaPublicKey = (RSAPublicKey)publicKey;
-				modulus = rsaPublicKey.getModulus();
-				exponent = rsaPublicKey.getPublicExponent();
-			} else {
-				ParsedKeyValue keyValue = parsedKeyInfo.getParsedKeyValue();
-				String mod = keyValue.getModulus();
-				String exp = keyValue.getExponent();
-				modulus = new BigInteger(1, Base64.decode(mod));
-				exponent = new BigInteger(1, Base64.decode(exp));
-				if (mod.length() != signatureValue.length()) {
-					new CryptoException("modulusB64.length() != signatureValueB64.length()");
-				}
-			}
+			modulus = parsedKeyInfo.getModulus();
+			exponent = parsedKeyInfo.getExponent();
+//			if (mod.length() != signatureValue.length()) {
+//				new CryptoException("modulusB64.length() != signatureValueB64.length()");
+//			}
 		} catch (IOException e) {
 			throw new CryptoException(e);
 		}
@@ -190,7 +182,7 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 			boolean valid = validateRSA(root, signedInfoCanonicalBytes, signatureValue, modulus, exponent, digest);
 			return (valid) ? modulus : null;
 		} else {
-			throw new CryptoException("not implemented");
+			throw new CryptoException("handling of multiple references in signature is not implemented");
 		}
 		
 //		Element root = xmlDoc.getRootElement();

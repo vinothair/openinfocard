@@ -37,6 +37,7 @@ import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.Constants;
 import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.TokenServiceReference;
+import org.xmldap.infocard.UserCredential;
 import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedToken;
@@ -45,8 +46,6 @@ import org.xmldap.util.*;
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.SupportedClaims;
 import org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl;
-
-import com.sun.security.auth.X500Principal;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -62,11 +61,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.PrivateKey;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
+import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class ProxySTS  extends HttpServlet {
@@ -259,10 +257,8 @@ public class ProxySTS  extends HttpServlet {
     protected void getCard(HttpServletResponse response) throws ServletException {
     	InfoCard card = new InfoCard(certChain, key);
     	String cardId = "0";
-        card.setCardId("https://" + domain + "/" + servletPath + "/" + "proxySTS/" + cardId);
+        card.setCardId("https://" + domain + "/" + servletPath + "/" + "proxySTS/" + cardId, 1);
         card.setCardName(domain);
-        card.setCardVersion(1);
-        card.setIssuerName(domain);
 
         String tokenServiceEndpoint = "https://" + domain + "/" + servletPath + "/" + "proxySTS";
         String mexEndpoint = "https://" + domain + "/" + servletPath + "/" + "mex" + "/" + "proxySTS";
@@ -271,12 +267,16 @@ public class ProxySTS  extends HttpServlet {
         card.setTimeIssued(issued.getDateTime());
         TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, certChain[0]);
         String username = "username";
-        tsr.setAuthType(TokenServiceReference.USERNAME, username);
-        card.setTokenServiceReference(tsr);
+        tsr.setAuthType(UserCredential.USERNAME, username);
+        ArrayList<TokenServiceReference> tsrl = new ArrayList<TokenServiceReference>();
+        tsrl.add(tsr);
+        card.setTokenServiceReference(tsrl);
         
 
-        SupportedTokenList tokenList = new SupportedTokenList();
-        SupportedToken token = new SupportedToken(SupportedToken.SAML11);
+        SupportedToken token = new SupportedToken(org.xmldap.ws.WSConstants.SAML11_NAMESPACE);
+        ArrayList<SupportedToken> stl = new ArrayList<SupportedToken>();
+        stl.add(token);
+        SupportedTokenList tokenList = new SupportedTokenList(stl);
         tokenList.addSupportedToken(token);
         card.setTokenList(tokenList);
 
@@ -287,7 +287,11 @@ public class ProxySTS  extends HttpServlet {
         claimList.addSupportedClaim(new SupportedClaim(Constants.IC_PRIVATEPERSONALIDENTIFIER, Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "RP PPID"));
         card.setClaimList(claimList);
 
-        card.setPrivacyPolicy("https://" + domain + "/" + servletPath + "/PrivacyPolicy.xml");
+        try {
+			card.setPrivacyPolicy("https://" + domain + "/" + servletPath + "/PrivacyPolicy.xml", 1);
+		} catch (URISyntaxException e) {
+			throw new ServletException("internal error in proxySTS", e);
+		}
 
 		try {
 			PrintWriter out = response.getWriter();

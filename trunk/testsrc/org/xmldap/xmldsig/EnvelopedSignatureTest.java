@@ -7,6 +7,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.Iterator;
 import java.util.Vector;
 
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 import org.xmldap.infocard.SelfIssuedToken;
@@ -23,7 +24,6 @@ import org.xmldap.xml.XmlUtils;
 //import nu.xom.Attribute;
 import nu.xom.Document;
 import nu.xom.Element;
-import nu.xom.ParsingException;
 
 import junit.framework.TestCase;
 
@@ -215,7 +215,12 @@ public class EnvelopedSignatureTest extends TestCase {
 	}
 	
 	public void testSignatureLength() throws IOException, ParsingException {
-		Document doc = XmlUtils.parse(simpleSamlAssertion);
+		Document doc;
+		try {
+			doc = XmlUtils.parse(simpleSamlAssertion);
+		} catch (nu.xom.ParsingException e) {
+			throw new ParsingException(e);
+		}
 		Element root = doc.getRootElement();
 		Element signature = root.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
 		ParsedSignature parsedSignature = new ParsedSignature(signature);

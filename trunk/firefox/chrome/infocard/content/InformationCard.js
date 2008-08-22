@@ -451,7 +451,7 @@ var IdentitySelector =
 
 			// Remove progress listener
 			var browser = window.getBrowser(); 
-			if (broswer != undefined) {
+			if (browser != undefined) {
 				browser.removeProgressListener( ICProgressListener);
 			} 
 		}

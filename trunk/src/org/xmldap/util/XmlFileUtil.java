@@ -17,6 +17,64 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class XmlFileUtil {
+	public static int getBomLength(byte[] b) {
+		int b0 = 0;
+		int b1 = 0;
+
+		if (b.length > 2) {
+			b0 = b[0] & 0xFF;
+			b1 = b[1] & 0xFF;
+
+            if (b0 == 0xFE && b1 == 0xFF) {
+                return 2;
+			} else if (b0 == 0xFF && b1 == 0xFE) {
+				return 2;
+			}
+		} else {
+			return 0;
+		}
+
+		if (b.length > 3) {
+			final int b2 = b[2] & 0xFF;
+			if (b0 != 0xEF || b1 != 0xBB || b2 != 0xBF) {
+				return 0;
+            } else {
+				return 3;
+			}
+		}
+		return 0;
+		
+	}
+	
+	public static String getEncoding(byte[] b) {
+		int b0 = 0;
+		int b1 = 0;
+
+		if (b.length > 2) {
+			b0 = b[0] & 0xFF;
+			b1 = b[1] & 0xFF;
+
+            if (b0 == 0xFE && b1 == 0xFF) {
+                return "UTF-16BE";
+			} else if (b0 == 0xFF && b1 == 0xFE) {
+				return "UTF-16LE";
+			}
+		} else {
+			return null;
+		}
+
+		if (b.length > 3) {
+			final int b2 = b[2] & 0xFF;
+			if (b0 != 0xEF || b1 != 0xBB || b2 != 0xBF) {
+				return null;
+            } else {
+				return "UTF-8";
+			}
+		}
+		return null;
+
+	}
+
 	/**
 	 * Removes the byte order mark from the stream, if
      * it exists and returns the encoding name.
@@ -94,16 +152,12 @@ public class XmlFileUtil {
 
 		System.out.println("encoding: " + encoding);
 		
-		int avail = fis.available();
-		byte[] encryptedStoreBytes = new byte[avail];
-		fis.read(encryptedStoreBytes);
-		fis.close();
+		String streamContent = doRead(fis);
 
-		System.out.println(new String(encryptedStoreBytes, encoding));
+		System.out.println(streamContent);
 		
 		Builder parser = new Builder();
-		Document encryptedStoreDoc = parser.build(new String(
-				encryptedStoreBytes, encoding), "");
+		Document encryptedStoreDoc = parser.build(streamContent, "");
 		return encryptedStoreDoc;
 	}
 
@@ -136,17 +190,14 @@ public class XmlFileUtil {
             encoding = "utf-8";
         }
 
+        String streamContent = doRead(stream);
 
-        int avail = stream.available();
-        byte[] encryptedStoreBytes = new byte[avail];
-        stream.read(encryptedStoreBytes);
-        stream.close();
         Builder parser = new Builder();
-        Document encryptedStoreDoc = parser.build(new String(encryptedStoreBytes, encoding), "");
+        Document encryptedStoreDoc = parser.build(streamContent, "");
         return encryptedStoreDoc;
     }
 
-	public String doRead(InputStream in) throws IOException {
+	static public String doRead(InputStream in) throws IOException {
 		BufferedReader ins = new BufferedReader(new InputStreamReader(in));
 		
 		StringBuilder sb = new StringBuilder();

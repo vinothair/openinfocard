@@ -37,7 +37,7 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
 //        informationCardPrivateData = new InformationCardPrivateData();
 //    }
 
-    public RoamingInformationCard(InformationCardMetaData informationCardMetaData, SelfIssuedInformationCardPrivateData informationCardPrivateData) {
+    public RoamingInformationCard(InformationCardMetaData informationCardMetaData, InformationCardPrivateData informationCardPrivateData) {
         this.informationCardMetaData = informationCardMetaData;
         this.informationCardPrivateData = informationCardPrivateData;
     }

@@ -9,6 +9,7 @@ function getCard(cardid){
 
 function readCardStore() {
  var cardFile = read(db);
+ debug(cardFile);
  return cardFile;
 }
 

@@ -47,10 +47,11 @@ import java.security.cert.X509Certificate;
  */
 public class IdentityEnabledEndpointReference extends EndpointReference implements Serializable {
 
-    private X509Certificate cert;
+    private X509Certificate cert = null;
 
     public IdentityEnabledEndpointReference(String sts, String mex) {
         super(sts, mex);
+        cert = null;
     }
 
     public IdentityEnabledEndpointReference(String sts, String mex, X509Certificate cert) {
@@ -72,7 +73,27 @@ public class IdentityEnabledEndpointReference extends EndpointReference implemen
 
     }
 
+    public String getAddress() {
+        return sts;
+    }
 
+    public void setAddress(String address) {
+        this.sts = address;
+    }
+
+
+    public String getMexAddress() {
+        return mex;
+    }
+
+    public void setMexAddress(String mexAddress) {
+        this.mex = mexAddress;
+    }
+
+    public X509Certificate getCert() {
+    	return cert;
+    }
+    
     public String toXML() throws SerializationException {
 
         Element iepr = serialize();

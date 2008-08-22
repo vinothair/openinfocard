@@ -2,6 +2,7 @@ package org.xmldap.xmldsig;
 
 import java.io.IOException;
 
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.ws.WSConstants;
 
 import nu.xom.Element;
@@ -12,7 +13,7 @@ public class ParsedSignature {
 	ParsedKeyInfo parsedKeyInfo = null;
 	byte[] signedInfoCanonicalBytes = null;
 	
-	public ParsedSignature(Element signature) throws IOException {
+	public ParsedSignature(Element signature) throws IOException, ParsingException {
 		Element signedInfo = signature.getFirstChildElement("SignedInfo", WSConstants.DSIG_NAMESPACE);
 		parsedSignedInfo = new ParsedSignedInfo(signedInfo);
 		signatureValue = signature.getFirstChildElement("SignatureValue", WSConstants.DSIG_NAMESPACE).getValue();

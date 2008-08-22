@@ -37,6 +37,7 @@ import nu.xom.XPathContext;
 
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.infocard.TokenServiceReference;
+import org.xmldap.infocard.UserCredential;
 import org.xmldap.util.Base64;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.PropertiesManager;
@@ -102,13 +103,13 @@ public class MexServlet extends HttpServlet {
 			filename = "WEB-INF/mex-pwd-symmetric-binding-get.xml";
 		} else if (url.endsWith("proxySTS")) {
 			filename = "WEB-INF/mex-proxy-get.xml";
-		} else if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
+		} else if (url.endsWith(UserCredential.USERNAME) || url.endsWith("/mex")) {
 			filename = "WEB-INF/mex-pwd-get.xml";
-		} else if (url.endsWith(TokenServiceReference.SELF_ISSUED)) {
+		} else if (url.endsWith(UserCredential.SELF_ISSUED)) {
 			filename = "WEB-INF/mex-self-get.xml";
-		} else if (url.endsWith(TokenServiceReference.X509)) {
+		} else if (url.endsWith(UserCredential.X509)) {
 			filename = "WEB-INF/mex-x509-get.xml";
-		} else if (url.endsWith(TokenServiceReference.KERB)) {
+		} else if (url.endsWith(UserCredential.KERB)) {
 			filename = "WEB-INF/mex-kerb-get.xml";
 		} else {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, "no mex data is associated with this url " + url);
@@ -196,15 +197,15 @@ public class MexServlet extends HttpServlet {
         String[] args = {messageID.getValue(), cert};
 
 		String filename = null;
-		if (url.endsWith(TokenServiceReference.USERNAME) || url.endsWith("/mex")) {
+		if (url.endsWith(UserCredential.USERNAME) || url.endsWith("/mex")) {
 			filename = "WEB-INF/mex-pwd-post.xml";
 		} else if (url.endsWith("proxySTS")) {
 			filename = "WEB-INF/mex-proxy-post.xml";
-		} else if (url.endsWith(TokenServiceReference.SELF_ISSUED)) {
+		} else if (url.endsWith(UserCredential.SELF_ISSUED)) {
 			filename = "WEB-INF/mex-self-post.xml";
-		} else if (url.endsWith(TokenServiceReference.X509)) {
+		} else if (url.endsWith(UserCredential.X509)) {
 			filename = "WEB-INF/mex-x509-post.xml";
-		} else if (url.endsWith(TokenServiceReference.KERB)) {
+		} else if (url.endsWith(UserCredential.KERB)) {
 			filename = "WEB-INF/mex-kerb-post.xml";
 		} else {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, "no mex data is associated with this url " + url);
