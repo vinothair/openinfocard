@@ -12,14 +12,14 @@ public class InformationCardReference {
 	
 	public InformationCardReference(Element informationCardReferenceElement) throws ParsingException {
 		Elements elts = informationCardReferenceElement.getChildElements("CardId", WSConstants.INFOCARD_NAMESPACE);
-		if (elts.size() != 1) {
+		if (elts.size() == 1) {
 			Element cardIdElement = elts.get(0);
 			cardId = cardIdElement.getValue();
 		} else {
 			throw new ParsingException("found " + elts.size() + " elements of type CardId");
 		}
 		elts = informationCardReferenceElement.getChildElements("CardVersion", WSConstants.INFOCARD_NAMESPACE);
-		if (elts.size() != 1) {
+		if (elts.size() == 1) {
 			Element cardVersionElement = elts.get(0);
 			cardVersion = Integer.valueOf(cardVersionElement.getValue()).longValue();
 		} else {

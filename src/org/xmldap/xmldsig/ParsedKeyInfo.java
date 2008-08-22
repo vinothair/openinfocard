@@ -1,5 +1,14 @@
 package org.xmldap.xmldsig;
 
+import java.math.BigInteger;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
+import java.util.List;
+
+import org.xmldap.exceptions.CryptoException;
+import org.xmldap.exceptions.ParsingException;
+import org.xmldap.util.Base64;
 import org.xmldap.ws.WSConstants;
 
 import nu.xom.Element;
@@ -22,7 +31,7 @@ public class ParsedKeyInfo {
 	String keyName = null;
 	ParsedKeyValue keyValue = null;
 	ParsedX509Data x509Data = null;
-	public ParsedKeyInfo(Element element) {
+	public ParsedKeyInfo(Element element) throws ParsingException {
 		Element child = element.getFirstChildElement("KeyName", WSConstants.DSIG_NAMESPACE);
 		if (child != null) {
 			keyName = child.getValue();
@@ -43,5 +52,32 @@ public class ParsedKeyInfo {
 	
 	public ParsedKeyValue getParsedKeyValue() {
 		return keyValue;
+	}
+	
+	public BigInteger getModulus() {
+		if (x509Data != null) {
+			List<X509Certificate> certs = x509Data.getCertificates();
+			X509Certificate cert = certs.get(0);
+			PublicKey publicKey = cert.getPublicKey();
+			RSAPublicKey rsaPublicKey = (RSAPublicKey)publicKey;
+			return rsaPublicKey.getModulus();
+		} else {
+			String mod = keyValue.getModulus();
+			return new BigInteger(1, Base64.decode(mod));
+		}
+	}
+	
+	public BigInteger getExponent() {
+		if (x509Data != null) {
+			List<X509Certificate> certs = x509Data.getCertificates();
+			X509Certificate cert = certs.get(0);
+			PublicKey publicKey = cert.getPublicKey();
+			RSAPublicKey rsaPublicKey = (RSAPublicKey)publicKey;
+			return rsaPublicKey.getPublicExponent();
+		} else {
+			String exp = keyValue.getExponent();
+			return new BigInteger(1, Base64.decode(exp));
+		}
+
 	}
 }

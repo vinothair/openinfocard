@@ -1476,33 +1476,73 @@ function digestNewCard(callback) {
     }
 
     if ( type == "managedCard") {
-debug(JSON.stringify(callback));
-        var card = new XML("<infocard/>");
-        card.name = "" + cardName + "";
-        card.type = type;
-        card.version = "" + callback.cardVersion + "";
-        card.id = "" + callback.cardId + "";
-
-        var data = new XML("<managed/>");
-        data.issuer = "" + callback.issuer + "";
-        data.mex = "" + callback.mex + "";
-//        data.username = "" + callback.uid + "";
-//        data.KeyIdentifier = "" + callback.KeyIdentifier + "";
-//        data.hint = "" + callback.hint + "";
-        data.image = "data:image/png;base64," + callback.cardImage + "";
-        var supportedClaims = new XML(callback.supportedClaims);
-        data.supportedClaims = supportedClaims;
-debug("new card" + callback.usercredential);
-		data.usercredential = new XML(callback.usercredential);
-		data.stsCert = "" + callback.stsCert + "";
-		data.requireAppliesTo = "" + callback.requireAppliesTo + "";
-		data.supportedTokenTypeList = new XML(callback.supportedTokenTypeList);
-		
-        card.carddata.data = data;
-        saveCard(card);
-
-
-
+    	var importedCardJSONStr = JSON.stringify(callback);
+    	var cardFileJSONStr = JSON.stringify(cardFile);
+debug("importedCardJSONStr="+importedCardJSONStr);
+    	var importedCardStr = TokenIssuer.importManagedCard(importedCardJSONStr, cardFileJSONStr);
+    	debug("importedCardStr = " + importedCardStr + " type=" + typeof(haveValidStsCertStr));
+    	var importedCard = JSON.parse(importedCardStr);
+    	if (importedCard == false) {
+    		// oops. Could not parse json
+    		alert("Internal error: could not parse json=" + importedCardStr);
+    		return;
+    	}
+    	if (importedCard == null) {
+    		alert("The managed card is NOT imported");
+    		return;
+    	}
+    	
+    	if (importedCard.error != null) {
+       		alert("The card is NOT imported\n" + importedCard.error);
+    		return;
+    	} else {
+	        var card = new XML("<infocard/>");
+	        card.name = "" + cardName + "";
+	        card.type = type;
+	        card.version = "" + callback.cardVersion + "";
+	        card.id = "" + callback.cardId + "";
+	
+	        var data = new XML("<managed/>");
+	        data.issuer = "" + callback.issuer + "";
+	        data.mex = "" + callback.mex + "";
+	//        data.username = "" + callback.uid + "";
+	//        data.KeyIdentifier = "" + callback.KeyIdentifier + "";
+	//        data.hint = "" + callback.hint + "";
+	        data.image = "data:image/png;base64," + callback.cardImage + "";
+	        var supportedClaims; 
+	        try {
+	        	supportedClaims = new XML(callback.supportedClaims);
+	        } catch (e) {
+	        	debug("supportedClaims: " + callback.supportedClaims);
+	        	alert("new card: supportedClaims: " + e);
+	        	alert("card is not imported");
+	        	return;
+	        }
+	        data.supportedClaims = supportedClaims;
+	debug("new card" + callback.usercredential);
+			try {
+				data.usercredential = new XML(callback.usercredential);
+			} catch (e) {
+				alert("new card: usercredential: " + e);
+	        	alert("card is not imported");
+	        	return;
+			}
+			data.stsCert = "" + callback.stsCert + "";
+			data.requireAppliesTo = "" + callback.requireAppliesTo + "";
+			try {
+				data.supportedTokenTypeList = new XML(callback.supportedTokenTypeList);
+			} catch (e) {
+				alert("new card: supportedTokenTypeList: " + e);
+	        	alert("card is not imported");
+	        	return;
+			}
+	        card.carddata.data = data;
+	        debug("saving card: " + cardName);
+//    		alert("importedCard="+importedCard);
+//    		//TODO remove return when it is working
+//    		return;
+	        saveCard(card);
+    	}
     }
 
 

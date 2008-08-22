@@ -1,18 +1,20 @@
 package org.xmldap.infocard.roaming;
 
+import java.util.List;
 import java.util.Random;
 
 import nu.xom.Attribute;
 import nu.xom.Element;
-import nu.xom.Elements;
 
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.InfoCard;
+import org.xmldap.infocard.TokenServiceReference;
+import org.xmldap.infocard.UserCredential;
 import org.xmldap.util.Base64;
 import org.xmldap.ws.WSConstants;
 
-public class InformationCardMetaData {
+public class InformationCardMetaData extends InfoCard {
 //  <ic:InformationCardMetaData>
 //    [Information Card]
 //    <ic:IsSelfIssued> xs:boolean </ic:IsSelfIssued>
@@ -24,7 +26,7 @@ public class InformationCardMetaData {
 //    <ic:BackgroundColor> xs:int </ic:BackgroundColor>
 //  </ic:InformationCardMetaData>
 
-	String lang = null;
+	//String lang = null;
 	boolean isSelfIssued;
 	String pinDigest = null;			// optional
 	String HashSalt = null;
@@ -33,7 +35,7 @@ public class InformationCardMetaData {
 	String issuerName = null;
 	String backgroundColor = null;
 	
-    InfoCard card;
+    //InfoCard card;
 
     public InformationCardMetaData(Element informationCardMetaDataElement) throws ParsingException {
     	if ("InformationCardMetaData".equals(informationCardMetaDataElement.getLocalName())) {
@@ -41,9 +43,10 @@ public class InformationCardMetaData {
     		Element elt;
     		elt = informationCardMetaDataElement.getFirstChildElement("InformationCard", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
-    			card = new InfoCard(elt);
+//    			card = new InfoCard(elt);
+    			super.createFromElement(elt);
     		} else {
-    			throw new ParsingException("Expected IsSelfIssued");
+    			throw new ParsingException("Expected InformationCard");
     		}
     		elt = informationCardMetaDataElement.getFirstChildElement("IsSelfIssued", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
@@ -99,7 +102,7 @@ public class InformationCardMetaData {
     	}
     }
     
-    Element serialize() throws SerializationException {
+    public Element serialize() throws SerializationException {
         Element informationCardMetaData = new Element("InformationCardMetaData", WSConstants.INFOCARD_NAMESPACE);
         Attribute lang;
         if (this.lang != null) {
@@ -108,22 +111,23 @@ public class InformationCardMetaData {
         	lang = new Attribute("xml:lang", "http://www.w3.org/XML/1998/namespace", "en");
         }
         informationCardMetaData.addAttribute(lang);
-        Element cardElm = card.serialize();
-        Elements children = cardElm.getChildElements();
-        for (int i = 0; i < children.size(); i++) {
-            Element child = children.get(i);
-            child.detach();
-            informationCardMetaData.appendChild(child);
-        }
+        Element cardElm = super.serialize();
+        informationCardMetaData.appendChild(cardElm);
+//        Elements children = cardElm.getChildElements();
+//        for (int i = 0; i < children.size(); i++) {
+//            Element child = children.get(i);
+//            child.detach();
+//            informationCardMetaData.appendChild(child);
+//        }
 
 
-        Element isSelfIssued = new Element("IsSelfIssued", WSConstants.INFOCARD_NAMESPACE);
-        if (org.xmldap.infocard.Constants.ISSUER_XMLSOAP.equals(card.getIssuer())) {
-        	isSelfIssued.appendChild("true");
+        Element isSelfIssuedElt = new Element("IsSelfIssued", WSConstants.INFOCARD_NAMESPACE);
+        if (isSelfIssued) {
+        	isSelfIssuedElt.appendChild("true");
         } else {
-        	isSelfIssued.appendChild("false");
+        	isSelfIssuedElt.appendChild("false");
         }
-        informationCardMetaData.appendChild(isSelfIssued);
+        informationCardMetaData.appendChild(isSelfIssuedElt);
         
         if (this.HashSalt == null) {
         	Random random = new Random();
@@ -137,19 +141,41 @@ public class InformationCardMetaData {
 
         Element timeLastUpdated = new Element("TimeLastUpdated", WSConstants.INFOCARD_NAMESPACE);
         informationCardMetaData.appendChild(timeLastUpdated);
-        timeLastUpdated.appendChild(card.getTimeIssued());
+        timeLastUpdated.appendChild(super.getTimeIssued());
 
-        Element issuerId = new Element("IssuerId", WSConstants.INFOCARD_NAMESPACE);
-        informationCardMetaData.appendChild(issuerId);
-
+        Element issuerIdElt = new Element("IssuerId", WSConstants.INFOCARD_NAMESPACE);
+        informationCardMetaData.appendChild(issuerIdElt);
+        if (!isSelfIssued) {
+        	boolean needIssuerId = false;
+        	List<TokenServiceReference> tsrl = super.getTokenServiceReference();
+        	for (TokenServiceReference tsr : tsrl) {
+        		UserCredential userCredential = tsr.getUserCredential();
+        		if (UserCredential.SELF_ISSUED.equals(userCredential.getAuthType())) {
+        			needIssuerId = true;
+        			break;
+        		}
+        	}
+        	if (needIssuerId) {
+        		if (issuerIdElt != null) {
+        			issuerIdElt.appendChild(this.issuerId);
+        		} else {
+        			throw new SerializationException("IssuerId is unknown but card is backed by a self-issued card");
+        		}
+        	}
+        } // else IssuerId is empty
+        
         Element issuerNameElt = new Element("IssuerName", WSConstants.INFOCARD_NAMESPACE);
         informationCardMetaData.appendChild(issuerNameElt);
-        String issuerNameStr = card.getIssuerName();
-        if (issuerNameStr == null) {
-        	issuerNameElt.appendChild(issuerNameStr);
-        } else {
-        	issuerNameElt.appendChild(card.getIssuer());
-        }
+        if (!isSelfIssued) {
+        	if (this.issuerName != null) {
+        		issuerNameElt.appendChild(this.issuerName);
+        	} else {
+            	// ISIP says this SHOULD be the O-value from the EV-Cert or the CN-Value from the cert.
+            	// Don't have the cert here...
+            	// TODO
+        		throw new SerializationException("required element IssuerName is null");
+        	}
+        } // else IssuerName is empty
         
         Element backgroundColor = new Element("BackgroundColor", WSConstants.INFOCARD_NAMESPACE);
         informationCardMetaData.appendChild(backgroundColor);
@@ -160,17 +186,11 @@ public class InformationCardMetaData {
         }
         return informationCardMetaData;
     }
+    
     public InformationCardMetaData(InfoCard card) {
-    	this.card = card;
+    	super(card);
+    	this.isSelfIssued = org.xmldap.infocard.Constants.ISSUER_XMLSOAP.equals(card.getIssuer());
     }
-
-	public String getLang() {
-		return lang;
-	}
-
-	public void setLang(String lang) {
-		this.lang = lang;
-	}
 
 	public String getPinDigest() {
 		return pinDigest;
@@ -196,6 +216,14 @@ public class InformationCardMetaData {
 		this.timeLastUpdated = timeLastUpdated;
 	}
 
+    public String getIssuerName() {
+        return issuerName;
+    }
+
+    public void setIssuerName(String issuerName) {
+        this.issuerName = issuerName;
+    }
+
 	public String getIssuerId() {
 		return issuerId;
 	}
@@ -204,24 +232,12 @@ public class InformationCardMetaData {
 		this.issuerId = issuerId;
 	}
 
-	public String getIssuerName() {
-		return issuerName;
-	}
-
-	public void setIssuerName(String issuerName) {
-		this.issuerName = issuerName;
-	}
-
 	public String getBackgroundColor() {
 		return backgroundColor;
 	}
 
 	public void setBackgroundColor(String backgroundColor) {
 		this.backgroundColor = backgroundColor;
-	}
-
-	public void setCard(InfoCard card) {
-		this.card = card;
 	}
 
 	public boolean getIsSelfIssued() {

@@ -32,6 +32,7 @@ package org.xmldap.sts.servlet;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.TokenServiceReference;
+import org.xmldap.infocard.UserCredential;
 import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedToken;
@@ -140,7 +141,6 @@ public class BackupServlet extends HttpServlet {
             InfoCard card = new InfoCard(); // no cert -> unsigned card
             card.setCardId("https://" + domainname + servletPath + "card/" + managedCard.getCardId(), 1);
             card.setCardName(managedCard.getCardName());
-            card.setIssuerName(domainname);
             card.setIssuer(tokenServiceEndpoint);
 
             XSDDateTime issued = new XSDDateTime();
@@ -209,7 +209,7 @@ public class BackupServlet extends HttpServlet {
 
     protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert, String username) {
         TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
-        tsr.setAuthType(TokenServiceReference.USERNAME, username);
+        tsr.setAuthType(UserCredential.USERNAME, username);
         return tsr;
     }
 

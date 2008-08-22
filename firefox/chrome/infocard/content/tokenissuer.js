@@ -1,9 +1,10 @@
+
 /*
  * Copyright (c) 2006, Chuck Mortimore - charliemortimore at gmail.com
  * xmldap.org
  * All rights reserved.
  *
- * Based upon work by: David François Huynh  <dfhuynh at csail.mit.edu>
+ * Based upon work by: David FranÔøΩois Huynh  <dfhuynh at csail.mit.edu>
  * http://simile.mit.edu/java-firefox-extension/
  *
  * Redistribution and use in source and binary forms, with or without
@@ -125,6 +126,20 @@ TokenIssuer.getToken = function(policy) {
         
         var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
         var result = issuer.getToken(policy);
+        return result;
+
+    } catch (e) {
+        this._fail(e);
+    }
+    return null;
+};
+
+TokenIssuer.importManagedCard = function(importedCardJSONStr, cardFileJSONStr) {
+    try {
+        var tokenIssuer = this.getTokenIssuer();
+        
+        var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
+        var result = issuer.importManagedCard(importedCardJSONStr, cardFileJSONStr);
         return result;
 
     } catch (e) {

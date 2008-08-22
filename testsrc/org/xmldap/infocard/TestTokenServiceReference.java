@@ -34,7 +34,7 @@ public class TestTokenServiceReference extends TestCase {
         String mexURL = "https://xmldap.org/sts/mex";
         String userName = "cmort";
         TokenServiceReference tsr = new TokenServiceReference(tsURL, mexURL, cert);
-        tsr.setAuthType(TokenServiceReference.USERNAME, userName);
+        tsr.setAuthType(UserCredential.USERNAME, userName);
         
         String actual = null;
         String expected = "<ic:TokenServiceList xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" + 
@@ -90,7 +90,7 @@ public class TestTokenServiceReference extends TestCase {
         X509Certificate userCert = org.xmldap.util.XmldapCertsAndKeys.getXmldapCert1();
         String userCertHash = CryptoUtils.digest(userCert.getEncoded());
         TokenServiceReference tsr = new TokenServiceReference(tsURL, mexURL, cert);
-        tsr.setAuthType(TokenServiceReference.X509, userCertHash);
+        tsr.setAuthType(UserCredential.X509, userCertHash);
         
         String actual = null;
         String expected = "<ic:TokenServiceList xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +

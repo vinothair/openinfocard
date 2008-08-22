@@ -40,14 +40,24 @@ import org.json.JSONObject;
 import org.xmldap.asn1.Logotype;
 import org.xmldap.asn1.LogotypeDetails;
 import org.xmldap.asn1.LogotypeInfo;
+import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.TokenIssuanceException;
+import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.SelfIssuedToken;
+import org.xmldap.infocard.roaming.InformationCardMetaData;
+import org.xmldap.infocard.roaming.InformationCardPrivateData;
+import org.xmldap.infocard.roaming.ManagedInformationCardPrivateData;
+import org.xmldap.infocard.roaming.RoamingInformationCard;
+import org.xmldap.infocard.roaming.RoamingStore;
 import org.xmldap.saml.Subject;
 import org.xmldap.util.Base64;
 import org.xmldap.util.CertsAndKeys;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.xml.XmlUtils;
+import org.xmldap.xmldsig.ValidatingEnvelopedSignature;
 import org.xmldap.xmlenc.EncryptedData;
 
 import javax.crypto.BadPaddingException;
@@ -257,18 +267,18 @@ public class TokenIssuer {
 		return "TokenIssuer initialized";
 	}
 
-	private static Document getInfocard(String card) throws TokenIssuanceException {
-		Builder parser = new Builder();
-		Document infocard = null;
-		try {
-			infocard = parser.build(card, "");
-		} catch (ParsingException e) {
-			throw new TokenIssuanceException(e);
-		} catch (IOException e) {
-			throw new TokenIssuanceException(e);
-		}
-		return infocard;
-	}
+//	private static Document getInfocard(String card) throws TokenIssuanceException {
+//		Builder parser = new Builder();
+//		Document infocard = null;
+//		try {
+//			infocard = parser.build(card, "");
+//		} catch (nu.xom.ParsingException e) {
+//			throw new TokenIssuanceException(e);
+//		} catch (IOException e) {
+//			throw new TokenIssuanceException(e);
+//		}
+//		return infocard;
+//	}
 
 	// private String claims2String(Element data) throws TokenIssuanceException
 	// {
@@ -552,6 +562,106 @@ public class TokenIssuer {
 		}
 	}
 
+	public String importManagedCard(Element importedCard, Document cardStore) throws TokenIssuanceException {
+		Element root = cardStore.getRootElement();
+		String storeFormat = root.getLocalName();
+		RoamingStore roamingStore;
+		
+		if ("infocards".equals(storeFormat)) {
+			throw new IllegalArgumentException("unsupported cardstore format: " + storeFormat);
+//			Infocards infocards = new Infocards(cardStore);
+//			roamingStore = new RoamingStore(infocards);
+		} if ("RoamingStore".equals(root.getLocalName())) {
+			try {
+				roamingStore = new RoamingStore(cardStore);
+			} catch (IOException e) {
+				throw new TokenIssuanceException(e);
+			} catch (ParsingException e) {
+				throw new TokenIssuanceException(e);
+			} catch (nu.xom.ParsingException e) {
+				throw new TokenIssuanceException(e);
+			}
+		} else {
+			throw new IllegalArgumentException("unsupported cardstore format: " + storeFormat);
+		}
+
+		try {
+			InfoCard card = new InfoCard(importedCard);
+			InformationCardMetaData informationCardMetaData = new InformationCardMetaData(card);
+			byte[] masterKeyBytes = new SecureRandom().generateSeed(32);
+			String masterKey = Base64.encodeBytes(masterKeyBytes);
+			InformationCardPrivateData informationCardPrivateData = new ManagedInformationCardPrivateData(masterKey);
+			RoamingInformationCard ric = new RoamingInformationCard(informationCardMetaData, informationCardPrivateData);
+			roamingStore.addRoamingInformationCard(ric);
+			return roamingStore.toXML();
+		} catch (ParsingException e) {
+			throw new TokenIssuanceException(e);
+		} catch (SerializationException e) {
+			throw new TokenIssuanceException(e);
+		}
+	}
+
+	public String importManagedCard(String importedCardJSONStr, String cardFileJSONStr)
+			throws TokenIssuanceException {
+		JSONObject result = new JSONObject();
+        try {
+
+        	JSONObject importedCard = new JSONObject(importedCardJSONStr);
+            if (importedCard.has("crdFileContent")) {
+            	String crdFileContent = (String) importedCard.get("crdFileContent");
+            	Document doc;
+				try {
+					doc = XmlUtils.parse(crdFileContent);
+				} catch (IOException e1) {
+					throw new TokenIssuanceException(e1);
+				} catch (nu.xom.ParsingException e1) {
+					throw new TokenIssuanceException(e1);
+				}
+            	ValidatingEnvelopedSignature signature;
+				try {
+					signature = new ValidatingEnvelopedSignature(doc);
+					Element validElement = signature.validate();
+					if (validElement == null) {
+	            		result.put("error", "The signature is not valid");
+	                	return result.toString();
+					}
+					
+					
+					try {
+						doc = XmlUtils.parse(cardFileJSONStr);
+						String newStore = importManagedCard(validElement, doc);
+						
+						result.put("result", newStore);
+	                	return result.toString();
+					} catch (IOException e) {
+						throw new TokenIssuanceException(e);
+					} catch (nu.xom.ParsingException e) {
+						throw new TokenIssuanceException(e);
+					}
+				} catch (ParsingException e) {
+					throw new TokenIssuanceException(e);
+				}
+             } else {
+				result.put("error", "crdFileContent not found");
+            	return result.toString();
+            }
+        } catch (JSONException e) {
+			try {
+				result.put("error", e.getMessage());
+			} catch (JSONException e1) {
+				throw new TokenIssuanceException(e1);
+			}
+        	return result.toString();
+		} catch (CryptoException e) {
+			try {
+				result.put("error", e.getMessage());
+			} catch (JSONException e1) {
+				throw new TokenIssuanceException(e1);
+			}
+        	return result.toString();
+		}
+	}
+
 	public String getToken(String serializedPolicy)
 			throws TokenIssuanceException {
 
@@ -685,7 +795,13 @@ public class TokenIssuer {
 			String confirmationMethod) throws TokenIssuanceException {
 		String issuedToken = null;
 
-		Document infocard = getInfocard(card);
+		Document infocard;
+		try {
+			infocard = XmlUtils.parse(card);
+		} catch (IOException e) {
+			throw new TokenIssuanceException(e);
+		} catch (nu.xom.ParsingException e) {
+			throw new TokenIssuanceException(e);		}
 
 		Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
 		Element data = (Element) dataNodes.get(0);

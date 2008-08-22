@@ -29,6 +29,9 @@
 package org.xmldap.infocard.roaming;
 
 import org.xmldap.exceptions.SerializationException;
+import org.xmldap.infocard.InfoCard;
+import org.xmldap.infocard.SelfIssuedClaims;
+import org.xmldap.util.Base64;
 import org.xmldap.util.XmlFileUtil;
 import org.xmldap.ws.WSConstants;
 
@@ -38,8 +41,9 @@ import nu.xom.Elements;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.StringReader;
+import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
 import java.util.Iterator;
@@ -80,8 +84,72 @@ public class RoamingStore implements org.xmldap.xml.Serializable {
     }
 
     public RoamingStore(String roamingStoreStr) throws ValidityException, IOException, ParsingException, org.xmldap.exceptions.ParsingException {
-    	this(XmlFileUtil.readXml(new StringReader(roamingStoreStr)));
+    	this(XmlFileUtil.readXml(new ByteArrayInputStream(roamingStoreStr.getBytes())));
     }
+
+//    public RoamingStore(Infocards infocards) throws org.xmldap.exceptions.ParsingException {
+//    	Collection<JsInfocard> infocardsList = infocards.getInfocards();
+//    	for (JsInfocard jsInfocard : infocardsList) {
+//			if (roamingInformationCards == null) {
+//				roamingInformationCards = new Vector<RoamingInformationCard>();
+//			}
+//			InformationCardPrivateData informationCardPrivateData;
+//			if ("selfAsserted".equals(jsInfocard.type)) {
+//				JsCardDataSelfAsserted cardData = (JsCardDataSelfAsserted)jsInfocard.cardData.foo;
+//				SelfIssuedClaims sic = new SelfIssuedClaims();
+//				for (String key : cardData.avps.keySet()) {
+//					if ("givenname".equals(key)) {
+//						sic.setGivenName(cardData.avps.get(key));
+//					} else if ("surname".equals(key)) {
+//						sic.setSurname(cardData.avps.get(key));
+//					} else if ("email".equals(key)) {
+//						sic.setEmailAddress(cardData.avps.get(key));
+//					} else if ("streetAddress".equals(key)) {
+//						sic.setStreetAddress(cardData.avps.get(key));
+//					} else if ("locality".equals(key)) {
+//						sic.setLocality(cardData.avps.get(key));
+//					} else if ("stateOrProvince".equals(key)) {
+//						sic.setStateOrProvince(cardData.avps.get(key));
+//					} else if ("postalCode".equals(key)) {
+//						sic.setPostalCode(cardData.avps.get(key));
+//					} else if ("country".equals(key)) {
+//						sic.setCountry(cardData.avps.get(key));
+//					} else if ("primaryPhone".equals(key)) {
+//						sic.setPrimaryPhone(cardData.avps.get(key));
+//					} else if ("otherPhone".equals(key)) {
+//						sic.setOtherPhone(cardData.avps.get(key));
+//					} else if ("mobilePhone".equals(key)) {
+//						sic.setMobilePhone(cardData.avps.get(key));
+//					} else if ("dateOfBirth".equals(key)) {
+//						sic.setDateOfBirth(cardData.avps.get(key));
+//					} else if ("gender".equals(key)) {
+//						sic.setGender(cardData.avps.get(key));
+//					} else {
+//						throw new IllegalArgumentException("unsupported self-issued attribute:"  + key);
+//					}
+//					byte[] ppid = Base64.decode(jsInfocard.privatepersonalidentifier);
+//					informationCardPrivateData = new SelfIssuedInformationCardPrivateData(sic, ppid);
+//				}
+//			} else if ("managedCard".equals(jsInfocard.type)) {
+//				informationCardPrivateData = new ManagedInformationCardPrivateData();
+//			} else {
+//				throw new IllegalArgumentException("Information Card type is not supported:" + jsInfocard.type);
+//			}
+//			InfoCard infocard = new InfoCard();
+//			{
+//				infocard.setCardId(jsInfocard.getId(), 1);
+//				infocard.setCardName(jsInfocard.getName());
+//				if ("managedCard".equals(jsInfocard.type)) {
+//					infocard.setIssuer(jsInfocard.getIssuer());
+//					infocard.setRequireAppliesTo(jsInfocard.getRequireApplisTo());
+//					infocard.set
+//				}
+//			}
+//			InformationCardMetaData informationCardMetaData = new InformationCardMetaData(infocard);
+//			RoamingInformationCard roamingInformationCard = new RoamingInformationCard(informationCardMetaData, informationCardPrivateData);
+//			roamingInformationCards.add(roamingInformationCard);
+//    	}
+//    }
 
     public RoamingStore(Document roamingStoreDoc) throws IOException, org.xmldap.exceptions.ParsingException, ParsingException {
     	Element root = roamingStoreDoc.getRootElement();

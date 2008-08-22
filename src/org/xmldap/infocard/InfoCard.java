@@ -66,7 +66,7 @@ public class InfoCard implements Serializable {
     private String base64BinaryCardImage;
     String mimeType = null;
     private String issuer = null;
-    private String issuerName = null;
+    //private String issuerName = null;
     private String timeIssued = null;
     private String timeExpires = null;
     private PrivacyNotice privacyPolicy = null;
@@ -75,17 +75,41 @@ public class InfoCard implements Serializable {
     private SupportedClaimList claimList = null;
     private String userName = null;
     private RequireAppliesTo requireAppliesTo = null; // optional 
-    private String lang = null;
+    protected String lang = null;
+
+    public InfoCard(InfoCard that) {
+        this.certChain = that.certChain;
+        this.privateKey = that.privateKey;
+        
+        this.informationCardReference = that.informationCardReference; // required
+        this.cardName = that.cardName;
+        this.base64BinaryCardImage = that.base64BinaryCardImage;
+        this.mimeType = that.mimeType;
+        this.issuer = that.issuer;
+        this.timeIssued = that.timeIssued;
+        this.timeExpires = that.timeExpires;
+        this.privacyPolicy = that.privacyPolicy;
+        this.tokenServiceReferenceList = that.tokenServiceReferenceList;
+        this.tokenList = that.tokenList;
+        this.claimList = that.claimList;
+        this.userName = that.userName;
+        this.requireAppliesTo = that.requireAppliesTo; // optional 
+        this.lang = that.lang;
+    }
 
     public InfoCard() {
         this.certChain = null;
     }
 
     public InfoCard(Element infoCardElement) throws ParsingException {
+    	createFromElement(infoCardElement);
+    }
+    
+    protected void createFromElement(Element infoCardElement) throws ParsingException {
     	// <ic:InformationCard xml:lang="xs:language" ...> 
     	//  <ic:InformationCardReference> ... </ic:InformationCardReference> 
     	//  <ic:CardName> xs:string </ic:CardName> ? 
-    	//  <ic:CardImage MimeType=”xs:string”> xs:base64Binary </ic:CardImage> ? 
+    	//  <ic:CardImage MimeType=ï¿½xs:stringï¿½> xs:base64Binary </ic:CardImage> ? 
     	//  <ic:Issuer> xs:anyURI </ic:Issuer> 
     	//  <ic:TimeIssued> xs:dateTime </ic:TimeIssued> 
     	//  <ic:TimeExpires> xs:dateTime </ic:TimeExpires> ? 
@@ -110,7 +134,9 @@ public class InfoCard implements Serializable {
     			Element elt = elts.get(0);
     			cardName = elt.getValue();
     		} else {
-    			throw new ParsingException("Found " + elts.size() + " elements of CardName");
+    			if (elts.size() > 1) {
+    				throw new ParsingException("Found " + elts.size() + " elements of CardName");
+    			}
     		}
     		elts = infoCardElement.getChildElements("CardImage", WSConstants.INFOCARD_NAMESPACE);
     		if (elts.size() == 1) {
@@ -230,6 +256,14 @@ public class InfoCard implements Serializable {
         return issuer;
     }
 
+	public void setLang(String lang) {
+		this.lang = lang;
+	}
+
+    public String getLang() {
+        return lang;
+    }
+
     public void setIssuer(String issuer) {
         this.issuer = issuer;
     }
@@ -273,14 +307,6 @@ public class InfoCard implements Serializable {
 
     public void setBase64BinaryCardImage(String base64BinaryCardImage) {
         this.base64BinaryCardImage = base64BinaryCardImage;
-    }
-
-    public String getIssuerName() {
-        return issuerName;
-    }
-
-    public void setIssuerName(String issuerName) {
-        this.issuerName = issuerName;
     }
 
     public String getTimeIssued() {

@@ -254,8 +254,10 @@ public class BaseEnvelopedSignature {
 		Element signature = root.getFirstChildElement("Signature",
 				WSConstants.DSIG_NAMESPACE);
 		// System.out.println(signature.toXML());
-		root.removeChild(signature);
-
+		if (signature != null) {
+			root.removeChild(signature);
+		}
+		
 		return XmlUtils.canonicalize(root, Canonicalizable.EXCLUSIVE_CANONICAL_XML);
 	}
 

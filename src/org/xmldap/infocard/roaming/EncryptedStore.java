@@ -129,7 +129,8 @@ public class EncryptedStore {
     private String decryptStore(String encoding, byte[] bytes, int offset, String password) throws CryptoException, ParsingException{
         Document encryptedStore = null;
         try {
-            encryptedStore = XmlFileUtil.readXml(encoding, bytes, offset);
+        	ByteArrayInputStream bais = new ByteArrayInputStream(bytes, offset, bytes.length);
+            encryptedStore = XmlFileUtil.readXml(encoding, bais);
         } catch (IOException e) {
             throw new ParsingException("Error parsing EncryptedStore", e);
         }

@@ -387,10 +387,27 @@ public class CryptoUtils {
         CertificateFactory cf;
         try {
             cf = CertificateFactory.getInstance("X509");
+        } catch (CertificateException e) {
+        	throw new CryptoException("Error creating X509 CertificateFactory", e);	
+        }
+        try {
             X509Certificate certificate = (X509Certificate)cf.generateCertificate(bis);
             return certificate;
         } catch (CertificateException e) {
-            throw new CryptoException("Error creating X509Certificate from base64-encoded String", e);
+        	// in case that the base64 coding is not compliant
+        	byte[] decodedBase64 = Base64.decode(b64EncodedX509Certificate);
+        	String b64 = Base64.encodeBytes(decodedBase64);
+            X509Certificate certificate;
+			try {
+		        sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
+		        sb.append(b64);
+		        sb.append("\n-----END CERTIFICATE-----\n");
+
+		        bis = new ByteArrayInputStream(sb.toString().getBytes());
+				certificate = (X509Certificate)cf.generateCertificate(bis);
+			} catch (CertificateException e1) {
+	            throw new CryptoException("Error creating X509Certificate from base64-encoded String", e1);			}
+            return certificate;
         }
 
     }
