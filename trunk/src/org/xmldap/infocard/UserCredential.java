@@ -17,7 +17,7 @@ public class UserCredential {
 
     private String authType = USERNAME;
     
-    private String hint = "Enter your username and password";
+    private String hint = null;
     
 	private String userName = null;
     private String ppi = null;
@@ -39,10 +39,8 @@ public class UserCredential {
 				hint = null;
 			}
 			
-			int credentialCount = 0;
 			elts = elt.getChildElements("UsernamePasswordCredential", WSConstants.INFOCARD_NAMESPACE);
 			if (elts.size() == 1) {
-				credentialCount++;
 				authType = USERNAME;
 				Element usernamePasswordCredential = elts.get(0);
 				Element usernameElt = usernamePasswordCredential.getFirstChildElement("Username", WSConstants.INFOCARD_NAMESPACE);
@@ -52,61 +50,49 @@ public class UserCredential {
 					throw new ParsingException("Expected Username");
 				}
 			} else {
-				throw new ParsingException("Expected one UsernamePasswordCredential but found: " + elts.size());
-			}
-			
-			elts = elt.getChildElements("KerberosV5Credential", WSConstants.INFOCARD_NAMESPACE);
-			if (elts.size() == 1) {
-				if (credentialCount > 0) {
-					throw new ParsingException("The choise under UserCredential (KerberosV5Credential) contains more than one element");
-				}
-				authType = KERB;
-			} else {
-				throw new ParsingException("Expected one UsernamePasswordCredential but found: " + elts.size());
-			}
-			
-			elts = elt.getChildElements("X509V3Credential", WSConstants.INFOCARD_NAMESPACE);
-			if (elts.size() == 1) {
-				if (credentialCount > 0) {
-					throw new ParsingException("The choise under UserCredential (X509V3Credential) contains more than one element");
-				}
-				authType = X509;
-				Element x509V3Credential = elts.get(0);
-				elts = x509V3Credential.getChildElements("X509Data", WSConstants.DSIG_NAMESPACE);
+				elts = elt.getChildElements("KerberosV5Credential", WSConstants.INFOCARD_NAMESPACE);
 				if (elts.size() == 1) {
-					Element x509Data = elts.get(0);
-					elts = x509Data.getChildElements("KeyIdentifier", WSConstants.WSSE_NAMESPACE_OASIS_10);
+					authType = KERB;
+				} else {
+					elts = elt.getChildElements("X509V3Credential", WSConstants.INFOCARD_NAMESPACE);
 					if (elts.size() == 1) {
-						Element keyIdentifier = elts.get(0);
-						// TODO check ValueType and EncodingType
-						x509Hash = keyIdentifier.getValue();
+						authType = X509;
+						Element x509V3Credential = elts.get(0);
+						elts = x509V3Credential.getChildElements("X509Data", WSConstants.DSIG_NAMESPACE);
+						if (elts.size() == 1) {
+							Element x509Data = elts.get(0);
+							elts = x509Data.getChildElements("KeyIdentifier", WSConstants.WSSE_NAMESPACE_OASIS_10);
+							if (elts.size() == 1) {
+								Element keyIdentifier = elts.get(0);
+								// TODO check ValueType and EncodingType
+								x509Hash = keyIdentifier.getValue();
+							} else {
+								throw new ParsingException("Expected one KeyIdentifier but found: " + elts.size());
+							}
+						} else {
+							throw new ParsingException("Expected one X509Data but found: " + elts.size());
+						}
 					} else {
-						throw new ParsingException("Expected one KeyIdentifier but found: " + elts.size());
+						elts = elt.getChildElements("SelfIssuedCredential", WSConstants.INFOCARD_NAMESPACE);
+						if (elts.size() == 1) {
+							authType = SELF_ISSUED;
+							Element selfIssuedCredential = elts.get(0);
+							elts = selfIssuedCredential.getChildElements("PrivatePersonalIdentifier", WSConstants.INFOCARD_NAMESPACE);
+							if (elts.size() == 1) {
+								Element privatePersonalIdentifier = elts.get(0);
+								this.ppi = privatePersonalIdentifier.getValue();
+							} else {
+								throw new ParsingException("Expected one PrivatePersonalIdentifier but found: " + elts.size());
+							}
+						} else {
+							throw new ParsingException("Expected one of UsernamePasswordCredential, KerberosV5Credential, X509V3Credential or SelfIssuedCredential");
+						}
 					}
-				} else {
-					throw new ParsingException("Expected one X509Data but found: " + elts.size());
+					
 				}
-			} else {
-				throw new ParsingException("Expected one UsernamePasswordCredential but found: " + elts.size());
+				
 			}
 			
-			elts = elt.getChildElements("SelfIssuedCredential", WSConstants.INFOCARD_NAMESPACE);
-			if (elts.size() == 1) {
-				if (credentialCount > 0) {
-					throw new ParsingException("The choise under UserCredential (SelfIssuedAuthenticate) contains more than one element");
-				}
-				authType = SELF_ISSUED;
-				Element selfIssuedCredential = elts.get(0);
-				elts = selfIssuedCredential.getChildElements("PrivatePersonalIdentifier", WSConstants.INFOCARD_NAMESPACE);
-				if (elts.size() == 1) {
-					Element privatePersonalIdentifier = elts.get(0);
-					this.ppi = privatePersonalIdentifier.getValue();
-				} else {
-					throw new ParsingException("Expected one PrivatePersonalIdentifier but found: " + elts.size());
-				}
-			} else {
-				throw new ParsingException("Expected one UsernamePasswordCredential but found: " + elts.size());
-			}
 
 		} else {
 			throw new ParsingException("Expected UserCredential but found" + name);
@@ -188,7 +174,11 @@ public class UserCredential {
         Element userCredential = new Element(WSConstants.INFOCARD_PREFIX + ":UserCredential", WSConstants.INFOCARD_NAMESPACE);
         if (USERNAME.equals(authType)) {
 	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-	        displayCredentialHint.appendChild(hint);
+	        if (hint != null) {
+	        	displayCredentialHint.appendChild(hint);
+	        } else {
+	        	displayCredentialHint.appendChild("Please enter your username and password.");
+	        }
 	        userCredential.appendChild(displayCredentialHint);
 	
 	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":UsernamePasswordCredential", WSConstants.INFOCARD_NAMESPACE);
@@ -198,7 +188,11 @@ public class UserCredential {
 	        userCredential.appendChild(credential);
         } else if (KERB.equals(authType)) {
 	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-	        displayCredentialHint.appendChild("Enter your kerberos credentials");
+	        if (hint != null) {
+	        	displayCredentialHint.appendChild(hint);
+	        } else {
+		        displayCredentialHint.appendChild("Enter your kerberos credentials");
+	        }
 	        userCredential.appendChild(displayCredentialHint);
 	        // <ic:KerberosV5Credential />
 	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":KerberosV5Credential", WSConstants.INFOCARD_NAMESPACE);
@@ -209,7 +203,11 @@ public class UserCredential {
 	         */
         } else if (SELF_ISSUED.equals(authType)) {
 	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-	        displayCredentialHint.appendChild("Choose a self-asserted card");
+	        if (hint != null) {
+	        	displayCredentialHint.appendChild(hint);
+	        } else {
+		        displayCredentialHint.appendChild("Choose a self-asserted card");
+	        }
 	        userCredential.appendChild(displayCredentialHint);
         	/*
 	        	  <ic:SelfIssuedCredential>
@@ -223,7 +221,7 @@ public class UserCredential {
 	        credentialValue.appendChild(ppi);
 	        credential.appendChild(credentialValue);
 	        userCredential.appendChild(credential);
-	        System.out.println(userCredential.toXML());
+	        //System.out.println(userCredential.toXML());
         } else if (X509.equals(authType)) {
         	/*
   				  <ic:DisplayCredentialHint> xs:string </ic:DisplayCredentialHint>
@@ -238,7 +236,11 @@ public class UserCredential {
 				  </ic:X509V3Credential>
         	 */
 	        Element displayCredentialHint = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayCredentialHint", WSConstants.INFOCARD_NAMESPACE);
-	        displayCredentialHint.appendChild("Choose a certificate");
+	        if (hint != null) {
+	        	displayCredentialHint.appendChild(hint);
+	        } else {
+		        displayCredentialHint.appendChild("Choose a certificate");
+	        }
 	        userCredential.appendChild(displayCredentialHint);
 	
 	        Element credential = new Element(WSConstants.INFOCARD_PREFIX + ":X509V3Credential", WSConstants.INFOCARD_NAMESPACE);
