@@ -17,7 +17,7 @@ public class PrivacyNotice {
 	}
 	
 	public PrivacyNotice(Element privacyNotice) throws ParsingException {
-//		<ic:PrivacyNotice Version=”xs:unsignedInt”?> xs:anyURI </ic:PrivacyNotice>
+//		<ic:PrivacyNotice Version=ï¿½xs:unsignedIntï¿½?> xs:anyURI </ic:PrivacyNotice>
 		if ("PrivacyNotice".equals(privacyNotice.getLocalName())) {
 			nu.xom.Attribute versionA = privacyNotice.getAttribute("Version");
 			if (versionA != null) {
@@ -58,6 +58,6 @@ public class PrivacyNotice {
 		return uri;
 	}
 	public void setUri(String uriASCIIString) throws URISyntaxException {
-		this.uri = new URI(uri).toASCIIString();
+		this.uri = new URI(uriASCIIString).toASCIIString();
 	}
 }
