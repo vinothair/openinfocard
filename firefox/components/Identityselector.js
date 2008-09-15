@@ -91,6 +91,8 @@ Xmldapidentityselector.prototype = {
 			  var currCert = chain.queryElementAt(i, nsIX509Cert);
 			  policy["certChain"+i] = getDer(currCert,win);
 			}
+			
+			debugObject("serverCert: ", serverCert, 0);
 		}
 		
         // win.document.URL is undefined
@@ -208,7 +210,28 @@ var XmldapidentityselectorModule = {
 function NSGetModule(aCompMgr, aFileSpec) { return XmldapidentityselectorModule; }
 
 
-
+function debugObject(prefix, object, indent) {
+	var msg = "";
+	var count = 0;
+	//if (indent > 3) return;
+	var pre = "";
+	for (var j=0; j<indent; j++) { pre += '\t'; }
+	for (var i in object) {
+		var value = object[i];
+		if (typeof(value) == 'object') {
+			//debugObject(prefix, value, indent+1);
+			msg += pre + i + ' type=' + typeof(value) + ':' + value + '\n';
+//			debug(prefix + pre + i + ' type=' + typeof(value) + ':' + value);
+		} else if ((typeof(value) == 'string') || ((typeof(value) == 'boolean')) || ((typeof(value) == 'number'))) {
+			msg += pre + ':' + i + '=' + value + '\n';
+//			debug(prefix + pre + ':' + i + '=' + value);
+		} else {
+			msg += pre + i + ' type=' + typeof(value) + '\n'
+//			debug(prefix + pre + i + ' type=' + typeof(value));
+		}
+	}
+	debug(msg);
+}
 
 function debug(msg) {
   var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);

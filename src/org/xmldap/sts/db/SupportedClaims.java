@@ -7,8 +7,13 @@ public class SupportedClaims {
 	protected static DbSupportedClaim[] dbSupportedClaims;
 
 	public static SupportedClaims getInstance(String name) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-		SupportedClaims supportedClaims = (SupportedClaims)Class.forName(name).newInstance();
-		return supportedClaims;
+		Class<?> clasz = Class.forName(name);
+		if (clasz != null) {
+			SupportedClaims supportedClaims = (SupportedClaims)clasz.newInstance();
+			return supportedClaims;
+		} else {
+			return null;
+		}
 	}
 	
 	public DbSupportedClaim getClaimByUri(String uri) {

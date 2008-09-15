@@ -49,9 +49,13 @@
     <script src="chrome://infocard/content/infocards.js"/>
     <script src="chrome://infocard/content/cardstore.js"/>
     <script src="chrome://infocard/content/tokenissuer.js"/>
-
+    
     <script>
-        TokenIssuer.initialize();
+		if (TokenIssuer.initialize() == true) {
+			icDebug("load TokenIssuer.initialize == true");
+		} else {
+			icDebug("load TokenIssuer.initialize == false");
+		}
     </script>
     
     <keyset>
@@ -188,6 +192,9 @@
 
                 <hbox id="controls">
 
+                    <vbox id="disableSelector">
+                        <label value="&cardmanager.disableSelector;" class="cardcontrols"/>
+                    </vbox>
                     <vbox id="newCard">
                         <label value="&cardmanager.newcard;" class="cardcontrols"/>
                     </vbox>

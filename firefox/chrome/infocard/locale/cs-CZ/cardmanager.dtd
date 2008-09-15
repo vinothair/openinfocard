@@ -15,6 +15,7 @@
 <!ENTITY cardmanager.dateofbirth "Datum Narozeni:">
 <!ENTITY cardmanager.gender "Pohlav&#237;:">
 <!ENTITY cardmanager.imgurl "Osobn&#237; URL:"> 
+<!ENTITY cardmanager.disableSelector "disable">
 <!ENTITY cardmanager.newcard "Nova karta">
 <!ENTITY cardmanager.deletecard "Vyma&#382;te kartu">
 <!ENTITY cardmanager.updatecard "Ulo&#382;it kartu do pam&#283;ti">

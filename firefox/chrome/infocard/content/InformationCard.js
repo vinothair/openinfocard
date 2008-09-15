@@ -31,7 +31,113 @@ var gNavPlat = navigator.platform;
 var gbIsWin = ((gNavPlat.indexOf( "Win") > -1) ? true : false);
 var gbIsMac = ((gNavPlat.indexOf( "Mac") > -1) ? true : false);
 var gbIsLinux = ((gNavPlat.indexOf( "Linux") > -1) ? true : false);
-					
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+
+function nsResolver(prefix) {
+	  var ns = {
+	    'xrds' : 'xri://$xrds',
+	    'xrd': 'xri://$XRD*($v*2.0)'
+	  };
+	  return ns[prefix] || null;
+	}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+
+function xrdsListener(doc, hrefStr)  
+{
+		this.doc = doc;
+		this.hrefStr = hrefStr;
+		
+		this.onError =  function(error) {
+			IdentitySelector.logMessage("xrdsListener:onError", "error=" + error);
+		}
+		
+		this.onReady = function(xrds) {
+			try {
+				var elts = xrds.getElementsByTagName("Service");
+				for (var i=0; i<elts.length; i++) {
+					var type = "" + elts[i].getElementsByTagName("Type")[0].firstChild.nodeValue + "";
+					if (type.indexOf("http://infocardfoundation.org/policy/1.0/login") == 0) {
+						var uri = "" + elts[i].getElementsByTagName("URI")[0].firstChild.nodeValue ;
+						doc.__identityselector__.icLoginPolicy = uri;
+						IdentitySelector.logMessage("xrdsListener:onReady", "IC Login Service Policy: " + doc.__identityselector__.icLoginPolicy);
+						IdentitySelector.retrieveIcLoginServicePolicy(doc, doc.__identityselector__.icLoginPolicy);
+					} else {
+						if (type.indexOf("http://infocardfoundation.org/service/1.0/login") == 0) {
+							var uri = "" + elts[i].getElementsByTagName("URI")[0].firstChild.nodeValue ;
+							doc.__identityselector__.icLoginService = uri;
+							IdentitySelector.logMessage("xrdsListener:onReady", "IC Login Service: " + doc.__identityselector__.icLoginService);
+						} else {
+							IdentitySelector.logMessage("xrdsListener:onReady", "Service: type=" + type + ":" + typeof(type) + " URI=" + elts[i].getElementsByTagName("URI")[0].firstChild.nodeValue);
+						}
+					}
+				}
+//				for (var i in xrds) {
+//					IdentitySelector.logMessage("xrdsListener:onReady", "i=" + i + " type=" + typeof(i));
+//				}
+				var response = new XML (Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance (Components.interfaces.nsIDOMSerializer).serializeToString(xrds.documentElement));
+				doc.__identityselector__.xrds = response;
+				IdentitySelector.logMessage("xrdsListener:onReady", "response=" + response);
+//				var elts = xrds.evalutate('Service', xrds, nsResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+			} catch(e) {
+				IdentitySelector.logMessage("xrdsListener:onReady", "Error: " + e);
+			}
+		}
+
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+
+function icLoginServiceListener(doc, hrefStr)  
+{
+		this.doc = doc;
+		this.hrefStr = hrefStr;
+		
+		this.onError =  function(error) {
+			IdentitySelector.logMessage("icLoginServiceListener:onError", "error=" + error);
+		}
+		
+		this.onReady = function(xrds) {
+			try {
+//				var elts = xrds.getElementsByTagName("Service");
+//				for (var i=0; i<elts.length; i++) {
+//					var type = "" + elts[i].getElementsByTagName("Type")[0].firstChild.nodeValue + "";
+//					if (type.indexOf("http://infocardfoundation.org/policy/1.0/login") == 0) {
+//						var uri = "" + elts[i].getElementsByTagName("URI")[0].firstChild.nodeValue ;
+//						doc.__identityselector__.icLoginPolicy = uri;
+//						IdentitySelector.logMessage("xrdsListener:onReady", "IC Login Service Policy: " + doc.__identityselector__.icLoginPolicy);
+//						IdentitySelector.retrieveIcLoginServicePolicy(doc, doc.__identityselector__.icLoginPolicy);
+//					} else {
+//						if (type.indexOf("http://infocardfoundation.org/service/1.0/login") == 0) {
+//							var uri = "" + elts[i].getElementsByTagName("URI")[0].firstChild.nodeValue ;
+//							doc.__identityselector__.icLoginService = uri;
+//							IdentitySelector.logMessage("icLoginServiceListener:onReady", "IC Login Service: " + doc.__identityselector__.icLoginService);
+//						} else {
+//							IdentitySelector.logMessage("icLoginServiceListener:onReady", "Service: type=" + type + ":" + typeof(type) + " URI=" + elts[i].getElementsByTagName("URI")[0].firstChild.nodeValue);
+//						}
+//					}
+//				}
+//				for (var i in xrds) {
+//					IdentitySelector.logMessage("xrdsListener:onReady", "i=" + i + " type=" + typeof(i));
+//				}
+				var response = new XML (Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance (Components.interfaces.nsIDOMSerializer).serializeToString(xrds.documentElement));
+				doc.__identityselector__.icLoginService = response;
+				IdentitySelector.logMessage("icLoginServiceListener:onReady", "response=" + response);
+//				var elts = xrds.evalutate('Service', xrds, nsResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+			} catch(e) {
+				IdentitySelector.logMessage("icLoginServiceListener:onReady", "Error: " + e);
+			}
+		}
+
+}
+
 // **************************************************************************
 // Desc:
 // **************************************************************************
@@ -71,6 +177,11 @@ var ICProgressListener =
 		if( aFlag & progListIFace.STATE_START)
 		{
 			IdentitySelector.logMessage( "onStateChange", "flag & start");
+		}
+		
+		if( aFlag & progListIFace.STATE_STOP)
+		{
+			IdentitySelector.logMessage( "onStateChange", "flag & stop");
 		}
 		
 		if( aFlag & progListIFace.STATE_STOP)
@@ -134,9 +245,10 @@ var ICProgressListener =
 		return( 0);
 	},
 	
-	onSecurityChange : function()
+	onSecurityChange : function(aProgress, aRequest, aState)
 	{
-		return( 0);
+		IdentitySelector.logMessage( "onSecurityChange", "state=" + aState);
+		return IdentitySelector.onSecurityChange(aProgress, aRequest, aState);
 	},
 	
 	onLinkIconAvailable : function()
@@ -152,6 +264,47 @@ var ICProgressListener =
 var IdentitySelector = 
 {
 	disabled : false,
+	
+	// Mode strings used to control CSS display
+	IDENTITY_MODE_IDENTIFIED       : "verifiedIdentity", // High-quality identity information
+	IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
+	IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
+	
+	setMode : function(doc, newMode) {
+		IdentitySelector.runInterceptScript(doc);
+		if( doc.wrappedJSObject)
+		{
+			doc = doc.wrappedJSObject;
+		}
+
+		doc.__identityselector__.mode = newMode;
+	},
+	
+	getMode : function(doc) {
+		IdentitySelector.runInterceptScript(doc);
+		if( doc.wrappedJSObject)
+		{
+			doc = doc.wrappedJSObject;
+		}
+		return doc.__identityselector__.mode;
+	},
+	
+	onSecurityChange : function(aProgress, aRequest, aState)
+	{
+		var doc = aProgress.DOMWindow.document;
+	    if (aState & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
+	        this.setMode(doc, this.IDENTITY_MODE_IDENTIFIED);
+			IdentitySelector.logMessage( "IdentitySelector", " onSecurityChange state=STATE_IDENTITY_EV_TOPLEVEL location=" + doc.location.href);
+	    } else if (aState & Components.interfaces.nsIWebProgressListener.STATE_SECURE_HIGH) {
+	        this.setMode(doc, this.IDENTITY_MODE_DOMAIN_VERIFIED);
+			IdentitySelector.logMessage( "IdentitySelector", " onSecurityChange state=STATE_SECURE_HIGH location=" + doc.location.href);
+	    }  else {
+	        this.setMode(doc, this.IDENTITY_MODE_UNKNOWN);
+			IdentitySelector.logMessage( "IdentitySelector", " onSecurityChange state=IDENTITY_MODE_UNKNOWN location=" + doc.location.href);
+	    }
+
+		return( 0);
+	},
 	
 	// ***********************************************************************
 	// Method: reportError
@@ -257,13 +410,68 @@ var IdentitySelector =
 		{
 		}
 	},
-			
+
+	
+	sameSchemeAndDomain : function(ownerDocument, htmlDoc) 
+	{
+		IdentitySelector.logMessage( "sameSchemeAndDomain", "ownerDocument.location.href=" + ownerDocument.location.href);
+		topScheme = ownerDocument.location.protocol;
+		topDomain = ownerDocument.location.host;
+		// TODO this should go up to the top. Currently this code supports only only level deep nesting.
+
+		IdentitySelector.logMessage( "sameSchemeAndDomain", " topURL:" + ownerDocument.location.href);
+
+		var subWindowScheme = "";
+		if (htmlDoc.location == undefined) { // htmlDoc is a string
+			IdentitySelector.logMessage( "sameSchemeAndDomain", " subWindowURL:" + htmlDoc);
+			// it is a string not a doc
+			var i = htmlDoc.indexOf(':');
+			if (i != -1) {
+				subWindowScheme = htmlDoc.substring(0,i+1); // include the colon
+			}
+		} else {
+			IdentitySelector.logMessage( "sameSchemeAndDomain", " subWindowURL:" + htmlDoc.location.href);
+			subWindowScheme = htmlDoc.location.protocol;
+		}
+		IdentitySelector.logMessage( "sameSchemeAndDomain", " subWindowDomain:" + subWindowDomain);
+		if (subWindowScheme == topScheme) {
+			IdentitySelector.logMessage( "sameSchemeAndDomain", " topDomain:" + topDomain);
+			var subWindowDomain = "";
+			if (htmlDoc.location == undefined) {
+				// it is a string not a doc
+				var i = htmlDoc.indexOf("//");
+				if (i != -1) {
+					var rest = htmlDoc.substr(i+2);
+					i = rest.indexOf("/");
+					if (i != -1) {
+						subWindowDomain = rest.substring(0, i);
+					} else {
+						subWindowDomain = rest;
+					}
+				}
+			} else {
+				subWindowDomain = htmlDoc.location.host;
+			}
+			IdentitySelector.logMessage( "sameSchemeAndDomain", " subWindowDomain:" + subWindowDomain);
+			if (subWindowDomain == topDomain) {
+				return true;
+			} else {
+				IdentitySelector.logMessage( "sameSchemeAndDomain", "domains do not match. " + subWindowDomain + "!=" + topDomain);
+			}
+		} else {
+			IdentitySelector.logMessage( "sameSchemeAndDomain", "schemes do not match. " + subWindowScheme + "!=" + topScheme);
+		}
+		return false;
+	},
+	
 	// ***********************************************************************
 	// Method: onInstall
 	// ***********************************************************************
 	
 	onInstall : function( event)
 	{
+		IdentitySelector.logMessage("onInstall", "start");
+
 		var handlerAlreadyInstalled = false;
 		
 		{
@@ -276,6 +484,22 @@ var IdentitySelector =
 				return;
 			}
 		}
+		
+		var htmlDoc;
+		
+//		IdentitySelector.logMessage("onInstall", "document.contentType=" + document.contentType);
+//		IdentitySelector.logMessage("onInstall", "window.document.contentType=" + window.document.contentType);
+//		IdentitySelector.logMessage("onInstall", "window.document.contentType=" + window.document.contentType);
+		if (event.originalTarget instanceof HTMLDocument) {
+			htmlDoc = event.originalTarget;
+			IdentitySelector.logMessage("onInstall", "HTML type:" + event.originalTarget.contentType + 
+					"\nlocation=" + htmlDoc.location.href);
+		} else {
+			IdentitySelector.logMessage("onInstall", "this no HTML. Exiting onInstall.");
+			window.removeEventListener( "load", 
+					IdentitySelector.onInstall, true);
+			return;
+		}
 		try
 		{
 			// Remove the load event listener
@@ -283,9 +507,8 @@ var IdentitySelector =
 			window.removeEventListener( "load", 
 				IdentitySelector.onInstall, true);
 				
-			// Determine if another add-on or plug-in has registered to handle
+			// Determine if a plug-in has registered to handle
 			// information cards
-			
 			if( navigator.mimeTypes && navigator.mimeTypes.length)
 			{
 				var mimeHandler = navigator.mimeTypes[ 
@@ -295,22 +518,78 @@ var IdentitySelector =
 					handlerAlreadyInstalled = true;
 				}
 			}
-			
-			if( !handlerAlreadyInstalled)
-			{
-				var event = document.createEvent( "Event");
 
-				event.initEvent( "IdentitySelectorAvailable", true, true);
-				top.dispatchEvent( event);
-				
-				if( top.IdentitySelectorAvailable == true)
+			if (!handlerAlreadyInstalled) {
+				var doc = htmlDoc;
+				IdentitySelector.runInterceptScript(doc);
+				if( doc.wrappedJSObject)
 				{
-					handlerAlreadyInstalled = true;
+					doc = doc.wrappedJSObject;
+				}
+				if (!(doc.__identityselector__.IdentitySelectorAvailable == undefined)) {
+					handlerAlreadyInstalled = (doc.__identityselector__.IdentitySelectorAvailable == true);
+				} else {
+					doc.__identityselector__.IdentitySelectorAvailable = true;
 				}
 			}
+
+//			// Determine if another extension has registered to handle
+//			// information cards
+//			if( !handlerAlreadyInstalled)
+//			{
+//				var event = document.createEvent( "Event");
+//
+//				event.initEvent( "IdentitySelectorAvailable", true, true);
+//				window.dispatchEvent( event);
+//				
+//				if( window.IdentitySelectorAvailable == true)
+//				{
+//					handlerAlreadyInstalled = true;
+//				}
+//			}
 			
 			if( !handlerAlreadyInstalled)
 			{
+				var secureFrameHandling = false;
+				{
+					var htmlDocWindow = null;
+					if (!(htmlDoc.defaultView == undefined)) {
+						htmlDocWindow = htmlDoc.defaultView;
+						IdentitySelector.logMessage( "onInstall", " htmlDoc.defaultView.location.href=" + htmlDoc.defaultView.location.href);
+						var parent = htmlDocWindow.frameElement; 
+						if (parent != null) {
+							if (parent.wrappedJSObject) {
+								parent = parent.wrappedJSObject;
+							}
+							if (parent instanceof HTMLIFrameElement) {
+								var ownerDocument = parent.ownerDocument;
+								secureFrameHandling = IdentitySelector.sameSchemeAndDomain(ownerDocument, htmlDoc);
+								IdentitySelector.logMessage( "onInstall", " secureFrameHandling=" + secureFrameHandling + 
+										"\nlocation=" + htmlDoc.location.href + " topLocation=" + ownerDocument.location.href);
+							} else {
+								IdentitySelector.logMessage( "onInstall", "parent=" + parent);
+							}
+						} else {
+							secureFrameHandling = true;
+							IdentitySelector.logMessage( "onInstall", " secureFrameHandling=" + secureFrameHandling + 
+									"\nlocation=" + htmlDoc.location.href + " no parent");
+						}
+					} else {
+						IdentitySelector.logMessage( "onInstall", " document.defaultView is not defined" );
+					}
+					
+				}
+				
+				{
+					var doc = htmlDoc;
+					IdentitySelector.runInterceptScript(doc);
+					if( doc.wrappedJSObject)
+					{
+						doc = doc.wrappedJSObject;
+					}
+					doc.__identityselector__.secureFrameHandling = secureFrameHandling;
+				}
+				
 				// Add event handlers.  The optional fourth parameter to
 				// addEventListener indicates that the listener is willing to
 				// accept untrusted events (such as those generated by web
@@ -366,7 +645,7 @@ var IdentitySelector =
 			else
 			{
 				IdentitySelector.logMessage( "onInstall", 
-					"Another identity selector is already installed.");
+					"Another identity selector is already installed.\nlocation=" + htmlDoc.location.href);
 			}
 		}
 		catch( e)
@@ -474,6 +753,35 @@ var IdentitySelector =
 		
 		if( doc.__identityselector__ === undefined)
 		{
+//			try
+//			{
+//				doc.__identityselector__ = new Object();
+//				doc.__identityselector__.data = new Object();
+//				doc.__identityselector__.submitIntercepted = false;
+//			
+//				doc.__identityselector__.chainSubmit = 
+//			      HTMLFormElement.prototype.submit;
+//			   HTMLFormElement.prototype.submit = function()
+//			   {
+//			      var event = doc.createEvent( 'Event');
+//			      event.initEvent( 'ICFormSubmit', true, true);
+//			      this.dispatchEvent( event);
+//			      doc.__identityselector__.chainSubmit.apply( this);
+//			   }
+//			
+//			   doc.__identityselector__.valueGetter = function()
+//			   {
+//			      var event = doc.createEvent( 'Event');
+//			      event.initEvent( 'ICGetTokenValue', true, true);
+//			      this.dispatchEvent( event);
+//			      return( this.__value);
+//			   }
+//			}
+//			catch( e)
+//			{
+//			   alert( e);
+//			}
+
 			eval( 
 				"try" +
 				"{" +
@@ -537,15 +845,16 @@ var IdentitySelector =
     		 
     		 delete target.__processed;
     		 
-		     IdentitySelector.processICardItems( doc, true);
-		     
-
-		  } if (target instanceof HTMLLinkElement) {
-		  	IdentitySelector.logMessage( "onSomethingChanged", "HTMLLinkElement " + target.tagName);
+     		runInterceptScript(doc); // make sure that __identityselector is defined
+     		IdentitySelector.processICardItems( doc, true);
+		 }
+		 
+		 if (target instanceof HTMLLinkElement) {
+    		runInterceptScript(doc); // make sure that __identityselector is defined
+    		IdentitySelector.logMessage( "onSomethingChanged", "HTMLLinkElement " + target.tagName);
 		  	IdentitySelector.processHtmlLinkElements( doc, true); // process "LINK rel" too
-		  } else {
-		   IdentitySelector.logMessage( "onSomethingChanged", "non HTMLObjectElement " + target.tagName);
-		  }
+		 }
+
 	    } else {
 	     IdentitySelector.logMessage( "onSomethingChanged", "event " + event);
 	    }
@@ -629,6 +938,29 @@ var IdentitySelector =
 				return;
 			}
 			
+			if (doc.__identityselector__.icLoginService != undefined) {
+				var s = "" + doc.__identityselector__.icLoginService;
+				var i = s.indexOf(" id=\"");
+				if (i != -1) {
+					i += 5;
+					s = s.substring(i);
+					i = s.indexOf("\"");
+					if (i != -1){
+						s = s.substring(0,i); // s has now value the first id attribute
+						var node = doc.getElementById(s);
+						if (node) {
+							doc.replaceNode(node, doc.__identityselector__.icLoginService);
+						} else {
+							IdentitySelector.logMessage("onContentLoaded", "Could not find node with id=" + s);
+						}
+					} else {
+						IdentitySelector.logMessage("onContentLoaded", "Could not find closing \" for ' id=' in\n" + doc.__identityselector__.icLoginService);
+					}
+				} else {
+					IdentitySelector.logMessage("onContentLoaded", "Could not find ' id=' in\n" + doc.__identityselector__.icLoginService);
+				}
+			}
+			
 			// Process all of the information card objects and elements 
 			// in the document
 		
@@ -674,13 +1006,74 @@ var IdentitySelector =
 					continue;
 				} else {
 					IdentitySelector.logMessage("processHtmlLinkElements: href=", hrefStr);
-					var data = doc.__identityselector__.data;
-					data.xrds_metadata_href = hrefStr;
-					return hrefStr;
+					if( doc.__identityselector__.xrds === undefined) {
+						var data = doc.__identityselector__.data;
+						data.xrds_metadata_href = hrefStr;
+						
+						IdentitySelector.retrieveXrds(doc, hrefStr); // async
+					} else {
+						IdentitySelector.logMessage("processHtmlLinkElements: already loaded: href=", hrefStr);
+					}
+					return;
 				}
 			} else {
 				continue;
 			}
+		}
+	},
+	
+	retrieveXrds : function(doc, hrefStr) {
+		IdentitySelector.retrieveX(doc, hrefStr, xrdsListener);
+	},
+	
+	retrieveIcLoginServicePolicy : function(doc, hrefStr) {
+		IdentitySelector.retrieveX(doc, hrefStr, icLoginServiceListener);
+	},
+	
+	retrieveX : function(doc, hrefStr, listenerO) {
+		try {
+			if (typeof(hrefStr) == 'string') {
+				var i = hrefStr.indexOf("://");
+				if (i == -1) { // it is not an URL. Try to build an URL from the baseURI of the document.
+					var baseUri = doc.baseURI;
+					if ((baseUri != null) && (baseUri.length > 0)) {
+						if ((baseUri.length - 1) == baseUri.lastIndexOf('/')) { // ends with /
+							hrefStr = baseUri + hrefStr;
+						} else {
+							hrefStr = baseUri + '/' + hrefStr;
+						}
+						IdentitySelector.logMessage("retrieveXrds: href=", hrefStr);
+					} // else no baseUri
+				} // else its an URL. Go ahead.
+			} // else not string but document
+			
+			var sameSchemeAndDomain = IdentitySelector.sameSchemeAndDomain(doc, hrefStr);
+			if (sameSchemeAndDomain == true) {
+				var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+				req.open('GET', hrefStr, true);
+				req.setRequestHeader ('Content-Type', 'text/xml');
+				req.overrideMimeType ('text/xml');
+				var listener = new listenerO(doc, hrefStr);
+				
+				req.onreadystatechange = function (aEvent) {
+		            if (req.readyState == 4) {
+		                if (!req.responseXML) {
+		                	listener.onError (req.responseText);
+		                    return;
+		                }
+	
+		                if (req.status != 200) {
+		                	listener.onError (req.statusText);
+		                    return;
+		                }
+		                listener.onReady(req.responseXML);
+		            }
+				};
+				
+				req.send(null);
+			}
+		} catch(e) {
+			IdentitySelector.logMessage("retrieveXrds: ", e);
 		}
 	},
 	
@@ -716,9 +1109,9 @@ var IdentitySelector =
 			
 			if( dispatchEvents)
 			{
-				var event = doc.createEvent( "Event");
-				event.initEvent( "ICObjectLoaded", true, true);
-				objElem.dispatchEvent( event);
+				var evnt = doc.createEvent( "Event");
+				evnt.initEvent( "ICObjectLoaded", true, true);
+				objElem.dispatchEvent( evnt);
 			}
 			
 			icardObjectCount++;
@@ -738,16 +1131,23 @@ var IdentitySelector =
 			{
 				var icardElem = icardElems[ i];
 				
-				var event = doc.createEvent( "Event");
-				event.initEvent( "ICElementLoaded", true, true);
-				icardElem.dispatchEvent( event);
+				var evnt = doc.createEvent( "Event");
+				evnt.initEvent( "ICElementLoaded", true, true);
+				icardElem.dispatchEvent( evnt);
 			}
 		}
 		
+		var frames = doc.defaultView.frames;
+		for (var i = 0; i < frames.length; i++) { 
+			var frame = frames[i];
+			IdentitySelector.logMessage( "processICardItems", "frame.document.location.href=" + frame.document.location.href);
+			IdentitySelector.processICardItems(frame.document, dispatchEvents);
+		 }
+
 		IdentitySelector.logMessage( "processICardItems", "Found " + 
 			icardElementCount + " ICard element(s) on " + doc.location);
-			
-		return( icardObjectCount + icardElementCount);
+		
+
 	},
 	
 	// ***********************************************************************
@@ -896,9 +1296,9 @@ var IdentitySelector =
 				
 				if( !doc.__identityselector__.contentLoaded)
 				{
-					var event = doc.createEvent( "Event");
-					event.initEvent( "ICObjectLoaded", true, true);
-					objElem.dispatchEvent( event);
+					var evnt = doc.createEvent( "Event");
+					evnt.initEvent( "ICObjectLoaded", true, true);
+					objElem.dispatchEvent( evnt);
 				}
 				
 				// If the embedded ICard object doesn't have a token attached to
@@ -909,10 +1309,10 @@ var IdentitySelector =
 					IdentitySelector.logMessage( "onFormSubmit", 
 						"Submit encountered in-line");
 					
-					var event = doc.createEvent( "Event");
-					event.initEvent( "CallIdentitySelector", true, true);
+					var evnt = doc.createEvent( "Event");
+					evnt.initEvent( "CallIdentitySelector", true, true);
 					doc.__identityselector__.targetElem = objElem;
-					doc.dispatchEvent( event);
+					doc.dispatchEvent( evnt);
 					
 					// If a token was retrieved, add it as a hidden field of
 					// the form
@@ -940,9 +1340,9 @@ var IdentitySelector =
 				
 				if( !doc.__identityselector__.contentLoaded)
 				{
-					var event = doc.createEvent( "Event");
-					event.initEvent( "ICElementLoaded", true, true);
-					icardElem.dispatchEvent( event);
+					var evnt = doc.createEvent( "Event");
+					evnt.initEvent( "ICElementLoaded", true, true);
+					icardElem.dispatchEvent( evnt);
 				}
 				
 				// If the embedded ICard element doesn't have a token attached to
@@ -953,10 +1353,10 @@ var IdentitySelector =
 					IdentitySelector.logMessage( "onFormSubmit", 
 						"Submit encountered in-line");
 					
-					var event = doc.createEvent( "Event");
-					event.initEvent( "CallIdentitySelector", true, true);
+					var evnt = doc.createEvent( "Event");
+					evnt.initEvent( "CallIdentitySelector", true, true);
 					doc.__identityselector__.targetElem = icardElem;
-					doc.dispatchEvent( event);
+					doc.dispatchEvent( evnt);
 					
 					// If a token was retrieved, add it as a hidden field of
 					// the form
@@ -1009,10 +1409,10 @@ var IdentitySelector =
 			
 			if( targetElem.__value == undefined)
 			{
-				var event = doc.createEvent( "Event");
-				event.initEvent( "CallIdentitySelector", true, true);
+				var evnt = doc.createEvent( "Event");
+				evnt.initEvent( "CallIdentitySelector", true, true);
 				doc.__identityselector__.targetElem = targetElem;
-				doc.dispatchEvent( event);
+				doc.dispatchEvent( evnt);
 				targetElem.__value = targetElem.token;
 			}
 		}
@@ -1125,6 +1525,11 @@ var IdentitySelector =
 			var objElem = target;
 			var form = objElem;
 			
+			if (objElem.tagName != 'OBJECT') {
+				IdentitySelector.logMessage( "onICardObjectLoaded", "object tagName != OBJECT. Exiting.");
+				return;
+			}
+			
 			if( objElem.__processed != undefined)
 			{
 				IdentitySelector.logMessage( "onICardObjectLoaded", 
@@ -1132,6 +1537,12 @@ var IdentitySelector =
 			}
 			else
 			{
+				if( doc.__identityselector__ === undefined) {
+					IdentitySelector.logMessage( "onICardElementLoaded", 
+					"running intercept script");
+					IdentitySelector.runInterceptScript(doc);
+				}
+				
 				delete objElem[ "value"];
 				objElem.__defineGetter__( "value", 
 					doc.__identityselector__.valueGetter);
@@ -1168,6 +1579,13 @@ var IdentitySelector =
 					"Processed ICard object.");
 					
 				objElem.__processed = true;
+
+				if( !("notificationBoxHidden" in doc.__identityselector__))
+				{
+					IdentitySelector.onHideNotificationBox();
+					doc.__identityselector__.notificationBoxHidden = true;
+				}
+
 			}
 		}
 		catch( e)
@@ -1175,11 +1593,6 @@ var IdentitySelector =
 			IdentitySelector.reportError( "onICardObjectLoaded", e);
 		}
 		
-		if( !("notificationBoxHidden" in doc.__identityselector__))
-		{
-			IdentitySelector.onHideNotificationBox();
-			doc.__identityselector__.notificationBoxHidden = true;
-		}
 	},
 	
 	// ***********************************************************************
@@ -1212,6 +1625,12 @@ var IdentitySelector =
 			}
 			else
 			{
+				if( doc.__identityselector__ === undefined) {
+					IdentitySelector.logMessage( "onICardElementLoaded", 
+					"running intercept script");
+					IdentitySelector.runInterceptScript(doc);
+				}
+
 				delete icardElem[ "value"];
 				icardElem.__defineGetter__( "value", 
 					doc.__identityselector__.valueGetter);
@@ -1533,6 +1952,11 @@ var IdentitySelector =
 		identObject = doc.__identityselector__;
 		data = identObject.data;
 
+		if (doc.__identityselector__.secureFrameHandling == false) {
+			IdentitySelector.logMessage( "onCallIdentitySelector", " secureFrameHandling == false. " + window.document.URL);
+			return;
+		}
+
 		try
 		{
 			if( identObject.targetElem != null)
@@ -1601,7 +2025,10 @@ var IdentitySelector =
 			    catch (e) {
 				    IdentitySelector.throwError( "onCallIdentitySelector:", e);
 			    }
-                /* Make the call to the selector */
+			    
+			    IdentitySelector.logMessage( "onCallIdentitySelector", "ssl security mode=" + IdentitySelector.getMode(doc));
+			    
+			    /* Make the call to the selector */
 			    identObject.targetElem.token = obj.GetBrowserToken(
 			     data.issuer , 
 			     data.recipient, 
@@ -2109,7 +2536,6 @@ Desc:
 
 httpRequestObserver.register();
 
-
 /****************************************************************************
 Desc:
 ****************************************************************************/
@@ -2128,8 +2554,8 @@ var prefObserver =
      switch(data)
      {
        case "disabled":
-         var disabled = prefs.getBoolPref( "disabled" );
-         if (disable == true) {
+         var disabled = this.prefs.getBoolPref( "disabled" );
+         if (disabled == true) {
          	IdentitySelector.onUninstall();
          } else {
          	IdentitySelector.onInstall();
@@ -2172,11 +2598,13 @@ catch( e)
 // **************************************************************************
 try
 {
-	window.addEventListener( "load",
-		IdentitySelector.onInstall, false);
-		
-	window.addEventListener( "unload", 
-		IdentitySelector.onUninstall, false);
+	window.addEventListener("load", function () { gBrowser.addEventListener("load", IdentitySelector.onInstall, true); }, false);
+	window.addEventListener("unload", function () { gBrowser.addEventListener("load", IdentitySelector.onUninstall, true); }, false);
+//	window.addEventListener( "load",
+//		IdentitySelector.onInstall, false);
+//		
+//	window.addEventListener( "unload", 
+//		IdentitySelector.onUninstall, false);
 }
 catch( e)
 {

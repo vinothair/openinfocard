@@ -101,8 +101,17 @@ public class STSServlet  extends HttpServlet {
             }
 
             String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
+            if (supportedClaimsClass == null) {
+            	throw new ServletException("supportedClaimsClass is null");
+            }
             supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
+            if (supportedClaimsImpl == null) {
+            	throw new ServletException("supportedClaimsImpl is null");
+            }
             storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
+            if (supportedClaimsClass == null) {
+            	throw new ServletException("storage is null");
+            }
             
             KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
             cert = keystore.getCertificate(keyname);

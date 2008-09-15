@@ -156,7 +156,12 @@ public class RelyingPartyServlet extends HttpServlet {
 		            out.println("<h2>The token is not encrypted!</h2>");
 	            }
 	            
-	            out.println("<h2>Valid Signature: " + token.isSignatureValid() + "</h2>");
+	            try {
+	            	out.println("<h2>Valid Signature: " + token.isSignatureValid() + "</h2>");
+	            } catch (InfoCardProcessingException e) {
+	            	out.println("<h2>INVALID Signature</h2>");
+	            	
+	            }
 	            boolean conditionsValid = token.isConditionsValid();
 	            if (conditionsValid) {
 	            	out.println("<h2>Valid Conditions: " +  conditionsValid + "</h2>");

@@ -15,6 +15,7 @@
 <!ENTITY cardmanager.dateofbirth "F&#246;delsedatum:">
 <!ENTITY cardmanager.gender "K&#246;n:">
 <!ENTITY cardmanager.imgurl "Image URL:"> 
+<!ENTITY cardmanager.disableSelector "disable">
 <!ENTITY cardmanager.newcard "Ny kontakt">
 <!ENTITY cardmanager.deletecard "Ta bort kontakt">
 <!ENTITY cardmanager.updatecard "Spara kontakt">

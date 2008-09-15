@@ -33,10 +33,10 @@
 
          var wizard = document.getElementById('card-window');
          wizard.goTo(value);
-//         var typeObj = wizard.getPageById("type");
-//         var typeObj = document.getElementById('type'); 
-//         alert("boink: " + value);
-//         typeObj.setAttribute('next', value);
+// var typeObj = wizard.getPageById("type");
+// var typeObj = document.getElementById('type');
+// alert("boink: " + value);
+// typeObj.setAttribute('next', value);
 
          return false;
      }
@@ -53,7 +53,7 @@
 		  percentComplete = (e.position / e.totalSize)*100;
 		  loadingStatus.value = "loaded: " + percentComplete +"%";
 		} else {
-			// blinking 
+			// blinking
 			if (loadingStatus.value.indexOf("loading") > 0) {
 				loadingStatus.value = "";
 			} else {
@@ -74,7 +74,7 @@
 			   theData = req.responseText;
 			  } else {
 			   loadingStatus.value = "Error loading page: " + req.status;
-			   debug(req.responseText);
+			   cardWizardDebug(req.responseText);
 			  }
 		  }
 		};
@@ -148,20 +148,20 @@
 
              var stop;
 			 while ((stop = data.indexOf("?>")) > 0) {
-			  debug("import managed card: removing processing instructions" + stop);
+			  cardWizardDebug("import managed card: removing processing instructions" + stop);
 			  var newData = data.substring(stop+2);
 			  data = newData;
-			  debug("import managed card: " + data);
+			  cardWizardDebug("import managed card: " + data);
 			 }
 			 
 			 // remove garbaged / BOM
 			 if ((stop = data.indexOf('<')) > 0) {
 				 var newData = data.substring(stop);
-				 debug("removed garbage in front of first <");
+				 cardWizardDebug("removed garbage in front of first <");
 				 data = newData;
 			 }
 			 
-		     debug("Import managed card: " + data);
+		     cardWizardDebug("Import managed card: " + data);
              return data;
          } else {
             return "";
@@ -171,7 +171,7 @@
 
 
       function parseCard(cardData) {
-		     debug("parseCard: " + cardData);
+		     cardWizardDebug("parseCard: " + cardData);
 
          var cardxml;
          
@@ -186,30 +186,34 @@
          }
          var dsig = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
          var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+         var ic07 = new Namespace("ic07", "http://schemas.xmlsoap.org/ws/2007/01/identity");
          var wsid = new Namespace("wsid", "http://schemas.xmlsoap.org/ws/2006/02/addressingidentity");
          var wsa = new Namespace("wsa", "http://www.w3.org/2005/08/addressing");
          var mex = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
          var wss = new Namespace("wss", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
 
-//         default xml namespace = "http://www.w3.org/2000/09/xmldsig#";
+// default xml namespace = "http://www.w3.org/2000/09/xmldsig#";
       
-//the following line does not work with the openidcards.sxip.com cards. It works down to the mexReference but failes to retrieve the address
-//         var mexEP =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
+// the following line does not work with the openidcards.sxip.com cards. It
+// works down to the mexReference but failes to retrieve the address
+// var mexEP =
+// cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
 
          var tokenservice =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService;
-         //debug("tokenservice:" + tokenservice.toXMLString());
+         // cardWizardDebug("tokenservice:" + tokenservice.toXMLString());
          var epr = tokenservice.wsa::EndpointReference;
-         //debug("EndpointReference:" + epr.toXMLString());
+         // cardWizardDebug("EndpointReference:" + epr.toXMLString());
          var mexOuter = epr.wsa::Metadata;
-         //debug("outer Metadata:" + mexOuter.toXMLString());
+         // cardWizardDebug("outer Metadata:" + mexOuter.toXMLString());
          var mexInner = mexOuter.mex::Metadata;
-         //debug("inner Metadata:" + mexInner.toXMLString());
+         // cardWizardDebug("inner Metadata:" + mexInner.toXMLString());
          var mexSection = mexInner.mex::MetadataSection;
-         //debug("MetadataSection:" + mexSection.toXMLString());
+         // cardWizardDebug("MetadataSection:" + mexSection.toXMLString());
          var mexReference = mexSection.mex::MetadataReference;
-         //debug("MetadataReference: " + mexReference.toXMLString());
-         var mexEP = mexReference.wsa::Address; // this does not work with the sxip openidinfocards
-         debug("mexAddress: " + mexEP.toXMLString());
+         // cardWizardDebug("MetadataReference: " + mexReference.toXMLString());
+         var mexEP = mexReference.wsa::Address; // this does not work with the
+												// sxip openidinfocards
+         cardWizardDebug("mexAddress: " + mexEP.toXMLString());
          if (mexEP == undefined) {
             var address = "" + mexReference.toString() + "";
             var ia = address.indexOf("Address");
@@ -219,7 +223,7 @@
             	address = address.substring(ia);
             	var ib = address.indexOf(lt);
             	address = address.substring(0, ib);
-            	debug("address:" + address);
+            	cardWizardDebug("address:" + address);
             	mexEP = address;
             } else {
             	alert("Could not find Metadata Address in imported card");
@@ -236,69 +240,85 @@
          var issuer = cardxml.dsig::Object.ic::InformationCard.ic::Issuer;
          
          var tokenServiceList = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService;
-//         alert("tokenServiceList=" + tokenServiceList);
+// alert("tokenServiceList=" + tokenServiceList);
          
          var stsCert;
          if (tokenServiceList.length > 1) {
         	 alert("multiple tokenservices are currently not supported. Using the first one only");
          }
          var tokenService = tokenServiceList[0];
-//         alert("tokenService=" + tokenService);
+// alert("tokenService=" + tokenService);
          
          stsCert = tokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data.dsig::X509Certificate;
-// alert("wsa::EndpointReference" + cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference);
+// alert("wsa::EndpointReference" +
+// cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference);
          var identity = tokenService.wsa::EndpointReference.wsid::Identity;
-//alert("wsid::Identity" + identity);
+// alert("wsid::Identity" + identity);
 		 var keyInfo = identity.dsig::KeyInfo;
 		 var identityStr = "" + identity;
 		 if ((typeof(keyInfo) == 'xml') && (""+keyInfo == "") && ((keyInfoIndex = identityStr.indexOf("KeyInfo>")) != -1)) {
-			 // I think this is a bug in Mozilla javascript XML implementation. 
+			 // I think this is a bug in Mozilla javascript XML
+				// implementation.
 			 // It does not handle default namespaces well...
 			 var keyInfoStr = identityStr.substring(keyInfoIndex); 
-			 var certIndex = keyInfoStr.indexOf("X509Certificate>") + "X509Certificate>".length; // start of value of X509Certificate element
+			 var certIndex = keyInfoStr.indexOf("X509Certificate>") + "X509Certificate>".length; // start
+																									// of
+																									// value
+																									// of
+																									// X509Certificate
+																									// element
 			 if (certIndex == -1) {
 				 alert("Could not find STS certificate");
 				 return;
 			 }
 			 var certSubStr = keyInfoStr.substring(certIndex);
-			 var certStopIndex = certSubStr.indexOf("<"); // < ist not in the Base64 alphabet
+			 var certStopIndex = certSubStr.indexOf("<"); // < ist not in the
+															// Base64 alphabet
 			 if (certStopIndex == -1) {
 				 alert("Could not find STS certificate!");
 				 return;
 			 }
 			 stsCert = certSubStr.substring(0,certStopIndex);
-//			 alert("stsCert String="+stsCert);
-			 debug("stsCert String="+stsCert);
+// alert("stsCert String="+stsCert);
+			 cardWizardDebug("stsCert String="+stsCert);
 		 } else {
-			 debug("KeyInfo="+keyInfo);
+			 cardWizardDebug("KeyInfo="+keyInfo);
 		 }
 		 
-//alert("dsig::KeyInfo" + keyInfo + "type=" + typeof(keyInfo));
-//alert("KeyInfo" + tokenService.wsa::EndpointReference.wsid::Identity.KeyInfo);
-//		 alert("dsig::X509Data" + tokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data);
-//		 alert("dsig::X509Certificate" + tokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data.dsig::X509Certificate);
+// alert("dsig::KeyInfo" + keyInfo + "type=" + typeof(keyInfo));
+// alert("KeyInfo" +
+// tokenService.wsa::EndpointReference.wsid::Identity.KeyInfo);
+// alert("dsig::X509Data" +
+// tokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data);
+// alert("dsig::X509Certificate" +
+// tokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data.dsig::X509Certificate);
 
 		 var supportedTokenTypeList = cardxml.dsig::Object.ic::InformationCard.ic::SupportedTokenTypeList;
 
 		 var cardUserCredential = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.toXMLString();
-//         var cardHint =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
-//         var cardUid =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
-//         var cardKeyIdentifier = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::X509V3Credential.dsig::X509Data.wss::KeyIdentifier;
-//         var cardPrivatePersonalIdentifier = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::SelfIssuedCredential.dsig::PrivatePersonalIdentifier;
+// var cardHint =
+// cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
+// var cardUid =
+// cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::UsernamePasswordCredential.ic::Username;
+// var cardKeyIdentifier =
+// cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::X509V3Credential.dsig::X509Data.wss::KeyIdentifier;
+// var cardPrivatePersonalIdentifier =
+// cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::SelfIssuedCredential.dsig::PrivatePersonalIdentifier;
 		 var requireAppliesTo = cardxml.dsig::Object.ic::InformationCard.ic::RequireAppliesTo;
+		 var requireStrongRecipientIdentity = cardxml.dsig::Object.ic::InformationCard.ic07::RequireStrongRecipientIdentity;
 		 
-          debug(cardId);
-          debug(cardName);
-          debug(issuer);
-          debug(mexEP);
-//          debug(cardHint);
-//          debug(cardUid);
-//		  debug(cardKeyIdentifier);
-//		  debug(cardPrivatePersonalIdentifier);
-		  debug(cardUserCredential);
-		  debug("stsCert: " + stsCert);
-		  debug("requireAppliesTo:" + requireAppliesTo);
-		  debug("SupportedTokenTypeList:"+ supportedTokenTypeList);
+          cardWizardDebug(cardId);
+          cardWizardDebug(cardName);
+          cardWizardDebug(issuer);
+          cardWizardDebug(mexEP);
+// cardWizardDebug(cardHint);
+// cardWizardDebug(cardUid);
+// cardWizardDebug(cardKeyIdentifier);
+// cardWizardDebug(cardPrivatePersonalIdentifier);
+		  cardWizardDebug(cardUserCredential);
+		  cardWizardDebug("stsCert: " + stsCert);
+		  cardWizardDebug("requireAppliesTo:" + requireAppliesTo);
+		  cardWizardDebug("SupportedTokenTypeList:"+ supportedTokenTypeList);
 		  
           var callbackdata = {};
           
@@ -311,16 +331,19 @@
           callbackdata["cardImage"] = cardImage;
           callbackdata["issuer"] = issuer;
           callbackdata["mex"] = mexEP;
-//          callbackdata["hint"] = cardHint;
-//          callbackdata["uid"] = cardUid;
-//          callbackdata["KeyIdentifier"] = cardKeyIdentifier;
-//          callbackdata["PrivatePersonalIdentifier"] = cardPrivatePersonalIdentifier;
+// callbackdata["hint"] = cardHint;
+// callbackdata["uid"] = cardUid;
+// callbackdata["KeyIdentifier"] = cardKeyIdentifier;
+// callbackdata["PrivatePersonalIdentifier"] = cardPrivatePersonalIdentifier;
 		  callbackdata["usercredential"] = cardUserCredential;
           callbackdata["stsCert"] = stsCert;
           callbackdata["supportedClaims"] = cardxml.dsig::Object.ic::InformationCard.ic::SupportedClaimTypeList.toXMLString();
           callbackdata["supportedTokenTypeList"] = supportedTokenTypeList.toXMLString();
-          if (requireAppliesTo == null) {
-              callbackdata["requireAppliesTo"] = requireAppliesTo;
+          if (requireAppliesTo != null) {
+              callbackdata["requireAppliesTo"] = true;
+          }
+          if (requireStrongRecipientIdentity != null) {
+              callbackdata["requireStrongRecipientIdentity"] = true;
           }
           
 			if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
@@ -359,17 +382,23 @@
       }
 
       function loadCardWizard(){
-    		if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-    		    var policy = window.arguments[0];
-    		    if ((policy != null) && (policy.hasOwnProperty("tokenType"))) {
-    				var tokenType = policy["tokenType"];
-    				if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
-    					document.getElementById('card-window').goTo('managedCard');
-    				}
-    		    }
-    		}
+		if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+		    var policy = window.arguments[0];
+		    if ((policy != null) && (policy.hasOwnProperty("tokenType"))) {
+				var tokenType = policy["tokenType"];
+				if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
+					document.getElementById('card-window').goTo('managedCard');
+				}
+		    }
+		}
     		
     	}
+      
+      function cardWizardDebug(msg) {
+    	  var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+    	  debug.logStringMessage("cardWizard: " + msg);
+    	}
+      
 
 
 

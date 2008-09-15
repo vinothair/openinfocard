@@ -120,6 +120,14 @@ public class MexServlet extends HttpServlet {
 		{
 			System.out.println("MEX reading file " + filename);
 			InputStream in = application.getResourceAsStream(filename);
+	        if (in == null) {
+	            in = application.getResourceAsStream('/' + filename); // second try
+	            if (in == null) {
+					System.err.println("MexServlet: Get: Error reading resource " + filename);
+					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error reading resource " + filename);
+					return;
+	            }
+            }
 	
 			BufferedReader ins = new BufferedReader(new InputStreamReader(in));
 			char[] cbuf = new char[2048];
@@ -215,7 +223,14 @@ public class MexServlet extends HttpServlet {
 
         ServletContext application = getServletConfig().getServletContext();
         InputStream in = application.getResourceAsStream(filename);
-
+        if (in == null) {
+            in = application.getResourceAsStream('/' + filename); // second try
+            if (in == null) {
+				System.err.println("MexServlet: Post: Error reading resource " + filename);
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error reading resource " + filename);
+				return;
+            }
+        }
 
 
         StringBuffer mexBuff = new StringBuffer();

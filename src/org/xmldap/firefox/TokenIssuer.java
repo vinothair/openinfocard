@@ -379,46 +379,46 @@ public class TokenIssuer {
 		Vector oids = x509Name.getOIDs();
 		Vector values = x509Name.getValues();
 		int index = 0;
-		StringBuffer orgIdStringBuffer = new StringBuffer("|"); 
+		String O = "O=\"\"|";
+		String L = "L=\"\"|";
+		String S = "S=\"\"|";
+		String C = "C=\"\"|";
 		for (Object oid : oids) {
 			if ("O".equals(oid)) {
 				String value = (String)values.get(index);
-				if (value==null) {
-					orgIdStringBuffer.append("O=\"\"|");
-				} else {
-					orgIdStringBuffer.append("O=\"" + value + "\"|");
+				if (value!=null) {
+					O = "O=\"" + value + "\"|";
 				}
 			} else if ("L".equals(oid)) {
 				String value = (String)values.get(index);
-				if (value==null) {
-					orgIdStringBuffer.append("L=\"\"|");
-				} else {
-					orgIdStringBuffer.append("L=\"" + value + "\"|");
+				if (value!=null) {
+					L = "L=\"" + value + "\"|";
 				}
 			} else if ("S".equals(oid)) {
 				String value = (String)values.get(index);
 				if (value==null) {
-					orgIdStringBuffer.append("S=\"\"|");
-				} else {
-					orgIdStringBuffer.append("S=\"" + value + "\"|");
+					S = "S=\"" + value + "\"|";
 				}
 			} else if ("C".equals(oid)) {
 				String value = (String)values.get(index);
 				if (value==null) {
-					orgIdStringBuffer.append("C=\"\"|");
-				} else {
-					orgIdStringBuffer.append("C=\"" + value + "\"|");
+					C = "C=\"" + value + "\"|";
 				}
 			} else {
 				System.out.println("unused oid (" + oid + "). Value=" + (String)values.get(index));
 			}
 			index += 1;
 		}
-		if (orgIdStringBuffer.length() == 1) { // none of OLSC were found
+		String orgId = "|" + O + L + S + C;
+		if ("|O=\"\"|L=\"\"|S=\"\"|C=\"\"|".equals(orgId)) {
 			PublicKey publicKey = relyingpartyCert.getPublicKey();
 			return new String(publicKey.getEncoded());
+		} 
+		try {
+			return Base64.encodeBytesNoBreaks(orgId.getBytes("UTF16-LE"));
+		} catch (UnsupportedEncodingException e) {
+			throw new TokenIssuanceException(e);
 		}
-		return orgIdStringBuffer.toString();
 	}
 	
 	public static byte[] rpIdentifierNonEV(
@@ -562,6 +562,13 @@ public class TokenIssuer {
 		}
 	}
 
+	public String newCardStore() throws SerializationException {
+		RoamingStore rs = new RoamingStore();
+		String result = rs.toXML();
+		System.out.println("TokenIssuer.java newCardStore =" + result);
+		return result;
+	}
+	
 	public String importManagedCard(Element importedCard, Document cardStore) throws TokenIssuanceException {
 		Element root = cardStore.getRootElement();
 		String storeFormat = root.getLocalName();
@@ -571,7 +578,7 @@ public class TokenIssuer {
 			throw new IllegalArgumentException("unsupported cardstore format: " + storeFormat);
 //			Infocards infocards = new Infocards(cardStore);
 //			roamingStore = new RoamingStore(infocards);
-		} if ("RoamingStore".equals(root.getLocalName())) {
+		} else if ("RoamingStore".equals(root.getLocalName())) {
 			try {
 				roamingStore = new RoamingStore(cardStore);
 			} catch (IOException e) {

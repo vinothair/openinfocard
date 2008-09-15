@@ -45,21 +45,10 @@ public class ManagedCard {
     private int cardVersion = 1;
     private String timeIssued;
     private String timeExpires;
+    boolean requireAppliesTo = false;
+    boolean requireStrongRecipientIdentity = true;
     
     private Map<String,String> supportedClaims = new HashMap<String,String>();
-//    private String givenName;
-//    private String surname;
-//    private String emailAddress;
-//    private String streetAddress;
-//    private String locality;
-//    private String stateOrProvince;
-//    private String postalCode;
-//    private String country;
-//    private String primaryPhone;
-//    private String otherPhone;
-//    private String mobilePhone;
-//    private String dateOfBirth;
-//    private String gender;
 
     public ManagedCard() {
         RandomGUID guid = new RandomGUID();
@@ -132,107 +121,26 @@ public class ManagedCard {
     public Set<String>getClaims() {
     	return supportedClaims.keySet();
     }
+
+
+	public boolean getRequireAppliesTo() {
+		return requireAppliesTo;
+	}
+
+
+	public void setRequireAppliesTo(boolean requireAppliesTo) {
+		this.requireAppliesTo = requireAppliesTo;
+	}
+
+
+	public boolean getRequireStrongRecipientIdentity() {
+		return requireStrongRecipientIdentity;
+	}
+
+
+	public void setRequireStrongRecipientIdentity(
+			boolean requireStrongRecipientIdentity) {
+		this.requireStrongRecipientIdentity = requireStrongRecipientIdentity;
+	}
     
-//    public String getGivenName() {
-//        return givenName;
-//    }
-//
-//    public void setGivenName(String givenName) {
-//        this.givenName = givenName;
-//    }
-//
-//    public String getSurname() {
-//        return surname;
-//    }
-//
-//    public void setSurname(String surname) {
-//        this.surname = surname;
-//    }
-//
-//    public String getEmailAddress() {
-//        return emailAddress;
-//    }
-//
-//    public void setEmailAddress(String emailAddress) {
-//        this.emailAddress = emailAddress;
-//    }
-//
-//    public String getStreetAddress() {
-//        return streetAddress;
-//    }
-//
-//    public void setStreetAddress(String streetAddress) {
-//        this.streetAddress = streetAddress;
-//    }
-//
-//    public String getLocality() {
-//        return locality;
-//    }
-//
-//    public void setLocality(String locality) {
-//        this.locality = locality;
-//    }
-//
-//    public String getStateOrProvince() {
-//        return stateOrProvince;
-//    }
-//
-//    public void setStateOrProvince(String stateOrProvince) {
-//        this.stateOrProvince = stateOrProvince;
-//    }
-//
-//    public String getPostalCode() {
-//        return postalCode;
-//    }
-//
-//    public void setPostalCode(String postalCode) {
-//        this.postalCode = postalCode;
-//    }
-//
-//    public String getCountry() {
-//        return country;
-//    }
-//
-//    public void setCountry(String country) {
-//        this.country = country;
-//    }
-//
-//    public String getPrimaryPhone() {
-//        return primaryPhone;
-//    }
-//
-//    public void setPrimaryPhone(String primaryPhone) {
-//        this.primaryPhone = primaryPhone;
-//    }
-//
-//    public String getOtherPhone() {
-//        return otherPhone;
-//    }
-//
-//    public void setOtherPhone(String otherPhone) {
-//        this.otherPhone = otherPhone;
-//    }
-//
-//    public String getMobilePhone() {
-//        return mobilePhone;
-//    }
-//
-//    public void setMobilePhone(String mobilePhone) {
-//        this.mobilePhone = mobilePhone;
-//    }
-//
-//    public String getDateOfBirth() {
-//        return dateOfBirth;
-//    }
-//
-//    public void setDateOfBirth(String dateOfBirth) {
-//        this.dateOfBirth = dateOfBirth;
-//    }
-//    public String getGender() {
-//        return gender;
-//    }
-//
-//    public void setGender(String gender) {
-//        this.gender = gender;
-//    }
 }

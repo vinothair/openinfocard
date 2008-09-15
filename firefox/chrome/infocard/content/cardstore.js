@@ -9,13 +9,13 @@ function getCard(cardid){
 
 function readCardStore() {
  var cardFile = read(db);
- debug(cardFile);
+ cardstoreDebug("readCardStore:" + cardFile);
  return cardFile;
 }
 
 function storeCard(card){
-debug("storeCard");
-debug(card);
+cardstoreDebug("storeCard");
+cardstoreDebug(card);
     var cardFile = read(db);
     cardFile.infocard += card;
     save(db,cardFile.toString());
@@ -98,7 +98,7 @@ function save(fileName, fileContents) {
 
 	var useProfile = prefs.getBoolPref("cardStoreCurrentProfile");
 	if (useProfile) {
-	    debug("saving profile cardstore");
+	    cardstoreDebug("saving profile cardstore");
 		fileName = getDir() + fileName;
 		saveLocalFile(fileName, fileContents);
 		return;
@@ -107,7 +107,7 @@ function save(fileName, fileContents) {
 	var localFilePath = prefs.getComplexValue("cardStoreLocalFilePath",
       Components.interfaces.nsISupportsString).data;
     if ((localFilePath != null) && (localFilePath != "")) {
-	    debug("using local file as cardstore: " + localFilePath);
+	    cardstoreDebug("using local file as cardstore: " + localFilePath);
 	    try {
 	    	saveLocalFile(localFilePath, fileContents);
 	    	return;
@@ -120,14 +120,14 @@ function save(fileName, fileContents) {
 	var url = prefs.getComplexValue("cardStoreUrl",
       Components.interfaces.nsISupportsString).data;
     if ((url != null) && (url != "")) {
-	    debug("writing url cardstore: " + url);
+	    cardstoreDebug("writing url cardstore: " + url);
 	    var req = new XMLHttpRequest();
 	    req.open('POST', url, false);
 	    req.setRequestHeader("Content-type", "application/xml; charset=utf-8");
 	    req.setRequestHeader("Cache-Control", "no-cache");
 	    req.setRequestHeader("User-Agent", "xmldap infocard stack");
 	    req.send(fileContents);
-        debug("POST request status="+req.status);
+        cardstoreDebug("POST request status="+req.status);
         if(req.status == 200) {
         	return;
 		} else {
@@ -143,7 +143,7 @@ function saveLocalFile(fileName, contents) {
     try {
 		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 	} catch (e) {
-		debug("cardstore::save: " + e);
+		cardstoreDebug("cardstore::save: " + e);
 	}
 	
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
@@ -216,14 +216,14 @@ function read(fileName) {
 	var useProfile = prefs.getBoolPref("cardStoreCurrentProfile");
 	if (useProfile) {
 	    fileName = getDir() + fileName;
-	    debug("using profile cardstore: " + fileName);
+	    cardstoreDebug("using profile cardstore: " + fileName);
 		return readLocalFile(fileName);
 	}
 	
 	var localFilePath = prefs.getComplexValue("cardStoreLocalFilePath",
       Components.interfaces.nsISupportsString).data;
     if ((localFilePath != null) && (localFilePath != "")) {
-	    debug("using local file as cardstore: " + localFilePath);
+	    cardstoreDebug("using local file as cardstore: " + localFilePath);
 	    try {
 	    	return readLocalFile(localFilePath);
 	    } catch(e) {
@@ -235,14 +235,14 @@ function read(fileName) {
 	var url = prefs.getComplexValue("cardStoreUrl",
       Components.interfaces.nsISupportsString).data;
     if ((url != null) && (url != "")) {
-	    debug("using url cardstore: " + url);
+	    cardstoreDebug("using url cardstore: " + url);
 	    var req = new XMLHttpRequest();
 	    req.open('GET', url, false);
 //	    req.setRequestHeader("Content-type", "application/xml; charset=utf-8");
 	    req.setRequestHeader("Cache-Control", "no-cache");
 	    req.setRequestHeader("User-Agent", "xmldap infocard stack");
 	    req.send(null);
-        debug("GET request status="+req.status);
+        cardstoreDebug("GET request status="+req.status);
         if(req.status == 200) {
         	try { // try to decrypt
         		var decrypted = "";
@@ -252,17 +252,17 @@ function read(fileName) {
                 return new XML(decrypted);
         	}
         	catch (e) {
-        		debug("decrypting cardstore returned from " + url + " failed");
+        		cardstoreDebug("decrypting cardstore returned from " + url + " failed");
         		try {
         			return new XML(req.responseText);
         		}
         		catch (e) {
-        			debug("no valid xml returned from " + url);
+        			cardstoreDebug("no valid xml returned from " + url);
         			return new XML(newDB());
         		}
         	}
 		} else {
-			debug("req.status = " + req.status);
+			cardstoreDebug("req.status = " + req.status);
 			alert(req.responseText);    
 	    	return new XML(newDB());
 	    }
@@ -277,14 +277,14 @@ function readLocalFile(fileName) {
     try {
 		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 	} catch (e) {
-		debug("Permission to read file was denied.");
+		cardstoreDebug("Permission to read file was denied.");
 	}
 
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 	file.initWithPath( fileName );
 
     if ( file.exists() == false ) {
-		debug("readLocalFile: " + fileName + " not found.");
+		cardstoreDebug("readLocalFile: " + fileName + " not found.");
         return newDB();
 
 	} else {
@@ -309,15 +309,15 @@ function readLocalFile(fileName) {
 		    		decrypted = sdr.decryptString(output);
 	            } catch (e) {
 	            	try {
-	            		debug("error decypting the cardstore: " + fileName);
+	            		cardstoreDebug("error decypting the cardstore: " + fileName);
 		            	return new XML(output);
 	            	} catch (e) {
-	            		debug("unencrypted cardstore is no valid xml: " + fileName);
+	            		cardstoreDebug("unencrypted cardstore is no valid xml: " + fileName);
 	            		return newDB();
 	            	}
 	            }
             
-            	//debug(decrypted);
+            	//cardstoreDebug(decrypted);
             	return new XML(decrypted);
 			} else {
 				try {
@@ -331,7 +331,7 @@ function readLocalFile(fileName) {
 		            try {
 			    		decrypted = sdr.decryptString(output);
 		            } catch (e) {
-		            	debug("error decypting the cardstore: " + fileName);
+		            	cardstoreDebug("error decypting the cardstore: " + fileName);
 			            return newDB();
 		            }
 				}
@@ -374,12 +374,19 @@ function newDB(){
 
     var dbFile = new XML("<infocards/>");
     dbFile.version = "1";
-    debug ( "New DB: " + dbFile.toString());
     return dbFile;
-
+//cardstoreDebug("newDB start");
+//	if (TokenIssuer.initialize() == true) {
+//	    var dbFile = TokenIssuer.newCardStore();
+//	    cardstoreDebug ( "New DB: " + dbFile.toString());
+//	    return dbFile;
+//	} else {
+//		cardstoreDebug("error initializing the TokenIssuer");
+//		return null;
+//	}
 }
 
-function debug(msg) {
+function cardstoreDebug(msg) {
   var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
   debug.logStringMessage("cardstore: " + msg);
 }

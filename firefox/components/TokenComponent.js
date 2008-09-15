@@ -3,7 +3,7 @@
  * xmldap.org
  * All rights reserved.
  *
- * Based upon work by: David François Huynh  <dfhuynh at csail.mit.edu>
+ * Based upon work by: David FranÔøΩois Huynh  <dfhuynh at csail.mit.edu>
  * http://simile.mit.edu/java-firefox-extension/
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,49 @@ function _printToJSConsole(msg) {
     Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService)
             .logStringMessage(msg);
+}
+
+function loadClassData(fileName) {
+    try {
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+	} catch (e) {
+		debug("Permission to read file was denied." + e);
+		return null;
+	}
+
+	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+	_printToJSConsole("loadClassData: " + fileName );
+	file.initWithPath( fileName );
+
+    if ( file.exists() == false ) {
+		debug("readLocalFile: " + fileName + " not found.");
+        return null;
+
+	} else {
+
+        var is = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance( Components.interfaces.nsIFileInputStream );
+		is.init( file,0x01, 00004, null);
+		var sis = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance( Components.interfaces.nsIScriptableInputStream );
+		sis.init( is );
+		var output = sis.read( sis.available() );
+        return output;
+	}
+}
+
+function getBootstrapClassLoader(java, firefoxClassLoaderURL) {
+//	var systemClassLoader = java.lang.ClassLoader.getSystemClassLoader();
+//	InternalError: Java class sun.misc.Launcher$AppClassLoader has no public field or method named "defineClass"
+//	return systemClassLoader.defineClass("edu.mit.simile.firefoxClassLoader", firefoxClassLoaderBytes, 0, firefoxClassLoaderBytes.length);
+
+	var classLoaderClasz = java.lang.Class.forName("java.lang.ClassLoader");
+	var classLoader = classLoaderClasz.newInstance();
+	if (classLoader != null) {
+		var firefoxClassLoaderBytes = loadClassData(firefoxClassLoaderURL);
+		return classLoader.defineClass("edu.mit.simile.firefoxClassLoader", firefoxClassLoaderBytes, 0, firefoxClassLoaderBytes.length);
+	} else {
+		_printToJSConsole("classLoader == null");
+		return null;
+	}
 }
 
 /*----------------------------------------------------------------------
@@ -252,7 +295,9 @@ TokenComponent.prototype._fail = function(e) {
 };
 
 TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
+	_printToJSConsole("in TokenComponent.prototype._bootstrapClassLoader");
     if (this._bootstraped) {
+    	_printToJSConsole("exiting TokenComponent.prototype._bootstrapClassLoader (already bootstraped)");
         return;
     }
     
@@ -262,14 +307,30 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
     var firefoxClassLoaderURL = 
         new java.net.URL(extensionPath + "components/firefoxClassLoader.jar");
     
-    var urlArray = java.lang.reflect.Array.newInstance(java.net.URL, 1);
+    var urlClasz = java.lang.Class.forName("java.net.URL");
+//    var urlArray = java.lang.reflect.Array.newInstance(java.net.URL, 1);
+    var urlArray = java.lang.reflect.Array.newInstance(urlClasz, 1);
     urlArray[0] = firefoxClassLoaderURL;
-    
+        
     /*
      *  Step 1. Load the bootstraping firefoxClassLoader.jar.
      */
-    var bootstrapClassLoader = java.net.URLClassLoader.newInstance(urlArray);
+//    var bootstrapClassLoader = getBootstrapClassLoader(java, extensionPath + "components/firefoxClassLoader.jar");
+//    if (bootstrapClassLoader == null) {
+//    	_printToJSConsole("exiting TokenComponent.prototype._bootstrapClassLoader (Error: could not create bootstrapClassLoader)");
+//    	throw "Error: could not create bootstrapClassLoader";
+//    }
+    
+    var urlClassLoaderClasz = java.lang.Class.forName("java.net.URLClassLoader");
+    var bootstrapClassLoader; 
+    try {
+    	bootstrapClassLoader = java.net.URLClassLoader.newInstance(urlArray);
+    } catch(e) {
+    	alert("error instanciating new URLCalssLoader:" + urlArray + "\n" + e);
+    }
     if (!(bootstrapClassLoader instanceof java.net.URLClassLoader)) {
+//    if ((bootstrapClassLoader == null) || ("java.net.URLClassLoader" != bootstrapClassLoader.getClass().getName())))
+//    if ((bootstrapClassLoader == null) || (bootstrapClassLoader.getClass() != urlClassLoaderClasz) ) {
     	_printToJSConsole("Error: java.net.URLClassLoader.newInstance failed! " + bootstrapClassLoader);
     }
     
@@ -283,11 +344,12 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
     );
     if (policyClass == null) {
 	   	_printToJSConsole("Error: edu.mit.simile.firefoxClassLoader.URLSetPolicy is null! " + bootstrapClassLoader);
+    	_printToJSConsole("exiting TokenComponent.prototype._bootstrapClassLoader (Error: could not create bootstrapClassLoader)");
     	throw "Error: edu.mit.simile.firefoxClassLoader.URLSetPolicy is null! " + bootstrapClassLoader;
     }
 //    _printToJSConsole("debug: policyClass.getName()=" + policyClass.getName());
     if ("edu.mit.simile.firefoxClassLoader.URLSetPolicy" != policyClass.getName()) {
-    	_printToJSConsole("Error: edu.mit.simile.firefoxClassLoader.URLSetPolicy not loaded! " + bootstrapClassLoader);
+    	_printToJSConsole("exiting TokenComponent.prototype._bootstrapClassLoader Error: edu.mit.simile.firefoxClassLoader.URLSetPolicy not loaded! " + bootstrapClassLoader);
     	throw "Error: edu.mit.simile.firefoxClassLoader.URLSetPolicy not loaded! " + bootstrapClassLoader;
     }
 
@@ -322,7 +384,13 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
       
     policy.addURL(firefoxClassLoaderURL);
     
-    var claszLoader = java.net.URLClassLoader.newInstance(urlArray);
+    var claszLoader;
+    try {
+    	claszLoader = java.net.URLClassLoader.newInstance(urlArray);
+    } catch(e) {
+    	_printToJSConsole("exiting TokenComponent.prototype._bootstrapClassLoader Error: error instanciating new URLClassLoader:" + urlArray + "\n" + e);
+    	alert("error instanciating new URLClassLoader:" + urlArray + "\n" + e);
+    }
     
     var firefoxClassLoaderPackages = new WrappedPackages(
         java,
@@ -331,6 +399,7 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
     var tracingClassLoaderClass = 
         firefoxClassLoaderPackages.getClass("edu.mit.simile.firefoxClassLoader.TracingClassLoader");
 	if (tracingClassLoaderClass == null) {
+    	_printToJSConsole("exiting TokenComponent.prototype._bootstrapClassLoader Error: tracingClassLoaderClass == null");
 		throw "tracingClassLoaderClass == null";
 	}
 	

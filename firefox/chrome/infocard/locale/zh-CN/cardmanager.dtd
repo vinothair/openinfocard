@@ -15,6 +15,7 @@
 <!ENTITY cardmanager.dateofbirth "&#20986;&#29983;&#24180;&#26376;:">
 <!ENTITY cardmanager.gender "&#24615;&#21029;:">
 <!ENTITY cardmanager.imgurl "&#22294;&#29255; URL&#22320;&#22336;:"> 
+<!ENTITY cardmanager.disableSelector "disable">
 <!ENTITY cardmanager.newcard "&#24314;&#31435;&#21345;&#29255;">
 <!ENTITY cardmanager.deletecard "&#21034;&#38500;&#21345;&#29255;">
 <!ENTITY cardmanager.updatecard "&#32232;&#36655; &#21345;&#29255;">
