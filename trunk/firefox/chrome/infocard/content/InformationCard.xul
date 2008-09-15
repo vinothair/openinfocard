@@ -35,6 +35,30 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE overlay SYSTEM "chrome://infocard/locale/cardmanager.dtd">
 <overlay id="InformationCardOverlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript" src="chrome://infocard/content/InformationCard.js"/>
+  
+  <menupopup id="idSelectorMenu">
+    <menuitem key="key_openIdSelectorSidebar" observes="viewIdSelectorSidebar"  />
+  </menupopup>
+  
+  <keyset id="mainKeyset">
+    <key id="key_openIdSelectorSidebar" command="viewIdSelectorSidebar"
+         key="I" 
+         modifiers="shift accel" />
+  </keyset>
+  
+  <broadcasterset id="mainBroadcasterSet"> 
+    <broadcaster id="viewIdSelectorSidebar" 
+                 label="&cardmanager.title;"
+                 autoCheck="false"
+                 type="checkbox"
+                 group="sidebar"
+                 sidebarurl="chrome://infocard/content/cardSidebar.xul"
+                 sidebartitle="&cardmanager.title;"
+                 oncommand="toggleSidebar('viewIdSelectorSidebar');" />
+  </broadcasterset>
+  
 </overlay>

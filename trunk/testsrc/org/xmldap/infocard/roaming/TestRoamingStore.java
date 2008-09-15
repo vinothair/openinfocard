@@ -1,6 +1,7 @@
 package org.xmldap.infocard.roaming;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,11 +12,13 @@ import nu.xom.ValidityException;
 
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.InfoCard;
+import org.xmldap.infocard.TokenServiceReference;
 import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.util.Base64;
+import org.xmldap.util.XmldapCertsAndKeys;
 import org.xmldap.ws.WSConstants;
 
 public class TestRoamingStore extends TestCase {
@@ -67,6 +70,13 @@ public class TestRoamingStore extends TestCase {
 			list.add(token);
 			SupportedTokenList tokenList = new SupportedTokenList(list);
 			card.setTokenList(tokenList);
+		}
+		{
+			X509Certificate cert = XmldapCertsAndKeys.getXmldapCert1();
+			TokenServiceReference tsr = new TokenServiceReference("sts", "mex", cert);
+			List<TokenServiceReference> tokenServiceReference = new ArrayList<TokenServiceReference>();
+			tokenServiceReference.add(tsr);
+			card.setTokenServiceReference(tokenServiceReference);
 		}
 		
         InformationCardMetaData informationCardMetaData = new InformationCardMetaData(card);

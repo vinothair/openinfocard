@@ -47,6 +47,7 @@
   <script src="chrome://infocard/content/cardWizard.js"/>
   <script src="chrome://infocard/content/cardstore.js"/>
   <script src="chrome://infocard/content/infocards.js"/>
+  <script src="chrome://infocard/content/tokenissuer.js"/>
 
   <wizardpage pageid="type" onpageadvanced="next(); return false;">
 
@@ -63,7 +64,7 @@
     </menulist>
   </wizardpage>
 
-  <wizardpage description="&cardwizard.carddetails;" pageid="selfAsserted" onpageadvanced="selfAssertedCallback();">
+  <wizardpage description="&cardwizard.carddetails;" pageid="selfAsserted" next="last" onpageadvanced="return selfAssertedCallback();">
      <label value="&cardwizard.selfasserted;"/>
       <vbox id="editarea" flex="1">
         <grid>
@@ -90,7 +91,7 @@
   </wizardpage>
 
 
-  <wizardpage description="&cardwizard.carddetails;" pageid="managedCard" onpageshow="onPageShowManagedCard();" onpageadvanced="parseCard(theData);">
+  <wizardpage description="&cardwizard.carddetails;" pageid="managedCard" next="last" onpageshow="return onPageShowManagedCard();" onpageadvanced="return parseCard(theData);">
 
       <label id="loadingStatus" value=""/>
       <label value="Please load your managed card:"/>
@@ -104,7 +105,7 @@
   </wizardpage>
 
 
-    <wizardpage description="&cardwizard.carddetails;" pageid="openid" onpageadvanced="openidCallback();">
+    <wizardpage description="&cardwizard.carddetails;" pageid="openid" next="last" onpageadvanced="return openidCallback();">
         <vbox id="editarea" flex="1">
           <grid>
               <columns><column id="colText"/><column id="colData"/></columns>
@@ -114,5 +115,10 @@
           </grid>
       </vbox>
     </wizardpage>
+
+  <wizardpage pageid="last">
+
+      <label value="You should never see this page. Please close it."/>
+  </wizardpage>
 
 </wizard>

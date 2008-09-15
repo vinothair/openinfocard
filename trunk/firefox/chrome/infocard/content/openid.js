@@ -64,7 +64,10 @@ function openid(server){
         var server = subStr.substring(0,endAddr);
         debug("Openid: " + server);
         try{
-
+        	if (java == undefined) {
+        		alert("openid: java == undefined");
+        		return;
+        	}
             var hostname = java.net.InetAddress.getLocalHost().getHostName();
             //this doesn't do any good on janrains trust warning
             //var url = server + "?openid.identity=" + openid_url + "&openid.return_to=http://" + hostname + ":7055/&openid.mode=checkid_immediate&openid.sreg.required=email,fullname,nickname";

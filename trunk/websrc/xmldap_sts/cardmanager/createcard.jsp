@@ -116,6 +116,11 @@
 		 String displayTag = claim.getDisplayTag(clientLocale);
 		 out.println("<tr><td>" + displayTag + ":</td><td><input type=\"text\" name=\"" + key + "\" class=\"forminput\"/></td></tr>");
 		}
+		if (storage.getVersion() > 1) {
+			System.out.println("createcard.jsp: dbVersion=" + storage.getVersion());
+			out.println("<tr><td>" + "RequireAppliesTo" + ":</td><td><input type=\"checkbox\" name=\"" + "RequireAppliesTo" + "\" class=\"forminput\"/></td></tr>");
+			out.println("<tr><td>" + "RequireStrongRecipientIdentity" + ":</td><td><input type=\"checkbox\" name=\"" + "RequireStrongRecipientIdentity" + "\" class=\"forminput\"/></td></tr>");
+		}
 %>
     <tr><td colspan=2><br/><input type="submit" value="Create a new card"/></td></tr>
     </table>
@@ -143,6 +148,19 @@
 	    	}
 	    }
 
+	    String audit = request.getParameter("RequireAppliesTo");
+    	if (audit != null) {
+    		if (!"".equals(audit)) {
+    			card.setRequireAppliesTo(true);
+    		}
+    	}
+	    String strongCrypto = request.getParameter("RequireStrongRecipientIdentity");
+    	if (strongCrypto != null) {
+    		if (!"".equals(strongCrypto)) {
+	    		card.setRequireStrongRecipientIdentity(true);
+    		}
+    	}
+	    
         storage.addCard(username, card);
 
         out.println("<script type=\"text/javascript\">document.location = \"/" + servletPath + "/cardmanager/\";</script>");

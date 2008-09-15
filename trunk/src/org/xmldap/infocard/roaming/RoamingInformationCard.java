@@ -38,6 +38,13 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
 //    }
 
     public RoamingInformationCard(InformationCardMetaData informationCardMetaData, InformationCardPrivateData informationCardPrivateData) {
+    	if (informationCardMetaData.getTokenList() == null) {
+    		throw new IllegalArgumentException("SupportedTokenList in information card MUST not be null");
+    	}
+    	if (informationCardMetaData.getTokenServiceReference() == null) {
+    		throw new IllegalArgumentException("TokenServiceList in information card MUST not be null");
+    	}
+    	
         this.informationCardMetaData = informationCardMetaData;
         this.informationCardPrivateData = informationCardPrivateData;
     }

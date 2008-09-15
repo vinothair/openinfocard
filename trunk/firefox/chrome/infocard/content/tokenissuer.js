@@ -38,6 +38,16 @@ TokenIssuer.initialize = function() {
 
         var tokenIssuer = this.getTokenIssuer();
         
+        if (java == undefined) {
+        	TokenIssuer._trace("TokenIssuer.initialize: java is undefined: " + win.document.location.href);
+        	alert("TokenIssuer.initialize: java is undefined");
+        	return false;
+        }
+        
+        {
+        	TokenIssuer._trace( "java.verion=" + java.lang.System.getProperty("java.version") );
+        }
+        
         /*
          *  Initialize it. The trick is to get past its IDL interface
          *  and right into its Javascript implementation, so that we
@@ -45,12 +55,15 @@ TokenIssuer.initialize = function() {
          *  then use to load its JARs. Note that XPCOM Javascript code
          *  is not given LiveConnect by default.
          */
-        if (!tokenIssuer.wrappedJSObject.initialize(java, false)) {
+        if (!tokenIssuer.wrappedJSObject.initialize(java, true)) {
             alert(tokenIssuer.wrappedJSObject.error);
+            return false;
         }
     } catch (e) {
         this._fail(e);
+        return false;
     }
+    return true;
 };
 
 TokenIssuer.getAllCards = function(dirName, password) {
@@ -71,8 +84,12 @@ TokenIssuer.getCard = function(dirName, password, card) {
         var tokenIssuer = this.getTokenIssuer();
         
         var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
-        var result = issuer.getCard(dirName, password, card);
-        return result;
+        if (issuer != null) {
+	        var result = issuer.getCard(dirName, password, card);
+	        return result;
+        } else {
+        	TokenIssuer._trace("TokenIssuer.getCard: issuer == null");
+        }
     } catch (e) {
         this._fail(e);
     }
@@ -85,6 +102,19 @@ TokenIssuer.newCard = function(dirName, password, card) {
         
         var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
         var result = issuer.newCard(dirName, password, card);
+        return result;
+    } catch (e) {
+        this._fail(e);
+    }
+    return null;
+};
+
+TokenIssuer.newCardStore = function() {
+    try {
+        var tokenIssuer = this.getTokenIssuer();
+        
+        var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
+        var result = issuer.newCardStore();
         return result;
     } catch (e) {
         this._fail(e);
@@ -125,9 +155,13 @@ TokenIssuer.getToken = function(policy) {
         var tokenIssuer = this.getTokenIssuer();
         
         var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
-        var result = issuer.getToken(policy);
-        return result;
-
+        if (issuer != null) {
+	        var result = issuer.getToken(policy);
+	        return result;
+        } else {
+        	TokenIssuer._trace("TokenIssuer.getToken: issuer == null");
+        	alert("Please make sure that java is installed and enabled");
+        }
     } catch (e) {
         this._fail(e);
     }

@@ -48,6 +48,7 @@ import java.net.URISyntaxException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * InfoCard allows you to create an InfoCard, and serialize to XML.
@@ -77,6 +78,10 @@ public class InfoCard implements Serializable {
     private RequireAppliesTo requireAppliesTo = null; // optional 
     protected String lang = null;
 
+    boolean requireStrongRecipientIdentity = true;
+
+    Map<String, String> issuerInformation = null;
+    
     public InfoCard(InfoCard that) {
         this.certChain = that.certChain;
         this.privateKey = that.privateKey;
@@ -463,6 +468,27 @@ public class InfoCard implements Serializable {
 	        infoCard.appendChild(ppElm);
         } // else optional
 
+        if (requireStrongRecipientIdentity == true) {
+            Element elm = new Element(WSConstants.INFOCARD07_PREFIX + ":RequireStrongRecipientIdentity", WSConstants.INFOCARD07_NAMESPACE);
+            infoCard.appendChild(elm);
+        }
+
+        if ((issuerInformation != null) && (issuerInformation.size() > 0)) {
+    		Element issuerInformationElm = new Element(WSConstants.INFOCARD07_PREFIX + ":IssuerInformation", WSConstants.INFOCARD07_NAMESPACE);
+        	for (String entryName : issuerInformation.keySet()) {
+        		String entryValue = issuerInformation.get(entryName);
+        		Element issuerInformationEntryElm = new Element(WSConstants.INFOCARD07_PREFIX + ":IssuerInformationEntry", WSConstants.INFOCARD07_NAMESPACE);
+        		Element entryNameElm = new Element(WSConstants.INFOCARD07_PREFIX + ":EntryName", WSConstants.INFOCARD07_NAMESPACE);
+        		entryNameElm.appendChild(entryName);
+        		Element entryValueElm = new Element(WSConstants.INFOCARD07_PREFIX + ":EntryValue", WSConstants.INFOCARD07_NAMESPACE);
+        		entryValueElm.appendChild(entryValue);
+        		issuerInformationEntryElm.appendChild(entryNameElm);
+        		issuerInformationEntryElm.appendChild(entryValueElm);
+        		issuerInformationElm.appendChild(issuerInformationEntryElm);
+        	}
+        	infoCard.appendChild(issuerInformationElm);
+        }
+        
         if (certChain != null && certChain.length > 0) {
             System.out.println("SigningCArd");
             //Get the signing util
@@ -572,4 +598,33 @@ public class InfoCard implements Serializable {
         return card.toXML();
 
     }
+    
+//	public boolean getRequireAppliesTo() {
+//		return requireAppliesTo;
+//	}
+
+
+	public void setRequireAppliesTo() {
+		this.requireAppliesTo = new RequireAppliesTo(false); // optional = false
+	}
+
+
+	public boolean getRequireStrongRecipientIdentity() {
+		return requireStrongRecipientIdentity;
+	}
+
+
+	public void setRequireStrongRecipientIdentity(
+			boolean requireStrongRecipientIdentity) {
+		this.requireStrongRecipientIdentity = requireStrongRecipientIdentity;
+	}
+
+	public Map<String, String> getIssuerInformation() {
+		return issuerInformation;
+	}
+
+	public void setIssuerInformation(Map<String, String> issuerInformation) {
+		this.issuerInformation = issuerInformation;
+	}
+
 }

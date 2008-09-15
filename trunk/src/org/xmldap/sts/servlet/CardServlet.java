@@ -168,6 +168,15 @@ public class CardServlet extends HttpServlet {
         card.setCardName(managedCard.getCardName());
         card.setIssuer(tokenServiceEndpoint);
 
+        if (managedCard.getRequireAppliesTo()) {
+        	// optional
+        	card.setRequireAppliesTo();  // optional = false
+        }
+        if (managedCard.getRequireStrongRecipientIdentity()) {
+        	// optional
+        	card.setRequireStrongRecipientIdentity(true);
+        }
+        
         // set card logo/image if available . . . if not available it will default to Milo :-)
         if (base64ImageFile != null) {
             card.setBase64BinaryCardImage(base64ImageFile);

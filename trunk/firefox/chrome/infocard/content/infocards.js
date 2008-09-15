@@ -51,11 +51,11 @@ function updateRPs() {
 	    var policy = window.arguments[0];
 	    if (policy.hasOwnProperty("cert")) {
 			var relyingPartyCertB64 = policy["cert"];
-		    var rpIdentifier = hex_sha1(relyingPartyCertB64);
+		    var rpIdentifier = computeRpIdentifier(relyingPartyCertB64);
 		    var count = 0;
 		    for each (rpId in selectedCard.rpIds) {
 		     count++;
-	debug(selectedCard.name + " rpId:" + rpId + " rpIdentifier:" + rpIdentifier);
+	icDebug(selectedCard.name + " rpId:" + rpId + " rpIdentifier:" + rpIdentifier);
 		     if (rpId == rpIdentifier) {
 		      // this RP is already in list of RPs
 		      return;
@@ -65,6 +65,107 @@ function updateRPs() {
 		    updateCard(selectedCard); // save to disk
 	    }
 	} // else nothing
+}
+
+function computeClientPseudonymPre20080829(policy){
+	var url = policy["url"]; // RP url
+	return hex_sha1(url + selectedCard.id);
+}
+
+function getRandomBytes(howMany) {
+	  var i;
+	  var bytes = new Array();
+	  for (i=0; i<howMany; i++)
+	    bytes[i] = Math.round(Math.random()*255);
+	  return bytes;
+}
+
+//return binary value of hashsalt
+function getHashSalt(card) {
+	var hashSalt;
+	if (card.hashsalt != undefined) {
+		hashSalt = window.atob(card.hashsalt);
+	} else {
+		hashSalt = "" + getRandomBytes(256);
+		card.hashsalt = window.btoa(hashsalt);
+		icDebug("card.hashsalt: " + card.hashsalt);
+		storeCard(card);
+		hashSalt = window.atob(card.hashsalt);
+	}
+	return hashSalt;
+}
+
+//return binary value of masterkey
+function getMasterKey(card) {
+	var masterkey;
+	if (card.masterkey != undefined) {
+		masterkey = window.atob(card.masterkey);
+	} else {
+		masterkey = "" + getRandomBytes(256);
+		card.masterkey = window.btoa(masterkey);
+		icDebug("card.masterkey: " + card.masterkey);
+		storeCard(card);
+		masterkey = window.atob(card.masterkey);
+	}
+	return masterkey;
+}
+
+function certFromB64(certB64) {
+	
+}
+
+function getCaCertForServerCert(cert)
+{
+   var i=1;
+   var nextCertInChain;
+   nextCertInChain = cert;
+   var lastSubjectName="";
+   while(true)
+   {
+     if(nextCertInChain == null)
+     {
+        return null;
+     }
+     if((nextCertInChain.type == nsIX509Cert.CA_CERT) ||
+                                 (nextCertInChain.subjectName = lastSubjectName))
+     {
+        break;
+     }
+
+     lastSubjectName = nextCertInChain.subjectName;
+     nextCertInChain = nextCertInChain.issuer;
+   }
+
+   return nextCertInChain;
+}
+
+function computeRpPpidSeed(policy) {
+	var relyingPartyCertB64 = null;
+	if (policy.hasOwnProperty("cert")) {
+		relyingPartyCertB64 = policy["cert"];
+	}
+    if (relyingPartyCertB64 != null) {
+		var cert = certFromB64(relyingPartyCertB64);
+    	if (isEV(relyingPartyCertB64)) {
+    	} else {
+    	}
+    } else {
+    }
+}
+
+// returns the base64 encoded value of ClientPseudonym
+function computeClientPseudonymPost20080829(policy){
+	var url = policy["url"]; // RP url
+	var relyingPartyCertB64 = null;
+	if (policy.hasOwnProperty("cert")) {
+		relyingPartyCertB64 = policy["cert"];
+	}
+
+	var rpPpidSeed = computeRpPpidSeed(policy);
+	var hashSalt = getHashSalt(selectedCard);
+	var masterkey = getMasterKey(selectedCard);
+	var clientPseudonymPpidBytes = sha256(masterkey + rpPpidSeed + hashsalt);
+	return window.btoa(clientPseudonymPpidBytes);
 }
 
 function ok(){
@@ -88,7 +189,6 @@ function ok(){
 			tokenType = policy["tokenType"];
 		}
 		var url = policy["url"]; // RP url
-		var clientPseudonym = hex_sha1(url + selectedCard.id);
 		var relyingPartyCertB64 = null;
 		if (policy.hasOwnProperty("cert")) {
 			relyingPartyCertB64 = policy["cert"];
@@ -97,10 +197,11 @@ function ok(){
 		if (policy.hasOwnProperty("issuerPolicy")) {
 			issuerPolicy = policy["issuerPolicy"];
 		}
+		var clientPseudonym = hex_sha1(url + selectedCard.id);
         var assertion = processManagedCard(
         	selectedCard, requiredClaims, optionalClaims, tokenType, 
         	clientPseudonym, url, relyingPartyCertB64, issuerPolicy);
-        debug("assertion:" + assertion);
+        icDebug("assertion:" + assertion);
         if (assertion == null) {
          return;
         }
@@ -131,7 +232,7 @@ function ok(){
 function finalizeOpenId() {
 
 
-    debug('1');
+    icDebug('1');
 
 
     var tokenToReturn;
@@ -162,7 +263,7 @@ function finalizeOpenId() {
 
     tokenToReturn = processCard(policy,false);
 
-    debug('2');
+    icDebug('2');
 
 
     finish(tokenToReturn);
@@ -176,7 +277,7 @@ function finish(tokenToReturn) {
 
     if (tokenToReturn != null) {
 
-        debug("Token: " + tokenToReturn);
+        icDebug("Token: " + tokenToReturn);
         window.arguments[1](tokenToReturn);
         window.close();
 
@@ -206,57 +307,57 @@ function getMex1(to, mexAddress) {
     	 "<a:To s:mustUnderstand=\"1\">" + to + "</a:To>" + 
     	"</s:Header><s:Body/></s:Envelope>";
 
-debug("getMex: mex request: " + mex);
-debug("managedCard.carddata.managed.mex: " + mexAddress);
+icDebug("getMex: mex request: " + mex);
+icDebug("managedCard.carddata.managed.mex: " + mexAddress);
 
     var req = new XMLHttpRequest();
     req.open('POST', mexAddress, false);
-    debug('mex xmlhttprequest open');
+    icDebug('mex xmlhttprequest open');
     req.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
     req.setRequestHeader("Cache-Control", "no-cache");
     req.setRequestHeader("accept-language", "en-us");
     req.setRequestHeader("User-Agent", "xmldap infocard stack");
-    debug('mex xmlhttprequest send');
+    icDebug('mex xmlhttprequest send');
     try {
 	    req.send(mex);
     }
     catch (e) {
-    	debug(e);
+    	icDebug(e);
     	alert("posting the MEX request failed." + e);
     	return null;
     }
-debug("getMex: mex POST request status="+req.status);
+icDebug("getMex: mex POST request status="+req.status);
     if(req.status == 200) {
-debug("getMex: mex POST request status 200");
+icDebug("getMex: mex POST request status 200");
 
         mexResponse = req.responseText;
-debug("getMex POST 200: " + mexResponse);
+icDebug("getMex POST 200: " + mexResponse);
         return mexResponse;
     } else {
-debug("getMex POST " + req.status + ": " + req.responseText);
+icDebug("getMex POST " + req.status + ": " + req.responseText);
 	    req.open('GET', mexAddress, false);
-	    debug('mex xmlhttprequest open');
+	    icDebug('mex xmlhttprequest open');
 	    req.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
 	    req.setRequestHeader("Cache-Control", "no-cache");
 	    req.setRequestHeader("accept-language", "en-us");
 	    req.setRequestHeader("User-Agent", "xmldap infocard stack");
-	    debug('mex GET xmlhttprequest send');
+	    icDebug('mex GET xmlhttprequest send');
 	    try {
 		    req.send(null);
 	    }
 	    catch (e) {
-	    	debug(e);
+	    	icDebug(e);
     		alert("getting the MEX request failed." + e);
     		return null;
 	    }
-debug("getMex: mex GET request status="+req.status);
+icDebug("getMex: mex GET request status="+req.status);
     if(req.status == 200) {
-debug("getMex: mex GET request status 200");
+icDebug("getMex: mex GET request status 200");
         mexResponse = req.responseText;
-debug("getMex: " + mexResponse);
+icDebug("getMex: " + mexResponse);
         return mexResponse;
     } else {
-    	debug("getMex GET " + req.status + ": " + req.responseText);
+    	icDebug("getMex GET " + req.status + ": " + req.responseText);
     }
 	return null;
 }
@@ -265,24 +366,24 @@ debug("getMex: " + mexResponse);
 function isClaimChecked(elementId, uri) {
 	 var checkbox = document.getElementById(elementId);
 	 if (!(checkbox == undefined)) {
-debug("isClaimChecked: found " + elementId);
+icDebug("isClaimChecked: found " + elementId);
 		 if (!(checkbox.checked == undefined)) {
-debug("isClaimChecked: is a checkbox ");
+icDebug("isClaimChecked: is a checkbox ");
 		  if (checkbox.checked) {
-debug("isClaimChecked: is checked ");
+icDebug("isClaimChecked: is checked ");
 		   if ( uri === undefined ) {
 		     return "";
 		   } else {
 			 return uri;
 		   }
 		  } else {
-debug("isClaimChecked: is not checked ");
+icDebug("isClaimChecked: is not checked ");
 		  }
 		 } else {
-		  debug( "expected type checkbox, but found: " + typeof(checkbox));
+		  icDebug( "expected type checkbox, but found: " + typeof(checkbox));
 		 } 
 	 } else {
-	  debug("checkbox not defined for uri: " + uri );
+	  icDebug("checkbox not defined for uri: " + uri );
 	 }
 	 return null;
 }
@@ -295,7 +396,7 @@ function processManagedCard(
 		var to = xmlreplace(managedCard.carddata.managed.issuer);
 		var mexAddress = issuerPolicy;
 		var issuerMex = getMex1(to, mexAddress);
-		debug("issuerMex=" + issuerMex);
+		icDebug("issuerMex=" + issuerMex);
 	}
 	
     var tokenToReturn = null;
@@ -321,12 +422,12 @@ function processManagedCard(
             var address = subStr.substring(0,endAddr);
 
 
-            debug(address);
+            icDebug(address);
 
             var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
 
 			var usercredential = managedCard.carddata.managed.ic::UserCredential;
-debug("processManagedCard::usercredential>>>" + usercredential);
+icDebug("processManagedCard::usercredential>>>" + usercredential);
 
             var rst = "<s:Envelope " + 
     			"xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" " + 
@@ -338,7 +439,7 @@ debug("processManagedCard::usercredential>>>" + usercredential);
 
 			if (!(usercredential.ic::UsernamePasswordCredential == undefined)) {
 	            var hint = usercredential.ic::DisplayCredentialHint;
-	            debug("hint:" + hint);
+	            icDebug("hint:" + hint);
 //	            var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 	            var prompts = Components.classes["@mozilla.org/network/default-auth-prompt;1"].getService(Components.interfaces.nsIAuthPrompt);
 	            username = {value:usercredential.ic::UsernamePasswordCredential.ic::Username};
@@ -378,10 +479,10 @@ debug("processManagedCard::usercredential>>>" + usercredential);
 				return null;
 	        } else if (!(usercredential.ic::SelfIssuedCredential == undefined)) {
 	            var hint = usercredential.ic::DisplayCredentialHint;
-	            debug("hint:" + hint);
+	            icDebug("hint:" + hint);
 	            var usercredential = usercredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier;
-	            debug("usercredential:" + usercredential);
-	            debug("stsCert:" + managedCard.carddata.managed.stsCert);
+	            icDebug("usercredential:" + usercredential);
+	            icDebug("stsCert:" + managedCard.carddata.managed.stsCert);
 				alert("unimplemented user credential type: SelfIssuedCredential");
 				return null;
 			} else {
@@ -395,21 +496,24 @@ debug("processManagedCard::usercredential>>>" + usercredential);
             
             if (!(managedCard.carddata.managed.requireAppliesTo == undefined)) {
             	var appliesTo = "<p:AppliesTo xmlns:p=\"http://schemas.xmlsoap.org/ws/2004/09/policy\"><a:EndpointReference>" + 
-            		"<a:Address>" + xmlreplace(relyingPartyURL) + "</a:Address>" + 
+            		"<a:Address>" + xmlreplace(relyingPartyURL) + "</a:Address>";
+            	if (relyingPartyCertB64 != null) {
+            		appliesTo = appliesTo + 
                     "<i:Identity xmlns:i=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\">" + 
                     "<ds:KeyInfo xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><ds:X509Data>" +
 					"<ds:X509Certificate>" + relyingPartyCertB64 + "</ds:X509Certificate>" +
-					"</ds:X509Data></ds:KeyInfo></i:Identity>" +
-                    "</a:EndpointReference></p:AppliesTo>";
-debug("requireAppliesTo" + appliesTo);
+					"</ds:X509Data></ds:KeyInfo></i:Identity>";
+            	}
+            	appliesTo = appliesTo + "</a:EndpointReference></p:AppliesTo>";
+icDebug("requireAppliesTo" + appliesTo);
 			    rst = rst + appliesTo;
             }
             
             rst = rst + "<wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType>" +
             "<wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
             "<wsid:CardId>";
-debug("cardid:"+ managedCard.id);
-debug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
+icDebug("cardid:"+ managedCard.id);
+icDebug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
             rst = rst + xmlreplace(managedCard.id);
 
             rst = rst + "</wsid:CardId>";
@@ -430,43 +534,44 @@ debug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
 				 if (claim != null) {
 				  var i = claim.indexOf("?");
 				  if (i > 0) { // dynamic claim. Uris starting with ? are not allowed
-				   debug("dynamic claim: " + claim);
+				   icDebug("dynamic claim: " + claim);
 				   var prefix = claim.substr(0,i);
 				   var foundit = false;
                    for (var index = 0; (index<claimsArray.length) && (foundit == false); index++) {
                     var requestedUri = claimsArray[index];
                     if (requestedUri.indexOf(prefix) == 0) {
-				     debug("dynamic claim match: " + requestedUri);
+				     icDebug("dynamic claim match: " + requestedUri);
 				     requestedClaims = requestedClaims + "<wsid:ClaimType Uri=\"" + xmlreplace(requestedUri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
 				     foundit = true;
                     }
                    }
                    if (foundit == false) {
-                   	debug("dynamic claim: " + claim + " not found in " + claimsArray);
+                   	icDebug("dynamic claim: " + claim + " not found in " + claimsArray);
                    }
 				  } else {
-				  	debug("static claim: " + claim);
+				  	icDebug("static claim: " + claim);
 				  	requestedClaims = requestedClaims + "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
 				  }
 				  count++;
 				 } else {
-				 	debug("claim is null: " + uri);
+				 	icDebug("claim is null: " + uri);
 				 }
                }
                if (count == 0) {
-                debug("no claims were requested!");
+                icDebug("no claims were requested!");
                }
                rst = rst + "<wst:Claims>" + requestedClaims + "</wst:Claims>";
             }
             
             rst = rst + "<wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>";
             
+//            if (managedCard.carddata.managed.requireAppliesTo == undefined) {
             // if a ppid is requested, then provide some selector entropy (clientPseudonym). The STS uses this to generate a RP depended ppid
             // even if the STS does not know the RP
             if (requiredClaims.indexOf("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") >= 0) {
 	            rst = rst + "<ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>" + xmlreplace(clientPseudonym) + "</PPID></ClientPseudonym>";
 			}
-			
+//          }
             // tokenType is optional. http://docs.oasis-open.org/ws-sx/ws-trust/200512/ws-trust-1.3-os.html
             if (tokenType != null) {
 	            rst = rst + "<wst:TokenType>" + xmlreplace(tokenType) + "</wst:TokenType>";
@@ -474,7 +579,7 @@ debug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
             rst = rst + "<wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
             "</wst:RequestSecurityToken></s:Body></s:Envelope>";
 
-debug("processManagedCard: request: " + rst);
+icDebug("processManagedCard: request: " + rst);
             var rstr;
             var rstReq = new XMLHttpRequest();
             rstReq.open('POST', address, false);
@@ -486,15 +591,15 @@ debug("processManagedCard: request: " + rst);
 	            rstReq.send(rst);
             } 
             catch (e) {
-				debug(e);
+				icDebug(e);
 				alert("posting the request to get the security tokens failed. " + e);
 				return null;            	
             }
             if(rstReq.status == 200) {
-debug("processManagedCard: request status 200");
+icDebug("processManagedCard: request status 200");
 
                 rstr = rstReq.responseText;
-debug("processManagedCard: RSTR:" + rstr);
+icDebug("processManagedCard: RSTR:" + rstr);
 
     var j = rstReq.responseText.indexOf("RequestedSecurityToken");
     if (j<0) {
@@ -513,18 +618,18 @@ debug("processManagedCard: RSTR:" + rstr);
 	} else {
 	 	prefix = "";
 	}    
-debug("prefix=" + prefix);
+icDebug("prefix=" + prefix);
     var rest = rstReq.responseText.substring(j);
-debug("rest=" + rest);
+icDebug("rest=" + rest);
     var l = rest.indexOf(">");
     rest = rest.substring(l+1);
-debug("Rest=" + rest);
+icDebug("Rest=" + rest);
     var k = rest.indexOf("</" + prefix + "RequestedSecurityToken");
     var tokenToReturn = rest.substring(0,k);
     
-debug("RSTR: " + tokenToReturn);
+icDebug("RSTR: " + tokenToReturn);
             } else {
-	            debug("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
+	            icDebug("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
 	            alert("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
 //            	var responseXml = new XML(rstReq.responseText);
 //            	var soap = new Namespace("soap", "http://www.w3.org/2003/05/soap-envelope");
@@ -568,10 +673,10 @@ function disable(){
 		"@mozilla.org/preferences-service;1"].
 			getService( Components.interfaces.nsIPrefBranch);
 	var disabled = prefService.getBoolPref( "identityselector.disabled");
-	debug("disabled=" + disabled);
+	icDebug("disabled=" + disabled);
 	prefService.setBoolPref( "identityselector.disabled", true);
 	disabled = prefService.getBoolPref( "identityselector.disabled");
-	debug("disabled=" + disabled);
+	icDebug("disabled=" + disabled);
 
     var doc = window.document;
     var event = doc.createEvent("Events");
@@ -582,7 +687,7 @@ function disable(){
 }
 
 function cancel(){
-	debug("cancel");
+	icDebug("cancel");
     var doc = window.document;
     var event = doc.createEvent("Events");
     event.initEvent("CancelIdentitySelector", true, true);
@@ -596,10 +701,14 @@ function cancel(){
 }
 
 function load(){
-
+	icDebug("load start. href=" + window.document.location.href );
+	
     var select = document.getElementById('selectcontrol');
     select.addEventListener("click", ok, false);
 
+
+    var disableElm = document.getElementById('disableSelector');
+    disableElm.addEventListener("click", disable, false);
 
     var newCardElm = document.getElementById('newCard');
     newCardElm.addEventListener("click", newCard, false);
@@ -617,7 +726,7 @@ function load(){
 	    var policy = window.arguments[0];
 	    if (policy.hasOwnProperty("cert")) {
 			var relyingPartyCertB64 = policy["cert"];
-		    rpIdentifier = hex_sha1(relyingPartyCertB64);
+		    rpIdentifier = computeRpIdentifier(relyingPartyCertB64);
 	    }
 	}
 
@@ -682,23 +791,29 @@ function load(){
 	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
 		var policy = window.arguments[0];
 		var serializedPolicy = JSON.stringify(policy);
-		var issuerLogoURL = TokenIssuer.getIssuerLogoURL(serializedPolicy);
-		debug("issuerLogoURL=" + issuerLogoURL);
-		if (issuerLogoURL != undefined) {
-			var issuerlogo = document.getElementById("issuerlogo");
-			issuerlogo.src = issuerLogoURL;
-			issuerlogo.hidden = false;
-			var issuerlogo_label = document.getElementById("issuerlogo_label");
-            issuerlogo_label.hidden = false;
-			var issuer_hbox = document.getElementById("issuer_hbox");
-            issuer_hbox.hidden = false;
+		if (TokenIssuer.initialize() == true) {
+			var issuerLogoURL = TokenIssuer.getIssuerLogoURL(serializedPolicy);
+			icDebug("issuerLogoURL=" + issuerLogoURL);
+			if (issuerLogoURL != undefined) {
+				var issuerlogo = document.getElementById("issuerlogo");
+				issuerlogo.src = issuerLogoURL;
+				issuerlogo.hidden = false;
+				var issuerlogo_label = document.getElementById("issuerlogo_label");
+	            issuerlogo_label.hidden = false;
+				var issuer_hbox = document.getElementById("issuer_hbox");
+	            issuer_hbox.hidden = false;
+			}
+		} else {
+			icDebug("load: error initializing the TokenIssuer");
+			alert("Error: Initializing the TokenIssuer");
+			// return;
 		}
 	}
 	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
 		var policy = window.arguments[0];
 	    var privacyUrl = policy["privacyUrl"];
         if (privacyUrl != null) {
-	    debug("privacyUrl " + privacyUrl);
+	    icDebug("privacyUrl " + privacyUrl);
              var showPrivacyStatementElm = document.getElementById('privacy_label');
              showPrivacyStatementElm.addEventListener("click", showPrivacyStatement, false);
              showPrivacyStatementElm.hidden = false;
@@ -708,11 +823,11 @@ function load(){
 	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
 		 var policy = window.arguments[0];
 		 if (policy.hasOwnProperty("cn")) {
-			 debug("never been here: " + policy["cn"]);
+			 icDebug("never been here: " + policy["cn"]);
 		 } else if (policy.hasOwnProperty("url")) {
-		 	debug("never been here: " + policy["url"]);
+		 	icDebug("never been here: " + policy["url"]);
 		 } else {
-		 	debug("never been here");
+		 	icDebug("never been here");
 		 }
 	}
 	 var firstTimeVisit = document.getElementById('firstTimeVisit');
@@ -722,7 +837,7 @@ function load(){
 	 } catch (e) {
 	  labelText = "This is your first visit to this site. Think!";
 	 }
-	 debug("firstTime: " + labelText);
+	 icDebug("firstTime: " + labelText);
 	 firstTimeVisit.setAttribute("value", labelText);
 	 var firstTimeVisitBox = document.getElementById('firstTimeVisitBox');
 	 firstTimeVisitBox.setAttribute("hidden", "false");
@@ -733,7 +848,7 @@ function indicateRequiredClaim(requiredClaims, optionalClaims, claim){
  var name = "_" + claim;
  var element = document.getElementById(name);
  if (element == undefined) {
-  debug( "Element " + name + " not found" );
+  icDebug( "Element " + name + " not found" );
   return;
  }
  if (requiredClaims.indexOf(claim.toLowerCase()) != -1) {
@@ -745,14 +860,14 @@ function indicateRequiredClaim(requiredClaims, optionalClaims, claim){
 
  if (optionalClaims != null) {
   if (optionalClaims.indexOf(claim.toLowerCase()) != -1) {
-    //debug("optional claim " + claim + " found in " + optionalClaims);
+    //icDebug("optional claim " + claim + " found in " + optionalClaims);
     element.checked = false;
     element.disabled = false;
     return;
   }
  } 
   
- //debug("claim " + claim + " not found");
+ //icDebug("claim " + claim + " not found");
  element.checked = false;
  element.disabled = true;
 }
@@ -772,7 +887,7 @@ function indicateRequiredClaims(){
 	 	 //optionalClaims = optionalClaims.toLowerCase();
 	 //}
 	
-	debug("requiredClaims: " + requiredClaims);
+	icDebug("requiredClaims: " + requiredClaims);
 	 indicateRequiredClaim(requiredClaims, optionalClaims, "givenname");
 	 indicateRequiredClaim(requiredClaims, optionalClaims, "surname");
 	 indicateRequiredClaim(requiredClaims, optionalClaims, "email");
@@ -790,10 +905,10 @@ function indicateRequiredClaims(){
 }
 
 function setCardSelf() {
-	//debug("setCardSelf card= " + selectedCard);
-	debug("setCardSelf givenname: " + selectedCard.carddata.selfasserted.givenname);
+	//icDebug("setCardSelf card= " + selectedCard);
+	icDebug("setCardSelf givenname: " + selectedCard.carddata.selfasserted.givenname);
         document.getElementById("givenname").value = selectedCard.carddata.selfasserted.givenname;
-	debug("setCardSelf: " + document.getElementById("givenname").value);
+	icDebug("setCardSelf: " + document.getElementById("givenname").value);
         document.getElementById("surname").value = selectedCard.carddata.selfasserted.surname;
         document.getElementById("email").value = selectedCard.carddata.selfasserted.emailaddress;
         document.getElementById("streetAddress").value = selectedCard.carddata.selfasserted.streetaddress;
@@ -842,8 +957,8 @@ function setCardSelf() {
 }
 
 function setCardManaged(requiredClaims, optionalClaims) {
-	debug("setCardManaged requiredClaims: " + requiredClaims);
-	debug("setCardManaged optionalClaims: " + optionalClaims);
+	icDebug("setCardManaged requiredClaims: " + requiredClaims);
+	icDebug("setCardManaged optionalClaims: " + optionalClaims);
 	
 		var managedRows = document.getElementById("managedRows0");
 		
@@ -860,7 +975,7 @@ function setCardManaged(requiredClaims, optionalClaims) {
 		//alert(list[0]);
 		//alert("length:" + list.length());
 		//alert(list.toXMLString());
-		debug("number of supported claims: " + list.length());
+		icDebug("number of supported claims: " + list.length());
 		var half = list.length() / 2;
 		var index=0;
 		for (; index<half; index++) {
@@ -889,7 +1004,7 @@ function setCardManaged(requiredClaims, optionalClaims) {
 		  if (ui != -1) {
  		   checkbox.setAttribute("checked", "false");
  		   checkbox.setAttribute("disabled", "false");
-debug("optional claim:" + uri);
+icDebug("optional claim:" + uri);
  		   var thisClaim = optionalClaims.substr(ui);
  		   var ws = thisClaim.indexOf(' '); // space
  		   if (ws == -1) {
@@ -903,13 +1018,13 @@ debug("optional claim:" + uri);
  		   }
  		   if (ws != -1) {
  		   	thisClaim = thisClaim.substring(0,ws);
- 		   	debug("thisClaim: " + thisClaim);
+ 		   	icDebug("thisClaim: " + thisClaim);
  		   }
 		   var qi = thisClaim.indexOf('?');
-debug("qi claim:" + thisClaim + " " + qi);
+icDebug("qi claim:" + thisClaim + " " + qi);
 		   if (qi >= 0) {
 				value = thisClaim.substr(qi);
-				debug("variable claim value: " + value);	
+				icDebug("variable claim value: " + value);	
 		   }
 		  }
 		 }
@@ -918,9 +1033,9 @@ debug("qi claim:" + thisClaim + " " + qi);
 		  if (ui != -1) {
  		   checkbox.setAttribute("checked", "true");
  		   checkbox.setAttribute("disabled", "true");
-debug("requiredClaim claim:" + uri);
+icDebug("requiredClaim claim:" + uri);
  		   var thisClaim = requiredClaims.substr(ui);
-debug("thisClaim=" + thisClaim);
+icDebug("thisClaim=" + thisClaim);
  		   var ws = thisClaim.indexOf(' '); // space
  		   if (ws == -1) {
  		   	ws = thisClaim.indexOf('	'); // tab
@@ -933,13 +1048,13 @@ debug("thisClaim=" + thisClaim);
  		   }
  		   if (ws != -1) {
  		   	thisClaim = thisClaim.substring(0,ws);
- 		   	debug("thisClaim: " + thisClaim);
+ 		   	icDebug("thisClaim: " + thisClaim);
  		   }
 		   var qi = thisClaim.indexOf('?');
-debug("qi Claim:" + thisClaim + " " + qi);
+icDebug("qi Claim:" + thisClaim + " " + qi);
 		   if (qi >= 0) {
 				value = thisClaim.substr(qi);
-				debug("variable Claim value: " + value);	
+				icDebug("variable Claim value: " + value);	
 		   }
 		  }
 		 }
@@ -949,7 +1064,7 @@ debug("qi Claim:" + thisClaim + " " + qi);
 		 }
 		 catch (err) {
 		  // tooltiptext barfs on "invalid character" while value does not... Axel
-		  debug(err + "(" + supportedClaim.ic::DisplayTag + ")");
+		  icDebug(err + "(" + supportedClaim.ic::DisplayTag + ")");
 		 }
 		 var textbox = document.createElement("textbox");
 		 textbox.setAttribute("id", uri);
@@ -996,7 +1111,7 @@ debug("qi Claim:" + thisClaim + " " + qi);
 		  if (ui != -1) {
  		   checkbox.setAttribute("checked", "false");
  		   checkbox.setAttribute("disabled", "false");
-debug("optional claim:" + uri);
+icDebug("optional claim:" + uri);
  		   var thisClaim = optionalClaims.substr(ui);
  		   var ws = thisClaim.indexOf(' '); // space
  		   if (ws == -1) {
@@ -1010,13 +1125,13 @@ debug("optional claim:" + uri);
  		   }
  		   if (ws != -1) {
  		   	thisClaim = thisClaim.substring(0,ws);
- 		   	debug("thisClaim: " + thisClaim);
+ 		   	icDebug("thisClaim: " + thisClaim);
  		   }
 		   var qi = thisClaim.indexOf('?');
-debug("qi claim:" + thisClaim + " " + qi);
+icDebug("qi claim:" + thisClaim + " " + qi);
 		   if (qi >= 0) {
 				value = thisClaim.substr(qi);
-				debug("variable claim value: " + value);	
+				icDebug("variable claim value: " + value);	
 		   }
 		  }
 		 }
@@ -1025,9 +1140,9 @@ debug("qi claim:" + thisClaim + " " + qi);
 		  if (ui != -1) {
  		   checkbox.setAttribute("checked", "true");
  		   checkbox.setAttribute("disabled", "true");
-debug("requiredClaim claim:" + uri);
+icDebug("requiredClaim claim:" + uri);
  		   var thisClaim = requiredClaims.substr(ui);
-debug("thisClaim=" + thisClaim);
+icDebug("thisClaim=" + thisClaim);
  		   var ws = thisClaim.indexOf(' '); // space
  		   if (ws == -1) {
  		   	ws = thisClaim.indexOf('	'); // tab
@@ -1040,13 +1155,13 @@ debug("thisClaim=" + thisClaim);
  		   }
  		   if (ws != -1) {
  		   	thisClaim = thisClaim.substring(0,ws);
- 		   	debug("thisClaim: " + thisClaim);
+ 		   	icDebug("thisClaim: " + thisClaim);
  		   }
 		   var qi = thisClaim.indexOf('?');
-debug("qi Claim:" + thisClaim + " " + qi);
+icDebug("qi Claim:" + thisClaim + " " + qi);
 		   if (qi >= 0) {
 				value = thisClaim.substr(qi);
-				debug("variable Claim value: " + value);	
+				icDebug("variable Claim value: " + value);	
 		   }
 		  }
 		 }
@@ -1056,7 +1171,7 @@ debug("qi Claim:" + thisClaim + " " + qi);
 		 }
 		 catch (err) {
 		  // tooltiptext barfs on "invalid character" while value does not... Axel
-		  debug(err + "(" + supportedClaim.ic::DisplayTag + ")");
+		  icDebug(err + "(" + supportedClaim.ic::DisplayTag + ")");
 		 }
 		 var textbox = document.createElement("textbox");
 		 textbox.setAttribute("id", uri);
@@ -1098,8 +1213,8 @@ function setCard(card){
 
     selectedCard = card;
 
-    debug("TYPE: " + selectedCard.type);
-//    debug(selectedCard);
+    icDebug("TYPE: " + selectedCard.type);
+//    icDebug(selectedCard);
 
     var selfassertedClaims = document.getElementById('selfassertedClaims');
     var managedClaims = document.getElementById('managedClaims');
@@ -1216,7 +1331,7 @@ function createItem(c, classStr){
     hbox.appendChild(vbox);
     hbox.addEventListener("click", handleCardChoice, false);
     hbox.addEventListener("dblclick", dblclick, false);
-    debug ("Setting cardid " + hbox.getAttribute("cardid"));
+    icDebug ("Setting cardid " + hbox.getAttribute("cardid"));
     return hbox;
 
 }
@@ -1232,7 +1347,7 @@ function computeMatching(card, policy) {
  }
 
  if (tokenType != null) {
-  debug("tokenType: " + tokenType + " card:" + card.name);
+  icDebug("tokenType: " + tokenType + " card:" + card.name);
   if (card.type == "managedCard") {
 	  var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
 	  var trust = new Namespace("trust", "http://schemas.xmlsoap.org/ws/2005/02/trust");
@@ -1242,10 +1357,21 @@ function computeMatching(card, policy) {
 	   var cardTokenType = list[index];
 	   if (tokenType == cardTokenType) {
 	    matchingTokenType = true;
-	    debug("matchingTokenType:" + tokenType);
+	    icDebug("matchingTokenType:" + tokenType);
+	    var relyingPartyUrl = policy["url"];
+	    if (card.carddata.managed.requireStrongRecipientIdentity != undefined) {
+	    	if (card.carddata.managed.requireStrongRecipientIdentity == true) {
+	    		if (relyingPartyUrl.indexOf("https") == 0) {
+	    		    icDebug("matchingRequireStrongRecipientIdentity");
+	    			return true;
+	    		} else {
+	    			return false;
+	    		}
+	    	}
+	    } // else do not care about requireStrongRecipientIdentity
 	    return matchingTokenType;
 	   } else {
-	    debug("notMatchingTokenType:" + cardTokenType);
+	    icDebug("notMatchingTokenType:" + cardTokenType);
 	   }
 	  }
   } else if (card.type == "selfAsserted") {
@@ -1254,10 +1380,10 @@ function computeMatching(card, policy) {
    } else if (tokenType ==  "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1") {
     matchingTokenType = true;
    } else {
-    debug("tokenType does not match tokenTypes for self-issued cards:" + tokenType);
+    icDebug("tokenType does not match tokenTypes for self-issued cards:" + tokenType);
    }
   } else {
-   debug("unsupported card type");
+   icDebug("unsupported card type");
    matchingTokenType = false;
   }
  } else { // RP does not require a special tokentype
@@ -1266,17 +1392,21 @@ function computeMatching(card, policy) {
  return matchingTokenType;
 }
 
+function computeRpIdentifier(cert) {
+	return hex_sha1(cert);
+}
+
 function computeHasBeenSend(card, policy) {
 	if (!policy.hasOwnProperty("cert")) {
 		return false;
 	}
 	var relyingPartyCertB64 = policy["cert"];
-    var rpIdentifier = hex_sha1(relyingPartyCertB64);
+    var rpIdentifier = computeRpIdentifier(relyingPartyCertB64);
     var beenThere = false;
     for each (rpId in card.rpIds) {
-     debug(card.name + " RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
+     icDebug(card.name + " RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
      if (rpId == rpIdentifier) {
-      debug(card.name + " has been sent to: " + policy["cn"]);
+      icDebug(card.name + " has been sent to: " + policy["cn"]);
       beenThere = true;
       break;
      }
@@ -1313,7 +1443,7 @@ function computeCardClass(card) {
  } else {
   cardClass = "contact";
  }
- debug("cardClass " + cardClass + " " + card.name);
+ icDebug("cardClass " + cardClass + " " + card.name);
  return cardClass;
 }
 
@@ -1339,7 +1469,7 @@ function newCard(){
 }
 
 function digestNewCard(callback) {
-	
+	icDebug("digestNewCard");
 	if (callback == undefined) {
 	 alert("no new card was imported");
 	 return;
@@ -1355,12 +1485,12 @@ function digestNewCard(callback) {
 
     var cardFile = readCardStore();
     for each (c in cardFile.infocard) {
-    	debug("newCard: cardId=" + typeof(c.id));
+    	icDebug("newCard: cardId=" + typeof(c.id));
     	if ("" + c.id == cardId) {
     		alert("This card is already in the card store. Please delete it first.");
     		return;
     	} else {
-    		debug("newCard: cardId=" + cardId + "!=" + c.id);
+    		icDebug("newCard: cardId=" + cardId + "!=" + c.id);
     	}
 	}
 	
@@ -1476,26 +1606,47 @@ function digestNewCard(callback) {
     }
 
     if ( type == "managedCard") {
-    	var importedCardJSONStr = JSON.stringify(callback);
-    	var cardFileJSONStr = JSON.stringify(cardFile);
-debug("importedCardJSONStr="+importedCardJSONStr);
-    	var importedCardStr = TokenIssuer.importManagedCard(importedCardJSONStr, cardFileJSONStr);
-    	debug("importedCardStr = " + importedCardStr + " type=" + typeof(haveValidStsCertStr));
-    	var importedCard = JSON.parse(importedCardStr);
-    	if (importedCard == false) {
-    		// oops. Could not parse json
-    		alert("Internal error: could not parse json=" + importedCardStr);
-    		return;
+    	var importedCardJSONStr = null;
+    	try {
+    		importedCardJSONStr = JSON.stringify(callback);
+    	} catch (e) {
+    		icDebug("error JSON.stringifying(callback) " + e);
     	}
-    	if (importedCard == null) {
-    		alert("The managed card is NOT imported");
-    		return;
+    	icDebug("importedCardJSONStr="+importedCardJSONStr);
+    	var cardFileJSONStr = null;
+    	try {
+    		cardFileJSONStr = JSON.stringify(cardFile);
+    	} catch (e) {
+    		icDebug("error JSON.stringifying(cardFile) " + e);
     	}
-    	
-    	if (importedCard.error != null) {
-       		alert("The card is NOT imported\n" + importedCard.error);
-    		return;
-    	} else {
+		if (TokenIssuer.initialize() == false) {
+			icDebug("digestNewCard: could not initialize TokenIssuer. Signature will not be validated");
+			alert("Could not initialize java. The card's signature will not be validated!");
+		} else {
+		    	var importedCardStr = TokenIssuer.importManagedCard(importedCardJSONStr, cardFileJSONStr);
+		    	if (importedCardStr != null) {
+			    	icDebug("importedCardStr = " + importedCardStr + " type=" + typeof(importedCardStr));
+			    	var importedCard = JSON.parse(importedCardStr);
+			    	if (importedCard == false) {
+			    		// oops. Could not parse json
+			    		alert("Internal error: could not parse json=" + importedCardStr);
+			    		return;
+			    	}
+			    	if (importedCard == null) {
+			    		alert("The managed card is NOT imported");
+			    		return;
+			    	}
+			    	
+			    	if (importedCard.error != null) {
+			       		alert("The card is NOT imported\n" + importedCard.error);
+			    		return;
+			    	} 
+		    	} else {
+		    		alert("Could not verify SIGNATURE of card: " + cardName + "\nContinuing anyways with import.");
+		    	}
+	    	}
+		
+		{
 	        var card = new XML("<infocard/>");
 	        card.name = "" + cardName + "";
 	        card.type = type;
@@ -1513,13 +1664,13 @@ debug("importedCardJSONStr="+importedCardJSONStr);
 	        try {
 	        	supportedClaims = new XML(callback.supportedClaims);
 	        } catch (e) {
-	        	debug("supportedClaims: " + callback.supportedClaims);
+	        	icDebug("supportedClaims: " + callback.supportedClaims);
 	        	alert("new card: supportedClaims: " + e);
 	        	alert("card is not imported");
 	        	return;
 	        }
 	        data.supportedClaims = supportedClaims;
-	debug("new card" + callback.usercredential);
+	icDebug("new card" + callback.usercredential);
 			try {
 				data.usercredential = new XML(callback.usercredential);
 			} catch (e) {
@@ -1528,7 +1679,13 @@ debug("importedCardJSONStr="+importedCardJSONStr);
 	        	return;
 			}
 			data.stsCert = "" + callback.stsCert + "";
-			data.requireAppliesTo = "" + callback.requireAppliesTo + "";
+			if (callback.requireAppliesTo) {
+				data.requireAppliesTo = true;
+			}
+			if (callback.requireStrongRecipientIdentity) {
+				data.requireStrongRecipientIdentity = true;
+			}
+			
 			try {
 				data.supportedTokenTypeList = new XML(callback.supportedTokenTypeList);
 			} catch (e) {
@@ -1537,7 +1694,7 @@ debug("importedCardJSONStr="+importedCardJSONStr);
 	        	return;
 			}
 	        card.carddata.data = data;
-	        debug("saving card: " + cardName);
+	        icDebug("saving card: " + cardName);
 //    		alert("importedCard="+importedCard);
 //    		//TODO remove return when it is working
 //    		return;
@@ -1598,7 +1755,7 @@ function reload() {
 
 function deleteCard(){
 
-    debug("Delete Card : " + selectedCardId);
+    icDebug("Delete Card : " + selectedCardId);
     
     var selectedCardId = selectedCard.id;
     removeCard(selectedCardId);
@@ -1610,14 +1767,14 @@ function setOptionalClaimsSelf(policy) {
     if (!(policy["optionalClaims"] == undefined)) {
      optionalClaims = policy["optionalClaims"];
      if (optionalClaims != null) {
-      debug("setOptionalClaimsSelf optionalClaims: " + optionalClaims);
+      icDebug("setOptionalClaimsSelf optionalClaims: " + optionalClaims);
       var checkedClaims = null;
       var claims = optionalClaims.split(/\s+/);
-      debug("setOptionalClaimsSelf claims: " + claims);
+      icDebug("setOptionalClaimsSelf claims: " + claims);
       var i;
       for (i in claims) {
        var claim = claims[i];
-       debug("setOptionalClaimsSelf claim: " + claim);
+       icDebug("setOptionalClaimsSelf claim: " + claim);
        if (claim.indexOf("givenname") != -1) {
         if (isClaimChecked("_givenname") != null) {
          var uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
@@ -1759,10 +1916,10 @@ function setOptionalClaimsSelf(policy) {
         }
         continue;
        } else {
-        debug("processCard: claim not in list:" + claim);
+        icDebug("processCard: claim not in list:" + claim);
        }
       }
-      debug("setOptionalClaimsSelf checkedClaims: " + checkedClaims);
+      icDebug("setOptionalClaimsSelf checkedClaims: " + checkedClaims);
 	  policy["optionalClaims"] = checkedClaims;
      }
     }
@@ -1774,7 +1931,12 @@ function processCard(policy, enableDebug){
         jvm.showJavaConsole();
     }
     
-
+	if (TokenIssuer.initialize() == false) {
+		idDebug("processCard: could not initialize TokenIssuer. " + window.document.location.href);
+		alert("Could not initialize the TokenIssuer. This is probably an java issuer");
+		return null;
+	}
+	
     var token;
     
     var serializedPolicy = JSON.stringify(policy);
@@ -1784,7 +1946,7 @@ function processCard(policy, enableDebug){
 
 }
 
-function debug(msg) {
+function icDebug(msg) {
   var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
   debug.logStringMessage("infocard: " + msg);
 }

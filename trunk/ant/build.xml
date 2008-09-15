@@ -19,6 +19,7 @@
             </fileset>
         </path>
         <property name="java.ver" value="15" />
+    	<property name="xpiVersion" value="${openinfocard.version}.${DSTAMP}${TSTAMP}" />
     </target>
 
 
@@ -103,10 +104,15 @@
 
     <target name="dist_XMLDAP_RP" depends="init">
 
-        <mkdir dir="${build.dir}/xmldap.org/"/>
+       <property file="${websrc.dir}/xmldap_rp/WEB-INF/rp.properties"/>
+    	
+       <mkdir dir="${build.dir}/xmldap.org/"/>
         <copy todir="${build.dir}/xmldap.org/relyingparty/">
           <fileset dir="${websrc.dir}/xmldap_rp/"/>
         </copy>
+        <replace  dir="${build.dir}/xmldap.org/relyingparty/WEB-INF/" includes="xmldap_rp.xrds">
+            <replacefilter token="@domain@" value="${domain}"/>
+        </replace>
         <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/relyingparty/WEB-INF/lib/"/>
         <jar destfile="${build.dir}/xmldap.org/relyingparty.war">
             <fileset dir="${build.dir}/xmldap.org/relyingparty/"/>
@@ -268,8 +274,17 @@
         <mkdir dir="${firefox.lib.dir}"/>
 
         <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" toFile="${firefox.lib.dir}/xmldap.jar"/>
-
-        <zip destfile="${build.dir}/xmldap.xpi"  basedir="${firefox.dir}"/>
+        <copy todir="${build.dir}/firefox">
+          <fileset dir="${firefox.dir}"/>
+        </copy>
+	
+    	<filter token="xpiVersion" value="${xpiVersion}"/>
+    	<move file="${build.dir}/firefox/install.rdf.in" toFile="${build.dir}/firefox/install.rdf" filtering="true"/>
+    		
+        <zip destfile="${build.dir}/xmldap-${xpiVersion}.xpi"  basedir="${build.dir}/firefox"/>
+    	
+    	<!-- for simpler loading into Firefox create this xpi with a static name -->
+    	<copy tofile="${build.dir}/xmldap.xpi" file="${build.dir}/xmldap-${xpiVersion}.xpi"/>
 
     </target>
 

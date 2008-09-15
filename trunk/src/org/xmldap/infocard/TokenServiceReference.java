@@ -57,11 +57,11 @@ public class TokenServiceReference implements Serializable {
 //    public TokenServiceReference() {
 //    }
 
-    public TokenServiceReference(String address, String mexAddress) {
-    	IdentityEnabledEndpointReference epr = new IdentityEnabledEndpointReference(address, mexAddress);
-    	epList = new ArrayList<IdentityEnabledEndpointReference>(1);
-    	epList.add(epr);
-    }
+//    public TokenServiceReference(String address, String mexAddress) {
+//    	IdentityEnabledEndpointReference epr = new IdentityEnabledEndpointReference(address, mexAddress);
+//    	epList = new ArrayList<IdentityEnabledEndpointReference>(1);
+//    	epList.add(epr);
+//    }
 
     public TokenServiceReference(String address, String mexAddress, X509Certificate cert) {
     	IdentityEnabledEndpointReference epr = new IdentityEnabledEndpointReference(address, mexAddress, cert);

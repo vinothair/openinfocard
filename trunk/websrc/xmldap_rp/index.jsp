@@ -22,6 +22,9 @@
 	}
 %>
 <%
+ org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
+ String requiredClaims = properties.getProperty("requiredClaims"); 
+ String optionalClaims = properties.getProperty("optionalClaims"); 
 
  String queryString = request.getQueryString();
  if (queryString != null) {
@@ -34,7 +37,6 @@
 	 } else if ("*/*".equals(contentType)) {
 		 contentType = "text/plain";
 	 }
-	 org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
 	 String privaceStatement = properties.getProperty("privacyStatement." + contentType); 
 	 if (privaceStatement == null) {
 		 privaceStatement = properties.getProperty("privacyStatement.text/plain"); 
@@ -56,8 +58,10 @@
 //	 java.io.FileInputStream fis = new java.io.FileInputStream(privaceStatement);
 	 java.io.BufferedReader ins = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
 	 try {
-			while (fis.available() != 0) {
-				out.println(ins.readLine());
+		 String line = ins.readLine();
+			while (line != null) {
+				out.println(line);
+				line = ins.readLine();
 			}
 		} catch (java.io.IOException e) {
 			throw new ServletException(e);
@@ -68,7 +72,6 @@
 		}
    } else  if (queryString.indexOf("xmldap_rp.xrds") == 0) {
 	 System.out.println("queryString.indexOf(\"xmldap_rp.xrds\") = " + queryString.indexOf("xmldap_rp.xrds"));
-	 org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
 	 String xrds = properties.getProperty("xrds"); 
 	 if (xrds != null) {
 		 response.setContentType("application/xml+xrds");
@@ -77,8 +80,10 @@
 	//	 java.io.FileInputStream fis = new java.io.FileInputStream(xrds);
 		 java.io.BufferedReader ins = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
 		 try {
-				while (fis.available() != 0) {
-					out.println(ins.readLine());
+			 String line = ins.readLine();
+				while (line != null) {
+					out.println(line);
+					line = ins.readLine();
 				}
 			} catch (java.io.IOException e) {
 				throw new ServletException(e);
@@ -88,9 +93,23 @@
 				ins.close();
 			}
 	} else {
-		System.out.println("ERROR: resource not found: xrds");
+		System.out.println("ERROR: resource not found: " + xrds);
 		// TODO return HTTP not found
 	}
+  } else  if (queryString.indexOf("login.xml") == 0) {
+		 System.out.println("queryString.indexOf(\"login.xml\") = " + queryString.indexOf("login.xml"));
+
+		 response.setContentType("application/xml");
+		 out.println("<object type=\"application/x-informationcard\" name=\"xmlToken\">");
+		 
+   		 out.print("<param name=\"privacyUrl\" value=\""); out.print(request.getRequestURL()); out.println("?privacy.txt\"/>");
+		 out.println("<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>");
+		 out.println("<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>");
+		 out.println("<param name=\"privacyVersion\" value=\"1\"/>");
+         out.println("<param name=\"tokenType\" value=\"urn:oasis:names:tc:SAML:1.0:assertion\"/>");
+		 out.println("</object>");
+
+	  
   }
  } else {
 	String userAgent = request.getHeader("user-agent");
@@ -100,7 +119,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Java Based Relying Party</title>
-	<link rel="xrds.metadata" href="xmldap_rp.xrds"/>
+	<link rel="xrds.metadata" href="?xmldap_rp.xrds"/>
 
     <style type="text/css">
     BODY {background: #FFF url(./img/banner.png) repeat-x;
@@ -150,10 +169,6 @@
     </style>
     
     <% 
-	 org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
-	 String requiredClaims = properties.getProperty("requiredClaims"); 
-	 String optionalClaims = properties.getProperty("optionalClaims"); 
-
      String servername = request.getServerName();
      if (servername != null) {
     	 if (servername.indexOf("xmldap.org") > 0) {

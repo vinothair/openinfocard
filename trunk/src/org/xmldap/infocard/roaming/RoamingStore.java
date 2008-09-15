@@ -182,10 +182,6 @@ public class RoamingStore implements org.xmldap.xml.Serializable {
 
     private Element getRoamingStore() throws SerializationException {
 
-        if (roamingInformationCards.isEmpty()) {
-            throw new SerializationException("Empty Roaming Store not allowed - add some cards");
-        }
-
         Element roamingStore = new Element("RoamingStore", WSConstants.INFOCARD_NAMESPACE);
         Iterator<RoamingInformationCard> cards = roamingInformationCards.iterator();
         while (cards.hasNext()) {
