@@ -35,7 +35,7 @@ import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.TokenServiceReference;
 import org.xmldap.infocard.UserCredential;
 import org.xmldap.infocard.policy.SupportedClaim;
-import org.xmldap.infocard.policy.SupportedClaimList;
+import org.xmldap.infocard.policy.SupportedClaimTypeList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.sts.db.DbSupportedClaim;
@@ -151,14 +151,21 @@ public class CardServlet extends HttpServlet {
         	System.out.println("CardServlet: could not find card:" + cardId);
             return;
         }
-        String userCredential = (String)session.getAttribute("UserCredential");
-        if (userCredential == null) {
-        	userCredential = UserCredential.USERNAME;
+        String userCredentialType = (String)session.getAttribute("UserCredential");
+        if (userCredentialType == null) {
+        	userCredentialType = UserCredential.USERNAME;
         	System.out.println("Warn: UserCredentialType is null. Using default: " + UserCredential.USERNAME);
         }
         
+        UserCredential usercredential = null;
+        if (UserCredential.USERNAME.equals(userCredentialType)) {
+        	usercredential = new UserCredential(UserCredential.USERNAME, username);
+        } else {
+        	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "only username password credentials are currently supported");
+        	return;
+        }
         String tokenServiceEndpoint = "https://" + domainname + "/" + servletPath + "/" + "tokenservice";
-        String mexEndpoint = "https://" + domainname + "/" + servletPath + "/" + "mex" + "/" + userCredential;
+        String mexEndpoint = "https://" + domainname + "/" + servletPath + "/" + "mex" + "/" + userCredentialType;
 
     //  x509Certificate2.appendChild("MIIEQTCCA6qgAwIBAgICAQQwDQYJKoZIhvcNAQEFBQAwgbsxJDAiBgNVBAcTG1ZhbGlDZXJ0IFZhbGlkYXRpb24gTmV0d29yazEXMBUGA1UEChMOVmFsaUNlcnQsIEluYy4xNTAzBgNVBAsTLFZhbGlDZXJ0IENsYXNzIDIgUG9saWN5IFZhbGlkYXRpb24gQXV0aG9yaXR5MSEwHwYDVQQDExhodHRwOi8vd3d3LnZhbGljZXJ0LmNvbS8xIDAeBgkqhkiG9w0BCQEWEWluZm9AdmFsaWNlcnQuY29tMB4XDTA0MDExNDIxMDUyMVoXDTI0MDEwOTIxMDUyMVowgewxCzAJBgNVBAYTAlVTMRAwDgYDVQQIEwdBcml6b25hMRMwEQYDVQQHEwpTY290dHNkYWxlMSUwIwYDVQQKExxTdGFyZmllbGQgVGVjaG5vbG9naWVzLCBJbmMuMTAwLgYDVQQLEydodHRwOi8vd3d3LnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkxMTAvBgNVBAMTKFN0YXJmaWVsZCBTZWN1cmUgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxKjAoBgkqhkiG9w0BCQEWG3ByYWN0aWNlc0BzdGFyZmllbGR0ZWNoLmNvbTCBnTANBgkqhkiG9w0BAQEFAAOBiwAwgYcCgYEA2xFDa9zRaXhZSehudBQIdBFsfrcqqCLYQjx6z59QskaupmcaIyK+D7M0+6yskKpbKMJw9raKgCrgm5xS4JGocqAW4cROfREJs5651POyUMRtSAi9vCqXDG2jimo8ms9KNNwe3upaJsChooKpSvuGIhKQOrKC1JKRn6lFn8Ok2/sCAQOjggEhMIIBHTAMBgNVHRMEBTADAQH/MAsGA1UdDwQEAwIBBjBKBgNVHR8EQzBBMD+gPaA7hjlodHRwOi8vY2VydGlmaWNhdGVzLnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkvcm9vdC5jcmwwTwYDVR0gBEgwRjBEBgtghkgBhvhFAQcXAzA1MDMGCCsGAQUFBwIBFidodHRwOi8vd3d3LnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkwOQYIKwYBBQUHAQEELTArMCkGCCsGAQUFBzABhh1odHRwOi8vb2NzcC5zdGFyZmllbGR0ZWNoLmNvbTAdBgNVHQ4EFgQUrFXet+oT6/yYaOJTYB7xJT6M7ucwCQYDVR0jBAIwADANBgkqhkiG9w0BAQUFAAOBgQB+HJi+rQONJYXufJCIIiv+J/RCsux/tfxyaAWkfZHvKNF9IDk7eQg3aBhS1Y8D0olPHhHR6aV0S/xfZ2WEcYR4WbfWydfXkzXmE6uUPI6TQImMwNfy5wdS0XCPmIzroG3RNlOQoI8WMB7ew79/RqWVKvnI3jvbd/TyMrEzYaIwNQ==");
     //  x509Certificate3.appendChild("MIIC5zCCAlACAQEwDQYJKoZIhvcNAQEFBQAwgbsxJDAiBgNVBAcTG1ZhbGlDZXJ0IFZhbGlkYXRpb24gTmV0d29yazEXMBUGA1UEChMOVmFsaUNlcnQsIEluYy4xNTAzBgNVBAsTLFZhbGlDZXJ0IENsYXNzIDIgUG9saWN5IFZhbGlkYXRpb24gQXV0aG9yaXR5MSEwHwYDVQQDExhodHRwOi8vd3d3LnZhbGljZXJ0LmNvbS8xIDAeBgkqhkiG9w0BCQEWEWluZm9AdmFsaWNlcnQuY29tMB4XDTk5MDYyNjAwMTk1NFoXDTE5MDYyNjAwMTk1NFowgbsxJDAiBgNVBAcTG1ZhbGlDZXJ0IFZhbGlkYXRpb24gTmV0d29yazEXMBUGA1UEChMOVmFsaUNlcnQsIEluYy4xNTAzBgNVBAsTLFZhbGlDZXJ0IENsYXNzIDIgUG9saWN5IFZhbGlkYXRpb24gQXV0aG9yaXR5MSEwHwYDVQQDExhodHRwOi8vd3d3LnZhbGljZXJ0LmNvbS8xIDAeBgkqhkiG9w0BCQEWEWluZm9AdmFsaWNlcnQuY29tMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDOOnHK5avIWZJV16vYdA757tn2VUdZZUcOBVXc65g2PFxTXdMwzzjsvUGJ7SVCCSRrCl6zfN1SLUzm1NZ9WlmpZdRJEy0kTRxQb7XBhVQ7/nHk01xC+YDgkRoKWzk2Z/M/VXwbP7RfZHM047QSv4dk+NoS/zcnwbNDu+97bi5p9wIDAQABMA0GCSqGSIb3DQEBBQUAA4GBADt/UG9vUJSZSWI4OB9L+KXIPqeCgfYrx+jFzug6EILLGACOTb2oWH+heQC1u+mNr0HZDzTuIYEZoDJJKPTEjlbVUjP9UNV+mWwD5MlM/Mtsq2azSiGM5bUMMj4QssxsodyamEwCW/POuZ6lcg5Ktz885hZo+L7tdEy8W9ViH0Pd");
@@ -182,16 +189,21 @@ public class CardServlet extends HttpServlet {
             card.setBase64BinaryCardImage(base64ImageFile);
         }
 
-
-        XSDDateTime issued = new XSDDateTime();
-        XSDDateTime expires = new XSDDateTime(525600);
-
-        card.setTimeIssued(issued.getDateTime());
-        card.setTimeExpires(expires.getDateTime());
-
+//		The next line made no sense since the dates are in the database and 
+//        are in the card already
+//        XSDDateTime issued = new XSDDateTime();
+//        XSDDateTime expires = new XSDDateTime(525600);
+//
+//        card.setTimeIssued(issued.getDateTime());
+//        card.setTimeExpires(expires.getDateTime());
+        card.setTimeIssued(managedCard.getTimeIssued());
+        String timeexpired = managedCard.getTimeExpires();
+        if (timeexpired != null) {
+        	card.setTimeExpires(timeexpired);
+        }
+        
         {
-	        TokenServiceReference tsr = getTokenServiceReference(tokenServiceEndpoint, mexEndpoint, certChain[0]);
-	        tsr.setAuthType(userCredential, username);
+	        TokenServiceReference tsr = getTokenServiceReference(tokenServiceEndpoint, mexEndpoint, certChain[0], usercredential);
 	        List<TokenServiceReference> list = new ArrayList<TokenServiceReference>();
 	        list.add(tsr);
 	        card.setTokenServiceReference(list);
@@ -204,7 +216,7 @@ public class CardServlet extends HttpServlet {
 	        tokenList.addSupportedToken(token);
 	        card.setTokenList(tokenList);
         }
-        SupportedClaimList claimList = getSupportedClaimList(managedCard);
+        SupportedClaimTypeList claimList = getSupportedClaimList(managedCard);
         card.setClaimList(claimList);
 
         try {
@@ -234,24 +246,25 @@ public class CardServlet extends HttpServlet {
         return "https://" + domainname + "/" + servletPath + "/PrivacyPolicy.xml";
     }
 
-    protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert) {
-        TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
+    protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert, UserCredential usercredential) {
+    	TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert, usercredential);
         return tsr;
     }
 
-    protected SupportedClaimList getSupportedClaimList(ManagedCard managedCard) {
+    protected SupportedClaimTypeList getSupportedClaimList(ManagedCard managedCard) {
     	List<DbSupportedClaim> supportedClaims = supportedClaimsImpl.dbSupportedClaims();
-        SupportedClaimList claimList = new SupportedClaimList();
         SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "your personal private identitfier");
-        claimList.addSupportedClaim(supportedClaim);
+        ArrayList<SupportedClaim> cl = new ArrayList<SupportedClaim>();
+        cl.add(supportedClaim);
     	for (DbSupportedClaim claim : supportedClaims) {
     		String value = managedCard.getClaim(claim.uri);
     		if ((value != null) && !("".equals(value))) {
 	    		// TODO: support description. Axel
 	    		supportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri, "A Description");
-	    		claimList.addSupportedClaim(supportedClaim);
+	    		cl.add(supportedClaim);
     		}
     	}
+        SupportedClaimTypeList claimList = new SupportedClaimTypeList(cl);
 //        SupportedClaimList claimList = new SupportedClaimList();
 //        SupportedClaim given = new SupportedClaim("GivenName", org.xmldap.infocard.Constants.IC_NS_GIVENNAME);
 //        SupportedClaim sur = new SupportedClaim("Surname", org.xmldap.infocard.Constants.IC_NS_SURNAME);

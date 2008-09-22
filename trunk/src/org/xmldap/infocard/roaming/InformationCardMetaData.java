@@ -75,7 +75,7 @@ public class InformationCardMetaData extends InfoCard {
     		}
     		elt = informationCardMetaDataElement.getFirstChildElement("TimeLastUpdated", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
-    			this.HashSalt = elt.getValue();
+    			this.timeLastUpdated = elt.getValue();
     		} else {
     			throw new ParsingException("Expected TimeLastUpdated");
     		}
@@ -187,9 +187,10 @@ public class InformationCardMetaData extends InfoCard {
         return informationCardMetaData;
     }
     
-    public InformationCardMetaData(InfoCard card) {
+    public InformationCardMetaData(InfoCard card, String issuerName) {
     	super(card);
     	this.isSelfIssued = org.xmldap.infocard.Constants.ISSUER_XMLSOAP.equals(card.getIssuer());
+    	this.issuerName = issuerName;
     }
 
 	public String getPinDigest() {

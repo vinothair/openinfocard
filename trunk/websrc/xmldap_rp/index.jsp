@@ -25,6 +25,7 @@
  org.xmldap.util.PropertiesManager properties = new org.xmldap.util.PropertiesManager(org.xmldap.util.PropertiesManager.RELYING_PARTY, config.getServletContext());
  String requiredClaims = properties.getProperty("requiredClaims"); 
  String optionalClaims = properties.getProperty("optionalClaims"); 
+ String tokentype = properties.getProperty("tokentype"); 
 
  String queryString = request.getQueryString();
  if (queryString != null) {
@@ -112,7 +113,12 @@
 	  
   }
  } else {
-	String userAgent = request.getHeader("user-agent");
+		String userAgent = request.getHeader("user-agent");
+		String cardSelectorName = request.getHeader("X-ID-Selector");
+		boolean isOpenInfocardSelector = false;
+		if (cardSelectorName != null) {
+			isOpenInfocardSelector = (cardSelectorName.indexOf("openinfocard") != -1);
+		}
 	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 %>
 
@@ -137,6 +143,10 @@
 
         A {color: #657485; font-family:verdana, arial, sans-serif; text-decoration: none}
         A:hover {color: #657485; text-decoration: underline}
+
+		.droparea:-moz-drag-over {
+		  border: 1px solid black;
+		}
 
         .container {
            background-color: #FFFFFF;
@@ -168,26 +178,6 @@
 
     </style>
     
-    <% 
-     String servername = request.getServerName();
-     if (servername != null) {
-    	 if (servername.indexOf("xmldap.org") > 0) {
-    %>
-
-    <script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
-    </script>
-    <script type="text/javascript">
-    if (!(urchinTracker == undefined)) {
-     _uacct = "UA-147402-2";
-     urchinTracker();
-    }
-    </script>
-    <%
-    	 }
-     }
-    %>
-
-
 </head>
 <body>
 	<div id="title">java based relying party</div>
@@ -207,20 +197,35 @@
 
 <form method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
 <p>
+<%
+	if (isOpenInfocardSelector) {
+%>		
+<!--  ondragover="return false" dragenter="return false"  -->
+<img id="icDropTarget" class="droparea" src="./img/card_off.png" alt=""
+     onmouseover="this.src='./img/card_on.png';"
+     onmouseout="this.src='./img/card_off.png';"
+     onclick='var pf = document.getElementById("infocard"); pf.submit();'/>
+<%
+	} else {
+%>
 <img src="./img/card_off.png" alt=""
      onmouseover="this.src='./img/card_on.png';"
      onmouseout="this.src='./img/card_off.png';"
      onclick='var pf = document.getElementById("infocard"); pf.submit();'/>
+<%
+	}
+%>
 
     <object type="application/x-informationcard" name="xmlToken">
 <%
-		out.println("<param name=\"privacyUrl\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>");
-    	out.println("<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>");
-    	out.println("<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>");
+		out.println("\t<param name=\"privacyUrl\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>");
+    	out.println("\t<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>");
+    	out.println("\t<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>");
+    	out.println("\t<param name=\"tokenType\" value=\"" + tokentype + "\"/>");
 %>
     			  <param name="privacyVersion" value="1"/>
-                  <param name="tokenType" value="urn:oasis:names:tc:SAML:1.0:assertion"/>
-            </object>
+    			  <param name="icDropTargetId" value="icDropTarget"/>
+    </object>
 </p>
 </form>
                     <br/>Click on the image above to login with and Infocard.<br/>
@@ -254,9 +259,12 @@
     <a href="http://xmldap.blogspot.com/2006/03/how-to-consume-tokens-from-infocard.html">Here's a brief overview of what it's doing.</a>
 
 <%
-	if (userAgent != null) {
-		out.println("<p style=\"font-size:xx-small\">Your user agent is: " + escapeHtmlEntities(userAgent) + "</p>");
-	}
+if (userAgent != null) {
+	out.println("<p style=\"font-size:xx-small\">Your user agent is: " + escapeHtmlEntities(userAgent) + "</p>");
+}
+if (cardSelectorName != null) {
+	out.println("<p style=\"font-size:xx-small\">Your ID selector is: " + escapeHtmlEntities(cardSelectorName) + "</p>");
+}
 %>
     </div>
     </div>

@@ -703,22 +703,25 @@ function cancel(){
 function load(){
 	icDebug("load start. href=" + window.document.location.href );
 	
-    var select = document.getElementById('selectcontrol');
-    select.addEventListener("click", ok, false);
-
-
-    var disableElm = document.getElementById('disableSelector');
-    disableElm.addEventListener("click", disable, false);
-
-    var newCardElm = document.getElementById('newCard');
-    newCardElm.addEventListener("click", newCard, false);
-
-    var deleteCardElm = document.getElementById('deleteCard');
-    deleteCardElm.addEventListener("click", deleteCard, false);
-
-    var cancelselector = document.getElementById('cancelselector');
-    cancelselector.addEventListener("click", cancel, false);
-
+	var controlarea = document.getElementById('selectcontrol');
+	if (controlarea) {
+	    var select = document.getElementById('selectcontrol');
+	    select.addEventListener("click", ok, false);
+	
+	
+	    var disableElm = document.getElementById('disableSelector');
+	    disableElm.addEventListener("click", disable, false);
+	
+	    var newCardElm = document.getElementById('newCard');
+	    newCardElm.addEventListener("click", newCard, false);
+	
+	    var deleteCardElm = document.getElementById('deleteCard');
+	    deleteCardElm.addEventListener("click", deleteCard, false);
+	
+	    var cancelselector = document.getElementById('cancelselector');
+	    cancelselector.addEventListener("click", cancel, false);
+	}
+	
     var stringsBundle = document.getElementById("string-bundle");
 
     var rpIdentifier = null;
@@ -770,23 +773,29 @@ function load(){
     	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
 	        var policy = window.arguments[0];
 	        var label = document.getElementById("notify");
-			var site = "Unknown";
-			if (policy.hasOwnProperty("cn")) {
-				site = policy["cn"];
-			} else if (policy.hasOwnProperty("url")) {
-				site = policy["url"];
-			}
-	        var please = stringsBundle.getFormattedString('pleaseselectacard', [site]);
-	        label.setAttribute("value", please);
+	        if (label != null) {
+				var site = "Unknown";
+				if (policy.hasOwnProperty("cn")) {
+					site = policy["cn"];
+				} else if (policy.hasOwnProperty("url")) {
+					site = policy["url"];
+				}
+		        var please = stringsBundle.getFormattedString('pleaseselectacard', [site]);
+		        label.setAttribute("value", please);
+	        }
 	    } else {
 	        var label = document.getElementById("notify");
-	        label.setAttribute("value", "card management");
+	        if (label != null) {
+	        	label.setAttribute("value", "card management");
+	        }
 	    }
 	} else {
         var label = document.getElementById("notify");
-		var button = stringsBundle.getString('newcard');
-        var youdont = stringsBundle.getFormattedString('youdonthaveanycards', [button]);
-        label.setAttribute("value", youdont);
+        if (label != null) {
+			var button = stringsBundle.getString('newcard');
+	        var youdont = stringsBundle.getFormattedString('youdonthaveanycards', [button]);
+	        label.setAttribute("value", youdont);
+        }
     }
 	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
 		var policy = window.arguments[0];
@@ -831,16 +840,18 @@ function load(){
 		 }
 	}
 	 var firstTimeVisit = document.getElementById('firstTimeVisit');
-	 var labelText;
-	 try {
-	  labelText = stringsBundle.getString('firstTimeVisit');
-	 } catch (e) {
-	  labelText = "This is your first visit to this site. Think!";
+	 if (firstTimeVisit != null) {
+		 var labelText;
+		 try {
+		  labelText = stringsBundle.getString('firstTimeVisit');
+		 } catch (e) {
+		  labelText = "This is your first visit to this site. Think!";
+		 }
+		 icDebug("firstTime: " + labelText);
+		 firstTimeVisit.setAttribute("value", labelText);
+		 var firstTimeVisitBox = document.getElementById('firstTimeVisitBox');
+		 firstTimeVisitBox.setAttribute("hidden", "false");
 	 }
-	 icDebug("firstTime: " + labelText);
-	 firstTimeVisit.setAttribute("value", labelText);
-	 var firstTimeVisitBox = document.getElementById('firstTimeVisitBox');
-	 firstTimeVisitBox.setAttribute("hidden", "false");
 	}
 }
 
@@ -953,7 +964,9 @@ function setCardSelf() {
 		var stringsBundle = document.getElementById("string-bundle");
 		var selfassertedcard = stringsBundle.getString('selfassertedcard');
         var label = document.getElementById("notify");
-        label.setAttribute("value", selfassertedcard);
+        if (label != null) {
+        	label.setAttribute("value", selfassertedcard);
+        }
 }
 
 function setCardManaged(requiredClaims, optionalClaims) {
@@ -1190,7 +1203,9 @@ icDebug("qi Claim:" + thisClaim + " " + qi);
 		var stringsBundle = document.getElementById("string-bundle");
 		var managedcardfromissuer = stringsBundle.getFormattedString('managedcardfromissuer', [selectedCard.carddata.managed.issuer]);
         var label = document.getElementById("notify");
-        label.setAttribute("value", managedcardfromissuer );
+        if (label != null) {
+        	label.setAttribute("value", managedcardfromissuer );
+        }
 }
 
 function setCard(card){
@@ -1201,16 +1216,20 @@ function setCard(card){
 	}
 	
     var showPrivacyStatementElm = document.getElementById('privacy_label');
-    showPrivacyStatementElm.hidden = true;
+    if (showPrivacyStatementElm != null) {
+    	showPrivacyStatementElm.hidden = true;
+    }
     
 	var issuerlogo = document.getElementById("issuerlogo");
-	issuerlogo.src = "";
-	issuerlogo.hidden = true;
-	var issuerlogo_label = document.getElementById("issuerlogo_label");
-    issuerlogo_label.hidden = true;
-	var issuer_hbox = document.getElementById("issuer_hbox");
-    issuer_hbox.hidden = true;
-
+	if (issuerlogo != null) {
+		issuerlogo.src = "";
+		issuerlogo.hidden = true;
+		var issuerlogo_label = document.getElementById("issuerlogo_label");
+	    issuerlogo_label.hidden = true;
+		var issuer_hbox = document.getElementById("issuer_hbox");
+	    issuer_hbox.hidden = true;
+	}
+	
     selectedCard = card;
 
     icDebug("TYPE: " + selectedCard.type);
@@ -1220,11 +1239,17 @@ function setCard(card){
     var managedClaims = document.getElementById('managedClaims');
 
     if (selectedCard.type == "selfAsserted" )  {
-        selfassertedClaims.setAttribute("hidden", "false");
-        managedClaims.setAttribute("hidden", "true");
+    	if (selfassertedClaims != null) {
+    		selfassertedClaims.setAttribute("hidden", "false");
+    	}
+    	if (managedClaims != null) {
+    		managedClaims.setAttribute("hidden", "true");
+    	}
 		var cardname = document.getElementById("cardname");
-        cardname.value = selectedCard.name;
-        cardname.hidden = false;
+		if (cardname != null) {
+			cardname.value = selectedCard.name;
+			cardname.hidden = false;
+		}
 		setCardSelf();
     }  else if (selectedCard.type == "managedCard" )   {
 	    var requiredClaims = null;
@@ -1236,25 +1261,39 @@ function setCard(card){
    	      optionalClaims = policy["optionalClaims"];
 	     }
 	    }	
-        selfassertedClaims.setAttribute("hidden", "true");
-        managedClaims.setAttribute("hidden", "false");
+    	if (selfassertedClaims != null) {
+    		selfassertedClaims.setAttribute("hidden", "true");
+    	}
+    	if (managedClaims != null) {
+    		managedClaims.setAttribute("hidden", "false");
+    	}
 
 		var cardname = document.getElementById("cardname");
-        cardname.value = selectedCard.name;
-        cardname.hidden = false;
+		if (cardname != null) {
+	        cardname.value = selectedCard.name;
+	        cardname.hidden = false;
+		}
 		setCardManaged(requiredClaims, optionalClaims);
     } else if (selectedCard.type == "openid" )  {
 
 
         var label = document.getElementById("notify");
-        label.setAttribute("value", "Use OpenID with Identity URL: " + selectedCard.id);
-
+        if (label != null) {
+        	label.setAttribute("value", "Use OpenID with Identity URL: " + selectedCard.id);
+        }
+        
 		var cardname = document.getElementById("cardname");
-        cardname.value = "";
-        cardname.hidden = true;
-
-        selfassertedClaims.setAttribute("hidden", "true");
-        managedClaims.setAttribute("hidden", "true");
+		if (cardname != null) {
+	        cardname.value = "";
+	        cardname.hidden = true;
+		}
+		
+    	if (selfassertedClaims != null) {
+    		selfassertedClaims.setAttribute("hidden", "true");
+    	}
+    	if (managedClaims != null) {
+    		managedClaims.setAttribute("hidden", "true");
+    	}
 
     } else  {
     	alert("unsupported card type\n" + selectedCard.type);
@@ -1287,6 +1326,13 @@ function createItem(c, classStr){
     hbox.setAttribute("class",classStr);
     hbox.setAttribute("cardid",c.id);
     hbox.setAttribute("id",c.id);
+    hbox.setAttribute("draggable","true");
+    hbox.setAttribute("ondraggesture", 
+    	"nsDragAndDrop.startDrag(event, listObserver);");
+    hbox.setAttribute("ondragexit", 
+    	"nsDragAndDrop.dragExit(event, listObserver);");
+    hbox.setAttribute("ondragdrop", 
+		"nsDragAndDrop.drop(event, listObserver);");
     var vbox = document.createElement("vbox");
     vbox.setAttribute("class","databox");
     vbox.setAttribute("flex","1");
@@ -1310,7 +1356,6 @@ function createItem(c, classStr){
     picturebox.setAttribute("flex", "0");
     picturebox.setAttribute("align", "center");
     var picture = document.createElement("image");
-
     if ( (imgurl == "") || (imgurl == undefined)) {
 
         if (c.type == "selfAsserted") {
@@ -1334,6 +1379,61 @@ function createItem(c, classStr){
     icDebug ("Setting cardid " + hbox.getAttribute("cardid"));
     return hbox;
 
+}
+
+var listObserver = {
+		  onDragStart: function (event, transferData, action) {
+			if (event.target.nodeName == 'image') {
+				var data = event.target.getAttribute("cardid");
+			  	icDebug("onDragStart: DATA=" + data);
+			} else {
+				icDebug("onDragStart: target.nodeName=" + event.target.nodeName);
+			    var data = event.target.getAttribute("id");
+			    if ("" + data != "") {
+				  	icDebug("onDragStart: data=" + data);
+			    } else {
+			      	icDebug("onDragStart: Data" + "boink");
+			    }
+			}
+		    transferData.data = new TransferData();
+//		    transferData.data.addDataForFlavour("text/unicode", "" + data);
+		    transferData.data.addDataForFlavour("application/x-informationcard+id", "" + data);
+		  },
+		  
+		  onDragExit : function (event, session) {
+		  	icDebug("onDragExit: event.target.nodeName=" + event.target.nodeName);
+//		    var targetId = event.target.getAttribute("id");
+//		  	icDebug("onDragExit: targetId=" + targetId);
+//		  	var doc = event.target.ownerDocument;
+//		  	if (doc.__identityselector__ == undefined) {
+//		  		icDebug("onDragExit: doc.__identityselector__ == undefined");
+//		  	} else {
+//		  		icDebug("onDragExit: doc.__identityselector__ != undefined");
+//		  	}
+//		  	for (var i in session) {
+//		  		
+//		  		icDebug("onDragExit: session." + i + "=" + eval("session." + i));
+//		  	}
+//		  	icDebug("onDragExit: session.sourceNode=" + session.sourceNode.nodeName);
+//		  	if (session.sourceNode.nodeName == 'image') {
+//				var data = event.target.getAttribute("cardid");
+//			  	icDebug("onDragExit: DATA=" + data);
+//		  	} else {
+//			    var data = event.target.getAttribute("id");
+//			    if ("" + data != "") {
+//				  	icDebug("onDragExit: data=" + data);
+//			    } else {
+//			      	icDebug("onDragExit: data" + "boink");
+//			    }
+//		  	}
+//		    transferData.data = new TransferData();
+//		    transferData.data.addDataForFlavour("text/unicode", data);
+  		  },
+  		  
+  		onDrop : function (evt, transferData, session) {
+  			  icDebug("onDrop: " + transferData.data);
+//  			event.target.setAttribute("value",transferData.data); 
+  		}
 }
 
 // returns true of card tokentype and RP's policy tokentype match
@@ -1612,10 +1712,10 @@ function digestNewCard(callback) {
     	} catch (e) {
     		icDebug("error JSON.stringifying(callback) " + e);
     	}
-    	icDebug("importedCardJSONStr="+importedCardJSONStr);
-    	var cardFileJSONStr = null;
+    	icDebug2("importedCardJSONStr="+importedCardJSONStr, 120);
+    	var cardFileStr = null;
     	try {
-    		cardFileJSONStr = JSON.stringify(cardFile);
+    		cardFileStr = "" + cardFile + "";
     	} catch (e) {
     		icDebug("error JSON.stringifying(cardFile) " + e);
     	}
@@ -1623,12 +1723,24 @@ function digestNewCard(callback) {
 			icDebug("digestNewCard: could not initialize TokenIssuer. Signature will not be validated");
 			alert("Could not initialize java. The card's signature will not be validated!");
 		} else {
-		    	var importedCardStr = TokenIssuer.importManagedCard(importedCardJSONStr, cardFileJSONStr);
+				var currentRoamingStore = readRoamingStore();
+				icDebug2("currentRoamingStore = " + currentRoamingStore, 120);
+				var importedCardStr = null;
+				try {
+			        var jvm = Components.classes["@mozilla.org/oji/jvm-mgr;1"].getService(Components.interfaces.nsIJVMManager);
+			        jvm.showJavaConsole();
+
+					importedCardStr = TokenIssuer.importManagedCard(importedCardJSONStr, currentRoamingStore);
+				} catch (e) {
+					icDebug("TokenIssuer.importManagedCard threw exception " + e);
+				}
 		    	if (importedCardStr != null) {
-			    	icDebug("importedCardStr = " + importedCardStr + " type=" + typeof(importedCardStr));
-			    	var importedCard = JSON.parse(importedCardStr);
+			    	icDebug2("importedCardStr = " + importedCardStr, 120);
+			    	icDebug("importedCardStr type=" + typeof(importedCardStr));
+			    	var importedCard = JSON.parse("" + importedCardStr + ""); // convert java.lang.String to javascript string
 			    	if (importedCard == false) {
 			    		// oops. Could not parse json
+			    		icDebug2("Internal error: could not parse json=" + importedCardStr, 120);
 			    		alert("Internal error: could not parse json=" + importedCardStr);
 			    		return;
 			    	}
@@ -1641,6 +1753,12 @@ function digestNewCard(callback) {
 			       		alert("The card is NOT imported\n" + importedCard.error);
 			    		return;
 			    	} 
+			    	var result = importedCard.result;
+			    	icDebug2("RoamingStore: " + result, 160);
+			    	
+			    	var roamingstore = new XML(result);
+			    	//icDebug("RoamingStoreXML: " + roamingstore);
+			    	saveRoamingStore(roamingstore);
 		    	} else {
 		    		alert("Could not verify SIGNATURE of card: " + cardName + "\nContinuing anyways with import.");
 		    	}
@@ -1739,11 +1857,15 @@ function reload() {
     grid1.setAttribute("hidden", "false");
 
     var label = document.getElementById("notify");
-    label.setAttribute("value", "Please select another card");
-
+    if (label != null) {
+    	label.setAttribute("value", "Please select another card");
+    }
+    
     var select = document.getElementById('selectcontrol');
-    select.setAttribute('hidden', 'true');
-
+    if (select != null) {
+    	select.setAttribute('hidden', 'true');
+    }
+    
 		var cardname = document.getElementById("cardname");
         cardname.value = "";
         cardname.hidden = false;
@@ -1755,9 +1877,12 @@ function reload() {
 
 function deleteCard(){
 
-    icDebug("Delete Card : " + selectedCardId);
+	if (selectedCard == undefined) return;
+	if (selectedCard == null) return;
+	
     
     var selectedCardId = selectedCard.id;
+    icDebug("Delete Card : " + selectedCardId);
     removeCard(selectedCardId);
 	reload();
 }
@@ -1946,7 +2071,19 @@ function processCard(policy, enableDebug){
 
 }
 
+function icDebug2(msg, width) {
+	  var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+	  var message = "";
+	  while (msg.length > width) {
+		  message += msg.substr(0,width) + "\n";
+		  msg = msg.substring(width);
+	  }
+	  if (msg.length > 0) {
+		  message += msg;
+	  }
+	  debug.logStringMessage("infocard: " + message);
+}
 function icDebug(msg) {
-  var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
-  debug.logStringMessage("infocard: " + msg);
+	  var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+	  debug.logStringMessage("infocard: " + msg);
 }

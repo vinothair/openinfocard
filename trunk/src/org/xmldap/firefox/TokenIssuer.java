@@ -47,6 +47,7 @@ import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.SelfIssuedToken;
+import org.xmldap.infocard.SignedInfoCard;
 import org.xmldap.infocard.roaming.InformationCardMetaData;
 import org.xmldap.infocard.roaming.InformationCardPrivateData;
 import org.xmldap.infocard.roaming.ManagedInformationCardPrivateData;
@@ -56,6 +57,7 @@ import org.xmldap.saml.Subject;
 import org.xmldap.util.Base64;
 import org.xmldap.util.CertsAndKeys;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.XmlUtils;
 import org.xmldap.xmldsig.ValidatingEnvelopedSignature;
 import org.xmldap.xmlenc.EncryptedData;
@@ -569,37 +571,45 @@ public class TokenIssuer {
 		return result;
 	}
 	
-	public String importManagedCard(Element importedCard, Document cardStore) throws TokenIssuanceException {
-		Element root = cardStore.getRootElement();
-		String storeFormat = root.getLocalName();
-		RoamingStore roamingStore;
-		
-		if ("infocards".equals(storeFormat)) {
-			throw new IllegalArgumentException("unsupported cardstore format: " + storeFormat);
-//			Infocards infocards = new Infocards(cardStore);
-//			roamingStore = new RoamingStore(infocards);
-		} else if ("RoamingStore".equals(root.getLocalName())) {
-			try {
-				roamingStore = new RoamingStore(cardStore);
-			} catch (IOException e) {
-				throw new TokenIssuanceException(e);
-			} catch (ParsingException e) {
-				throw new TokenIssuanceException(e);
-			} catch (nu.xom.ParsingException e) {
-				throw new TokenIssuanceException(e);
+	public String importManagedCard(Element importedCard, Document cardStore, String issuerName) throws TokenIssuanceException {
+		String storeFormat = null;
+		RoamingStore roamingStore = null;
+		if (cardStore != null) {
+			Element root = cardStore.getRootElement();
+			storeFormat = root.getLocalName();
+			if ("RoamingStore".equals(root.getLocalName())) {
+				try {
+					roamingStore = new RoamingStore(cardStore);
+				} catch (IOException e) {
+					throw new TokenIssuanceException(e);
+				} catch (ParsingException e) {
+					throw new TokenIssuanceException(e);
+				} catch (nu.xom.ParsingException e) {
+					throw new TokenIssuanceException(e);
+				}
+			} else {
+				throw new IllegalArgumentException("unsupported cardstore format: " + storeFormat);
 			}
-		} else {
-			throw new IllegalArgumentException("unsupported cardstore format: " + storeFormat);
 		}
 
 		try {
 			InfoCard card = new InfoCard(importedCard);
-			InformationCardMetaData informationCardMetaData = new InformationCardMetaData(card);
+			if (!card.checkValidity(null)) {
+				// card is not valid
+				throw new TokenIssuanceException("the imported information card is not valid");
+			}
+            InformationCardMetaData informationCardMetaData = new InformationCardMetaData(card, issuerName);
 			byte[] masterKeyBytes = new SecureRandom().generateSeed(32);
 			String masterKey = Base64.encodeBytes(masterKeyBytes);
 			InformationCardPrivateData informationCardPrivateData = new ManagedInformationCardPrivateData(masterKey);
 			RoamingInformationCard ric = new RoamingInformationCard(informationCardMetaData, informationCardPrivateData);
-			roamingStore.addRoamingInformationCard(ric);
+			if (roamingStore == null) {
+				Vector<RoamingInformationCard> v = new Vector<RoamingInformationCard>(1);
+				v.add(ric);
+				roamingStore = new RoamingStore(v);
+			} else {
+				roamingStore.addRoamingInformationCard(ric);
+			}
 			return roamingStore.toXML();
 		} catch (ParsingException e) {
 			throw new TokenIssuanceException(e);
@@ -635,11 +645,29 @@ public class TokenIssuer {
 					
 					
 					try {
-						doc = XmlUtils.parse(cardFileJSONStr);
-						String newStore = importManagedCard(validElement, doc);
-						
-						result.put("result", newStore);
-	                	return result.toString();
+						if (cardFileJSONStr != null) {
+							System.out.println(cardFileJSONStr);
+							doc = XmlUtils.parse(cardFileJSONStr);
+						} else {
+							doc = null;
+						}
+						String ns = validElement.getNamespaceURI();
+						String name = validElement.getLocalName();
+						if ("Object".equals(name) && WSConstants.DSIG_NAMESPACE.equals(ns)) {
+//							Element validInfocardElement = validElement.getFirstChildElement("InformationCard", WSConstants.INFOCARD_NAMESPACE);
+							if (validElement.getChildCount() == 1) {
+								Element validInfocardElement = (Element) validElement.getChild(0);
+								X509Certificate signingCert = signature.getCert(); 
+								String issuerName = signingCert.getSubjectX500Principal().getName();
+								String newStore = importManagedCard(validInfocardElement, doc, issuerName);
+								result.put("result", newStore);
+			                	return result.toString();
+							} else {
+								throw new TokenIssuanceException("Signature is valid but has more than one child element: \n" + validElement.toXML());
+							}
+						} else {
+							throw new TokenIssuanceException("Signature is valid but could not find 'dsig:Object': \n" + validElement.toXML());
+						}
 					} catch (IOException e) {
 						throw new TokenIssuanceException(e);
 					} catch (nu.xom.ParsingException e) {

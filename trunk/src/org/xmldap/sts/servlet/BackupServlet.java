@@ -34,7 +34,7 @@ import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.TokenServiceReference;
 import org.xmldap.infocard.UserCredential;
 import org.xmldap.infocard.policy.SupportedClaim;
-import org.xmldap.infocard.policy.SupportedClaimList;
+import org.xmldap.infocard.policy.SupportedClaimTypeList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.infocard.roaming.EncryptedStore;
@@ -162,7 +162,7 @@ public class BackupServlet extends HttpServlet {
 	            card.setTokenList(tokenList);
             }
             
-            SupportedClaimList claimList = getSupportedClaimList();
+            SupportedClaimTypeList claimList = getSupportedClaimList();
             card.setClaimList(claimList);
             /*
             SupportedClaimList claimList = new SupportedClaimList();
@@ -181,7 +181,8 @@ public class BackupServlet extends HttpServlet {
 				throw new ServletException("Error setting PrivacyNotice", e);
 			}
 
-            InformationCardMetaData informationCardMetaData = new InformationCardMetaData(card);
+			String issuerName = cert.getIssuerX500Principal().getName();
+            InformationCardMetaData informationCardMetaData = new InformationCardMetaData(card, issuerName);
             SelfIssuedInformationCardPrivateData informationCardPrivateData = new SelfIssuedInformationCardPrivateData();
             RoamingInformationCard ric = new RoamingInformationCard(informationCardMetaData, informationCardPrivateData);
             store.addRoamingInformationCard(ric);
@@ -208,24 +209,26 @@ public class BackupServlet extends HttpServlet {
     }
 
     protected TokenServiceReference getTokenServiceReference(String tokenServiceEndpoint, String mexEndpoint, X509Certificate cert, String username) {
-        TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert);
-        tsr.setAuthType(UserCredential.USERNAME, username);
+    	UserCredential usercredential = new UserCredential(UserCredential.USERNAME, username);
+        TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, cert, usercredential);
         return tsr;
     }
 
-    protected SupportedClaimList getSupportedClaimList() {
+    protected SupportedClaimTypeList getSupportedClaimList() {
         List<DbSupportedClaim> supportedClaims = supportedClaimsImpl.dbSupportedClaims();
-        SupportedClaimList claimList = new SupportedClaimList();
 
+        ArrayList<SupportedClaim> cl = new ArrayList<SupportedClaim>();
+        
         //PPID is breaking backup files
         //SupportedClaim supportedClaim = new SupportedClaim("PPID", org.xmldap.infocard.Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
         //claimList.addSupportedClaim(supportedClaim);
         for (DbSupportedClaim claim : supportedClaims) {
         	// TODO: support description. Axel
             SupportedClaim thisSupportedClaim = new SupportedClaim(claim.displayTags[0].displayTag, claim.uri, "A Description");
-            claimList.addSupportedClaim(thisSupportedClaim);
+            cl.add(thisSupportedClaim);
         }
 
+        SupportedClaimTypeList claimList = new SupportedClaimTypeList(cl);
         return claimList;
     }
 

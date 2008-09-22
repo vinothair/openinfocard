@@ -224,9 +224,8 @@ public class Token {
     	//   </saml:AudienceRestrictionCondition>
     	//  </saml:Conditions>
 
-        XPathContext thisContext = new XPathContext();
-        thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
-        Nodes nodes = getDoc().query("//saml:Conditions", thisContext);
+        XPathContext context = buildSamlXPathContext();
+        Nodes nodes = getDoc().query("//saml:Conditions", context);
         Element element = (Element) nodes.get(0);
 
         //Get the values
@@ -250,12 +249,11 @@ public class Token {
         }
     }
 
-    public String getConfirmationMethod() {
-        XPathContext thisContext = new XPathContext();
-        thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
+    public String getConfirmationMethod() throws InfoCardProcessingException {
+        XPathContext context = buildSamlXPathContext();
         Nodes nodes = null;
 		try {
-			nodes  = getDoc().query("saml:Assertion/saml:AttributeStatement/saml:Subject/saml:SubjectConfirmation/saml:ConfirmationMethod", thisContext);;
+			nodes  = getDoc().query("saml:Assertion/saml:AttributeStatement/saml:Subject/saml:SubjectConfirmation/saml:ConfirmationMethod", context);;
 		} catch (InfoCardProcessingException e) {
 			return e.getMessage();
 		}
@@ -303,7 +301,7 @@ public class Token {
 
 	public X509Certificate getCertificateOrNull() throws InfoCardProcessingException {
 	    XPathContext thisContext = new XPathContext();
-	    thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
+//	    thisContext.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
 	    thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
 	    Nodes nodes = getDoc().query("//dsig:X509Data/dsig:X509Certificate", thisContext);
 	    if ((nodes != null) && (nodes.size() > 0)) {
@@ -325,21 +323,42 @@ public class Token {
 	    }
 	}
 
-
+	private XPathContext buildSamlXPathContext() throws InfoCardProcessingException {
+        XPathContext context = new XPathContext();
+        
+        String namespace = getDoc().getRootElement().getNamespaceURI();
+        if ( !WSConstants.SAML11_NAMESPACE.equals(namespace) && !WSConstants.SAML20_NAMESPACE.equals(namespace)) {
+            throw new InfoCardProcessingException("Unsupported token namespace: " + namespace);
+        }
+        context.addNamespace("saml", namespace);
+        return context;
+	}
+	
     //TODO - improve claims
     private void parseClaims() throws InfoCardProcessingException {
 
-        claims = new HashMap();
-        XPathContext context = new XPathContext();
-        context.addNamespace("saml", WSConstants.SAML11_NAMESPACE);
+    	claims = new HashMap();
+        XPathContext context = buildSamlXPathContext();
+                
+        String attributeName;
+        String namespace = getDoc().getRootElement().getNamespaceURI();
+        if ( WSConstants.SAML11_NAMESPACE.equals(namespace)) {
+            attributeName = "AttributeName";
+        } else if ( WSConstants.SAML20_NAMESPACE.equals(namespace)) {
+            attributeName = "Name";
+        } else {
+            throw new InfoCardProcessingException("Unsupported token namespace: " + namespace);
+        }
+        
+        // XPath to find attributes is the same in SAML 1.1 and 2.0
         Nodes claimNodeList = getDoc().query("/saml:Assertion/saml:AttributeStatement/saml:Attribute", context);
 
         for (int i = 0; i < claimNodeList.size(); i++) {
 
             Element claim = (Element) claimNodeList.get(i);
-            Attribute nameAttr = claim.getAttribute("AttributeName");
+            Attribute nameAttr = claim.getAttribute(attributeName);
             String name = nameAttr.getValue();
-            Element valueElm = claim.getFirstChildElement("AttributeValue", WSConstants.SAML11_NAMESPACE);
+            Element valueElm = claim.getFirstChildElement("AttributeValue", namespace);
             String value = valueElm.getValue();
             claims.put(name,value);
 

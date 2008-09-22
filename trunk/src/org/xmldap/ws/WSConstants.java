@@ -72,6 +72,8 @@ public interface WSConstants {
 
     //public final static String SAML11_NAMESPACE  = "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLAssertionID";
     public final static String SAML11_NAMESPACE = "urn:oasis:names:tc:SAML:1.0:assertion";
+    public final static String WSS_SAML11_NAMESPACE = "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1";
+    public final static String SAML20_NAMESPACE = "urn:oasis:names:tc:SAML:2.0:assertion";
     public final static String SAML_PREFIX = "saml";
 
     public final static String INFOCARD = "http://schemas.microsoft.com/ws/2005/05/identity";

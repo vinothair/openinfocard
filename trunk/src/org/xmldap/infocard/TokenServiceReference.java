@@ -52,7 +52,7 @@ public class TokenServiceReference implements Serializable {
 
 //    private X509Certificate cert;
 
-    private List<IdentityEnabledEndpointReference> epList = null;
+    private List<EndpointReference> epList = null;
 
 //    public TokenServiceReference() {
 //    }
@@ -63,10 +63,12 @@ public class TokenServiceReference implements Serializable {
 //    	epList.add(epr);
 //    }
 
-    public TokenServiceReference(String address, String mexAddress, X509Certificate cert) {
+    public TokenServiceReference(
+    		String address, String mexAddress, X509Certificate cert, UserCredential userCredential) {
     	IdentityEnabledEndpointReference epr = new IdentityEnabledEndpointReference(address, mexAddress, cert);
-    	epList = new ArrayList<IdentityEnabledEndpointReference>(1);
+    	epList = new ArrayList<EndpointReference>(1);
     	epList.add(epr);
+    	this.userCredential = userCredential;
     }
 
     public TokenServiceReference(Element tokenServiceReference) throws ParsingException {
@@ -75,14 +77,18 @@ public class TokenServiceReference implements Serializable {
     		Elements elts = tokenServiceReference.getChildElements("EndpointReference", WSConstants.WSA_NAMESPACE_05_08);
     		if (elts.size() == 1) {
     			Element elt = elts.get(0);
-    			EndpointReference epr = new EndpointReference(elt);
+    			EndpointReference epr = new IdentityEnabledEndpointReference(elt);
+    			if (epList == null) {
+    				epList = new ArrayList<EndpointReference>();
+    			}
+    			epList.add(epr);
     		} else {
     			throw new ParsingException("Expected one occurence of EndpointReference but found: " + elts.size());
     		}
     		elts = tokenServiceReference.getChildElements("UserCredential", WSConstants.INFOCARD_NAMESPACE);
     		if (elts.size() == 1) {
     			Element elt = elts.get(0);
-    			UserCredential epr = new UserCredential(elt);
+    			userCredential = new UserCredential(elt);
     		} else {
     			throw new ParsingException("Expected one occurence of UserCredential but found: " + elts.size());
     		}
@@ -92,27 +98,27 @@ public class TokenServiceReference implements Serializable {
     }
     
     public String getMexAddress() {
-    	IdentityEnabledEndpointReference epr = epList.get(0);
+    	EndpointReference epr = epList.get(0);
     	return epr.getMexAddress();
     }
 
     public void setMexAddress(String mexAddress) {
-    	IdentityEnabledEndpointReference epr = epList.get(0);
+    	EndpointReference epr = epList.get(0);
     	epr.setMexAddress(mexAddress);
     }
 
     public X509Certificate getCert() {
-    	IdentityEnabledEndpointReference epr = epList.get(0);
+    	IdentityEnabledEndpointReference epr = (IdentityEnabledEndpointReference)epList.get(0);
         return epr.getCert();
     }
 
     public String getAddress() {
-    	IdentityEnabledEndpointReference epr = epList.get(0);
+    	EndpointReference epr = epList.get(0);
         return epr.getAddress();
     }
 
     public void setAddress(String address) {
-    	IdentityEnabledEndpointReference epr = epList.get(0);
+    	EndpointReference epr = epList.get(0);
         epr.setAddress(address);
     }
 
@@ -128,7 +134,7 @@ public class TokenServiceReference implements Serializable {
 
         //TODO - support all the reference types
         Element tokenService = new Element(WSConstants.INFOCARD_PREFIX + ":TokenService", WSConstants.INFOCARD_NAMESPACE);
-        IdentityEnabledEndpointReference iepr = epList.get(0);
+        EndpointReference iepr = epList.get(0);
         tokenService.appendChild(iepr.serialize());
 
         Element userCredentialElt = userCredential.serialize();

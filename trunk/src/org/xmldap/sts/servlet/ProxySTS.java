@@ -39,7 +39,7 @@ import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.TokenServiceReference;
 import org.xmldap.infocard.UserCredential;
 import org.xmldap.infocard.policy.SupportedClaim;
-import org.xmldap.infocard.policy.SupportedClaimList;
+import org.xmldap.infocard.policy.SupportedClaimTypeList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.util.*;
@@ -265,28 +265,32 @@ public class ProxySTS  extends HttpServlet {
         card.setIssuer(tokenServiceEndpoint);
         XSDDateTime issued = new XSDDateTime();
         card.setTimeIssued(issued.getDateTime());
-        TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, certChain[0]);
         String username = "username";
-        tsr.setAuthType(UserCredential.USERNAME, username);
+        UserCredential usercredential = new UserCredential(UserCredential.USERNAME, username);
+        TokenServiceReference tsr = new TokenServiceReference(tokenServiceEndpoint, mexEndpoint, certChain[0], usercredential);
         ArrayList<TokenServiceReference> tsrl = new ArrayList<TokenServiceReference>();
         tsrl.add(tsr);
         card.setTokenServiceReference(tsrl);
         
-
-        SupportedToken token = new SupportedToken(org.xmldap.ws.WSConstants.SAML11_NAMESPACE);
-        ArrayList<SupportedToken> stl = new ArrayList<SupportedToken>();
-        stl.add(token);
-        SupportedTokenList tokenList = new SupportedTokenList(stl);
-        tokenList.addSupportedToken(token);
-        card.setTokenList(tokenList);
-
-        SupportedClaimList claimList = new SupportedClaimList();
-        claimList.addSupportedClaim(new SupportedClaim(Constants.IC_GIVENNAME, Constants.IC_NS_GIVENNAME, "Your givenname"));
-        claimList.addSupportedClaim(new SupportedClaim(Constants.IC_SURNAME, Constants.IC_NS_SURNAME, "Your surname"));
-        claimList.addSupportedClaim(new SupportedClaim(Constants.IC_EMAILADDRESS, Constants.IC_NS_EMAILADDRESS, "Your email address"));
-        claimList.addSupportedClaim(new SupportedClaim(Constants.IC_PRIVATEPERSONALIDENTIFIER, Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "RP PPID"));
-        card.setClaimList(claimList);
-
+        {
+	        SupportedToken token = new SupportedToken(org.xmldap.ws.WSConstants.SAML11_NAMESPACE);
+	        ArrayList<SupportedToken> stl = new ArrayList<SupportedToken>();
+	        stl.add(token);
+	        SupportedTokenList tokenList = new SupportedTokenList(stl);
+	        tokenList.addSupportedToken(token);
+	        card.setTokenList(tokenList);
+        }
+        
+        {
+	        ArrayList<SupportedClaim> cl = new ArrayList<SupportedClaim>();
+	        cl.add(new SupportedClaim(Constants.IC_GIVENNAME, Constants.IC_NS_GIVENNAME, "Your givenname"));
+	        cl.add(new SupportedClaim(Constants.IC_SURNAME, Constants.IC_NS_SURNAME, "Your surname"));
+	        cl.add(new SupportedClaim(Constants.IC_EMAILADDRESS, Constants.IC_NS_EMAILADDRESS, "Your email address"));
+	        cl.add(new SupportedClaim(Constants.IC_PRIVATEPERSONALIDENTIFIER, Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, "RP PPID"));
+	        SupportedClaimTypeList claimList = new SupportedClaimTypeList(cl);
+	        card.setClaimList(claimList);
+        }
+        
         try {
 			card.setPrivacyPolicy("https://" + domain + "/" + servletPath + "/PrivacyPolicy.xml", 1);
 		} catch (URISyntaxException e) {
