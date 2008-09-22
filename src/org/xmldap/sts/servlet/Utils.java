@@ -297,8 +297,19 @@ public class Utils {
 
         Element requestedDisplayToken = new Element(WSConstants.INFOCARD_PREFIX + ":RequestedDisplayToken", WSConstants.INFOCARD_NAMESPACE);
         Element displayToken = new Element(WSConstants.INFOCARD_PREFIX + ":DisplayToken", WSConstants.INFOCARD_NAMESPACE);
-        Attribute lang = new Attribute("xml:lang","http://www.w3.org/XML/1998/namespace","en");
-        displayToken.addAttribute(lang);
+        {
+        	String languageIso639;
+        	if (clientLocale != null) {
+	        	String uri = cardClaims.iterator().next();
+	        	DbSupportedClaim dbClaim = supportedClaimsImpl.getClaimByUri(uri);
+	        	Locale locale = dbClaim.getLocale(clientLocale);
+	        	languageIso639 = locale.getLanguage();
+        	} else {
+        		languageIso639 = "en";
+        	}
+	        Attribute lang = new Attribute("xml:lang","http://www.w3.org/XML/1998/namespace",languageIso639);
+	        displayToken.addAttribute(lang);
+        }
         requestedDisplayToken.appendChild(displayToken);
 
         for (String uri : cardClaims) {

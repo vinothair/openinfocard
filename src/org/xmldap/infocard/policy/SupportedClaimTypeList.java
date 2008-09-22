@@ -41,19 +41,19 @@ import java.util.Iterator;
 import java.util.List;
 
 
-public class SupportedClaimList implements Serializable {
+public class SupportedClaimTypeList implements Serializable {
 
     List<SupportedClaim> supportedClaims = new ArrayList<SupportedClaim>();
 
 //    <ic:SupportedClaimTypeList> 
-//     (<ic:SupportedClaimType Uri=”xs:anyURI”> 
+//     (<ic:SupportedClaimType Uri=ï¿½xs:anyURIï¿½> 
 //       <ic:DisplayTag> xs:string </ic:DisplayTag> ? 
 //       <ic:Description> xs:string </ic:Description> ? 
 //      </ic:SupportedClaimType>) + 
 //      </ic:SupportedClaimTypeList>
-	public SupportedClaimList(Element supportedClaimsElement) throws ParsingException {
+	public SupportedClaimTypeList(Element supportedClaimsElement) throws ParsingException {
 		Elements elts = supportedClaimsElement.getChildElements("SupportedClaimType", WSConstants.INFOCARD_NAMESPACE);
-		if (elts.size() > 1) {
+		if (elts.size() > 0) {
 			for (int index=0; index<elts.size(); index++) {
 				Element elt = elts.get(index);
 				SupportedClaim supportedClaim = new SupportedClaim(elt);
@@ -64,11 +64,8 @@ public class SupportedClaimList implements Serializable {
 		}
 
 	}
-	public SupportedClaimList() {
-		
-	}
 	
-	public SupportedClaimList(List<SupportedClaim> list) {
+	public SupportedClaimTypeList(List<SupportedClaim> list) {
 		supportedClaims = list;
 	}
 	

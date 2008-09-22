@@ -44,6 +44,23 @@ function nsResolver(prefix) {
 	  return ns[prefix] || null;
 	}
 
+var listObserver = {
+		onDragOver: function (event, flavour, session) {
+			IdentitySelector.logMessage("onDragOver: " + flavour.contentType);
+		},
+
+		onDrop : function (evt, transferData, session) {
+			IdentitySelector.logMessage("onDrop: " + transferData.data);
+//			event.target.setAttribute("value",transferData.data); 
+		},
+		getSupportedFlavours : function () { 
+			var flavours = new FlavourSet(); 
+//			flavours.appendFlavour("text/unicode"); 
+			flavours.appendFlavour("application/x-informationcard+id"); 
+			return flavours; 
+		} 
+}
+
 /****************************************************************************
 Desc:
 ****************************************************************************/
@@ -1245,7 +1262,7 @@ var IdentitySelector =
 			}
 			
 			// privacyVersion
-	
+			
 			if( objElem.privacyVersion != undefined && 
 				objElem.privacyVersion != null && 
 				objElem.privacyVersion != "")
@@ -1255,6 +1272,19 @@ var IdentitySelector =
 			else
 			{
 				delete data[ "privacyVersion"];
+			}
+
+			// icDropTargetId
+			
+			if( objElem.icDropTargetId != undefined && 
+				objElem.icDropTargetId != null && 
+				objElem.icDropTargetId != "")
+			{
+				data.icDropTargetId = objElem.icDropTargetId;
+			}
+			else
+			{
+				delete data[ "icDropTargetId"];
 			}
 		}
 		catch( e)
@@ -1486,6 +1516,14 @@ var IdentitySelector =
 				break;
 			}
 
+			case "icdroptargetid":
+			{
+				IdentitySelector.logMessage( "extractParameter", 
+					"icDropTargetId = " + sourceNode.value);
+				destNode.icDropTargetId = sourceNode.value;
+				break;
+			}
+
 			default:
 			{
 				IdentitySelector.logMessage( "extractParameter", 
@@ -1494,6 +1532,166 @@ var IdentitySelector =
 				break;
 			}
 		}
+	},
+
+	// ***********************************************************************
+	// Method: onDrop
+	// ***********************************************************************
+	
+	onDrop : function(event)
+	{
+		IdentitySelector.logMessage( "IdentitySelector.onDrop", event.target.nodeName);
+		nsDragAndDrop.drop(event, listObserver);
+		return false;
+	},
+	
+	// ***********************************************************************
+	// Method: onDrop
+	// ***********************************************************************
+	
+	onDragOver : function(event)
+	{
+		IdentitySelector.logMessage( "IdentitySelector.onDragOver", event.target.nodeName);
+		nsDragAndDrop.dragOver(event, listObserver);
+		return false;
+	},
+
+	// ***********************************************************************
+	// Method: findRelatedObject
+	// loop through the objects in the doc to find the one that has targetId
+	// as the value of icDropTargetId
+	// ***********************************************************************
+	
+	findRelatedObject : function(doc, targetId)
+	{
+		
+		var itemCount = 0;
+		
+		// Process all of the information card objects in the document
+				
+		var objElems = doc.getElementsByTagName( "OBJECT");
+		
+		for( var i = 0; i < objElems.length; i++) 
+		{
+			var objElem = objElems[ i];
+			var objTypeStr = objElem.getAttribute( "TYPE");
+			
+			if( objTypeStr == null || 
+				 objTypeStr.toLowerCase() !== 
+					"application/x-informationcard")
+			{
+				continue;
+			}
+			if (objElem.icDropTargetId != undefined) {
+				IdentitySelector.logMessage( "IdentitySelector.findRelatedObject", "dropTarget for object " + ((objElem.name != undefined) ? objElem.name : "") + " is " + objElem.icDropTargetId);
+				if (targetId == objElem.icDropTargetId) {
+					return objElem;
+				}
+			} else {
+				IdentitySelector.logMessage( "IdentitySelector.findRelatedObject", "no dropTarget specified for object " + object.name);
+			}
+			
+		}
+		return null;
+	},
+
+	// ***********************************************************************
+	// Method: onWindowDragDrop
+	// ***********************************************************************
+	
+	onWindowDragDrop : function(event)
+	{
+		IdentitySelector.logMessage( "IdentitySelector.onWindowDragDrop",   "target.nodeName=", event.target.nodeName +
+					"\noriginalTarget.nodeName=" + event.originalTarget.nodeName + 
+					"\ncurrentTarget.nodeName=" + event.currentTarget.nodeName);
+		if (this.disabled == true) {
+			IdentitySelector.logMessage("IdentitySelector.onWindowDragDrop", " ID selector is disabled. Exiting");
+			return;
+		}
+		var target = event.target;
+		if( target.wrappedJSObject)
+		{
+			target = target.wrappedJSObject;
+		}
+		var targetId = target.id;
+		if (targetId != null) {
+			
+			var doc = target.ownerDocument;
+			var object = IdentitySelector.findRelatedObject(doc, targetId);
+			if (object != null) {
+				var dragService = Cc["@mozilla.org/widget/dragservice;1"].getService(Ci.nsIDragService);
+			    var dragSession = dragService.getCurrentSession();
+			    var sourceNode = dragSession.sourceNode;
+
+			    // Setup a transfer item to retrieve the file data
+			    var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+			    trans.addDataFlavor("application/x-informationcard+id");
+
+			    var cardId = null;
+			    for (var i=0; i<dragSession.numDropItems; i++) {
+			      var uri = null;
+
+			      dragSession.getData(trans, i);
+			      var flavor = {}, data = {}, length = {};
+			      trans.getAnyTransferData(flavor, data, length);
+			      if (data) {
+			    	var str = null;
+			        try {
+			          str = data.value.QueryInterface(Ci.nsISupportsString);
+			        }
+			        catch(ex) {
+			        }
+			        if (str != null) {
+			        	IdentitySelector.logMessage("IdentitySelector.onWindowDragDrop", "data=" + str);
+			        	cardId = str;
+			        	break; // only one
+			        } else {
+			        	IdentitySelector.logMessage("IdentitySelector.onWindowDragDrop", "data=null");
+			        }
+			      }
+			    }
+			    if (cardId != null) {
+			    	// launch IdentitySelector with cardId
+		        	IdentitySelector.logMessage("IdentitySelector.onWindowDragDrop", "launching IdentitySelector for card: " + cardId);
+					doc.__identityselector__.targetElem = object;
+					doc.__identityselector__.cardId = cardId;
+
+					var form = target;
+					var fired = false;
+					while( form != null) 
+					{
+						if( form.tagName != undefined && form.tagName == "FORM")
+						{
+							// the droptarget is inside a form -> submit it
+				        	var trgt = form;
+							var evnt = doc.createEvent( "Event");
+							evnt.initEvent( "submit", true, true);
+							trgt.dispatchEvent( evnt);
+							fired = true;
+
+							break;
+						}
+						
+						form = form.parentNode;
+					}
+
+					if (!fired) {
+						alert("The drop target is not inside a form\nDon't know how to submit token.");
+					}
+//					if (!fired) {
+//			        	var trgt = doc;
+//						var evnt = doc.createEvent( "Event");
+//						evnt.initEvent( "CallIdentitySelector", true, true);
+//						trgt.dispatchEvent( evnt);
+//					}
+			    }
+				event.preventDefault();
+				event.stopPropagation();
+			} else {
+				IdentitySelector.logMessage("IdentitySelector.onWindowDragDrop",   "no object found for targetId=" + targetId + " in document " + doc.location.href);
+			}
+		}
+		return false;
 	},
 
 	// ***********************************************************************
@@ -1572,6 +1770,24 @@ var IdentitySelector =
 						 childNode.tagName == "PARAM") 
 					{
 						IdentitySelector.extractParameter( childNode, objElem);
+					}
+				}
+				
+				if (objElem.icDropTargetId != undefined) {
+					var dropTargetElement = doc.getElementById(objElem.icDropTargetId);
+					if (dropTargetElement != null) {
+						IdentitySelector.logMessage( "onICardObjectLoaded", 
+							"icDropTargetId=" + objElem.icDropTargetId);
+						dropTargetElement.setAttribute("ondragdrop", "IdentitySelector.onDrop(); return false;");
+						dropTargetElement.setAttribute("ondragover", "IdentitySelector.onDragOver(); return false;");
+//						dropTargetElement.setAttribute("ondragdrop", "IdentitySelector.onDrop(); return false;");
+						if ((doc.defaultView != undefined) && (doc.defaultView)) {
+							var docWindow = doc.defaultView;
+							docWindow.addEventListener("dragdrop", IdentitySelector.onWindowDragDrop, false);
+						}
+					} else {
+						IdentitySelector.logMessage( "onICardObjectLoaded", 
+							"icDropTargetId == null");
 					}
 				}
 				
@@ -1948,7 +2164,15 @@ var IdentitySelector =
 			target = target.wrappedJSObject;
 		}
 		
-		doc = target;
+		IdentitySelector.logMessage( "onCallIdentitySelector", 
+				"target=" + target + "\noriginalTarget=" + event.originalTarget);
+		
+		if (target instanceof HTMLObjectElement) {
+			doc = target.ownerDocument; // event was fired in onDragDrop
+		} else {
+			doc = target;
+		}
+		
 		identObject = doc.__identityselector__;
 		data = identObject.data;
 
@@ -2038,7 +2262,9 @@ var IdentitySelector =
 			     data.privacyUrl, 
 			     data.privacyVersion, 
 			     sslCert, 
-                 data.issuerPolicy );
+                 data.issuerPolicy,
+                 data.icDropTargetId,
+                 IdentitySelector.getMode(doc));
 
 			    IdentitySelector.logMessage( "onCallIdentitySelector", 
 					    "returned token == " + identObject.targetElem.token);

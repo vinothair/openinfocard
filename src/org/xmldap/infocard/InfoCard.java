@@ -32,23 +32,33 @@ import nu.xom.Attribute;
 import nu.xom.Element;
 import nu.xom.Elements;
 
+import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
-import org.xmldap.infocard.policy.SupportedClaimList;
+import org.xmldap.infocard.policy.SupportedClaimTypeList;
 import org.xmldap.infocard.policy.SupportedTokenList;
 import org.xmldap.infocard.roaming.InformationCardReference;
 import org.xmldap.infocard.roaming.PrivacyNotice;
 import org.xmldap.infocard.roaming.RequireAppliesTo;
+import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xmldsig.InfoCardSignature;
+import org.xmldap.xmldsig.ValidatingEnvelopedSignature;
 import org.xmldap.xml.Serializable;
 
 import java.net.URISyntaxException;
 import java.security.PrivateKey;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * InfoCard allows you to create an InfoCard, and serialize to XML.
@@ -73,7 +83,7 @@ public class InfoCard implements Serializable {
     private PrivacyNotice privacyPolicy = null;
     private List<TokenServiceReference> tokenServiceReferenceList = null;
     private SupportedTokenList tokenList = null;
-    private SupportedClaimList claimList = null;
+    private SupportedClaimTypeList claimList = null;
     private String userName = null;
     private RequireAppliesTo requireAppliesTo = null; // optional 
     protected String lang = null;
@@ -125,7 +135,8 @@ public class InfoCard implements Serializable {
     	//  <ic:PrivacyNotice ...> ... </ic:PrivacyNotice> ? 
     	//  ... 
     	// </ic:InformationCard>
-    	if ("InformationCard".equals(infoCardElement.getLocalName())) {
+    	String name = infoCardElement.getLocalName();
+    	if ("InformationCard".equals(name)) {
     		lang = infoCardElement.getAttributeValue("lang");
     		Elements elts = infoCardElement.getChildElements("InformationCardReference", WSConstants.INFOCARD_NAMESPACE);
     		if (elts.size() == 1) {
@@ -184,6 +195,9 @@ public class InfoCard implements Serializable {
     				for (int i=0; i<tokenServiceList.size(); i++) {
     					Element tokenServiceElement = tokenServiceList.get(i);
     					TokenServiceReference tsr = new TokenServiceReference(tokenServiceElement);
+    					if (tokenServiceReferenceList == null) {
+    						tokenServiceReferenceList = new ArrayList<TokenServiceReference>();
+    					}
     					tokenServiceReferenceList.add(tsr);
     				}
     			}
@@ -197,12 +211,19 @@ public class InfoCard implements Serializable {
     		} else {
     			throw new ParsingException("Found " + elts.size() + " elements of SupportedTokenTypeList");
     		}
-    		elts = infoCardElement.getChildElements("SupportedClaimList", WSConstants.INFOCARD_NAMESPACE);
+
+//    	    <ic:SupportedClaimTypeList> 
+//    	     (<ic:SupportedClaimType Uri=�xs:anyURI�> 
+//    	       <ic:DisplayTag> xs:string </ic:DisplayTag> ? 
+//    	       <ic:Description> xs:string </ic:Description> ? 
+//    	      </ic:SupportedClaimType>) + 
+//    	      </ic:SupportedClaimTypeList>
+    		elts = infoCardElement.getChildElements("SupportedClaimTypeList", WSConstants.INFOCARD_NAMESPACE);
     		if (elts.size() == 1) {
     			Element elt = elts.get(0);
-    			claimList = new SupportedClaimList(elt);
+    			claimList = new SupportedClaimTypeList(elt);
     		} else {
-    			throw new ParsingException("Found " + elts.size() + " elements of SupportedTokenTypeList");
+    			throw new ParsingException("Found " + elts.size() + " elements of SupportedClaimTypeList in\n" + infoCardElement.toXML());
     		}
     		elts = infoCardElement.getChildElements("RequireAppliesTo", WSConstants.INFOCARD_NAMESPACE);
     		if (elts.size() == 1) {
@@ -225,7 +246,7 @@ public class InfoCard implements Serializable {
     		// TODO we need to store the other not defined child elements of InformationCard
     		// to export them 
     	} else {
-    		throw new ParsingException("Expected InformationCard");
+    			throw new ParsingException("Expected InformationCard but found " + name);
     	}
     }
 
@@ -319,7 +340,8 @@ public class InfoCard implements Serializable {
     }
 
     public void setTimeIssued(String timeIssued) {
-        this.timeIssued = timeIssued;
+    	Calendar dt = XSDDateTime.parse(timeIssued); 
+        this.timeIssued = XSDDateTime.getDateTime(dt);
     }
 
     public String getTimeExpires() {
@@ -327,7 +349,12 @@ public class InfoCard implements Serializable {
     }
 
     public void setTimeExpires(String timeExpires) {
-        this.timeExpires = timeExpires;
+    	if (timeExpires != null) {
+	    	Calendar dt = XSDDateTime.parse(timeExpires); 
+	        this.timeExpires = XSDDateTime.getDateTime(dt);
+    	} else {
+    		this.timeExpires = null;
+    	}
     }
 
     public List<TokenServiceReference> getTokenServiceReference() {
@@ -346,11 +373,11 @@ public class InfoCard implements Serializable {
         this.tokenList = tokenList;
     }
 
-    public SupportedClaimList getClaimList() {
+    public SupportedClaimTypeList getClaimList() {
         return claimList;
     }
 
-    public void setClaimList(SupportedClaimList claimList) {
+    public void setClaimList(SupportedClaimTypeList claimList) {
         this.claimList = claimList;
     }
 
@@ -423,17 +450,20 @@ public class InfoCard implements Serializable {
         if (timeIssued != null) {
 	        Element timeIssuedElm = new Element(WSConstants.INFOCARD_PREFIX + ":TimeIssued", WSConstants.INFOCARD_NAMESPACE);
 	        timeIssuedElm.appendChild(timeIssued);
+	        System.out.println("TimeIssued=" + timeIssued);
 	        //timeIssuedElm.appendChild("2006-09-04T19:39:19.6053152Z");
 	        infoCard.appendChild(timeIssuedElm);
         } else {
         	throw new SerializationException("timeIssued is null but required");
         }
-        Element timeExpiresElm = new Element(WSConstants.INFOCARD_PREFIX + ":TimeExpires", WSConstants.INFOCARD_NAMESPACE);
-        //timeExpiresElm.appendChild(timeExpires);
-        timeExpiresElm.appendChild("9999-12-31T23:59:59.9999999Z");
-        infoCard.appendChild(timeExpiresElm);
-
-        if (tokenServiceReferenceList != null) {
+        if (timeExpires != null) {
+	        Element timeExpiresElm = new Element(WSConstants.INFOCARD_PREFIX + ":TimeExpires", WSConstants.INFOCARD_NAMESPACE);
+	        timeExpiresElm.appendChild(timeExpires);
+	        System.out.println("TimeExpires=" + timeExpires);
+	        infoCard.appendChild(timeExpiresElm);
+        } // else optional
+        
+        if ((tokenServiceReferenceList != null) && (tokenServiceReferenceList.size() > 0)){
             Element tokenServiceList = new Element(WSConstants.INFOCARD_PREFIX + ":TokenServiceList", WSConstants.INFOCARD_NAMESPACE);
             for (int i=0; i<tokenServiceReferenceList.size(); i++) {
             	TokenServiceReference tsr = tokenServiceReferenceList.get(i);
@@ -450,7 +480,7 @@ public class InfoCard implements Serializable {
         if (claimList != null) {
         	infoCard.appendChild(claimList.serialize());
         } else {
-        	throw new SerializationException("SupportedClaimList is null but required");
+        	throw new SerializationException("SupportedClaimTypeList is null but required");
         }
         
         if (requireAppliesTo != null) {
@@ -627,4 +657,47 @@ public class InfoCard implements Serializable {
 		this.issuerInformation = issuerInformation;
 	}
 
+	public boolean checkValidity(String when) {
+		Calendar whenCal;
+		if (when != null) {
+			whenCal = XSDDateTime.parse(when);
+		} else {
+			whenCal = XSDDateTime.parse(new XSDDateTime().getDateTime());
+		}
+		{
+			Calendar timeIssued = XSDDateTime.parse(this.timeIssued);
+			if (timeIssued.after(whenCal)) {
+				// issued after when
+				System.out.println("InfoCard: issued after when: " + this.timeIssued + " after " + XSDDateTime.getDateTime(whenCal));
+				return false;
+			}
+		}
+		if (this.timeExpires != null) {
+			Calendar timeExpired = XSDDateTime.parse(this.timeExpires);
+			if (timeExpired.before(whenCal)) {
+				// expired before when
+				System.out.println("InfoCard: expired before when: " + this.timeExpires + " before " + XSDDateTime.getDateTime(whenCal));
+				return false;
+			}
+		}
+		if (tokenServiceReferenceList == null) return false; 
+		if (tokenServiceReferenceList.size() < 1) return false; 
+		for (int index=0; index < tokenServiceReferenceList.size(); index++) {
+			TokenServiceReference tsr = tokenServiceReferenceList.get(index);
+			X509Certificate cert = tsr.getCert();
+			if (cert != null) {
+				Date date = whenCal.getTime();
+				try {
+					cert.checkValidity(date);
+				} catch (CertificateExpiredException e) {
+					System.out.println("InfoCard: " + e.getMessage());
+					return false;
+				} catch (CertificateNotYetValidException e) {
+					System.out.println("InfoCard: " + e.getMessage());
+					return false;
+				}
+			}
+		}
+		return false;
+	}
 }

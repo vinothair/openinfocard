@@ -29,12 +29,16 @@
 package org.xmldap.ws.soap.headers.addressing;
 
 import nu.xom.Element;
+import nu.xom.Elements;
+
 import org.xmldap.exceptions.KeyStoreException;
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.InfocardKeyInfo;
+import org.xmldap.xmldsig.ParsedKeyInfo;
 
 import java.security.cert.X509Certificate;
 
@@ -49,45 +53,46 @@ public class IdentityEnabledEndpointReference extends EndpointReference implemen
 
     private X509Certificate cert = null;
 
-    public IdentityEnabledEndpointReference(String sts, String mex) {
-        super(sts, mex);
-        cert = null;
-    }
+//    public IdentityEnabledEndpointReference(String sts, String mex) {
+//        super(sts, mex);
+//        cert = null;
+//    }
 
     public IdentityEnabledEndpointReference(String sts, String mex, X509Certificate cert) {
         super(sts, mex);
         this.cert = cert;
     }
 
+    public IdentityEnabledEndpointReference(Element elt) throws ParsingException {
+    	super(elt);
+    	
+    	Elements elts = elt.getChildElements("Identity", WSConstants.WSA_ID_06_02);
+    	if (elts != null && elts.size() == 1) {
+    		Element identityElt = elts.get(0);
+    		elts = identityElt.getChildElements("KeyInfo", WSConstants.DSIG_NAMESPACE);
+    		if (elts != null && elts.size() == 1) {
+    			Element keyinfo = elts.get(0);
+    			ParsedKeyInfo parsedKeyInfo = new ParsedKeyInfo(keyinfo);
+    			cert = parsedKeyInfo.getParsedX509Data().getCertificates().get(0);
+    		} else {
+    			throw new ParsingException("IdentityEnabledEndpointReference: only KeyInfo as Identity is implemented. " + identityElt.toXML());
+    		}
+    	} // else optional
+    }
 
     private Element getIEPR() throws SerializationException {
 
         Element ref = getEPR();
-        Element identity = new Element(WSConstants.WSA_ID_PREFIX + ":Identity", WSConstants.WSA_ID_06_02);
-
-        //AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(cert);
-        InfocardKeyInfo keyInfo = new InfocardKeyInfo(cert);
-        identity.appendChild(keyInfo.serialize());
-        ref.appendChild(identity);
+        if (cert != null) {
+	        Element identity = new Element(WSConstants.WSA_ID_PREFIX + ":Identity", WSConstants.WSA_ID_06_02);
+	
+	        //AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(cert);
+	        InfocardKeyInfo keyInfo = new InfocardKeyInfo(cert);
+	        identity.appendChild(keyInfo.serialize());
+	        ref.appendChild(identity);
+        }
         return ref;
 
-    }
-
-    public String getAddress() {
-        return sts;
-    }
-
-    public void setAddress(String address) {
-        this.sts = address;
-    }
-
-
-    public String getMexAddress() {
-        return mex;
-    }
-
-    public void setMexAddress(String mexAddress) {
-        this.mex = mexAddress;
     }
 
     public X509Certificate getCert() {

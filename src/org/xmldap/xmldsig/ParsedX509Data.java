@@ -29,16 +29,16 @@ public class ParsedX509Data {
 				Element child = kids.get(index);
 				String certificateB64 = child.getValue();
 				try {
-					System.err.println("ParsedX509Data: index=" + index + "; cert=" + certificateB64);
+//					System.err.println("ParsedX509Data: index=" + index + "; cert=" + certificateB64);
 					X509Certificate cert = CryptoUtils.X509fromB64(certificateB64);
-					cert.checkValidity();
+//					cert.checkValidity();
 					certs.add(cert);
 				} catch (CryptoException e) {
 					throw new ParsingException(e);
-				} catch (CertificateExpiredException e) {
-					throw new ParsingException(e);
-				} catch (CertificateNotYetValidException e) {
-					throw new ParsingException(e);
+//				} catch (CertificateExpiredException e) {
+//					throw new ParsingException(e);
+//				} catch (CertificateNotYetValidException e) {
+//					throw new ParsingException(e);
 				}
 			}
 		} else {

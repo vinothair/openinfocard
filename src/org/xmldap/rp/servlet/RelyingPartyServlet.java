@@ -203,6 +203,10 @@ public class RelyingPartyServlet extends HttpServlet {
 	            	out.println("<h2>Your user agent is</h2>");
 	            	out.println("<p>" + escapeHtmlEntities(userAgent) + "</p>");
 	            }
+	    		String cardSelectorName = request.getHeader("X-ID-Selector");
+	            if (cardSelectorName != null) {
+	            	out.println("<p style=\"font-size:xx-small\">Your ID selector is: " + escapeHtmlEntities(cardSelectorName) + "</p>");
+	            }
 
 	            out.println("</body></html>");
         } catch (InfoCardProcessingException e) {

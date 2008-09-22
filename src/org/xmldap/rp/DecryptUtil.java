@@ -89,7 +89,7 @@ public class DecryptUtil {
         byte[] clearTextKey = null;
         try {
             clearTextKey = CryptoUtils.decryptRSAOAEP(keyCipherText, key);
-            System.out.println("Key Length: " + clearTextKey.length);
+//            System.out.println("Key Length: " + clearTextKey.length);
         } catch (org.xmldap.exceptions.CryptoException e) {
             throw new CryptoException("Error using RSA to decrypt the AES Encryption Key", e);
         }

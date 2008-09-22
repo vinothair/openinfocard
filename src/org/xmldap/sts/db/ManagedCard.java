@@ -99,6 +99,8 @@ public class ManagedCard {
     }
 
     public void setTimeIssued(String timeIssued) {
+    	if (timeIssued == null) throw new IllegalArgumentException("timeissued is required and must not be null");
+    	if ("".equals(timeIssued)) throw new IllegalArgumentException("timeissued is required and must not be empty");
         this.timeIssued = timeIssued;
     }
 

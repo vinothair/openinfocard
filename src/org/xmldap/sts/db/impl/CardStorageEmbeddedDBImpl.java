@@ -80,8 +80,8 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
 
 		String query = "create table cards("
 				+ "cardid varchar(255) NOT NULL CONSTRAINT CARD_PK PRIMARY KEY,"
-				+ " cardName varchar(48)," + " cardVersion int,"
-				+ " timeIssued varChar(50)," + " timeExpires varChar(50),"
+				+ " cardName varchar(48) NOT NULL," + " cardVersion int,"
+				+ " timeIssued varChar(50) NOT NULL," + " timeExpires varChar(50),"
 				+ " requireStrongRecipientIdentity int,"
 				+ " requireAppliesTo int" + claimsDefinition + ")";
 		System.out.println(query);
@@ -339,7 +339,12 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
 				pstmt.setString(parameterIndex++, card.getCardName());
 				pstmt.setInt(parameterIndex++, card.getCardVersion());
 				pstmt.setString(parameterIndex++, card.getTimeIssued());
-				pstmt.setString(parameterIndex++, card.getTimeExpires());
+				String timeExpires = card.getTimeExpires();
+				if (timeExpires != null) {
+					pstmt.setString(parameterIndex++, timeExpires);
+				} else {
+					pstmt.setNull(parameterIndex++, java.sql.Types.VARCHAR);
+				}
 				if (version > 1) {
 					// " requireStrongRecipientIdentity int" +
 					// " requireAppliesTo int" +
@@ -475,8 +480,12 @@ public class CardStorageEmbeddedDBImpl implements CardStorage {
 					card = new ManagedCard(rs.getString(columnIndex++));
 					card.setCardName(rs.getString(columnIndex++));
 					card.setCardVersion(rs.getInt(columnIndex++));
-					card.setTimeIssued(rs.getString(columnIndex++));
-					card.setTimeExpires(rs.getString(columnIndex++));
+					String timeissued = rs.getString(columnIndex++);
+					System.out.println("CardStorageEmbeddedImpl getCard: timeissued=" + timeissued);
+					card.setTimeIssued(timeissued);
+					String timeexpired = rs.getString(columnIndex++);
+					System.out.println("CardStorageEmbeddedImpl getCard: timeexpired=" + timeexpired);
+					card.setTimeExpires(timeexpired);
 
 					if (version > 1) {
 						// introduced "requireStrongRecipientIdentity int" and

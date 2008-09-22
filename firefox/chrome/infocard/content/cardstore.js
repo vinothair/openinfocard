@@ -1,5 +1,14 @@
 var db = "cardDb.xml";
 
+function saveRoamingStore(roamingstore) {
+	//saveLocalFile(getDir() + "roamingstore.xml", roamingstore);
+	save("roamingstore.xml", roamingstore);
+}
+
+function readRoamingStore() {
+	return readALocalFile(getDir() + "roamingstore.xml");
+}
+
 function getCard(cardid){
 
     var cardFile = read(db);
@@ -272,76 +281,81 @@ function read(fileName) {
     return new XML(newDB());
 } 
 
-function readLocalFile(fileName) {
-
+function readALocalFile(fileName) {
     try {
 		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 	} catch (e) {
-		cardstoreDebug("Permission to read file was denied.");
+		cardstoreDebug("readALocalFile: Permission to read file was denied. " + e);
 	}
 
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 	file.initWithPath( fileName );
 
     if ( file.exists() == false ) {
-		cardstoreDebug("readLocalFile: " + fileName + " not found.");
-        return newDB();
+		cardstoreDebug("readALocalFile: " + fileName + " not found.");
+        return null;
+	}
 
-	} else {
+    var is = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance( Components.interfaces.nsIFileInputStream );
+	is.init( file,0x01, 00004, null);
+	var sis = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance( Components.interfaces.nsIScriptableInputStream );
+	sis.init( is );
+	var output = sis.read( sis.available() );
+	return output;
+} 
 
-        var is = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance( Components.interfaces.nsIFileInputStream );
-		is.init( file,0x01, 00004, null);
-		var sis = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance( Components.interfaces.nsIScriptableInputStream );
-		sis.init( is );
-		var output = sis.read( sis.available() );
-        if (!output) {
-        	output = newDB();
-        } else {
-			var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefService);
-			prefs = prefs.getBranch("extensions.infocard.");
-        	var encrypt = prefs.getBoolPref("cardStoreMasterPasswordEncryption");
-			if (encrypt) {
+function readLocalFile(fileName) {
+
+	var output = readALocalFile(fileName);
+	if (output == null) {
+		return newDB();
+	}
+
+    if (!output) {
+    	output = newDB();
+    } else {
+		var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                getService(Components.interfaces.nsIPrefService);
+		prefs = prefs.getBranch("extensions.infocard.");
+    	var encrypt = prefs.getBoolPref("cardStoreMasterPasswordEncryption");
+		if (encrypt) {
+            var sdr = Components.classes["@mozilla.org/security/sdr;1"]
+                            .getService(Components.interfaces.nsISecretDecoderRing);
+            var decrypted = "";
+            try {
+	    		decrypted = sdr.decryptString(output);
+            } catch (e) {
+            	try {
+            		cardstoreDebug("error decypting the cardstore: " + fileName);
+	            	return new XML(output);
+            	} catch (e) {
+            		cardstoreDebug("unencrypted cardstore is no valid xml: " + fileName);
+            		return newDB();
+            	}
+            }
+        
+        	//cardstoreDebug(decrypted);
+        	return new XML(decrypted);
+		} else {
+			try {
+				return new XML(output);
+			}
+			catch (e) {
+				// try to decrypt
 	            var sdr = Components.classes["@mozilla.org/security/sdr;1"]
 	                            .getService(Components.interfaces.nsISecretDecoderRing);
 	            var decrypted = "";
 	            try {
 		    		decrypted = sdr.decryptString(output);
 	            } catch (e) {
-	            	try {
-	            		cardstoreDebug("error decypting the cardstore: " + fileName);
-		            	return new XML(output);
-	            	} catch (e) {
-	            		cardstoreDebug("unencrypted cardstore is no valid xml: " + fileName);
-	            		return newDB();
-	            	}
+	            	cardstoreDebug("error decypting the cardstore: " + fileName);
+		            return newDB();
 	            }
-            
-            	//cardstoreDebug(decrypted);
-            	return new XML(decrypted);
-			} else {
-				try {
-					return new XML(output);
-				}
-				catch (e) {
-					// try to decrypt
-		            var sdr = Components.classes["@mozilla.org/security/sdr;1"]
-		                            .getService(Components.interfaces.nsISecretDecoderRing);
-		            var decrypted = "";
-		            try {
-			    		decrypted = sdr.decryptString(output);
-		            } catch (e) {
-		            	cardstoreDebug("error decypting the cardstore: " + fileName);
-			            return newDB();
-		            }
-				}
 			}
-        }
-        var dbFile = new XML(output);
-        return dbFile;
-
-	}
-
+		}
+    }
+    var dbFile = new XML(output);
+    return dbFile;
 }
 
 function getDir(){
@@ -350,7 +364,7 @@ function getDir(){
     try {
         netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     } catch (e) {
-        alert("Permission to save file was denied.");
+        alert("Permission to save file was denied." + e);
     }
     // get the path to the user's home (profile) directory
     const DIR_SERVICE = new Components.Constructor("@mozilla.org/file/directory_service;1","nsIProperties");

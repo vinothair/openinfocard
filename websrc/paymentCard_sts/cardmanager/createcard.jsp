@@ -6,6 +6,7 @@
 <%@ page import="org.xmldap.sts.db.impl.CardStorageEmbeddedDBImpl"%>
 <%@ page import="org.xmldap.util.PropertiesManager"%>
 <%@ page import="org.xmldap.sts.db.SupportedClaims"%>
+<%@ page import="org.xmldap.util.XSDDateTime"%>
 <%
 
 	PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, getServletContext());
@@ -148,7 +149,9 @@
 	    		}
 	    	}
 	    }
-
+		
+	    String timeissued = new XSDDateTime().getDateTime();
+	    card.setTimeIssued(timeissued);
         storage.addCard(username, card);
 
         out.println("<script type=\"text/javascript\">document.location = \"/" + servletPath + "/cardmanager/\";</script>");

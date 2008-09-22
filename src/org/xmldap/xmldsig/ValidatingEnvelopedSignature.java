@@ -2,6 +2,9 @@ package org.xmldap.xmldsig;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +27,8 @@ public class ValidatingEnvelopedSignature {
 	}
 	
 	public ValidatingEnvelopedSignature(Element signature) throws ParsingException {
-		if ("Signature".equals(signature.getLocalName())) {
+		String name = signature.getLocalName();
+		if ("Signature".equals(name)) {
 			if (WSConstants.DSIG_NAMESPACE.equals(signature.getNamespaceURI())) {
 				try {
 					parsedSignature = new ParsedSignature(signature);
@@ -34,7 +38,7 @@ public class ValidatingEnvelopedSignature {
 				}
 			}
 		} else {
-			throw new ParsingException("ValidatingEnvelopedSignature: localname must be Signature");
+			throw new ParsingException("ValidatingEnvelopedSignature: localname must be Signature, not " + name + ".\n" + signature.toXML());
 		}
 	}
 	
@@ -46,6 +50,7 @@ public class ValidatingEnvelopedSignature {
 		List<Element> elts = validate(false);
 		if (elts == null) return null;
 		if (elts.size() != 1) {
+			System.out.println("multipleReferencesAllowed == false, but number of list Elements != 1");
 			throw new InternalError("multipleReferencesAllowed == false, but number of list Elements != 1");
 		}
 		return elts.get(0);
@@ -65,6 +70,22 @@ public class ValidatingEnvelopedSignature {
 		Elements objects = signature.getChildElements("Object", WSConstants.DSIG_NAMESPACE);
 
 		ParsedKeyInfo keyInfo = parsedSignature.getParsedKeyInfo();
+		ParsedX509Data parsedX509Data = keyInfo.getParsedX509Data();
+		if (parsedX509Data != null) {
+			List<X509Certificate> certList = parsedX509Data.getCertificates();
+			for (X509Certificate cert : certList) {
+				try {
+					System.out.println("checking validity of " + cert.getSubjectX500Principal().getName());
+					cert.checkValidity();
+				} catch (CertificateExpiredException e) {
+					System.out.println("CertificateExpiredException: " + e.getMessage());
+					throw new CryptoException(e);
+				} catch (CertificateNotYetValidException e) {
+					System.out.println("CertificateNotYetValidException: " + e.getMessage());
+					throw new CryptoException(e);
+				}
+			}
+		}
 		BigInteger modulus = keyInfo.getModulus();
 		BigInteger exponent = keyInfo.getExponent();
 		
@@ -115,5 +136,16 @@ public class ValidatingEnvelopedSignature {
 			}
 		}
 		return validElements;
+	}
+	
+	public X509Certificate getCert() {
+		ParsedKeyInfo keyInfo = parsedSignature.getParsedKeyInfo();
+		if (keyInfo == null) { return null; }
+		ParsedX509Data parsedX509data = keyInfo.getParsedX509Data();
+		if (parsedX509data == null) { return null; }
+		List<X509Certificate> certs = parsedX509data.getCertificates();
+		if (certs == null) { return null; }
+		if (certs.size() == 0) { return null; }
+		return certs.get(0);
 	}
 }

@@ -137,6 +137,23 @@ public class EndpointReference implements Serializable {
 
     }
 
+    public String getAddress() {
+        return sts;
+    }
+
+    public void setAddress(String address) {
+        this.sts = address;
+    }
+
+
+    public String getMexAddress() {
+        return mex;
+    }
+
+    public void setMexAddress(String mexAddress) {
+        this.mex = mexAddress;
+    }
+
     public String toXML() throws SerializationException {
         Element epr = serialize();
         return epr.toXML();
