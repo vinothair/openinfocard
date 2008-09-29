@@ -31,6 +31,7 @@ package org.xmldap.infocard;
 import nu.xom.Attribute;
 import nu.xom.Element;
 import nu.xom.Elements;
+import nu.xom.Node;
 
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.ParsingException;
@@ -55,6 +56,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -91,8 +93,11 @@ public class InfoCard implements Serializable {
     boolean requireStrongRecipientIdentity = true;
 
     Map<String, String> issuerInformation = null;
+
+    // <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    protected List<Element> bastards = null;
     
-    public InfoCard(InfoCard that) {
+	public InfoCard(InfoCard that) {
         this.certChain = that.certChain;
         this.privateKey = that.privateKey;
         
@@ -110,6 +115,7 @@ public class InfoCard implements Serializable {
         this.userName = that.userName;
         this.requireAppliesTo = that.requireAppliesTo; // optional 
         this.lang = that.lang;
+        this.bastards = that.bastards;
     }
 
     public InfoCard() {
@@ -117,10 +123,6 @@ public class InfoCard implements Serializable {
     }
 
     public InfoCard(Element infoCardElement) throws ParsingException {
-    	createFromElement(infoCardElement);
-    }
-    
-    protected void createFromElement(Element infoCardElement) throws ParsingException {
     	// <ic:InformationCard xml:lang="xs:language" ...> 
     	//  <ic:InformationCardReference> ... </ic:InformationCardReference> 
     	//  <ic:CardName> xs:string </ic:CardName> ? 
@@ -137,80 +139,108 @@ public class InfoCard implements Serializable {
     	// </ic:InformationCard>
     	String name = infoCardElement.getLocalName();
     	if ("InformationCard".equals(name)) {
-    		lang = infoCardElement.getAttributeValue("lang");
-    		Elements elts = infoCardElement.getChildElements("InformationCardReference", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			informationCardReference = new InformationCardReference(elt);
-    		} else {
-    			throw new ParsingException("Found " + elts.size() + " elements of InformationCardReference");
-    		}
-    		elts = infoCardElement.getChildElements("CardName", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			cardName = elt.getValue();
-    		} else {
-    			if (elts.size() > 1) {
-    				throw new ParsingException("Found " + elts.size() + " elements of CardName");
-    			}
-    		}
-    		elts = infoCardElement.getChildElements("CardImage", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			base64BinaryCardImage = elt.getValue();
-    			mimeType = elt.getAttributeValue("MimeType");
-    		} else {
-    			throw new ParsingException("Found " + elts.size() + " elements of CardImage");
-    		}
-    		elts = infoCardElement.getChildElements("Issuer", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			issuer = elt.getValue();
-    		} else {
-    			throw new ParsingException("Found " + elts.size() + " elements of Issuer");
-    		}
-    		elts = infoCardElement.getChildElements("TimeIssued", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			timeIssued = elt.getValue();
-    		} else {
-    			throw new ParsingException("Found " + elts.size() + " elements of TimeIssued");
-    		}
-    		elts = infoCardElement.getChildElements("TimeExpires", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			timeIssued = elt.getValue();
-    		} else {
-    			if (elts.size() > 1) {
-    				throw new ParsingException("Found " + elts.size() + " elements of TimeExpires");
-    			}
-    		}
-    		elts = infoCardElement.getChildElements("TokenServiceList", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			Elements tokenServiceList = elt.getChildElements("TokenService", WSConstants.INFOCARD_NAMESPACE);
-    			if (tokenServiceList.size() < 1) {
-    				throw new ParsingException("missing TokenService children in TokenServiceList");
-    			} else {
-    				for (int i=0; i<tokenServiceList.size(); i++) {
-    					Element tokenServiceElement = tokenServiceList.get(i);
-    					TokenServiceReference tsr = new TokenServiceReference(tokenServiceElement);
-    					if (tokenServiceReferenceList == null) {
-    						tokenServiceReferenceList = new ArrayList<TokenServiceReference>();
-    					}
-    					tokenServiceReferenceList.add(tsr);
-    				}
-    			}
-    		} else {
-    			throw new ParsingException("Found " + elts.size() + " elements of TokenServiceList");
-    		}
-    		elts = infoCardElement.getChildElements("SupportedTokenTypeList", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			tokenList = new SupportedTokenList(elt);
-    		} else {
-    			throw new ParsingException("Found " + elts.size() + " elements of SupportedTokenTypeList");
-    		}
+    		createFromElement(infoCardElement);
+    	} else {
+    			throw new ParsingException("Expected InformationCard but found " + name);
+    	}
+    }
+    
+    private List<Element> children(Elements kids) {
+    	if (kids == null) return null;
+    	if (kids.size() == 0) return new ArrayList<Element>();
+    	ArrayList<Element> children = new ArrayList<Element>(kids.size());
+    	for (int i=0; i<kids.size(); i++) {
+    		children.add(kids.get(i));
+    	}
+    	return children;
+    }
+    
+    protected void createFromElement(Element infoCardElement)
+			throws ParsingException {
+    	List<Element> children = children(infoCardElement.getChildElements());
+    	
+		lang = infoCardElement.getAttributeValue("lang");
+		Elements elts = infoCardElement.getChildElements("InformationCardReference", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			informationCardReference = new InformationCardReference(elt);
+		} else {
+			throw new ParsingException("Found " + elts.size() + " elements of InformationCardReference");
+		}
+		elts = infoCardElement.getChildElements("CardName", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			cardName = elt.getValue();
+		} else {
+			if (elts.size() > 1) {
+				throw new ParsingException("Found " + elts.size() + " elements of CardName");
+			}
+		}
+		elts = infoCardElement.getChildElements("CardImage", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			base64BinaryCardImage = elt.getValue();
+			mimeType = elt.getAttributeValue("MimeType");
+		} else {
+			throw new ParsingException("Found " + elts.size() + " elements of CardImage");
+		}
+		elts = infoCardElement.getChildElements("Issuer", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			issuer = elt.getValue();
+		} else {
+			throw new ParsingException("Found " + elts.size() + " elements of Issuer");
+		}
+		elts = infoCardElement.getChildElements("TimeIssued", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			timeIssued = elt.getValue();
+		} else {
+			throw new ParsingException("Found " + elts.size() + " elements of TimeIssued");
+		}
+		elts = infoCardElement.getChildElements("TimeExpires", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			timeIssued = elt.getValue();
+		} else {
+			if (elts.size() > 1) {
+				throw new ParsingException("Found " + elts.size() + " elements of TimeExpires");
+			}
+		}
+		elts = infoCardElement.getChildElements("TokenServiceList", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			Elements tokenServiceList = elt.getChildElements("TokenService", WSConstants.INFOCARD_NAMESPACE);
+			if (tokenServiceList.size() < 1) {
+				throw new ParsingException("missing TokenService children in TokenServiceList");
+			} else {
+				for (int i=0; i<tokenServiceList.size(); i++) {
+					Element tokenServiceElement = tokenServiceList.get(i);
+					TokenServiceReference tsr = new TokenServiceReference(tokenServiceElement);
+					if (tokenServiceReferenceList == null) {
+						tokenServiceReferenceList = new ArrayList<TokenServiceReference>();
+					}
+					tokenServiceReferenceList.add(tsr);
+				}
+			}
+		} else {
+			throw new ParsingException("Found " + elts.size() + " elements of TokenServiceList");
+		}
+		elts = infoCardElement.getChildElements("SupportedTokenTypeList", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			tokenList = new SupportedTokenList(elt);
+		} else {
+			throw new ParsingException("Found " + elts.size() + " elements of SupportedTokenTypeList");
+		}
 
 //    	    <ic:SupportedClaimTypeList> 
 //    	     (<ic:SupportedClaimType Uri=�xs:anyURI�> 
@@ -218,37 +248,86 @@ public class InfoCard implements Serializable {
 //    	       <ic:Description> xs:string </ic:Description> ? 
 //    	      </ic:SupportedClaimType>) + 
 //    	      </ic:SupportedClaimTypeList>
-    		elts = infoCardElement.getChildElements("SupportedClaimTypeList", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			claimList = new SupportedClaimTypeList(elt);
-    		} else {
-    			throw new ParsingException("Found " + elts.size() + " elements of SupportedClaimTypeList in\n" + infoCardElement.toXML());
-    		}
-    		elts = infoCardElement.getChildElements("RequireAppliesTo", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			requireAppliesTo = new RequireAppliesTo(elt);
-    		} else {
-    			if (elts.size() > 1) {
-    				throw new ParsingException("Found " + elts.size() + " elements of RequireAppliesTo");
-    			}
-    		}
-    		elts = infoCardElement.getChildElements("PrivacyNotice", WSConstants.INFOCARD_NAMESPACE);
-    		if (elts.size() == 1) {
-    			Element elt = elts.get(0);
-    			privacyPolicy = new PrivacyNotice(elt);
-    		} else {
-    			if (elts.size() > 1) {
-    				throw new ParsingException("Found " + elts.size() + " elements of PrivacyNotice");
-    			}
-    		}
-    		// TODO we need to store the other not defined child elements of InformationCard
-    		// to export them 
-    	} else {
-    			throw new ParsingException("Expected InformationCard but found " + name);
-    	}
-    }
+		elts = infoCardElement.getChildElements("SupportedClaimTypeList", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			claimList = new SupportedClaimTypeList(elt);
+		} else {
+			throw new ParsingException("Found " + elts.size() + " elements of SupportedClaimTypeList in\n" + infoCardElement.toXML());
+		}
+		elts = infoCardElement.getChildElements("RequireAppliesTo", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			requireAppliesTo = new RequireAppliesTo(elt);
+		} else {
+			if (elts.size() > 1) {
+				throw new ParsingException("Found " + elts.size() + " elements of RequireAppliesTo");
+			}
+		}
+		elts = infoCardElement.getChildElements("PrivacyNotice", WSConstants.INFOCARD_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			privacyPolicy = new PrivacyNotice(elt);
+		} else {
+			if (elts.size() > 1) {
+				throw new ParsingException("Found " + elts.size() + " elements of PrivacyNotice");
+			}
+		}
+		elts = infoCardElement.getChildElements("RequireStrongRecipientIdentity", WSConstants.INFOCARD07_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			requireStrongRecipientIdentity = true;
+		} else {
+			if (elts.size() > 1) {
+				throw new ParsingException("Found " + elts.size() + " elements of RequireStrongRecipientIdentity");
+			}
+		}
+		elts = infoCardElement.getChildElements("IssuerInformation", WSConstants.INFOCARD07_NAMESPACE);
+		if (elts.size() == 1) {
+			Element elt = elts.get(0);
+			children.remove(elt);
+			issuerInformation = new HashMap<String, String>();
+			elts = elt.getChildElements("IssuerInformationEntry", WSConstants.INFOCARD07_NAMESPACE);
+			if (elts.size() > 1) {
+				Element issuerInformationEntry = elts.get(0);
+				String name = null;
+				elts = issuerInformationEntry.getChildElements("EntryName", WSConstants.INFOCARD07_NAMESPACE);
+				if (elts.size() == 1) {
+					elt = elts.get(0);
+					name = elt.getValue();
+					if ((name == null) || ("".equals(name))) {
+						throw new ParsingException("EntryName is null or empty");
+					}
+				} else {
+					throw new ParsingException("Found " + elts.size() + " elements of EntryName; expected exactly one.");
+				}
+				String value = null;
+				elts = issuerInformationEntry.getChildElements("EntryValue", WSConstants.INFOCARD07_NAMESPACE);
+				if (elts.size() == 1) {
+					elt = elts.get(0);
+					value = elt.getValue();
+					if (value == null) {
+						throw new ParsingException("EntryValue is null");
+					}
+				} else {
+					throw new ParsingException("Found " + elts.size() + " elements of EntryValue; expected exactly one.");
+				}
+				issuerInformation.put(name, value);
+			} else {
+				throw new ParsingException("Expected IssuerInformationEntry");
+			}
+		} else {
+			if (elts.size() > 1) {
+				throw new ParsingException("Found " + elts.size() + " elements of IssuerInformation");
+			}
+		}
+
+		bastards = children; 
+	}
 
 //    public InfoCard(X509Certificate cert, PrivateKey privateKey) {
 //        this.certChain = new X509Certificate[]{cert};
@@ -400,7 +479,31 @@ public class InfoCard implements Serializable {
 	        Attribute lang = new Attribute("xml:lang", "http://www.w3.org/XML/1998/namespace", "en-us");
 	        infoCard.addAttribute(lang);
         }
-    	infoCard.addNamespaceDeclaration(WSConstants.MEX_PREFIX,WSConstants.MEX_04_09);
+    	appendChildren(infoCard);
+        
+        if (certChain != null && certChain.length > 0) {
+            System.out.println("SigningCArd");
+            //Get the signing util
+            InfoCardSignature signer = new InfoCardSignature(certChain,privateKey);
+
+            Element signedCard = null;
+
+            try {
+
+                signedCard = signer.sign(infoCard);
+            } catch (SigningException e) {
+                throw new SerializationException(e);
+            }
+
+            return signedCard;
+
+        }
+        return infoCard;
+
+    }
+
+	protected void appendChildren(Element infoCard) throws SerializationException {
+		infoCard.addNamespaceDeclaration(WSConstants.MEX_PREFIX,WSConstants.MEX_04_09);
         infoCard.addNamespaceDeclaration(WSConstants.DSIG_PREFIX,WSConstants.DSIG_NAMESPACE);
         infoCard.addNamespaceDeclaration(WSConstants.INFOCARD_PREFIX, WSConstants.INFOCARD_NAMESPACE);
         infoCard.addNamespaceDeclaration(WSConstants.WSA_PREFIX,WSConstants.WSA_NAMESPACE_05_08);
@@ -519,26 +622,15 @@ public class InfoCard implements Serializable {
         	infoCard.appendChild(issuerInformationElm);
         }
         
-        if (certChain != null && certChain.length > 0) {
-            System.out.println("SigningCArd");
-            //Get the signing util
-            InfoCardSignature signer = new InfoCardSignature(certChain,privateKey);
-
-            Element signedCard = null;
-
-            try {
-
-                signedCard = signer.sign(infoCard);
-            } catch (SigningException e) {
-                throw new SerializationException(e);
-            }
-
-            return signedCard;
-
+        if (bastards != null) {
+	        // <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+	        for (Element bastard : bastards) {
+	        	Element node = (Element)bastard.copy();
+	        	node.detach();
+	        	infoCard.appendChild(node);
+	        }
         }
-        return infoCard;
-
-    }
+	}
 
     /*
 
@@ -655,6 +747,14 @@ public class InfoCard implements Serializable {
 
 	public void setIssuerInformation(Map<String, String> issuerInformation) {
 		this.issuerInformation = issuerInformation;
+	}
+
+    public List<Element> getBastards() {
+		return bastards;
+	}
+
+	public void setBastards(List<Element> bastards) {
+		this.bastards = bastards;
 	}
 
 	public boolean checkValidity(String when) {
