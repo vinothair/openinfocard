@@ -40,16 +40,17 @@ public class InformationCardMetaData extends InfoCard {
     public InformationCardMetaData(Element informationCardMetaDataElement) throws ParsingException {
     	if ("InformationCardMetaData".equals(informationCardMetaDataElement.getLocalName())) {
     		
-    		Element elt;
-    		elt = informationCardMetaDataElement.getFirstChildElement("InformationCard", WSConstants.INFOCARD_NAMESPACE);
-    		if (elt != null) {
+    		Element elt = informationCardMetaDataElement;
+//    		elt = informationCardMetaDataElement.getFirstChildElement("InformationCard", WSConstants.INFOCARD_NAMESPACE);
+//    		if (elt != null) {
 //    			card = new InfoCard(elt);
     			super.createFromElement(elt);
-    		} else {
-    			throw new ParsingException("Expected InformationCard");
-    		}
+//    		} else {
+//    			throw new ParsingException("Expected InformationCard");
+//    		}
     		elt = informationCardMetaDataElement.getFirstChildElement("IsSelfIssued", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
+    			super.bastards.remove(elt);
     			String value = elt.getValue();
     			if ("true".equals(value) || ("1").equals(value)) {
     				isSelfIssued = true;
@@ -63,36 +64,42 @@ public class InformationCardMetaData extends InfoCard {
     		}
     		elt = informationCardMetaDataElement.getFirstChildElement("PinDigest", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
+    			super.bastards.remove(elt);
     			this.pinDigest = elt.getValue();
     		} else {
     			// optional
     		}
     		elt = informationCardMetaDataElement.getFirstChildElement("HashSalt", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
+    			super.bastards.remove(elt);
     			this.HashSalt = elt.getValue();
     		} else {
     			throw new ParsingException("Expected HashSalt");
     		}
     		elt = informationCardMetaDataElement.getFirstChildElement("TimeLastUpdated", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
+    			super.bastards.remove(elt);
     			this.timeLastUpdated = elt.getValue();
     		} else {
     			throw new ParsingException("Expected TimeLastUpdated");
     		}
     		elt = informationCardMetaDataElement.getFirstChildElement("IssuerId", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
+    			super.bastards.remove(elt);
     			this.issuerId = elt.getValue();
     		} else {
     			throw new ParsingException("Expected IssuerId");
     		}
     		elt = informationCardMetaDataElement.getFirstChildElement("IssuerName", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
+    			super.bastards.remove(elt);
     			this.issuerName = elt.getValue();
     		} else {
     			throw new ParsingException("Expected IssuerName");
     		}
     		elt = informationCardMetaDataElement.getFirstChildElement("BackgroundColor", WSConstants.INFOCARD_NAMESPACE);
     		if (elt != null) {
+    			super.bastards.remove(elt);
     			this.backgroundColor = elt.getValue();
     		} else {
     			throw new ParsingException("Expected BackgroundColor");
@@ -111,8 +118,10 @@ public class InformationCardMetaData extends InfoCard {
         	lang = new Attribute("xml:lang", "http://www.w3.org/XML/1998/namespace", "en");
         }
         informationCardMetaData.addAttribute(lang);
-        Element cardElm = super.serialize();
-        informationCardMetaData.appendChild(cardElm);
+        
+        super.appendChildren(informationCardMetaData);
+//        Element cardElm = super.serialize();
+//        informationCardMetaData.appendChild(cardElm);
 //        Elements children = cardElm.getChildElements();
 //        for (int i = 0; i < children.size(); i++) {
 //            Element child = children.get(i);
