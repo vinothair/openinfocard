@@ -282,8 +282,12 @@ public class InfoCard implements Serializable {
 			children.remove(elt);
 			requireStrongRecipientIdentity = true;
 		} else {
-			if (elts.size() > 1) {
-				throw new ParsingException("Found " + elts.size() + " elements of RequireStrongRecipientIdentity");
+			if (elts.size() ==0) {
+				requireStrongRecipientIdentity = false;
+			} else {
+				if (elts.size() > 1) {
+					throw new ParsingException("Found " + elts.size() + " elements of RequireStrongRecipientIdentity");
+				}
 			}
 		}
 		elts = infoCardElement.getChildElements("IssuerInformation", WSConstants.INFOCARD07_NAMESPACE);
