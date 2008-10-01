@@ -33,6 +33,8 @@ import org.xmldap.util.XmlFileUtil;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.crypto.EncryptedStoreKeys;
 import org.xmldap.ws.WSConstants;
+import org.xmldap.xml.Canonicalizable;
+import org.xmldap.xml.XmlUtils;
 import org.xmldap.exceptions.*;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
@@ -221,7 +223,7 @@ public class EncryptedStore {
 
     }
 
-    public void toStream(OutputStream output) {
+    public void toStream(OutputStream output) throws IOException {
         Element encryptedStore = new Element("EncryptedStore", WSConstants.INFOCARD_NAMESPACE);
         Element storeSalt = new Element("StoreSalt", WSConstants.INFOCARD_NAMESPACE);
 
@@ -239,10 +241,13 @@ public class EncryptedStore {
         try {
             output.write(bom);
             output.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>".getBytes("UTF8"));
-            output.write(encryptedStore.toXML().getBytes("UTF8"));
+            byte[] bytes = XmlUtils.canonicalize(encryptedStore, Canonicalizable.EXCLUSIVE_CANONICAL_XML);
+            output.write(bytes);
+//            output.write(encryptedStore.toXML().getBytes("UTF8"));
 
         } catch (IOException e) {
             e.printStackTrace();
+            throw e;
         }
 
     }
