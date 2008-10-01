@@ -758,6 +758,21 @@ var IdentitySelector =
 	},
 	
 	// ***********************************************************************
+	// Method: form submit interceptor
+	// ***********************************************************************
+	
+	interceptor : function(e)
+	{
+		IdentitySelector.logMessage("IdentitySelector.interceptor", " start");
+		var frm = e ? e.target : this;
+		var dcmt = frm.ownerDocument;
+		var evnt = dcmnt.createEvent( 'Event');
+	    evnt.initEvent( 'ICFormSubmit', true, true);
+	    this.dispatchEvent( evnt);
+	    dcmnt.__identityselector__.chainSubmit.apply( this);
+	},
+	
+	// ***********************************************************************
 	// Method: runInterceptScript
 	// ***********************************************************************
 	
@@ -768,66 +783,17 @@ var IdentitySelector =
 			doc = doc.wrappedJSObject;
 		}
 		
-		if( doc.__identityselector__ === undefined)
+		if( doc.__identityselector__ == undefined)
 		{
-//			try
-//			{
-//				doc.__identityselector__ = new Object();
-//				doc.__identityselector__.data = new Object();
-//				doc.__identityselector__.submitIntercepted = false;
-//			
-//				doc.__identityselector__.chainSubmit = 
-//			      HTMLFormElement.prototype.submit;
-//			   HTMLFormElement.prototype.submit = function()
-//			   {
-//			      var event = doc.createEvent( 'Event');
-//			      event.initEvent( 'ICFormSubmit', true, true);
-//			      this.dispatchEvent( event);
-//			      doc.__identityselector__.chainSubmit.apply( this);
-//			   }
-//			
-//			   doc.__identityselector__.valueGetter = function()
-//			   {
-//			      var event = doc.createEvent( 'Event');
-//			      event.initEvent( 'ICGetTokenValue', true, true);
-//			      this.dispatchEvent( event);
-//			      return( this.__value);
-//			   }
-//			}
-//			catch( e)
-//			{
-//			   alert( e);
-//			}
-
-			eval( 
-				"try" +
-				"{" +
-				"   document.__identityselector__ = new Object();" +
-				"   document.__identityselector__.data = new Object();" +
-				"   document.__identityselector__.submitIntercepted = false;" +
-				
-				"   document.__identityselector__.chainSubmit = " +
-				"      HTMLFormElement.prototype.submit;" +
-				"   HTMLFormElement.prototype.submit = function()" +
-				"   {" +
-				"      var event = document.createEvent( 'Event');" +
-				"      event.initEvent( 'ICFormSubmit', true, true);" +
-				"      this.dispatchEvent( event);" +
-				"      document.__identityselector__.chainSubmit.apply( this);" +
-				"   };" +
-				
-				"   document.__identityselector__.valueGetter = function()" +
-				"   {" +
-				"      var event = document.createEvent( 'Event');" +
-				"      event.initEvent( 'ICGetTokenValue', true, true);" +
-				"      this.dispatchEvent( event);" +
-				"      return( this.__value);" +
-				"   };" +
-				"}" +
-				"catch( e)" +
-				"{" +
-				"   alert( e);" +
-				"}", doc);
+			// Load and execute the script
+			
+			Components.classes[ 
+				"@mozilla.org/moz/jssubscript-loader;1"].getService(
+				Components.interfaces.mozIJSSubScriptLoader).loadSubScript(
+				"chrome://infocard/content/Intercept.js", doc)
+			
+			IdentitySelector.logMessage( "runInterceptScript", 
+				"Executed script on " + doc.location);
 		}
 	},
 		
@@ -886,7 +852,7 @@ var IdentitySelector =
 	onContentLoaded : function( event)
 	{
 		var target = event ? event.target : this;
-		var doc;
+		var doc = null;
 		
 		if( target.wrappedJSObject)
 		{
@@ -1303,7 +1269,7 @@ var IdentitySelector =
 		{
 			var target = event ? event.target : this;
 			var doc;
-			var form;
+			var form = null;
 			var objElem;
 			var icardElem;
 			
@@ -1331,6 +1297,9 @@ var IdentitySelector =
 					objElem.dispatchEvent( evnt);
 				}
 				
+//				var invokeSelector = ( objElem.token == undefined);
+				var invokeSelector = ( objElem.token == undefined);
+
 				// If the embedded ICard object doesn't have a token attached to
 				// it, invoke the selector
 				
@@ -1349,6 +1318,8 @@ var IdentitySelector =
 					
 					if( objElem.token != undefined)
 					{
+						IdentitySelector.logMessage( "onFormSubmit", 
+						"adding input with name=" + objElem.getAttribute( "name") + " to form. value=" + objElem.token);
 						var input = doc.createElement( "INPUT");
 					
 						input.setAttribute( "name", 
@@ -1356,6 +1327,7 @@ var IdentitySelector =
 						input.setAttribute( "type", "hidden");
 						input.value = objElem.token;
 						form.appendChild( input);
+						delete objElem[ "token"];
 					}
 					
 				}
@@ -1415,6 +1387,20 @@ var IdentitySelector =
 		{
 			IdentitySelector.reportError( "onFormSubmit", e);
 		}
+		
+		if (form instanceof HTMLFormElement) {
+			IdentitySelector.logMessage( "onFormSubmit", 
+					"submitting form");
+////			form.submit(); // this call cancels the previous submit
+//			var evnt = doc.createEvent( "Event");
+//			evnt.initEvent( "submit", true, true);
+//			form.dispatchEvent( evnt);
+		} else {
+			IdentitySelector.logMessage( "onFormSubmit", 
+			"form is no instanceof HTMLFormElement but : " + form);
+		}
+		var cancelSubmit = true;
+		return cancelSubmit;
 	},
 
 	// ***********************************************************************
@@ -1694,6 +1680,16 @@ var IdentitySelector =
 		return false;
 	},
 
+//	// ***********************************************************************
+//	// Method: valueGetter
+//	// ***********************************************************************
+//	
+//	valueGetter : function()
+//	{
+//		IdentitySelector.logMessage("IdentitySelector.valueGetter",   "object =" + this + "location=" + this.ownerDocument.location.href );
+//		return "value";
+//	},
+
 	// ***********************************************************************
 	// Method: onICardObjectLoaded
 	// ***********************************************************************
@@ -1741,9 +1737,21 @@ var IdentitySelector =
 					IdentitySelector.runInterceptScript(doc);
 				}
 				
+				{
+					if( objElem.wrappedJSObject)
+					{
+						objElem = objElem.wrappedJSObject;
+						IdentitySelector.logMessage( "onICardElementLoaded", 
+								"objElem wrapped: " + objElem);
+					}
+
+					IdentitySelector.logMessage( "onICardElementLoaded", "defining Getter for " + objElem);
 				delete objElem[ "value"];
-				objElem.__defineGetter__( "value", 
-					doc.__identityselector__.valueGetter);
+//				objElem.__defineGetter__( "value", 
+//					doc.__identityselector__.valueGetter);
+//					objElem.__defineGetter__( "value", 
+//						IdentitySelector.valueGetter);
+				}
 				
 				while( form != null) 
 				{
@@ -1848,8 +1856,8 @@ var IdentitySelector =
 				}
 
 				delete icardElem[ "value"];
-				icardElem.__defineGetter__( "value", 
-					doc.__identityselector__.valueGetter);
+//				icardElem.__defineGetter__( "value", 
+//					doc.__identityselector__.valueGetter);
 				
 				while( form != null) 
 				{
@@ -2759,8 +2767,65 @@ var httpRequestObserver =
 /****************************************************************************
 Desc:
 ****************************************************************************/
+try {
+	httpRequestObserver.register();
+} catch (e) {
+ 	 IdentitySelector.logMessage("httpRequestObserver.register() failed: ", e);
+}
 
-httpRequestObserver.register();
+///****************************************************************************
+//Desc:
+//****************************************************************************/
+//
+//var formSubmitObserver =
+//{
+//  QueryInterface : function(aIID)
+//  {
+//	  if ( !aIID.equals(Components.interfaces.nsISupports) &&
+//	       !aIID.equals(Components.interfaces.nsIObserver) &&
+//	       !aIID.equals(Components.interfaces.nsIFormSubmitObserver) &&
+//	       !aIID.equals(Components.interfaces.nsISupportsWeakReference) )
+//		  {
+//		    throw Components.results.NS_ERROR_NO_INTERFACE;
+//		  }
+//		  return this;
+//  },
+//  
+//  notify: function(formElement, aWindow, actionURI)
+//  {
+//	var doc = formElement.ownerDocument;
+//	var evnt = doc.createEvent( "Event");
+//	evnt.initEvent( "ICFormSubmit", true, true);
+//	formElement.dispatchEvent( evnt);
+//	var cancelSubmit = true;
+//	return cancelSubmit; // cancel submit
+//  },
+//
+//  get observerService() {
+//    return Components.classes["@mozilla.org/observer-service;1"]
+//                     .getService(Components.interfaces.nsIObserverService)
+//  },
+//
+//  register: function()
+//  {
+//    this.observerService.addObserver(this, "earlyformsubmit", false);
+//  },
+//
+//  unregister: function()
+//  {
+//    this.observerService.removeObserver(this, "earlyformsubmit");
+//  }
+//};
+//
+///****************************************************************************
+//Desc:
+//****************************************************************************/
+//
+//try {
+//	formSubmitObserver.register();
+//} catch(e) {
+//  	 IdentitySelector.logMessage("formSubmitObserver.register() failed: ", e);
+//}
 
 /****************************************************************************
 Desc:
@@ -2792,7 +2857,6 @@ var prefObserver =
 
   register: function()
   {
- 	IdentitySelector.logMessage("prefObserver:", "register");
   	this.prefs = Components.classes["@mozilla.org/preferences-service;1"]
          .getService(Components.interfaces.nsIPrefService)
          .getBranch("identityselector.");
@@ -2816,7 +2880,7 @@ try
 }
 catch( e)
 {
-	IdentitySelector.reportError( "prefObserver.register()", e);
+	IdentitySelector.reportError( "prefObserver.register() failed: ", e);
 }
 
 // **************************************************************************
@@ -2834,5 +2898,5 @@ try
 }
 catch( e)
 {
-	IdentitySelector.reportError( "window.addEventListener", e);
+	IdentitySelector.reportError( "window.addEventListener failed: ", e);
 }
