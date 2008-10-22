@@ -32,6 +32,123 @@ var gbIsWin = ((gNavPlat.indexOf( "Win") > -1) ? true : false);
 var gbIsMac = ((gNavPlat.indexOf( "Mac") > -1) ? true : false);
 var gbIsLinux = ((gNavPlat.indexOf( "Linux") > -1) ? true : false);
 
+function getCidFromPrefs() {
+	var cid = null;
+    // lookup class id from config.
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+    var pbi = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
+
+    cid = pbi.getCharPref("identityselector.contractid");
+	return cid;
+}
+
+function getObjectForClassId(cid) {
+	var obj = null;
+    try {
+	    var cidClass = Components.classes[cid];
+	    if (cidClass != undefined) { 
+		    obj = cidClass.createInstance();
+		    obj = obj.QueryInterface(Components.interfaces.IIdentitySelector);
+	    } else {
+		    IdentitySelector.reportError("getObjectForClassId", "the class " + cid + " is not installed");
+	    }
+    }
+    catch (e) {
+	    IdentitySelector.throwError( "getObjectForClassId:", e);
+    }
+    return obj;
+}
+
+//<object type="application/x-informationcard" name="xmlToken">
+//<param name="privacyUrl" value="https://w4de3esy0069028.gdc-bln01.t-systems.com:8443/relyingparty/?privacy.txt"/>
+//<param name="requiredClaims" value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"/>
+//<param name="optionalClaims" value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender"/>
+//<param name="privacyVersion" value="1"/>
+//<param name="tokenType" value="urn:oasis:names:tc:SAML:1.0:assertion"/>
+//</object>
+function parseRpPolicy(icLoginPolicy) {
+//	IdentitySelector.logMessage("parseRpPolicy", "typeof(icLoginPolicy)=" + typeof(icLoginPolicy)); // xml
+	IdentitySelector.logMessage("parseRpPolicy", "icLoginPolicy=" + icLoginPolicy.toString());
+	var data = new Object();
+
+//	if( icLoginPolicy.wrappedJSObject)
+//	{
+//		IdentitySelector.logMessage("parseRpPolicy", "icLoginPolicy =" + icLoginPolicy.wrappedJSObject.toString());
+//		icLoginPolicy = icLoginPolicy.wrappedJSObject;
+//	}
+//	var xmlPolicy = new XML(icLoginPolicy.toString());
+//	IdentitySelector.logMessage("parseRpPolicy", "xmlPolicy.child(1).@name=" + xmlPolicy.child(1).@name.toString());
+
+	var params = icLoginPolicy.toString().split("<param");
+	IdentitySelector.logMessage("parseRpPolicy", "params.length=" + params.length);
+	for (var i=0; i<params.length; i++) {
+		var name = null;
+		var value = null;
+		var param = params[i];
+		IdentitySelector.logMessage("parseRpPolicy", "param i=" + i + " param=" + param);
+		var j = param.indexOf('name="');
+		if (j != -1) {
+			var s1 = param.substring(j + 6);
+			j = s1.indexOf('"');
+			if (j != -1) {
+				name = s1.substring(0,j);
+				s1 = param.substring(j);
+				j = s1.indexOf("value=\"");
+				if (j != -1) {
+					s1 = s1.substring(j+7);
+					j = s1.indexOf('"');
+					if (j != -1) {
+						value = s1.substring(0,j);
+					} else {
+						IdentitySelector.logMessage("parseRpPolicy", "no closing \" in value= in " + param);
+					}
+				} else {
+					IdentitySelector.logMessage("parseRpPolicy", "no value=\" in " + param);
+				}
+			} else {
+				IdentitySelector.logMessage("parseRpPolicy", "no closing \" in name= in " + param);
+			}
+		} else {
+			IdentitySelector.logMessage("parseRpPolicy", "no name= in " + param);
+		}
+		if ((name != null) && (name != "") && (value != null)) {
+			data[name] = value;
+			IdentitySelector.logMessage("parseRpPolicy", "data[" + name + "] =" + value);
+		} else {
+			IdentitySelector.logMessage("parseRpPolicy", "no name or no value in " + param);
+		}
+	}
+	
+	return data;
+}
+
+function getSSLCertFromDocument(doc) {
+	var sslCert = null;
+    var browser = doc.getElementById( "content");
+    var secureUi = browser.securityUI;
+    var sslStatusProvider = null;
+
+    sslStatusProvider = secureUi.QueryInterface(
+				    Components.interfaces.nsISSLStatusProvider);
+
+    if( sslStatusProvider != null)
+    {
+	    try
+	    {
+		    sslStatus = sslStatusProvider.SSLStatus.QueryInterface(
+					    Components.interfaces.nsISSLStatus);
+		    if( sslStatus != null && sslStatus.serverCert != undefined)
+		    {
+			    sslCert = sslStatus.serverCert
+		    }
+	    }
+	    catch( e)
+	    {
+	    	IdentitySelector.logMessage("getSSLCertFromDocument: " + e);
+	    }
+    }
+	return sslCert;
+}
 /****************************************************************************
 Desc:
 ****************************************************************************/
@@ -81,9 +198,9 @@ function xrdsListener(doc, hrefStr)
 					var type = "" + elts[i].getElementsByTagName("Type")[0].firstChild.nodeValue + "";
 					if (type.indexOf("http://infocardfoundation.org/policy/1.0/login") == 0) {
 						var uri = "" + elts[i].getElementsByTagName("URI")[0].firstChild.nodeValue ;
-						doc.__identityselector__.icLoginPolicy = uri;
+						doc.__identityselector__.icLoginPolicyUri = uri;
 						IdentitySelector.logMessage("xrdsListener:onReady", "IC Login Service Policy: " + doc.__identityselector__.icLoginPolicy);
-						IdentitySelector.retrieveIcLoginServicePolicy(doc, doc.__identityselector__.icLoginPolicy);
+						IdentitySelector.retrieveIcLoginServicePolicy(doc, doc.__identityselector__.icLoginPolicyUri);
 					} else {
 						if (type.indexOf("http://infocardfoundation.org/service/1.0/login") == 0) {
 							var uri = "" + elts[i].getElementsByTagName("URI")[0].firstChild.nodeValue ;
@@ -106,6 +223,27 @@ function xrdsListener(doc, hrefStr)
 			}
 		}
 
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+
+function showStatusbarIcon(doc, show)  
+{
+		var statusBarImage = doc.getElementById("ic-status-bar-image");
+		if (statusBarImage != null) {
+			if (show == true) {
+				statusBarImage.src = "chrome://infocard/content/img/infocard_23x16.png";
+				statusBarImage.onclick = function () {
+					IdentitySelector.callIdentitySelector(doc);}
+			} else {
+				statusBarImage.src = "chrome://infocard/content/img/infocard_23x16-crossed.png";
+				statusBarImage.onclick = null;
+			}
+		} else {
+			IdentitySelector.logMessage("showStatusbarIcon", "Internal Warning: ic-status-bar-image not found");
+		}
 }
 
 /****************************************************************************
@@ -145,9 +283,15 @@ function icLoginServiceListener(doc, hrefStr)
 //					IdentitySelector.logMessage("xrdsListener:onReady", "i=" + i + " type=" + typeof(i));
 //				}
 				var response = new XML (Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance (Components.interfaces.nsIDOMSerializer).serializeToString(xrds.documentElement));
-				doc.__identityselector__.icLoginService = response;
+				doc.__identityselector__.icLoginPolicy = response;
 				IdentitySelector.logMessage("icLoginServiceListener:onReady", "response=" + response);
 //				var elts = xrds.evalutate('Service', xrds, nsResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+
+				if ((doc.defaultView != undefined) && (doc.defaultView)) {
+					var docWindow = doc.defaultView;
+					docWindow.addEventListener("dragdrop", IdentitySelector.onWindowDragDrop, false);
+					showStatusbarIcon(document, true);
+				}
 			} catch(e) {
 				IdentitySelector.logMessage("icLoginServiceListener:onReady", "Error: " + e);
 			}
@@ -304,6 +448,11 @@ var IdentitySelector =
 			doc = doc.wrappedJSObject;
 		}
 		return doc.__identityselector__.mode;
+	},
+	
+	statusbarClick : function(event)
+	{
+		IdentitySelector.logMessage( "statusbarClick", "clicked");
 	},
 	
 	onSecurityChange : function(aProgress, aRequest, aState)
@@ -485,6 +634,75 @@ var IdentitySelector =
 	// Method: onInstall
 	// ***********************************************************************
 	
+	tabSelected : function( event)
+	{
+		var browser = gBrowser.selectedTab.linkedBrowser;
+		// browser is the XUL element of the browser that's just been selected
+		var doc = gBrowser.selectedBrowser.contentDocument;
+		if (doc instanceof HTMLDocument) {
+			IdentitySelector.logMessage("tabSelected: ", "document is HTMLDocument: " + doc.location.href);
+			if( doc.wrappedJSObject)
+			{
+				IdentitySelector.logMessage("tabSelected: ", "document was wrapped: " + doc.location.href);
+				doc = doc.wrappedJSObject;
+			}
+
+			if( doc.__identityselector__ === undefined) {
+				showStatusbarIcon(document, true);
+			} else {
+				if (((doc.__identityselector__.icLoginService != undefined) && (doc.__identityselector__.icLoginPolicy != undefined)) 
+						|| ((doc.__identityselector__.icardElementCount != undefined) && (doc.__identityselector__.icardElementCount > 0)) 
+						|| ((doc.__identityselector__.icardObjectCount != undefined) && (doc.__identityselector__.icardObjectCount > 0))) 
+				{  
+					showStatusbarIcon(document, true);
+				} else {
+					showStatusbarIcon(document, false);
+				}
+			}
+		} else {
+			IdentitySelector.logMessage("tabSelected: ", "document is no HTMLDocument: " + doc.location.href);
+		}
+	},
+	
+	// ***********************************************************************
+	// Method: secureFrameHandling
+	// ***********************************************************************
+	
+	secureFrameHandling : function( htmlDoc)
+	{
+		var secureFrameHandling = false;
+		var htmlDocWindow = null;
+		if (!(htmlDoc.defaultView == undefined)) {
+			htmlDocWindow = htmlDoc.defaultView;
+			IdentitySelector.logMessage( "secureFrameHandling", " htmlDoc.defaultView.location.href=" + htmlDoc.defaultView.location.href);
+			var parent = htmlDocWindow.frameElement; 
+			if (parent != null) {
+				if (parent.wrappedJSObject) {
+					parent = parent.wrappedJSObject;
+				}
+				if (parent instanceof HTMLIFrameElement) {
+					var ownerDocument = parent.ownerDocument;
+					secureFrameHandling = IdentitySelector.sameSchemeAndDomain(ownerDocument, htmlDoc);
+					IdentitySelector.logMessage( "secureFrameHandling", " secureFrameHandling=" + secureFrameHandling + 
+							"\nlocation=" + htmlDoc.location.href + " topLocation=" + ownerDocument.location.href);
+				} else {
+					IdentitySelector.logMessage( "secureFrameHandling", "parent=" + parent);
+				}
+			} else {
+				secureFrameHandling = true;
+				IdentitySelector.logMessage( "secureFrameHandling", " secureFrameHandling=" + secureFrameHandling + 
+						"\nlocation=" + htmlDoc.location.href + " no parent");
+			}
+		} else {
+			IdentitySelector.logMessage( "secureFrameHandling", " htmlDoc.defaultView is not defined. htmlDoc.location.href="+htmlDoc.location.href);
+		}
+		return secureFrameHandling;
+	},
+	
+	// ***********************************************************************
+	// Method: onInstall
+	// ***********************************************************************
+	
 	onInstall : function( event)
 	{
 		IdentitySelector.logMessage("onInstall", "start");
@@ -501,7 +719,7 @@ var IdentitySelector =
 				return;
 			}
 		}
-		
+
 		var htmlDoc;
 		
 //		IdentitySelector.logMessage("onInstall", "document.contentType=" + document.contentType);
@@ -517,6 +735,14 @@ var IdentitySelector =
 					IdentitySelector.onInstall, true);
 			return;
 		}
+		
+//		if (htmlDoc.location.href.indexOf("about:")){
+//			IdentitySelector.logMessage("onInstall", "this htmlDocument starts with about:. Exiting.");
+//			window.removeEventListener( "load", 
+//					IdentitySelector.onInstall, true);
+//			return;
+//		}
+			
 		try
 		{
 			// Remove the load event listener
@@ -567,34 +793,10 @@ var IdentitySelector =
 			
 			if( !handlerAlreadyInstalled)
 			{
-				var secureFrameHandling = false;
-				{
-					var htmlDocWindow = null;
-					if (!(htmlDoc.defaultView == undefined)) {
-						htmlDocWindow = htmlDoc.defaultView;
-						IdentitySelector.logMessage( "onInstall", " htmlDoc.defaultView.location.href=" + htmlDoc.defaultView.location.href);
-						var parent = htmlDocWindow.frameElement; 
-						if (parent != null) {
-							if (parent.wrappedJSObject) {
-								parent = parent.wrappedJSObject;
-							}
-							if (parent instanceof HTMLIFrameElement) {
-								var ownerDocument = parent.ownerDocument;
-								secureFrameHandling = IdentitySelector.sameSchemeAndDomain(ownerDocument, htmlDoc);
-								IdentitySelector.logMessage( "onInstall", " secureFrameHandling=" + secureFrameHandling + 
-										"\nlocation=" + htmlDoc.location.href + " topLocation=" + ownerDocument.location.href);
-							} else {
-								IdentitySelector.logMessage( "onInstall", "parent=" + parent);
-							}
-						} else {
-							secureFrameHandling = true;
-							IdentitySelector.logMessage( "onInstall", " secureFrameHandling=" + secureFrameHandling + 
-									"\nlocation=" + htmlDoc.location.href + " no parent");
-						}
-					} else {
-						IdentitySelector.logMessage( "onInstall", " document.defaultView is not defined" );
-					}
-					
+				var secureFrameHandling = IdentitySelector.secureFrameHandling(htmlDoc);
+				if (secureFrameHandling == false) {
+					IdentitySelector.logMessage("onInstall", "secureFrameHandling == false. Exiting");
+					return;
 				}
 				
 				{
@@ -699,6 +901,12 @@ var IdentitySelector =
 	
 	onUninstall : function( event)
 	{
+		try {
+			showStatusbarIcon(document, false);
+		} catch (e) {
+			IdentitySelector.logMessage("onUninstall Exception", e);
+		}
+		
 		try
 		{
 			// Remove the event listeners
@@ -861,6 +1069,17 @@ var IdentitySelector =
 		
 		doc = target;
 		
+		if (this.disabled == true) {
+			IdentitySelector.logMessage("onContentLoaded", " ID selector is disabled. Exiting");
+			return;
+		}
+
+		var secureFrameHandling = IdentitySelector.secureFrameHandling(doc);
+		if (secureFrameHandling == false) {
+			IdentitySelector.logMessage("onContentLoaded", "secureFrameHandling == false. Exiting. doc.location.href=" + doc.location.href);
+			return;
+		}
+
 		doc.addEventListener( "DOMSubtreeModified", 
 					IdentitySelector.onSomethingChanged, false, false);
 					
@@ -920,30 +1139,14 @@ var IdentitySelector =
 				
 				return;
 			}
+		}
+		catch( e)
+		{
+			IdentitySelector.reportError( "onContentLoaded (doc.__identityselector__ === undefined)", e);
+		}
 			
-			if (doc.__identityselector__.icLoginService != undefined) {
-				var s = "" + doc.__identityselector__.icLoginService;
-				var i = s.indexOf(" id=\"");
-				if (i != -1) {
-					i += 5;
-					s = s.substring(i);
-					i = s.indexOf("\"");
-					if (i != -1){
-						s = s.substring(0,i); // s has now value the first id attribute
-						var node = doc.getElementById(s);
-						if (node) {
-							doc.replaceNode(node, doc.__identityselector__.icLoginService);
-						} else {
-							IdentitySelector.logMessage("onContentLoaded", "Could not find node with id=" + s);
-						}
-					} else {
-						IdentitySelector.logMessage("onContentLoaded", "Could not find closing \" for ' id=' in\n" + doc.__identityselector__.icLoginService);
-					}
-				} else {
-					IdentitySelector.logMessage("onContentLoaded", "Could not find ' id=' in\n" + doc.__identityselector__.icLoginService);
-				}
-			}
-			
+		try
+		{
 			// Process all of the information card objects and elements 
 			// in the document
 		
@@ -951,8 +1154,20 @@ var IdentitySelector =
 			
 			if( !doc.__identityselector__.submitIntercepted)
 			{
-				IdentitySelector.processICardItems( doc, true);
-				IdentitySelector.processHtmlLinkElements( doc, true); // process "LINK rel" too
+				try {
+					IdentitySelector.processICardItems( doc, true);
+				}
+				catch( e)
+				{
+					IdentitySelector.reportError( "onContentLoaded (processICardItems)", e + " doc=" + doc.location.href + ((e.lineNumber != undefined) ? " line:"+e.lineNumber : ""));
+				}
+				try {
+					IdentitySelector.processHtmlLinkElements( doc, true); // process "LINK rel" too
+				}
+				catch( e)
+				{
+					IdentitySelector.reportError( "onContentLoaded (processHtmlLinkElements)", e);
+				}
 			}					
 		}
 		catch( e)
@@ -1006,6 +1221,7 @@ var IdentitySelector =
 	},
 	
 	retrieveXrds : function(doc, hrefStr) {
+		IdentitySelector.logMessage("retrieveXrds: doc=" + doc.location.href + " href=", hrefStr);
 		IdentitySelector.retrieveX(doc, hrefStr, xrdsListener);
 	},
 	
@@ -1102,9 +1318,15 @@ var IdentitySelector =
 		
 		IdentitySelector.logMessage( "processICardItems", "Found " + 
 			icardObjectCount + " ICard object(s) on " + doc.location);
-			
+		doc.__identityselector__.icardObjectCount = icardObjectCount;
+		
+		if (icardObjectCount > 0) {
+			showStatusbarIcon(document, true);
+		}
+		
 		// Process all of the information card elements in the document
 		
+		// TODO: This is wrong or only correct if the namespace prefix is IC. Axel
 		var icardElems = doc.getElementsByTagName( "IC:INFORMATIONCARD");
 		var icardElementCount = icardElems.length;
 		
@@ -1123,12 +1345,21 @@ var IdentitySelector =
 		var frames = doc.defaultView.frames;
 		for (var i = 0; i < frames.length; i++) { 
 			var frame = frames[i];
-			IdentitySelector.logMessage( "processICardItems", "frame.document.location.href=" + frame.document.location.href);
-			IdentitySelector.processICardItems(frame.document, dispatchEvents);
+			IdentitySelector.logMessage( "processICardItems", "doc.location.href=" + doc.location.href + " frame.document.location.href=" + frame.document.location.href);
+			if (IdentitySelector.secureFrameHandling(frame.document)) {
+				IdentitySelector.runInterceptScript(frame.document);
+				IdentitySelector.processICardItems(frame.document, dispatchEvents);
+			} else {
+				IdentitySelector.logMessage( "processICardItems", "Handle subframes: secureFrameHandling == false ");
+			}
 		 }
 
 		IdentitySelector.logMessage( "processICardItems", "Found " + 
 			icardElementCount + " ICard element(s) on " + doc.location);
+		doc.__identityselector__.icardElementCount = icardElementCount;
+		if (icardElementCount > 0) {
+			showStatusbarIcon(document, true);
+		}
 		
 
 	},
@@ -1594,6 +1825,9 @@ var IdentitySelector =
 			IdentitySelector.logMessage("IdentitySelector.onWindowDragDrop", " ID selector is disabled. Exiting");
 			return;
 		}
+
+		var fired = false;
+
 		var target = event.target;
 		if( target.wrappedJSObject)
 		{
@@ -1643,7 +1877,6 @@ var IdentitySelector =
 					doc.__identityselector__.cardId = cardId;
 
 					var form = target;
-					var fired = false;
 					while( form != null) 
 					{
 						if( form.tagName != undefined && form.tagName == "FORM")
@@ -1677,9 +1910,123 @@ var IdentitySelector =
 				IdentitySelector.logMessage("IdentitySelector.onWindowDragDrop",   "no object found for targetId=" + targetId + " in document " + doc.location.href);
 			}
 		}
+
+		if (fired == false){
+			if (doc.__identityselector__.icLoginService != undefined) {
+				IdentitySelector.logMessage("IdentitySelector.onWindowDragDrop",   "doc.__identityselector__.icLoginService=" + doc.__identityselector__.icLoginService);
+			}
+			if (doc.__identityselector__.icLoginPolicy != undefined) {
+				IdentitySelector.logMessage("IdentitySelector.onWindowDragDrop",   "doc.__identityselector__.icLoginPolicy=" + doc.__identityselector__.icLoginPolicy);
+			}
+			IdentitySelector.callIdentitySelector(doc);
+			event.preventDefault();
+			event.stopPropagation();
+		}
 		return false;
 	},
 
+	callIdentitySelector : function(doc)
+	{
+		var icLoginService = doc.__identityselector__.icLoginService;
+		var icLoginPolicy = doc.__identityselector__.icLoginPolicy;
+
+		// post token value to service
+		var sameSchemeAndDomain = IdentitySelector.sameSchemeAndDomain(doc, icLoginService);
+		if (sameSchemeAndDomain == true) {
+			
+			var cid = getCidFromPrefs();
+			if (cid == null) {
+				IdentitySelector.logMessage("IdentitySelector.callIdentitySelector",   "cid is null");
+				return;
+			}
+		    var obj = getObjectForClassId(cid);
+		    if (obj == null) {
+				IdentitySelector.logMessage("IdentitySelector.callIdentitySelector",   "obj is null");
+		    	return;
+		    }
+	
+		    var data = parseRpPolicy(icLoginPolicy);
+		    
+		    var issuer = null;
+		    if (data.hasOwnProperty("issuer")) {
+		    	issuer = data["issuer"];
+		    }
+		    var recipient = null;
+		    if (data.hasOwnProperty("recipient")) {
+		    	recipient = data["recipient"];
+		    }
+		    var requiredClaims = null;
+		    if (data.hasOwnProperty("requiredClaims")) {
+		    	requiredClaims = data["requiredClaims"];
+		    }
+		    var optionalClaims = null;
+		    if (data.hasOwnProperty("optionalClaims")) {
+		    	optionalClaims = data["optionalClaims"];
+		    }
+		    var tokenType = null;
+		    if (data.hasOwnProperty("tokenType")) {
+		    	tokenType = data["tokenType"];
+		    }
+		    var privacyUrl = null;
+		    if (data.hasOwnProperty("privacyUrl")) {
+		    	privacyUrl = data["privacyUrl"];
+		    }
+		    var privacyVersion = null;
+		    if (data.hasOwnProperty("privacyVersion")) {
+		    	privacyVersion = data["privacyVersion"];
+		    }
+		    var issuerPolicy = null;
+		    if (data.hasOwnProperty("issuerPolicy")) {
+		    	issuerPolicy = data["issuerPolicy"];
+		    }
+		    var icDropTargetId = null;
+		    if (data.hasOwnProperty("icDropTargetId")) {
+		    	icDropTargetId = data["icDropTargetId"];
+		    }
+		    
+		    var sslCert = getSSLCertFromDocument(document);
+
+			// call identity selector
+			var token = obj.GetBrowserToken(
+				     issuer , 
+				     icLoginService, // TODO: Why not doc.location.href??? I don not know, Axel.
+				     requiredClaims,
+				     optionalClaims, 
+				     tokenType,
+				     privacyUrl, 
+				     privacyVersion, 
+				     sslCert, 
+	                 issuerPolicy,
+	                 icDropTargetId,
+	                 IdentitySelector.getMode(doc));		
+		
+			IdentitySelector.logMessage("IdentitySelector.callIdentitySelector",   "sending token " + token + " to " + icLoginService);
+			var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+			req.open('POST', icLoginService, false);
+			req.setRequestHeader("Content-Length", token.length);
+			
+		    try {
+		    	req.send(token);
+		    }
+		    catch (e) {
+		    	icDebug(e);
+		    	alert("posting the security token to " + icLoginService + " failed" + e);
+		    	return;
+		    }
+		    IdentitySelector.logMessage("IdentitySelector.callIdentitySelector status="+req.status);
+		    if(req.status == 200) {
+		    	doc.location.href = icLoginService;
+		    	return; // fine
+		    } else {
+		    	alert("The service " + icLoginService + " returned an error:\n" + req.responseText);
+		    	return;
+		    }
+	    } else {
+	    	IdentitySelector.logMessage("IdentitySelector.callIdentitySelector",   
+				"doc.location.href=" + doc.location.href + "!=" + "icLoginService=" + icLoginService);
+	    }
+	},
+	
 //	// ***********************************************************************
 //	// Method: valueGetter
 //	// ***********************************************************************
@@ -2203,41 +2550,9 @@ var IdentitySelector =
 			}
 			
 			// Launch the card selector
-		    var sslCert = null;
-			{
-			    var browser = document.getElementById( "content");
-			    var secureUi = browser.securityUI;
-			    var sslStatusProvider = null;
+		    var sslCert = getSSLCertFromDocument(document);
 
-			    sslStatusProvider = secureUi.QueryInterface(
-							    Components.interfaces.nsISSLStatusProvider);
-
-			    if( sslStatusProvider != null)
-			    {
-				    try
-				    {
-					    sslStatus = sslStatusProvider.SSLStatus.QueryInterface(
-								    Components.interfaces.nsISSLStatus);
-					    if( sslStatus != null && sslStatus.serverCert != undefined)
-					    {
-						    sslCert = sslStatus.serverCert
-					    }
-				    }
-				    catch( e)
-				    {
-					    sslStatus = null;
-				    }
-			    }
-            }
-
-            var cid = null;
-            {
-   			    // lookup class id from config.
-			    var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-			    var pbi = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
-
-			    cid = pbi.getCharPref("identityselector.contractid");
-            }
+            var cid = getCidFromPrefs(); // class id of selector
 
             if (cid == "digitalme") {
     			identObject.targetElem.token = 
@@ -2888,8 +3203,11 @@ catch( e)
 // **************************************************************************
 try
 {
-	window.addEventListener("load", function () { gBrowser.addEventListener("load", IdentitySelector.onInstall, true); }, false);
-	window.addEventListener("unload", function () { gBrowser.addEventListener("load", IdentitySelector.onUninstall, true); }, false);
+	window.addEventListener("load", function () { 
+		var container = gBrowser.tabContainer;
+		container.addEventListener("TabSelect", IdentitySelector.tabSelected, false);
+		gBrowser.addEventListener("load", IdentitySelector.onInstall, true); }, false);
+	window.addEventListener("unload", function () { IdentitySelector.onUninstall(); }, false);
 //	window.addEventListener( "load",
 //		IdentitySelector.onInstall, false);
 //		

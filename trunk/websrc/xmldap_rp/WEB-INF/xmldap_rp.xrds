@@ -28,7 +28,7 @@
 		<Service>
 			<Type>http://infocardfoundation.org/service/1.0/login
 			</Type>
-			<URI>https://@domain@/relyingparty/
+			<URI>https://@domain@/relyingparty/link.jsp
 			</URI>
 		</Service>
 		<!--

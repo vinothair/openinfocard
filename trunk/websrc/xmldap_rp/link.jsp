@@ -26,7 +26,10 @@
  String requiredClaims = properties.getProperty("requiredClaims"); 
  String optionalClaims = properties.getProperty("optionalClaims"); 
 
+ String token = null;
+ 
  String queryString = request.getQueryString();
+ 
  if (queryString != null) {
 	 if (queryString.indexOf("xmldap_rp.xrds") == 0) {
 		 System.out.println("queryString.indexOf(\"xmldap_rp.xrds\") = " + queryString.indexOf("xmldap_rp.xrds"));
@@ -56,15 +59,44 @@
 		}
 	 }
  } else {
-
+	String method = request.getMethod();
+	if ("POST".equals(method)) {
+    	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
+        out.println("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\"><head><title>XMLDAP Relying Party token digester</title><style type=\"text/css\">BODY {color:#000;font-family: verdana, arial, sans-serif;}</style></head><body>");
+        java.io.BufferedReader reader = request.getReader();
+        char[] buf; 
+        int contentLength = request.getContentLength();
+        if (contentLength > 0) {
+        	System.out.println("link.jsp: POST contentLength=" + contentLength);
+        	buf = new char[contentLength];
+        } else {
+        	buf = new char[4 * 1024];
+        }
+        StringBuffer sb = new StringBuffer();
+        int len;
+        while ((len = reader.read(buf, 0, buf.length)) > 0) {
+          sb.append(buf, 0, len);
+        }
+        String data = sb.toString();
+        if (session == null) {
+	        session = request.getSession(true);
+        }
+        session.setAttribute("token", data);
+        System.out.println("link.jsp: POST\n" + data);
+		return;
+	} else {
+		if (session != null) {
+			token = (String)session.getAttribute("token");
+		}
+	}
  String userAgent = request.getHeader("user-agent");
  out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 %>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>XRDS &amp; Java Based Relying Party</title>
-	<link rel="xrds.metadata" href="?xmldap_rp.xrds"/>
+	<title>XRDS &amp; Java Based Relying Party without object element</title>
+	<link rel="xrds.metadata" href="https://w4de3esy0069028.gdc-bln01.t-systems.com:8443/relyingparty/?xmldap_rp.xrds"/>
 
     <style type="text/css">
     BODY {background: #FFF url(./img/banner.png) repeat-x;
@@ -119,15 +151,22 @@
 	<div id="title">java based relying party</div>
 	<div id="links">
 	<a href="../">resources</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<a href="http://xmldap.blogspot.com">xmldap.blogspot.com</a>
+	<a href="http://ignisvulpis.blogspot.com">ignisvulpis.blogspot.com</a>
 	</div>
 
 
 	<div>   <br/>
 	<div class="container" id="relying_party">
 
-<h2>Login with an InfoCard</h2>
-	<div id="infocardStuffGoesHere" />
+<%
+	if (token != null) {
+        out.println("<h2>Here's what you posted:</h2>");
+        out.println("<p><textarea rows='10' cols='150' readonly='readonly'>" + escapeHtmlEntities(token) + "</textarea></p>");
+        out.println("</body></html>");
+		out.flush();
+	}
+%>
+<h2>Provide claims with an Information Card</h2>
     <br/><br/>
     <h2>Curious about how it works...?</h2>
 
