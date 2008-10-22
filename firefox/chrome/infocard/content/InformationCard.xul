@@ -61,4 +61,12 @@
                  oncommand="toggleSidebar('viewIdSelectorSidebar');" />
   </broadcasterset>
   
+  <statusbar id="status-bar">
+   <statusbarpanel 
+   	id="ic-status-bar-panel" 
+   	tooltiptext="Information Card Selector">
+   	<image id="ic-status-bar-image" src="chrome://infocard/content/img/infocard_23x16-crossed.png"/>
+   </statusbarpanel>
+ </statusbar>
+  
 </overlay>
