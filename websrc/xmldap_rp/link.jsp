@@ -1,3 +1,12 @@
+<%@ page import="org.xmldap.util.PropertiesManager"%>
+<%@ page import="org.xmldap.util.KeystoreUtil"%>
+<%@ page import="java.security.PrivateKey"%>
+<%@ page import="org.xmldap.rp.Token"%>
+<%@ page import="java.util.Iterator"%>
+<%@ page import="java.util.Map"%>
+<%@ page import="java.util.HashMap"%>
+<%@ page import="java.util.Set"%>
+
 <%!
 
 	String escapeHtmlEntities(String html) {
@@ -26,11 +35,21 @@
  String requiredClaims = properties.getProperty("requiredClaims"); 
  String optionalClaims = properties.getProperty("optionalClaims"); 
 
+ String key = properties.getProperty("key");
+ String keystorePath = properties.getProperty("keystore");
+ String keystorePassword = properties.getProperty("keystore-password");
+ String keyPassword = properties.getProperty("key-password");
+
+ KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
+ PrivateKey privateKey = keystore.getPrivateKey(key,keyPassword);
  String token = null;
+ Map allClaims = null;
  
  String queryString = request.getQueryString();
+ boolean clearPrivacyData = false;
  
  if (queryString != null) {
+	 System.out.println("queryString=" + queryString);
 	 if (queryString.indexOf("xmldap_rp.xrds") == 0) {
 		 System.out.println("queryString.indexOf(\"xmldap_rp.xrds\") = " + queryString.indexOf("xmldap_rp.xrds"));
 		 String xrds = properties.getProperty("xrds"); 
@@ -57,8 +76,14 @@
 			System.out.println("ERROR: resource not found: " + xrds);
 			// TODO return HTTP not found
 		}
+		 return;
+	 } else if (queryString.indexOf("clearPrivacyData") >= 0) {
+		 System.out.println("queryString.indexOf(\"clearPrivacyData\") = " + queryString.indexOf("clearPrivacyData"));
+		 clearPrivacyData = true;
 	 }
- } else {
+ }
+
+ {
 	String method = request.getMethod();
 	if ("POST".equals(method)) {
     	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
@@ -87,6 +112,7 @@
 	} else {
 		if (session != null) {
 			token = (String)session.getAttribute("token");
+			allClaims = (Map)session.getAttribute("claims");
 		}
 	}
  String userAgent = request.getHeader("user-agent");
@@ -159,14 +185,59 @@
 	<div class="container" id="relying_party">
 
 <%
-	if (token != null) {
-        out.println("<h2>Here's what you posted:</h2>");
-        out.println("<p><textarea rows='10' cols='150' readonly='readonly'>" + escapeHtmlEntities(token) + "</textarea></p>");
-        out.println("</body></html>");
-		out.flush();
+	if (session == null) {
+	    session = request.getSession(true);
+	}
+	if (clearPrivacyData) { // GET not POST
+		allClaims = null;
+		session.removeAttribute("claims");
+		System.out.println("removed attribute claims from session");
+		token = null;
+		session.removeAttribute("token");
+    	out.println("<p>Privacy data was cleared.</p>");
+	} else {
+		allClaims = (Map)session.getAttribute("claims");
+		if (token != null) { // POST not GET
+			Token aToken = new Token(token, privateKey);
+		    Map claims = aToken.getClaims();
+		    Set keys = claims.keySet();
+		    Iterator keyIter = keys.iterator();
+		    while (keyIter.hasNext()){
+		        String name = (String) keyIter.next();
+		        String value = (String) claims.get(name);
+		        if (allClaims == null) {
+		        	allClaims = new HashMap();
+		        }
+		        allClaims.put(name, value);
+		    }
+	        if (session == null) {
+		        session = request.getSession(true);
+	        }
+		    session.setAttribute("claims", allClaims);
+		    session.removeAttribute("token");
+		}
+	    if (allClaims != null && allClaims.size() > 0) {
+	    	out.println("<h2>You provided the following claims:</h2>");
+	    	Set keys = allClaims.keySet();
+	    	Iterator keyIter = keys.iterator();
+		    while (keyIter.hasNext()){
+		        String name = (String) keyIter.next();
+		        String value = (String) allClaims.get(name);
+		        out.println("<p>" + escapeHtmlEntities(name) + ": " + escapeHtmlEntities(value) + "</p>");
+		    }
+	    }
 	}
 %>
 <h2>Provide claims with an Information Card</h2>
+<%
+if (allClaims != null && allClaims.size() > 0) {
+%>
+	<form id="clearForm" action="link.jsp">
+		<input type="submit" name="clearPrivacyData" value="Clear privacy data"/>
+	</form>
+<%
+}
+%>
     <br/><br/>
     <h2>Curious about how it works...?</h2>
 

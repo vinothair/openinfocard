@@ -50,6 +50,7 @@
     <script src="chrome://infocard/content/cardstore.js"/>
     <script src="chrome://infocard/content/tokenissuer.js"/>
     
+    <!--
     <script>
 		if (TokenIssuer.initialize() == true) {
 			icDebug("load TokenIssuer.initialize == true");
@@ -57,6 +58,7 @@
 			icDebug("load TokenIssuer.initialize == false");
 		}
     </script>
+    -->
     
     <keyset>
   		<key id="cancel-key" keycode="VK_ESCAPE" oncommand="cancel();"/>
