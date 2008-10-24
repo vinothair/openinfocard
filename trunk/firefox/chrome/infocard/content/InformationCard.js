@@ -323,32 +323,32 @@ var ICProgressListener =
 		
 		// Log the flags
 		
-		IdentitySelector.logMessage( "onStateChange", "flags = " + aFlag);
-		
-		if( aFlag & progListIFace.STATE_IS_DOCUMENT)
-		{
-			IdentitySelector.logMessage( "onStateChange", "flag & document");
-		}
-			
-		if( aFlag & progListIFace.STATE_IS_WINDOW)
-		{
-			IdentitySelector.logMessage( "onStateChange", "flag & window");
-		}
-		
-		if( aFlag & progListIFace.STATE_START)
-		{
-			IdentitySelector.logMessage( "onStateChange", "flag & start");
-		}
-		
-		if( aFlag & progListIFace.STATE_STOP)
-		{
-			IdentitySelector.logMessage( "onStateChange", "flag & stop");
-		}
-		
-		if( aFlag & progListIFace.STATE_STOP)
-		{
-			IdentitySelector.logMessage( "onStateChange", "flag & stop");
-		}
+//		IdentitySelector.logMessage( "onStateChange", "flags = " + aFlag);
+//		
+//		if( aFlag & progListIFace.STATE_IS_DOCUMENT)
+//		{
+//			IdentitySelector.logMessage( "onStateChange", "flag & document");
+//		}
+//			
+//		if( aFlag & progListIFace.STATE_IS_WINDOW)
+//		{
+//			IdentitySelector.logMessage( "onStateChange", "flag & window");
+//		}
+//		
+//		if( aFlag & progListIFace.STATE_START)
+//		{
+//			IdentitySelector.logMessage( "onStateChange", "flag & start");
+//		}
+//		
+//		if( aFlag & progListIFace.STATE_STOP)
+//		{
+//			IdentitySelector.logMessage( "onStateChange", "flag & stop");
+//		}
+//		
+//		if( aFlag & progListIFace.STATE_STOP)
+//		{
+//			IdentitySelector.logMessage( "onStateChange", "flag & stop");
+//		}
 		
 		// Process the document.  The 'STOP' state isn't reached until after
 		// the page is fully loaded and all onload events have completed.
@@ -360,8 +360,8 @@ var ICProgressListener =
 		{
 			if( aFlag & progListIFace.STATE_IS_WINDOW)
 			{
-				IdentitySelector.logMessage( "onStateChange", 
-					"stop status code = " + aStatus);
+//				IdentitySelector.logMessage( "onStateChange", 
+//					"stop status code = " + aStatus);
 					
 				if( aStatus == 0)
 				{
@@ -408,7 +408,7 @@ var ICProgressListener =
 	
 	onSecurityChange : function(aProgress, aRequest, aState)
 	{
-		IdentitySelector.logMessage( "onSecurityChange", "state=" + aState);
+//		IdentitySelector.logMessage( "onSecurityChange", "state=" + aState);
 		return IdentitySelector.onSecurityChange(aProgress, aRequest, aState);
 	},
 	
@@ -450,9 +450,36 @@ var IdentitySelector =
 		return doc.__identityselector__.mode;
 	},
 	
-	statusbarClick : function(event)
+	statusbarClick : function()
 	{
 		IdentitySelector.logMessage( "statusbarClick", "clicked");
+		var doc = gBrowser.selectedBrowser.contentDocument;
+		if (doc instanceof HTMLDocument) {
+			if( doc.wrappedJSObject)
+			{
+				doc = doc.wrappedJSObject;
+			}
+
+			if( !(doc.__identityselector__ === undefined)) {
+				IdentitySelector.callIdentitySelector(doc);
+			} else {
+				if (doc.location != undefined) {
+					IdentitySelector.logMessage( "statusbarClick", "The site " + doc.location.href + " does not support Information Cards.\n" +
+							"To learn more about Information Cards please visit the Information Card Foundation at\n" +
+							"https://informationcard.net/");
+					alert("The site " + doc.location.href + " does not support Information Cards.\n" +
+							"To learn more about Information Cards please visit the Information Card Foundation at\n" +
+							"https://informationcard.net/");
+				} else {
+					IdentitySelector.logMessage( "statusbarClick", "Information Cards are not supported here.\n" +
+							"To learn more about Information Cards please visit the Information Card Foundation at\n" +
+							"https://informationcard.net/");
+					alert("Information Cards are not supported here.\n" +
+							"To learn more about Information Cards please visit the Information Card Foundation at\n" +
+							"https://informationcard.net/");
+				}
+			}
+		}
 	},
 	
 	onSecurityChange : function(aProgress, aRequest, aState)
@@ -460,13 +487,13 @@ var IdentitySelector =
 		var doc = aProgress.DOMWindow.document;
 	    if (aState & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
 	        this.setMode(doc, this.IDENTITY_MODE_IDENTIFIED);
-			IdentitySelector.logMessage( "IdentitySelector", " onSecurityChange state=STATE_IDENTITY_EV_TOPLEVEL location=" + doc.location.href);
+//			IdentitySelector.logMessage( "IdentitySelector", " onSecurityChange state=STATE_IDENTITY_EV_TOPLEVEL location=" + doc.location.href);
 	    } else if (aState & Components.interfaces.nsIWebProgressListener.STATE_SECURE_HIGH) {
 	        this.setMode(doc, this.IDENTITY_MODE_DOMAIN_VERIFIED);
-			IdentitySelector.logMessage( "IdentitySelector", " onSecurityChange state=STATE_SECURE_HIGH location=" + doc.location.href);
+//			IdentitySelector.logMessage( "IdentitySelector", " onSecurityChange state=STATE_SECURE_HIGH location=" + doc.location.href);
 	    }  else {
 	        this.setMode(doc, this.IDENTITY_MODE_UNKNOWN);
-			IdentitySelector.logMessage( "IdentitySelector", " onSecurityChange state=IDENTITY_MODE_UNKNOWN location=" + doc.location.href);
+//			IdentitySelector.logMessage( "IdentitySelector", " onSecurityChange state=IDENTITY_MODE_UNKNOWN location=" + doc.location.href);
 	    }
 
 		return( 0);
@@ -648,7 +675,7 @@ var IdentitySelector =
 			}
 
 			if( doc.__identityselector__ === undefined) {
-				showStatusbarIcon(document, true);
+				showStatusbarIcon(document, false);
 			} else {
 				if (((doc.__identityselector__.icLoginService != undefined) && (doc.__identityselector__.icLoginPolicy != undefined)) 
 						|| ((doc.__identityselector__.icardElementCount != undefined) && (doc.__identityselector__.icardElementCount > 0)) 
@@ -657,6 +684,15 @@ var IdentitySelector =
 					showStatusbarIcon(document, true);
 				} else {
 					showStatusbarIcon(document, false);
+				}
+			}
+			
+			var sidebarElement = document.getElementById("sidebar");
+			if (sidebarElement != null) {
+				var sidebarWindow = sidebarElement.contentWindow;
+				if (sidebarWindow && sidebarWindow.location.href ==
+				      "chrome://infocard/content/cardSidebar.xul") {
+				  sidebarWindow.reload();
 				}
 			}
 		} else {

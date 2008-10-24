@@ -64,7 +64,9 @@
   <statusbar id="status-bar">
    <statusbarpanel 
    	id="ic-status-bar-panel" 
-   	tooltiptext="Information Card Selector">
+   	class="statusbarpanel-iconic"
+   	tooltiptext="Information Card Selector" 
+   	onclick="IdentitySelector.statusbarClick()">
    	<image id="ic-status-bar-image" src="chrome://infocard/content/img/infocard_23x16-crossed.png"/>
    </statusbarpanel>
  </statusbar>

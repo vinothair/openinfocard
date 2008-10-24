@@ -27,8 +27,8 @@
  */
 
 var selectedCard;
-
 var selectorDebugging = false;
+var tokenIssuerInitialized = false;
 
 function xmlreplace(text) {
  var str;
@@ -47,8 +47,8 @@ function xmlreplace(text) {
 // update the list of RPs to where a card has been sent
 // this function is called from "ok" -> selectedCard is set
 function updateRPs() {
-   	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-	    var policy = window.arguments[0];
+	var policy = getPolicy();
+   	if (policy != null) {
 	    if (policy.hasOwnProperty("cert")) {
 			var relyingPartyCertB64 = policy["cert"];
 		    var rpIdentifier = computeRpIdentifier(relyingPartyCertB64);
@@ -171,7 +171,10 @@ function computeClientPseudonymPost20080829(policy){
 function ok(){
 
     var tokenToReturn;
-    var policy = window.arguments[0];
+    var policy = getPolicy();
+    if (policy == null) {
+    	return;
+    }
 
     if (selectedCard.type == "selfAsserted") {
         policy["type"] = "selfAsserted";
@@ -236,7 +239,7 @@ function finalizeOpenId() {
 
 
     var tokenToReturn;
-    var policy = window.arguments[0];
+    var policy = getPolicy();
 
 
     policy["type"] = "selfAsserted";
@@ -653,19 +656,21 @@ icDebug("RSTR: " + tokenToReturn);
 
 
 function showPrivacyStatement() {
-	var policy = window.arguments[0];
-    var privacyUrl = policy["privacyUrl"];
-    if (privacyUrl == null) {
-     alert("relying party did not specify a privacy statement URL");
-     return;
-    }
-    // prevent file:// and chrome:// etc
-    if (privacyUrl.indexOf("http") != 0) {
-     alert("The relying party's privacy statement URL does not start with 'http'\n" + privacyUrl);
-     return;
-    }
-    
-    window.open(privacyUrl, "privacyStatement");
+	var policy = getPolicy();
+	if (policy != null) {
+	    var privacyUrl = policy["privacyUrl"];
+	    if (privacyUrl == null) {
+	     alert("relying party did not specify a privacy statement URL");
+	     return;
+	    }
+	    // prevent file:// and chrome:// etc
+	    if (privacyUrl.indexOf("http") != 0) {
+	     alert("The relying party's privacy statement URL does not start with 'http'\n" + privacyUrl);
+	     return;
+	    }
+	    
+	    window.open(privacyUrl, "privacyStatement");
+	}
 }
 
 function disable(){
@@ -700,7 +705,15 @@ function cancel(){
     window.close();
 }
 
-function load(){
+function getPolicy(){
+	var policy = null;
+	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+	    policy = window.arguments[0];
+	}
+	return policy;
+}
+
+function load(policyParam){
 	icDebug("load start. href=" + window.document.location.href );
 	
 	var controlarea = document.getElementById('selectcontrol');
@@ -724,14 +737,19 @@ function load(){
 	
     var stringsBundle = document.getElementById("string-bundle");
 
+    var policy;
+    if (policyParam == undefined) {
+    	policy = getPolicy();
+    } else {
+    	policy = policyParam;
+    }
+    	
     var rpIdentifier = null;
-   	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-	    var policy = window.arguments[0];
-	    if (policy.hasOwnProperty("cert")) {
-			var relyingPartyCertB64 = policy["cert"];
-		    rpIdentifier = computeRpIdentifier(relyingPartyCertB64);
-	    }
-	}
+
+    if (policy != null && policy.hasOwnProperty("cert")) {
+		var relyingPartyCertB64 = policy["cert"];
+	    rpIdentifier = computeRpIdentifier(relyingPartyCertB64);
+    }
 
     var cardFile = readCardStore();
     var cardArea = document.getElementById("cardselection");
@@ -742,8 +760,8 @@ function load(){
     var scrolledIntoView = false;
     for each (c in cardFile.infocard) {
 	    var cardClass = "contact";
-    	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-			cardClass = computeCardClass(c, window.arguments[0]);
+    	if (policy != null) {
+			cardClass = computeCardClass(c, policy);
 		}
         latestCard = createItem(c, cardClass);
         selectMe = c;
@@ -770,8 +788,7 @@ function load(){
     }
 
     if ( count != 0) {
-    	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-	        var policy = window.arguments[0];
+    	if (policy != null) {
 	        var label = document.getElementById("notify");
 	        if (label != null) {
 				var site = "Unknown";
@@ -797,8 +814,7 @@ function load(){
 	        label.setAttribute("value", youdont);
         }
     }
-	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-		var policy = window.arguments[0];
+	if (policy != null) {
 		var serializedPolicy = JSON.stringify(policy);
 		if (TokenIssuer.initialize() == true) {
 			var issuerLogoURL = TokenIssuer.getIssuerLogoURL(serializedPolicy);
@@ -814,12 +830,12 @@ function load(){
 			}
 		} else {
 			icDebug("load: error initializing the TokenIssuer");
-			alert("Error: Initializing the TokenIssuer");
+			icDebug("load: window.java=" + window.java + " window.document.location.href=" + window.document.location.href);
+//			alert("Error: Initializing the TokenIssuer");
 			// return;
 		}
 	}
-	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-		var policy = window.arguments[0];
+	if (policy != null) {
 	    var privacyUrl = policy["privacyUrl"];
         if (privacyUrl != null) {
 	    icDebug("privacyUrl " + privacyUrl);
@@ -829,8 +845,7 @@ function load(){
 	    }
 	}
 	if (!beenThere) {
-	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-		 var policy = window.arguments[0];
+	if (policy != null) {
 		 if (policy.hasOwnProperty("cn")) {
 			 icDebug("never been here: " + policy["cn"]);
 		 } else if (policy.hasOwnProperty("url")) {
@@ -883,10 +898,7 @@ function indicateRequiredClaim(requiredClaims, optionalClaims, claim){
  element.disabled = true;
 }
 
-function indicateRequiredClaims(){
- if (window.arguments == undefined) return;
- if (window.arguments.length > 0) {
-	 var policy = window.arguments[0];
+function indicateRequiredClaims(policy){
 	 var requiredClaims = policy["requiredClaims"];
 	 if (requiredClaims == undefined) return;
 	 if (requiredClaims == null) return;
@@ -912,7 +924,6 @@ function indicateRequiredClaims(){
 	 indicateRequiredClaim(requiredClaims, optionalClaims, "mobilePhone");
 	 indicateRequiredClaim(requiredClaims, optionalClaims, "dateOfBirth");
 	 indicateRequiredClaim(requiredClaims, optionalClaims, "gender");
- }
 }
 
 function setCardSelf() {
@@ -952,8 +963,11 @@ function setCardSelf() {
         document.getElementById("gender").visibility = 'visible';
         document.getElementById("imgurl").visibility = 'visible';
 
-        indicateRequiredClaims();
-
+   	 	var policy = getPolicy();
+   	 	if (policy != null) {
+   	 		indicateRequiredClaims(policy);
+   	 	}
+   	 	
         var grid = document.getElementById("editgrid");
         grid.setAttribute("hidden", "false");
 
@@ -1254,12 +1268,10 @@ function setCard(card){
     }  else if (selectedCard.type == "managedCard" )   {
 	    var requiredClaims = null;
 	    var optionalClaims = null;
- 	    if (!(window.arguments == undefined)) {
-	     if (window.arguments.length > 0) {
-		  var policy = window.arguments[0];
+	    var policy = getPolicy();
+ 	    if (policy != null) {
 		  requiredClaims = policy["requiredClaims"];
    	      optionalClaims = policy["optionalClaims"];
-	     }
 	    }	
     	if (selfassertedClaims != null) {
     		selfassertedClaims.setAttribute("hidden", "true");
@@ -1524,24 +1536,26 @@ function computeHasBeenSend(card, policy) {
 // 
 function computeCardClass(card) {
  var cardClass;
- var policy = null;
- if (!(window.arguments == undefined)) {
-  policy = window.arguments[0];
- }
- if (policy != null) {
-  var matching = computeMatching(card, policy);
-  if (matching == true) {
-   var hasBeenSent = computeHasBeenSend(card, policy);
-   if (hasBeenSent == true) {
-    cardClass = "contactGreen";
-   } else {
-    cardClass = "contactYellow";
-   }
-  } else {
-   cardClass = "contactRed";
-  }
+ if ((window.java == undefined) && (card.type == "selfAsserted")) {
+	 // if there is a java problem then self-issued cards do not work
+	 cardClass = "contactRed";
  } else {
-  cardClass = "contact";
+	 var policy = getPolicy();
+	 if (policy != null) {
+	  var matching = computeMatching(card, policy);
+	  if (matching == true) {
+	   var hasBeenSent = computeHasBeenSend(card, policy);
+	   if (hasBeenSent == true) {
+	    cardClass = "contactGreen";
+	   } else {
+	    cardClass = "contactYellow";
+	   }
+	  } else {
+	   cardClass = "contactRed";
+	  }
+	 } else {
+		 cardClass = "contact";
+	 }
  }
  icDebug("cardClass " + cardClass + " " + card.name);
  return cardClass;
@@ -1719,9 +1733,10 @@ function digestNewCard(callback) {
     	} catch (e) {
     		icDebug("error JSON.stringifying(cardFile) " + e);
     	}
-		if (TokenIssuer.initialize() == false) {
+		if (tokenIssuerInitialized = TokenIssuer.initialize() == false) {
 			icDebug("digestNewCard: could not initialize TokenIssuer. Signature will not be validated");
-			alert("Could not initialize java. The card's signature will not be validated!");
+			idDebug("processCard: window.java = " + window.java + "window.document.location.href=" + window.document.location.href);
+//			alert("Could not initialize java. The card's signature will not be validated!");
 		} else {
 				var currentRoamingStore = readRoamingStore();
 				icDebug2("currentRoamingStore = " + currentRoamingStore, 120);
@@ -1836,7 +1851,7 @@ function digestNewCard(callback) {
 
 }
 
-function reload() {
+function reload(policyParam) {
     var cardArea = document.getElementById("cardselection");
     while (cardArea.hasChildNodes())
 	{
@@ -1845,16 +1860,23 @@ function reload() {
 
 
     var grid = document.getElementById("editgrid");
-    grid.setAttribute("hidden", "true");
+    if (grid != null) {
+    	grid.setAttribute("hidden", "true");
+    }
+    grid = document.getElementById("editgrid1");
+    if (grid != null) {
+    	grid.setAttribute("hidden", "true");
+    }
 
-    var grid1 = document.getElementById("editgrid1");
-    grid1.setAttribute("hidden", "true");
+    grid = document.getElementById("editgrid2");
+    if (grid != null) {
+    	grid.setAttribute("hidden", "true");
+    }
 
-    var grid = document.getElementById("editgrid2");
-    grid.setAttribute("hidden", "false");
-
-    var grid1 = document.getElementById("editgrid3");
-    grid1.setAttribute("hidden", "false");
+    grid = document.getElementById("editgrid3");
+    if (grid != null) {
+    	grid.setAttribute("hidden", "true");
+    }
 
     var label = document.getElementById("notify");
     if (label != null) {
@@ -1866,13 +1888,15 @@ function reload() {
     	select.setAttribute('hidden', 'true');
     }
     
-		var cardname = document.getElementById("cardname");
+	var cardname = document.getElementById("cardname");
+	if (cardname != null) {
         cardname.value = "";
         cardname.hidden = false;
-
+	}
+	
     selectedCard = null;
 
-    load();
+    load(policyParam);
 }
 
 function deleteCard(){
@@ -2056,9 +2080,10 @@ function processCard(policy, enableDebug){
         jvm.showJavaConsole();
     }
     
-	if (TokenIssuer.initialize() == false) {
-		idDebug("processCard: could not initialize TokenIssuer. " + window.document.location.href);
-		alert("Could not initialize the TokenIssuer. This is probably an java issuer");
+	if (tokenIssuerInitialized = TokenIssuer.initialize() == false) {
+		idDebug("processCard: could not initialize TokenIssuer. window.document.location.href=" + window.document.location.href);
+		idDebug("processCard: window.java=" + window.java);
+		//		alert("Could not initialize the TokenIssuer. This is probably an java issuer");
 		return null;
 	}
 	

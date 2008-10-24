@@ -40,7 +40,7 @@ TokenIssuer.initialize = function() {
         
         if (java == undefined) {
         	TokenIssuer._trace("TokenIssuer.initialize: java is undefined: " + win.document.location.href);
-        	alert("TokenIssuer.initialize: java is undefined");
+//        	alert("TokenIssuer.initialize: java is undefined");
         	return false;
         }
         
