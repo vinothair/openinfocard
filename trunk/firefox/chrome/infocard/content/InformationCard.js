@@ -235,11 +235,8 @@ function showStatusbarIcon(doc, show)
 		if (statusBarImage != null) {
 			if (show == true) {
 				statusBarImage.src = "chrome://infocard/content/img/infocard_23x16.png";
-				statusBarImage.onclick = function () {
-					IdentitySelector.callIdentitySelector(doc);}
 			} else {
 				statusBarImage.src = "chrome://infocard/content/img/infocard_23x16-crossed.png";
-				statusBarImage.onclick = null;
 			}
 		} else {
 			IdentitySelector.logMessage("showStatusbarIcon", "Internal Warning: ic-status-bar-image not found");
@@ -2022,6 +2019,14 @@ var IdentitySelector =
 		    
 		    var sslCert = getSSLCertFromDocument(document);
 
+		    var extraParams = {};
+		    extraParams[0] = "sslMode";
+		    extraParams[1] = IdentitySelector.getMode(doc);
+		    if (doc.__identityselector__.cardId != undefined) {
+		    	extraParams[2] = "cardId";
+		    	extraParams[3] = doc.__identityselector__.cardId;
+		    }
+		    
 			// call identity selector
 			var token = obj.GetBrowserToken(
 				     issuer , 
@@ -2033,8 +2038,7 @@ var IdentitySelector =
 				     privacyVersion, 
 				     sslCert, 
 	                 issuerPolicy,
-	                 icDropTargetId,
-	                 IdentitySelector.getMode(doc));		
+	                 extraParams.length, extraParams);		
 		
 			IdentitySelector.logMessage("IdentitySelector.callIdentitySelector",   "sending token " + token + " to " + icLoginService);
 			var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
@@ -2611,6 +2615,14 @@ var IdentitySelector =
 			    
 			    IdentitySelector.logMessage( "onCallIdentitySelector", "ssl security mode=" + IdentitySelector.getMode(doc));
 			    
+			    var extraParams = {};
+			    extraParams[0] = "sslMode";
+			    extraParams[1] = IdentitySelector.getMode(doc);
+			    if (doc.__identityselector__.cardId != undefined) {
+			    	extraParams[2] = "cardId";
+			    	extraParams[3] = doc.__identityselector__.cardId;
+			    }
+
 			    /* Make the call to the selector */
 			    identObject.targetElem.token = obj.GetBrowserToken(
 			     data.issuer , 
@@ -2622,8 +2634,7 @@ var IdentitySelector =
 			     data.privacyVersion, 
 			     sslCert, 
                  data.issuerPolicy,
-                 data.icDropTargetId,
-                 IdentitySelector.getMode(doc));
+                 extraParams.length, extraParams);
 
 			    IdentitySelector.logMessage( "onCallIdentitySelector", 
 					    "returned token == " + identObject.targetElem.token);
