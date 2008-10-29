@@ -1,0 +1,48 @@
+#include "nsISupports.idl"
+#include "nsIX509Cert.idl"
+            
+[scriptable, uuid(DDD9BC02-C964-4bd5-B5BC-943E483C6C58)]
+interface IInformationCardStore : nsISupports
+{
+  /* returns true on success */
+  boolean   login(in string credentials);
+  void   logout();
+  boolean loggedIn();
+
+  void   clearCardStore();
+
+  // the informationCardXml is defined in ISIP 1.5
+  void	 addCard(in string informationCardXml);
+  void   removeCard(in string cardId);
+
+  // the roamingStoreXml is defined in ISIP 1.5
+  void   addCardsFromRoamingStore(in string roamingStoreXml);
+
+  // the informationCardXml is defined in ISIP 1.5
+  void updateCard(in string informationCardXml, in string cardId);
+
+  void getAllCardIds(out unsigned long count, [array, size_is(count)] out string cardIds);
+
+  unsigned long getCardCount(); 
+
+  string cardIdIterator();
+  string cardidIteratorNext(in string iterator);
+  boolean cardIdIteratorHasNext(in string iterator);
+
+  // returns an encrypted card store as defined in ISIP 1.5
+  string cardStoreExportAllCards(in wstring password);
+  string cardStoreExportCards(in wstring password, in unsigned long count, [array, size_is(count)] in string cardIds);
+
+  // this may return null if this cardStore is not willing to reveal the mastersecret
+  string getMasterSecretForCard(in string cardId);
+  string getRpIdentifier(in string cardId, in nsIX509Cert relyingPartyCertificate);
+  
+  string getCardByPPID(in string PPID, in nsIX509Cert relyingPartyCertificate);
+
+  string getCardStoreName();
+  string getCardStoreVersion();
+
+  readonly attribute wstring errorstring;
+  readonly attribute long errornumber;
+
+};
