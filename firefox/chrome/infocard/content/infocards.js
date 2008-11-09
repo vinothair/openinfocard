@@ -27,7 +27,7 @@
  */
 
 var selectedCard;
-var selectorDebugging = false;
+var selectorDebugging = true;
 var tokenIssuerInitialized = false;
 
 function xmlreplace(text) {
@@ -55,7 +55,7 @@ function updateRPs() {
 		    var count = 0;
 		    for each (rpId in selectedCard.rpIds) {
 		     count++;
-	icDebug(selectedCard.name + " rpId:" + rpId + " rpIdentifier:" + rpIdentifier);
+	icDebug("updateRPs:" + selectedCard.name + " rpId:" + rpId + " rpIdentifier:" + rpIdentifier);
 		     if (rpId == rpIdentifier) {
 		      // this RP is already in list of RPs
 		      return;
@@ -173,6 +173,7 @@ function ok(){
     var tokenToReturn;
     var policy = getPolicy();
     if (policy == null) {
+    	icDebug("policy == null");
     	return;
     }
 
@@ -1316,8 +1317,12 @@ function setCard(card){
 function dblclick(event) {
 	handleCardChoice(event);
 	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+		icDebug("dblclick: ok");
 		ok();
-	} // else cardManager.xul called from preferences
+	} else {
+		// else cardManager.xul called from preferences
+		icDebug("dblclick: not calling ok");
+	}
 }
 
 function handleCardChoice(event){
@@ -1516,7 +1521,7 @@ function computeHasBeenSend(card, policy) {
     var rpIdentifier = computeRpIdentifier(relyingPartyCertB64);
     var beenThere = false;
     for each (rpId in card.rpIds) {
-     icDebug(card.name + " RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
+     icDebug("computeHasBeenSend: " + card.name + " RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
      if (rpId == rpIdentifier) {
       icDebug(card.name + " has been sent to: " + policy["cn"]);
       beenThere = true;

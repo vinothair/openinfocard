@@ -39,6 +39,12 @@
 <!DOCTYPE overlay SYSTEM "chrome://infocard/locale/cardmanager.dtd">
 <overlay id="InformationCardOverlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript" src="chrome://infocard/content/InformationCard.js"/>
+   <script type="application/x-javascript" src="chrome://infocard/content/OpeninfocardSelector.js"/>
+   <script type="application/x-javascript" src="chrome://infocard/content/Statusbar.js"/>
+   <script type="application/x-javascript" src="chrome://infocard/content/XRDS.js"/>
+   <script type="application/x-javascript" src="chrome://infocard/content/missingPluginInstaller.js"/>
+   <script type="application/x-javascript" src="chrome://infocard/content/InformationCardHelper.js"/>
+   <script type="application/x-javascript" src="chrome://infocard/content/DragAndDrop.js"/>
   
   <menupopup id="idSelectorMenu">
     <menuitem key="key_openIdSelectorSidebar" observes="viewIdSelectorSidebar"  />
@@ -66,7 +72,7 @@
    	id="ic-status-bar-panel" 
    	class="statusbarpanel-iconic"
    	tooltiptext="Information Card Selector" 
-   	onclick="IdentitySelector.statusbarClick()">
+   	onclick="InformationCardStatusbar.statusbarClick()">
    	<image id="ic-status-bar-image" src="chrome://infocard/content/img/infocard_23x16-crossed.png"/>
    </statusbarpanel>
  </statusbar>

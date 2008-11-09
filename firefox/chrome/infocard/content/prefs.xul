@@ -3,74 +3,91 @@
 <?xml-stylesheet href="cards.css" type="text/css"?>
 <!DOCTYPE overlay SYSTEM "chrome://infocard/locale/prefs.dtd">
 
-<overlay id="openinfocard_preferences_overlay" 
- xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
- xmlns:html="http://www.w3.org/1999/xhtml">
+<overlay id="openinfocard_preferences_overlay"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:html="http://www.w3.org/1999/xhtml">
 
-    <!-- Merge with the BrowserPreferences Window -->
-    <prefwindow id="BrowserPreferences">
-          <prefpane id="openInfocardPane"
-                    label="OpenInfocard"
-                    image="chrome://infocard/content/xmldap.png"
-                    onpaneload="populateMenu();">
+	<!-- Merge with the BrowserPreferences Window -->
+	<prefwindow id="BrowserPreferences">
+		<prefpane id="openInfocardPane" label="OpenInfocard"
+			image="chrome://infocard/content/xmldap.png" onpaneload="populateMenu();">
 			<preferences>
-  				<preference id="pref_cardStoreMasterPasswordEncryption" name="extensions.infocard.cardStoreMasterPasswordEncryption" type="bool"/>
-  				<preference id="pref_cardStoreCurrentProfile" name="extensions.infocard.cardStoreCurrentProfile" type="bool"/>
-  				<preference id="pref_cardStoreLocalFilePath" name="extensions.infocard.cardStoreLocalFilePath" type="unichar"/>
-  				<preference id="pref_cardStoreUrl" name="extensions.infocard.cardStoreUrl" type="unichar"/>
-  				<preference id="pref_identityselector" name="identityselector.contractid" type="unichar"/>
-  				<preference id="pref_advertiseSelector" name="identityselector.advertise" type="unichar"/>
-  				<preference id="pref_enabledDisabledCb" name="identityselector.disabled" type="bool"/>
+				<preference id="pref_cardStoreMasterPasswordEncryption"
+					name="extensions.infocard.cardStoreMasterPasswordEncryption" type="bool" />
+				<preference id="pref_cardStoreCurrentProfile"
+					name="extensions.infocard.cardStoreCurrentProfile" type="bool" />
+				<preference id="pref_cardStoreLocalFilePath"
+					name="extensions.infocard.cardStoreLocalFilePath" type="unichar" />
+				<preference id="pref_cardStoreUrl" name="extensions.infocard.cardStoreUrl"
+					type="unichar" />
+				<preference id="pref_identityselector" name="identityselector.contractid"
+					type="unichar" />
+				<preference id="pref_selector_class" name="extensions.identityselector.selector_class"
+					type="unichar" />
+				<preference id="pref_advertiseSelector" name="identityselector.advertise"
+					type="unichar" />
+				<preference id="pref_enabledDisabledCb" name="identityselector.disabled"
+					type="bool" />
 			</preferences>
-			
-              <vbox id="openinfocardSelectorHeader">
-                <label>&infocard.prefs.title;</label>
-              </vbox>
 
-              <separator id="openinfocardSelectorSeparator"/>
+			<vbox id="openinfocardSelectorHeader">
+				<label>&infocard.prefs.title;
+				</label>
+			</vbox>
+
+			<separator id="openinfocardSelectorSeparator" />
 
 			<groupbox id="enabledDisabledGroup">
-			  <checkbox id="enabledDisabledCb" label="&infocard.prefs.enabled;" checked="false" preference="pref_enabledDisabledCb"/>
-              <vbox id="selectorManageCards">
-                <button label="&infocard.prefs.manageCards;" oncommand="prefsCallback();"/>
-              </vbox>
-              
-              <groupbox id="cardStorePrefsBox">
-                <caption label="&infocard.prefs.groupboxCaption;"/>
-                <checkbox id="cardStoreMasterPasswordEncryption" label="&infocard.prefs.encryption;" checked="true" preference="pref_cardStoreMasterPasswordEncryption"/>
-                <checkbox id="cardStoreCurrentProfile" label="&infocard.prefs.profile;" checked="true" preference="pref_cardStoreCurrentProfile"/>
-                <hbox>
-                 <label class="prefLabel" value="&infocard.prefs.localFile;" />
-                 <textbox class="prefText" flex="1" id="cardStoreLocalFilePath" preference="pref_cardStoreLocalFilePath" type="autocomplete" autocompletesearch="history"/>
-                 <button label="&infocard.prefs.filePicker;" oncommand="filePicker();"/>
-                </hbox>
-                <hbox>
-                 <label class="prefLabel" value="&infocard.prefs.URL;" />
-                 <textbox class="prefText" flex="1" id="cardStoreUrl" preference="pref_cardStoreUrl" type="autocomplete" autocompletesearch="history"/>
-                </hbox>
-              </groupbox>
-              <groupbox id="chooseSelectorGroupBox" hidden="false">
-                <caption label="&infocard.prefs.chooseSelector;"/>
-                    <menulist id="selector" preference="pref_identityselector">
-                    	<menupopup id="menupopup" />
-                    </menulist>
-              </groupbox>
-              <groupbox id="advertiseSelectorGroupBox" hidden="false">
-                <caption label="&infocard.prefs.advertiseSelector;"/>
-                    <menulist id="advertiseSelector" preference="pref_advertiseSelector">
-                        <menupopup id="advselectorpopup">
-                            <menuitem label="&infocard.prefs.advertiseSelectorNO;" value="advertiseSelectorNO"/>
-                            <menuitem label="&infocard.prefs.advertiseSelectorInstallation;" value="advertiseSelectorInstallation"/>
-                            <menuitem label="&infocard.prefs.advertiseSelectorName;" value="advertiseSelectorName"/>
-                        </menupopup>
-                    </menulist>
-              </groupbox>
-			</groupbox>
-          </prefpane>
+				<checkbox id="enabledDisabledCb" label="&infocard.prefs.enabled;"
+					checked="false" preference="pref_enabledDisabledCb" />
+				<vbox id="selectorManageCards">
+					<button label="&infocard.prefs.manageCards;" oncommand="prefsCallback();" />
+				</vbox>
 
- <!-- beware of https://bugzilla.mozilla.org/show_bug.cgi?id=296418 -->
- <html:script type="application/x-javascript">
-  <![CDATA[
+				<groupbox id="cardStorePrefsBox">
+					<caption label="&infocard.prefs.groupboxCaption;" />
+					<checkbox id="cardStoreMasterPasswordEncryption" label="&infocard.prefs.encryption;"
+						checked="true" preference="pref_cardStoreMasterPasswordEncryption" />
+					<checkbox id="cardStoreCurrentProfile" label="&infocard.prefs.profile;"
+						checked="true" preference="pref_cardStoreCurrentProfile" />
+					<hbox>
+						<label class="prefLabel" value="&infocard.prefs.localFile;" />
+						<textbox class="prefText" flex="1" id="cardStoreLocalFilePath"
+							preference="pref_cardStoreLocalFilePath" type="autocomplete"
+							autocompletesearch="history" />
+						<button label="&infocard.prefs.filePicker;" oncommand="filePicker();" />
+					</hbox>
+					<hbox>
+						<label class="prefLabel" value="&infocard.prefs.URL;" />
+						<textbox class="prefText" flex="1" id="cardStoreUrl"
+							preference="pref_cardStoreUrl" type="autocomplete"
+							autocompletesearch="history" />
+					</hbox>
+				</groupbox>
+				<groupbox id="chooseSelectorGroupBox" hidden="false">
+					<caption label="&infocard.prefs.chooseSelector;" />
+					<menulist id="selector" preference="pref_selector_class">
+						<menupopup id="menupopup" />
+					</menulist>
+				</groupbox>
+				<groupbox id="advertiseSelectorGroupBox" hidden="false">
+					<caption label="&infocard.prefs.advertiseSelector;" />
+					<menulist id="advertiseSelector" preference="pref_advertiseSelector">
+						<menupopup id="advselectorpopup">
+							<menuitem label="&infocard.prefs.advertiseSelectorNO;"
+								value="advertiseSelectorNO" />
+							<menuitem label="&infocard.prefs.advertiseSelectorInstallation;"
+								value="advertiseSelectorInstallation" />
+							<menuitem label="&infocard.prefs.advertiseSelectorName;"
+								value="advertiseSelectorName" />
+						</menupopup>
+					</menulist>
+				</groupbox>
+			</groupbox>
+		</prefpane>
+		<!-- beware of https://bugzilla.mozilla.org/show_bug.cgi?id=296418 -->
+		<html:script type="application/x-javascript">
+		 <![CDATA[
      function prefsCallback() {
       var mgmtWindow = window.openDialog("chrome://infocard/content/cardManager.xul","InfoCard Selector", "modal,chrome,resizable,width=800,height=640,centerscreen");
      }
@@ -104,7 +121,7 @@
 		var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 		var pbi = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
 
-		cid = pbi.getCharPref("identityselector.contractid");
+		cid = pbi.getCharPref("extensions.identityselector.selector_class");
       }
 	  debug("selected selector " + cid);
       var menuList = document.getElementById("selector");
@@ -119,17 +136,22 @@
 	  for (;selectors.hasMoreElements(); ) {
 	   var clasz = selectors.getNext().QueryInterface(Components.interfaces.nsISupportsCString).data;
 	   debug("clasz=" + clasz);
-       var contractid = catman.getCategoryEntry(IIDENTITYSELECTOR_IID_STR, clasz);
+
+       var categoryEntry = catman.getCategoryEntry(IIDENTITYSELECTOR_IID_STR, clasz);
+       var j = categoryEntry.indexOf(':');
+       var selectorClass = categoryEntry.substring(0,j);
+       var contractid = categoryEntry.substring(j+1)
 	   debug("contractid=" + contractid);
+	   debug("selectorClass=" + selectorClass);
 
        try {
         var obj = Components.classes[contractid];
         if (obj !== undefined) {
          var menuitem = document.createElement("menuitem");
          menuitem.setAttribute("label", clasz);
-         menuitem.setAttribute("value", contractid);
+         menuitem.setAttribute("value", selectorClass);
          menuPopup.appendChild(menuitem);
-         if (contractid && (contractid == cid)) {
+         if ((selectorClass != null) && (cid != null) && (selectorClass == cid)) {
           debug("selecting " + clasz);
           menuList.selectedItem = menuitem;
          }
@@ -146,11 +168,15 @@
         menuitem.setAttribute("label", "digitalme");
         menuitem.setAttribute("value", "digitalme");
         menuPopup.appendChild(menuitem);
+        if (menuList.selectedItem == null) {
+        	menuList.selectedItem = menuitem;
+        }
       }
      }
 
-  ]]>
- </html:script>
-    
- </prefwindow>
+
+	     ]]>
+		</html:script>
+		
+	</prefwindow>
 </overlay>
