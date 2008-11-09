@@ -38,6 +38,7 @@ const IIDENTITYSELECTOR_IID_STR = "ddd9bc02-c964-4bd5-b5bc-943e483c6c57";
 const CLASS_ID = Components.ID("72e894fd-0d6c-484d-abe8-5903b5f8bf3b");
 const CLASS_NAME = "The openinfocard identity selector";
 const CONTRACT_ID = "@xmldap.org/identityselector;1";
+const SELECTOR_CLASS_NAME = "OpeninfocardSelector";
 
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
 
@@ -50,7 +51,7 @@ Xmldapidentityselector.prototype = {
 
     GetBrowserToken: function (
      issuer , recipientURL, requiredClaims, optionalClaims , tokenType, 
-     privacyPolicy, privacyPolicyVersion, serverCert, issuerPolicy, sslMode) {
+     privacyPolicy, privacyPolicyVersion, serverCert, issuerPolicy, extraParams) {
 
         debug('issuer: ' + issuer);
         debug('recipientURL: ' + recipientURL);
@@ -61,7 +62,7 @@ Xmldapidentityselector.prototype = {
         debug('privacyPolicyVersion: ' + privacyPolicyVersion);
         debug('serverCert: ' + serverCert);
         debug('issuerPolicy: ' + issuerPolicy);
-        debug('sslMode: ' + sslMode);
+        debug('extraParams: ' + extraParams);
 
 
         var callback;
@@ -74,7 +75,7 @@ Xmldapidentityselector.prototype = {
         policy["privacyUrl"] = privacyPolicy;
         policy["privacyVersion"] = privacyPolicyVersion;
         policy["issuerPolicy"] = issuerPolicy;
-        policy["sslMode"] = sslMode;
+        policy["extraParams"] = extraParams;
 
         //get a handle on a window
         var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
@@ -95,7 +96,7 @@ Xmldapidentityselector.prototype = {
 			  policy["certChain"+i] = getDer(currCert,win);
 			}
 			
-			debugObject("serverCert: ", serverCert, 0);
+//			debugObject("serverCert: ", serverCert, 0);
 		}
 		
         // win.document.URL is undefined
@@ -168,9 +169,10 @@ var XmldapidentityselectorModule = {
     
     var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
 
+    var categoryEntry = SELECTOR_CLASS_NAME + ':' + CONTRACT_ID;
     catman.addCategoryEntry(IIDENTITYSELECTOR_IID_STR,
                             CLASS_NAME,
-                            CONTRACT_ID,
+                            categoryEntry,
                             true,
                             true);
     var selectors = catman.enumerateCategory ( IIDENTITYSELECTOR_IID_STR );

@@ -122,7 +122,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>XRDS &amp; Java Based Relying Party without object element</title>
-	<link rel="xrds.metadata" href="https://w4de3esy0069028.gdc-bln01.t-systems.com:8443/relyingparty/?xmldap_rp.xrds"/>
+	<link rel="xrds.metadata" href="https://xmldap.org/relyingparty/?xmldap_rp.xrds"/>
 
     <style type="text/css">
     BODY {background: #FFF url(./img/banner.png) repeat-x;
