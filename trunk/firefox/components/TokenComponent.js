@@ -151,7 +151,7 @@ var TokenModule = {
          */
         return true;
     }
-}
+};
 
 /*
  *  This function NSGetModule will be called by Firefox to retrieve the
@@ -461,13 +461,13 @@ TokenComponent.prototype._loadJava = function(java, jarURLStrings) {
     this._trace("} TokenComponent._loadJava");
     
     return packages;
-}
+};
 
 TokenComponent.prototype._trace = function (msg) {
     if (this._traceFlag) {
         _printToJSConsole(msg);
     }
-}
+};
 
 /*
  *  Get the file path to the installation directory of this 
@@ -536,7 +536,7 @@ function WrappedPackages(java, classLoader) {
 //            a[i] = args[i];
 //        }
 //        return a;
-    }
+    };
 
     this.getClass = function(className) {
         var classWrapper = packages.getClass(className);
