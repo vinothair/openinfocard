@@ -13,4 +13,4 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
 		return;
 	}
 	missingPluginInstaller.prototype.__newMissingPlugin(aEvent);
-}
+};
