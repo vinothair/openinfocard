@@ -30,9 +30,7 @@ public class PrivacyNotice {
 				catch (NumberFormatException e) {
 					throw new ParsingException( "PrivacyNotice Version is not a number: " + versionA.getValue(), e);
 				}
-			} else {
-				throw new ParsingException("Expected Version attribute in PrivacyNotice");
-			}
+			} // else optional
 			
 			uri = privacyNotice.getValue();
 			try {
