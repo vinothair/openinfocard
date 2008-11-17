@@ -89,7 +89,7 @@ function login(cardStorePath) {
 	else if (CC_loginManager!= null) {
  	  // Login Manager exists so this is Firefox 3
  	  // Login Manager code
- 	  alert("loginManager support is not implemented.")
+ 	  alert("loginManager support is not implemented.");
 	}
 }
 
