@@ -35,7 +35,7 @@ function xrdsListener(doc, hrefStr) {
    this.hrefStr = hrefStr;
    this.onError = function(error) {
       IdentitySelector.logMessage("xrdsListener:onError", "error=" + error);
-      }
+      };
    this.onReady = function(xrds) {
       try {
          var elts = xrds.getElementsByTagName("Service");
@@ -72,7 +72,7 @@ function xrdsListener(doc, hrefStr) {
       catch(e) {
          IdentitySelector.logMessage("xrdsListener:onReady", "Error: " + e);
          }
-      }
+      };
 }
 
 /***************************************************************************
@@ -83,7 +83,7 @@ function icLoginServiceListener(doc, hrefStr) {
    this.hrefStr = hrefStr;
    this.onError = function(error) {
       IdentitySelector.logMessage("icLoginServiceListener:onError", "error=" + error);
-      }
+      };
    this.onReady = function(xrds) {
       try {
          var response = new XML (Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance (Components.interfaces.nsIDOMSerializer).serializeToString(xrds.documentElement));
@@ -100,7 +100,7 @@ function icLoginServiceListener(doc, hrefStr) {
       catch(e) {
          IdentitySelector.logMessage("icLoginServiceListener:onReady", "Error: " + e);
          }
-      }
+      };
 }		
 
 var InformationCardXrds = {
