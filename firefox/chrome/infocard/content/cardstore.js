@@ -1,5 +1,17 @@
 var db = "cardDb.xml";
 
+function clearOpeninfocardHistory() {
+    var cardFile = read(db);
+    var nDB = newDB();
+    
+    for each (c in cardFile.infocard) {
+    	delete c.rpIds;
+    	dump("clearOpeninfocardHistory: " + c.id);
+    	nDB.infocard += c;
+    }
+    save(db,nDB.toString());
+}
+
 function saveRoamingStore(roamingstore) {
 	//saveLocalFile(getDir() + "roamingstore.xml", roamingstore);
 	save("roamingstore.xml", roamingstore);

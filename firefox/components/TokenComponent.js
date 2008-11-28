@@ -328,10 +328,11 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
     } catch(e) {
     	alert("error instanciating new URLCalssLoader:" + urlArray + "\n" + e);
     }
-    if (!(bootstrapClassLoader instanceof java.net.URLClassLoader)) {
+    if (!(bootstrapClassLoader.getClass().isInstance(java.lang.Class.forName("java.net.URLClassLoader")))) {
+//    if (!(bootstrapClassLoader instanceof java.net.URLClassLoader)) {
 //    if ((bootstrapClassLoader == null) || ("java.net.URLClassLoader" != bootstrapClassLoader.getClass().getName())))
 //    if ((bootstrapClassLoader == null) || (bootstrapClassLoader.getClass() != urlClassLoaderClasz) ) {
-    	_printToJSConsole("Error: java.net.URLClassLoader.newInstance failed! " + bootstrapClassLoader);
+//    	_printToJSConsole("Error: java.net.URLClassLoader.newInstance failed! " + bootstrapClassLoader);
     }
     
     /*

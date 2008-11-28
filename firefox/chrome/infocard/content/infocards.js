@@ -714,6 +714,24 @@ function getPolicy(){
 	return policy;
 }
 
+function getCardId(extraParams){
+	try {
+		for (var i=0; i<extraParams.length; i++) {
+			var val = JSON.parse(extraParams[i]);
+			if ((val !== null) && val.hasOwnProperty("cardid")) {
+				var cardId = val.cardid;
+				icDebug("getCardId: cardId = " + cardId);
+				return cardId;
+			} else {
+				icDebug("getCardId: extraParams[" + i + "] = " + extraParams[i]);
+			}
+		}
+	} catch (e) {
+		icDebug("getCardId threw exception: " + e);
+	}
+//	return undefined;
+}
+
 function load(policyParam){
 	icDebug("load start. href=" + window.document.location.href );
 	
@@ -750,6 +768,15 @@ function load(policyParam){
     if (policy != null && policy.hasOwnProperty("cert")) {
 		var relyingPartyCertB64 = policy["cert"];
 	    rpIdentifier = computeRpIdentifier(relyingPartyCertB64);
+    }
+
+    var extraParams = null;
+    var extraParamsCardId;
+    if ((policy !== null) && policy.hasOwnProperty("extraParams")) {
+    	extraParams = policy.extraParams;
+    	extraParamsCardId = getCardId(extraParams);
+    	icDebug("extraParams length = " + extraParams.length);
+    	icDebug("extraParams cardId = " + extraParamsCardId);
     }
 
     var cardFile = readCardStore();
@@ -869,6 +896,14 @@ function load(policyParam){
 		 firstTimeVisitBox.setAttribute("hidden", "false");
 	 }
 	}
+	
+	if (extraParamsCardId !== undefined) {
+		var choosenCard = getCard(extraParamsCardId);
+		setCard(choosenCard);
+	} else {
+		 icDebug("extraParamsCardId === undefined");
+	}
+
 }
 
 function indicateRequiredClaim(requiredClaims, optionalClaims, claim){

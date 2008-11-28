@@ -138,6 +138,10 @@ var InformationCardHelper = {
         }
         data.recipient = doc.location.href;
         
+        if (doc.__identityselector__.sslMode != undefined) {
+            data.sslMode = "" + doc.__identityselector__.sslMode;
+        }
+
         // call identity selector
         var token = getSecurityToken(data);
 
