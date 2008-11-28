@@ -6,3 +6,4 @@ pref("identityselector.disabled", false);
 pref("identityselector.contractid", "@xmldap.org/identityselector;1");
 pref("identityselector.advertise", "advertiseSelectorName");
 pref("extensions.identityselector.selector_class", "OpeninfocardSelector");
+pref("privacy.item.infocard", false);

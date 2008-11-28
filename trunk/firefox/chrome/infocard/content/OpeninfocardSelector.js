@@ -9,21 +9,72 @@ function debugObject(prefix, object, indent) {
 	var pre = "";
 	for (var j=0; j<indent; j++) { pre += '\t'; }
 	for (var i in object) {
-		var value = object[i];
-		if (typeof(value) == 'object') {
-			//debugObject(prefix, value, indent+1);
-			msg += pre + i + ' type=' + typeof(value) + ':' + value + '\n';
-//			debug(prefix + pre + i + ' type=' + typeof(value) + ':' + value);
-		} else if ((typeof(value) == 'string') || ((typeof(value) == 'boolean')) || ((typeof(value) == 'number'))) {
-			msg += pre + ':' + i + '=' + value + '\n';
-//			debug(prefix + pre + ':' + i + '=' + value);
-		} else {
-			msg += pre + i + ' type=' + typeof(value) + '\n'
-//			debug(prefix + pre + i + ' type=' + typeof(value));
+		if (object.hasOwnProperty(i)) {
+	
+			var value = object[i];
+			if (typeof(value) == 'object') {
+				//debugObject(prefix, value, indent+1);
+				msg += pre + i + ' type=' + typeof(value) + ':' + value + '\n';
+	//			debug(prefix + pre + i + ' type=' + typeof(value) + ':' + value);
+			} else if ((typeof(value) == 'string') || ((typeof(value) == 'boolean')) || ((typeof(value) == 'number'))) {
+				msg += pre + ':' + i + '=' + value + '\n';
+	//			debug(prefix + pre + ':' + i + '=' + value);
+			} else {
+				msg += pre + i + ' type=' + typeof(value) + '\n';
+	//			debug(prefix + pre + i + ' type=' + typeof(value));
+			}
 		}
 	}
 	IdentitySelector.logMessage(msg);
 }
+
+//**************************************************************************
+//Desc:
+//**************************************************************************
+
+var OpeninfocardSecurityStateChangeListener =
+{
+        QueryInterface : function( aIID)
+        {
+                if( aIID.equals( Components.interfaces.nsIWebProgressListener) ||
+                         aIID.equals( Components.interfaces.nsISupportsWeakReference) ||
+                         aIID.equals( Components.interfaces.nsISupports))
+                {
+                        return( this);
+                }
+               
+                throw Components.results.NS_NOINTERFACE;
+        },
+        
+        onSecurityChange : function(aWebProgress, aRequest, aState)
+        {
+    		IdentitySelector.logMessage( "OpeninfocardSecurityStateChangeListener", "onSecurityChange aState=" + aState);
+        	try {
+	        	const wpl = Components.interfaces.nsIWebProgressListener;
+	        	var doc = aWebProgress.DOMWindow.document;
+	        	IdentitySelector.runInterceptScript(doc);
+	        	if( doc.wrappedJSObject)
+                {
+                        doc = doc.wrappedJSObject;
+                }
+	            if( doc.__identityselector__ == undefined)
+	            {
+	        		IdentitySelector.logMessage( "OpeninfocardSecurityStateChangeListener", "doc.__identityselector__ == undefined; " + doc.location.href);
+	            	return;
+	            }
+	            if (aState & wpl.STATE_IDENTITY_EV_TOPLEVEL) {
+	            	doc.__identityselector__.sslMode = "EV";
+	            } else if (aState & wpl.STATE_SECURE_HIGH) {
+	            	doc.__identityselector__.sslMode = "SSL";
+	            } else {
+	            	doc.__identityselector__.sslMode = "low";
+	            }
+        		IdentitySelector.logMessage( "OpeninfocardSecurityStateChangeListener", "doc.location.href=" + doc.location.href + " doc.__identityselector__.sslMode=" + doc.__identityselector__.sslMode);
+	        } catch (e) {
+        		IdentitySelector.reportError( "OpeninfocardSecurityStateChangeListener", "doc.location.href=" + doc.location.href + " exception=" + e);
+	        }
+        }
+};
 
 // **************************************************************************
 // Desc:
@@ -38,13 +89,24 @@ var OpeninfocardSelector = {
 		var token = null;
 		
 		this.disabled = gPrefService.getBoolPref("identityselector.disabled");
-		if (this.disabled == true) {
+		if (this.disabled === true) {
 			IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 					" Id selector is disabled. Exiting");
 			return null;
 		}
 		
-		var doc = document;
+//		var doc = document;
+//		try {
+//			doc = doc.getElementById( "content");
+////			doc = doc.contentDocument;
+//		} catch (e) {
+//			IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//			" doc.contentDocument threw exception: " + e);
+//		}
+//		if( doc.wrappedJSObject)
+//        {
+//                doc = doc.wrappedJSObject;
+//        }
 		
 		IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 				"Identity selector invoked.");
@@ -54,62 +116,76 @@ var OpeninfocardSelector = {
 			var sslCert = OpeninfocardSelector.getSSLCertFromDocument(document);
 			var cid = CONTRACT_ID;
 			// class id of selector
-			{
-				var obj = null;
-				try {
-					var cidClass = Components.classes[cid];
-					if (cidClass != undefined) {
-						obj = cidClass.createInstance();
-						obj = obj
-								.QueryInterface(Components.interfaces.IIdentitySelector);
-					} else {
-						IdentitySelector.reportError(SELECTOR_CLASS_NAME+".getSecurityToken",
-								"the class " + cid + " is not installed");
-						return;
-					}
-				} catch (e) {
-					IdentitySelector.throwError("OpeninfocardSelector.getSecurityToken:", e);
+			var obj = null;
+			try {
+				var cidClass = Components.classes[cid];
+				if (cidClass !== undefined) {
+					obj = cidClass.createInstance();
+					obj = obj
+							.QueryInterface(Components.interfaces.IIdentitySelector);
+				} else {
+					IdentitySelector.reportError(SELECTOR_CLASS_NAME+".getSecurityToken",
+							"the class " + cid + " is not installed");
+					return;
 				}
+			} catch (e) {
+				IdentitySelector.throwError("OpeninfocardSelector.getSecurityToken:", e);
+			}
 //				IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 //						"ssl security mode=" + IdentitySelector.getMode(doc));
-				
-				var extraParams = {};
+			
+			var extraParams = function(){
+				var extraParams = new Array();
+				var len = 0;
 				for (var i in data) {
-					extraParams[i] = data[i];
+					if (("issuer" !== ""+i) 
+						&& ("recipient" !== ""+i)
+						&& ("requiredClaims" !== ""+i)
+						&& ("optionalClaims" !== ""+i)
+						&& ("tokenType" !== ""+i)
+						&& ("privacyUrl" !== ""+i)
+						&& ("privacyVersion" !== ""+i)
+						&& ("issuerPolicy" !== ""+i)) 
+					{
+						var obj = new Object();
+						obj[i] = data[i];
+						len = extraParams.length;
+						extraParams[len] = JSON.stringify(obj);
+						IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+								"extraParams[" + len + "] = " + extraParams[len]);
+					} else {
+						IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+								"i=" + i + "; value=" + data[i] + ";");
+					}
 				}
-				
-				if (extraParams.issuer !== undefined) {
-					delete extraParams.issuer;
-				}
-				if (extraParams.recipient !== undefined) {
-					delete extraParams.recipient;
-				}
-				if (extraParams.requiredClaims !== undefined) {
-					delete extraParams.requiredClaims;
-				}
-				if (extraParams.optionalClaims !== undefined) {
-					delete extraParams.optionalClaims;
-				}
-				if (extraParams.tokenType !== undefined) {
-					delete extraParams.tokenType;
-				}
-				if (extraParams.privacyUrl !== undefined) {
-					delete extraParams.privacyUrl;
-				}
-				if (extraParams.privacyVersion !== undefined) {
-					delete extraParams.privacyVersion;
-				}
-				if (extraParams.issuerPolicy !== undefined) {
-					delete extraParams.issuerPolicy;
-				}
-				debugObject("OpeninfocardSelector", data, 0);
-				/* Make the call to the selector */
-				token = obj.GetBrowserToken(data.issuer,
-						data.recipient, data.requiredClaims,
-						data.optionalClaims, data.tokenType, data.privacyUrl,
-						data.privacyVersion, sslCert, data.issuerPolicy,
-						extraParams);
-			}
+				return extraParams;
+			}();
+			
+//			if (doc.__identityselector__ != undefined && doc.__identityselector__.sslMode != undefined) {
+//				extraParams[extraParams.length] = "{" + "sslMode" + "," + doc.__identityselector__.sslMode + "}";
+//			} else {
+//				if (doc.__identityselector__ == undefined) {
+//					IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//							"doc.__identityselector__ == undefined doc.location.href=" + doc.location.href);
+//				} else if (doc.__identityselector__.sslMode == undefined ) {
+//					IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//							"doc.__identityselector__.sslMode == undefined doc.location.href=" + doc.location.href);
+//				} else {
+//					IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//							"??? doc.location.href=" + doc.location.href);
+//				}
+//			}
+			
+			IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+					"extraParams.length="+extraParams.length);
+			
+			debugObject("OpeninfocardSelector", data, 0);
+			/* Make the call to the selector */
+			token = obj.GetBrowserToken(data.issuer,
+					data.recipient, data.requiredClaims,
+					data.optionalClaims, data.tokenType, data.privacyUrl,
+					data.privacyVersion, sslCert, data.issuerPolicy,
+					extraParams.length, extraParams);
 		} catch (e) {
 			IdentitySelector.throwError(SELECTOR_CLASS_NAME+".getSecurityToken", e);
 		}
@@ -124,7 +200,7 @@ var OpeninfocardSelector = {
 		   sslStatusProvider = secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
 		   if( sslStatusProvider != null) {
 		      try {
-		         sslStatus = sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+		         var sslStatus = sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
 		         if( sslStatus != null && sslStatus.serverCert != undefined) {
 		            sslCert = sslStatus.serverCert;
 		         }
@@ -135,4 +211,37 @@ var OpeninfocardSelector = {
 		   }
 		   return sslCert;
 	}
+	
+	, onLoad : function(event) {
+		IdentitySelector.logMessage( "OpeninfocardSelector", "onLoad: " + document.location.href);
+		gBrowser.removeEventListener( "load", OpeninfocardSelector.onLoad, false);
+        window.getBrowser().addProgressListener( OpeninfocardSecurityStateChangeListener,
+                Components.interfaces.nsIWebProgress.NOTIFY_STATE_ALL &
+                Components.interfaces.nsIWebProgress.NOTIFY_SECURITY);
+
+	}
+	
+	, onUnload : function(event) {
+		try {
+			IdentitySelector.logMessage( "OpeninfocardSelector", "onUnload: " + document.location.href);
+			gBrowser.removeEventListener( "load", OpeninfocardSelector.onLoad, false);
+		    window.removeEventListener( "load", function(event){gBrowser.addEventListener("load", OpeninfocardSelector.onLoad(event), true)}, false);
+	               
+	        window.removeEventListener( "unload", OpeninfocardSelector.onUnload, false);
+	        window.getBrowser().removeProgressListener( OpeninfocardSecurityStateChangeListener );
+		} catch (e) {}
+	}
 };
+
+try
+{
+	IdentitySelector.logMessage( "OpeninfocardSelector", "start");
+        window.addEventListener( "load", function(event){gBrowser.addEventListener("load", OpeninfocardSelector.onLoad(event), true)}, false);
+               
+        window.addEventListener( "unload",
+        		OpeninfocardSelector.onUnload, false);
+}
+catch( e)
+{
+        IdentitySelector.reportError( "window.addEventListener", e);
+}

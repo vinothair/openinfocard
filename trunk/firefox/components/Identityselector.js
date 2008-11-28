@@ -51,7 +51,8 @@ Xmldapidentityselector.prototype = {
 
     GetBrowserToken: function (
      issuer , recipientURL, requiredClaims, optionalClaims , tokenType, 
-     privacyPolicy, privacyPolicyVersion, serverCert, issuerPolicy, extraParams) {
+     privacyPolicy, privacyPolicyVersion, serverCert, issuerPolicy, 
+     extraParamsLenght, extraParams) {
 
         debug('issuer: ' + issuer);
         debug('recipientURL: ' + recipientURL);
@@ -62,7 +63,7 @@ Xmldapidentityselector.prototype = {
         debug('privacyPolicyVersion: ' + privacyPolicyVersion);
         debug('serverCert: ' + serverCert);
         debug('issuerPolicy: ' + issuerPolicy);
-        debug('extraParams: ' + extraParams);
+        debug('extraParamsLenght: ' + extraParamsLenght);
 
 
         var callback;
@@ -75,6 +76,7 @@ Xmldapidentityselector.prototype = {
         policy["privacyUrl"] = privacyPolicy;
         policy["privacyVersion"] = privacyPolicyVersion;
         policy["issuerPolicy"] = issuerPolicy;
+        policy["extraParamsLenght"] = extraParamsLenght;
         policy["extraParams"] = extraParams;
 
         //get a handle on a window

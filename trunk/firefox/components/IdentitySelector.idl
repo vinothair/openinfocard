@@ -42,7 +42,13 @@
 interface IIdentitySelector : nsISupports
 {
   void About();
-  string GetBrowserToken(in wstring issuerUri, in wstring recipientUrl, in wstring requiredClaims, in wstring optionalClaims, in wstring tokenType, in wstring privacyPolicy, in long privacyPolicyVersion ,in nsIX509Cert certificate, in wstring issuerPolicy );
+  void ManageCardSpace();
+  string GetBrowserToken(in wstring issuerUri, in wstring recipientUrl, 
+	  in wstring requiredClaims, in wstring optionalClaims, in wstring tokenType, 
+	  in wstring privacyPolicy, in long privacyPolicyVersion ,
+	  in nsIX509Cert certificate, in wstring issuerPolicy,
+	  in unsigned long extraParamsLenght,
+	  [array, size_is(extraParamsLenght)] in wstring extraParams);
   string GetVersion();
 
   readonly attribute wstring errorstring;
