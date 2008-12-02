@@ -25,7 +25,7 @@ function debugObject(prefix, object, indent) {
 			}
 		}
 	}
-	IdentitySelector.logMessage(msg);
+	IdentitySelectorDiag.logMessage(msg);
 }
 
 //**************************************************************************
@@ -45,10 +45,18 @@ var OpeninfocardSecurityStateChangeListener =
                
                 throw Components.results.NS_NOINTERFACE;
         },
+
+        onProgressChange : function() { return( 0); },
+       
+        onStatusChange : function() { return( 0); },
+       
+        onLocationChange: function(aProgress, aRequest, aURI) {},
         
+        onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {},
+
         onSecurityChange : function(aWebProgress, aRequest, aState)
         {
-    		IdentitySelector.logMessage( "OpeninfocardSecurityStateChangeListener", "onSecurityChange aState=" + aState);
+    		IdentitySelectorDiag.logMessage( "OpeninfocardSecurityStateChangeListener", "onSecurityChange aState=" + aState);
         	try {
 	        	const wpl = Components.interfaces.nsIWebProgressListener;
 	        	var doc = aWebProgress.DOMWindow.document;
@@ -57,9 +65,9 @@ var OpeninfocardSecurityStateChangeListener =
                 {
                         doc = doc.wrappedJSObject;
                 }
-	            if( doc.__identityselector__ == undefined)
+	            if( doc.__identityselector__ === undefined)
 	            {
-	        		IdentitySelector.logMessage( "OpeninfocardSecurityStateChangeListener", "doc.__identityselector__ == undefined; " + doc.location.href);
+	        		IdentitySelectorDiag.logMessage( "OpeninfocardSecurityStateChangeListener", "doc.__identityselector__ == undefined; " + doc.location.href);
 	            	return;
 	            }
 	            if (aState & wpl.STATE_IDENTITY_EV_TOPLEVEL) {
@@ -69,9 +77,9 @@ var OpeninfocardSecurityStateChangeListener =
 	            } else {
 	            	doc.__identityselector__.sslMode = "low";
 	            }
-        		IdentitySelector.logMessage( "OpeninfocardSecurityStateChangeListener", "doc.location.href=" + doc.location.href + " doc.__identityselector__.sslMode=" + doc.__identityselector__.sslMode);
+        		IdentitySelectorDiag.logMessage( "OpeninfocardSecurityStateChangeListener", "doc.location.href=" + doc.location.href + " doc.__identityselector__.sslMode=" + doc.__identityselector__.sslMode);
 	        } catch (e) {
-        		IdentitySelector.reportError( "OpeninfocardSecurityStateChangeListener", "doc.location.href=" + doc.location.href + " exception=" + e);
+        		IdentitySelectorDiag.reportError( "OpeninfocardSecurityStateChangeListener", "doc.location.href=" + doc.location.href + " exception=" + e);
 	        }
         }
 };
@@ -90,7 +98,7 @@ var OpeninfocardSelector = {
 		
 		this.disabled = gPrefService.getBoolPref("identityselector.disabled");
 		if (this.disabled === true) {
-			IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+			IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 					" Id selector is disabled. Exiting");
 			return null;
 		}
@@ -100,7 +108,7 @@ var OpeninfocardSelector = {
 //			doc = doc.getElementById( "content");
 ////			doc = doc.contentDocument;
 //		} catch (e) {
-//			IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//			IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 //			" doc.contentDocument threw exception: " + e);
 //		}
 //		if( doc.wrappedJSObject)
@@ -108,7 +116,7 @@ var OpeninfocardSelector = {
 //                doc = doc.wrappedJSObject;
 //        }
 		
-		IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+		IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 				"Identity selector invoked.");
 
 		try {
@@ -124,18 +132,18 @@ var OpeninfocardSelector = {
 					obj = obj
 							.QueryInterface(Components.interfaces.IIdentitySelector);
 				} else {
-					IdentitySelector.reportError(SELECTOR_CLASS_NAME+".getSecurityToken",
+					IdentitySelectorDiag.reportError(SELECTOR_CLASS_NAME+".getSecurityToken",
 							"the class " + cid + " is not installed");
 					return;
 				}
 			} catch (e) {
 				IdentitySelector.throwError("OpeninfocardSelector.getSecurityToken:", e);
 			}
-//				IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//				IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 //						"ssl security mode=" + IdentitySelector.getMode(doc));
 			
 			var extraParams = function(){
-				var extraParams = new Array();
+				var extraParams = [];
 				var len = 0;
 				for (var i in data) {
 					if (("issuer" !== ""+i) 
@@ -147,14 +155,14 @@ var OpeninfocardSelector = {
 						&& ("privacyVersion" !== ""+i)
 						&& ("issuerPolicy" !== ""+i)) 
 					{
-						var obj = new Object();
+						var obj = {};
 						obj[i] = data[i];
 						len = extraParams.length;
 						extraParams[len] = JSON.stringify(obj);
-						IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+						IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 								"extraParams[" + len + "] = " + extraParams[len]);
 					} else {
-						IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+						IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 								"i=" + i + "; value=" + data[i] + ";");
 					}
 				}
@@ -165,18 +173,18 @@ var OpeninfocardSelector = {
 //				extraParams[extraParams.length] = "{" + "sslMode" + "," + doc.__identityselector__.sslMode + "}";
 //			} else {
 //				if (doc.__identityselector__ == undefined) {
-//					IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//					IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 //							"doc.__identityselector__ == undefined doc.location.href=" + doc.location.href);
 //				} else if (doc.__identityselector__.sslMode == undefined ) {
-//					IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//					IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 //							"doc.__identityselector__.sslMode == undefined doc.location.href=" + doc.location.href);
 //				} else {
-//					IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//					IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 //							"??? doc.location.href=" + doc.location.href);
 //				}
 //			}
 			
-			IdentitySelector.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+			IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 					"extraParams.length="+extraParams.length);
 			
 			debugObject("OpeninfocardSelector", data, 0);
@@ -186,8 +194,8 @@ var OpeninfocardSelector = {
 					data.optionalClaims, data.tokenType, data.privacyUrl,
 					data.privacyVersion, sslCert, data.issuerPolicy,
 					extraParams.length, extraParams);
-		} catch (e) {
-			IdentitySelector.throwError(SELECTOR_CLASS_NAME+".getSecurityToken", e);
+		} catch (e1) {
+			IdentitySelector.throwError(SELECTOR_CLASS_NAME+".getSecurityToken", e1);
 		}
 		return token;
 	}
@@ -198,22 +206,22 @@ var OpeninfocardSelector = {
 		   var secureUi = browser.securityUI;
 		   var sslStatusProvider = null;
 		   sslStatusProvider = secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
-		   if( sslStatusProvider != null) {
+		   if( sslStatusProvider !== null) {
 		      try {
 		         var sslStatus = sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
-		         if( sslStatus != null && sslStatus.serverCert != undefined) {
+		         if( sslStatus !== null && sslStatus.serverCert !== undefined) {
 		            sslCert = sslStatus.serverCert;
 		         }
 		      }
 		      catch( e) {
-		         IdentitySelector.logMessage("getSSLCertFromDocument: " + e);
+		         IdentitySelectorDiag.logMessage("getSSLCertFromDocument: " + e);
 		      }
 		   }
 		   return sslCert;
 	}
 	
 	, onLoad : function(event) {
-		IdentitySelector.logMessage( "OpeninfocardSelector", "onLoad: " + document.location.href);
+		IdentitySelectorDiag.logMessage( "OpeninfocardSelector", "onLoad: " + document.location.href);
 		gBrowser.removeEventListener( "load", OpeninfocardSelector.onLoad, false);
         window.getBrowser().addProgressListener( OpeninfocardSecurityStateChangeListener,
                 Components.interfaces.nsIWebProgress.NOTIFY_STATE_ALL &
@@ -223,9 +231,9 @@ var OpeninfocardSelector = {
 	
 	, onUnload : function(event) {
 		try {
-			IdentitySelector.logMessage( "OpeninfocardSelector", "onUnload: " + document.location.href);
+			IdentitySelectorDiag.logMessage( "OpeninfocardSelector", "onUnload: " + document.location.href);
 			gBrowser.removeEventListener( "load", OpeninfocardSelector.onLoad, false);
-		    window.removeEventListener( "load", function(event){gBrowser.addEventListener("load", OpeninfocardSelector.onLoad(event), true)}, false);
+		    window.removeEventListener( "load", function(event){gBrowser.addEventListener("load", OpeninfocardSelector.onLoad(event), true);}, false);
 	               
 	        window.removeEventListener( "unload", OpeninfocardSelector.onUnload, false);
 	        window.getBrowser().removeProgressListener( OpeninfocardSecurityStateChangeListener );
@@ -235,13 +243,13 @@ var OpeninfocardSelector = {
 
 try
 {
-	IdentitySelector.logMessage( "OpeninfocardSelector", "start");
-        window.addEventListener( "load", function(event){gBrowser.addEventListener("load", OpeninfocardSelector.onLoad(event), true)}, false);
-               
-        window.addEventListener( "unload",
-        		OpeninfocardSelector.onUnload, false);
+	IdentitySelectorDiag.logMessage( "OpeninfocardSelector", "start");
+    window.addEventListener( "load", function(event){gBrowser.addEventListener("load", OpeninfocardSelector.onLoad, true);}, false);
+           
+    window.addEventListener( "unload",
+    		OpeninfocardSelector.onUnload, false);
 }
 catch( e)
 {
-        IdentitySelector.reportError( "window.addEventListener", e);
+        IdentitySelectorDiag.reportError( "window.addEventListener", e);
 }

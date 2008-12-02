@@ -24,21 +24,21 @@ var InformationCardDragAndDrop = {
 					} catch (ex) {
 					}
 					if (str !== null) {
-						IdentitySelector.logMessage(
+						IdentitySelectorDiag.logMessage(
 								"InformationCardDragAndDrop.extractDragData",
 								"data=" + str);
 						cardId = str;
 						break;
 						// only one
 					} else {
-						IdentitySelector.logMessage(
+						IdentitySelectorDiag.logMessage(
 								"InformationCardDragAndDrop.extractDragData",
 								"data=null");
 					}
 				}
 			}
 		} catch (e) {
-			IdentitySelector.logMessage(
+			IdentitySelectorDiag.logMessage(
 					"InformationCardDragAndDrop.extractDragData",e);
 		}
 		return cardId;
@@ -48,7 +48,7 @@ var InformationCardDragAndDrop = {
 	// Method: onWindowDragDrop
 	// ***********************************************************************
 	onWindowDragDrop : function(event) {
-		IdentitySelector.logMessage(
+		IdentitySelectorDiag.logMessage(
 				"InformationCardDragAndDrop.onWindowDragDrop",
 				"target.nodeName=", event.target.nodeName
 						+ "\noriginalTarget.nodeName="
@@ -56,7 +56,7 @@ var InformationCardDragAndDrop = {
 						+ "\ncurrentTarget.nodeName="
 						+ event.currentTarget.nodeName);
 		if (this.disabled === true) {
-			IdentitySelector.logMessage(
+			IdentitySelectorDiag.logMessage(
 					"InformationCardDragAndDrop.onWindowDragDrop",
 					" ID selector is disabled. Exiting");
 			return;
@@ -71,18 +71,18 @@ var InformationCardDragAndDrop = {
 		var cardId = InformationCardDragAndDrop.extractDragData();
 		
 		if (cardId === null) {
-			IdentitySelector.logMessage(
+			IdentitySelectorDiag.logMessage(
 					"InformationCardDragAndDrop.onWindowDragDrop", "cardId == null");
 			return;
 		}
 		
 		if (targetId !== null) {
-			IdentitySelector.logMessage(
+			IdentitySelectorDiag.logMessage(
 					"InformationCardDragAndDrop.onWindowDragDrop", "targetId="+targetId);
 			var object = InformationCardHelper.findRelatedObject(doc, targetId);
 			if (object !== null) {
 				// launch IdentitySelector with cardId
-				IdentitySelector.logMessage(
+				IdentitySelectorDiag.logMessage(
 						"InformationCardDragAndDrop.onWindowDragDrop",
 						"launching IdentitySelector for card: " + cardId);
 				doc.__identityselector__.targetElem = object;
@@ -112,23 +112,23 @@ var InformationCardDragAndDrop = {
 				event.preventDefault();
 				event.stopPropagation();
 			} else {
-				IdentitySelector.logMessage(
+				IdentitySelectorDiag.logMessage(
 						"InformationCardDragAndDrop.onWindowDragDrop",
 						"no object found for targetId=" + targetId
 								+ " in document " + doc.location.href);
 			}
 		}
 		if (fired == false) {
-			IdentitySelector.logMessage(
+			IdentitySelectorDiag.logMessage(
 					"InformationCardDragAndDrop.onWindowDragDrop", "cardId="+cardId);
 			if (doc.__identityselector__.icLoginService != undefined) {
-				IdentitySelector.logMessage(
+				IdentitySelectorDiag.logMessage(
 						"InformationCardDragAndDrop.onWindowDragDrop",
 						"doc.__identityselector__.icLoginService="
 								+ doc.__identityselector__.icLoginService);
 			}
 			if (doc.__identityselector__.icLoginPolicy != undefined) {
-				IdentitySelector.logMessage(
+				IdentitySelectorDiag.logMessage(
 						"InformationCardDragAndDrop.onWindowDragDrop",
 						"doc.__identityselector__.icLoginPolicy="
 								+ doc.__identityselector__.icLoginPolicy);

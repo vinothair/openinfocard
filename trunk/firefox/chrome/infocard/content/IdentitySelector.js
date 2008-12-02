@@ -21,169 +21,32 @@
 // Desc: Constants
 // **************************************************************************
 
-const nsIX509Cert = Components.interfaces.nsIX509Cert;
+var nsIX509Cert = Components.interfaces.nsIX509Cert;
 
-const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
-const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
+var nsIX509CertDB = Components.interfaces.nsIX509CertDB;
+var nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 
-const nsINSSCertCache = Components.interfaces.nsINSSCertCache;
-const nsNSSCertCache = "@mozilla.org/security/nsscertcache;1";
+var nsINSSCertCache = Components.interfaces.nsINSSCertCache;
+var nsNSSCertCache = "@mozilla.org/security/nsscertcache;1";
 
-const nsICertTree = Components.interfaces.nsICertTree;
-const nsCertTree = "@mozilla.org/security/nsCertTree;1";
+var nsICertTree = Components.interfaces.nsICertTree;
+var nsCertTree = "@mozilla.org/security/nsCertTree;1";
 
-const nsILocalFile = Components.interfaces.nsILocalFile;
-const nsLocalFile = "@mozilla.org/file/local;1";
+var nsILocalFile = Components.interfaces.nsILocalFile;
+var nsLocalFile = "@mozilla.org/file/local;1";
 
-const nsIFileOutputStream = Components.interfaces.nsIFileOutputStream;
-const nsFileOutputStream = "@mozilla.org/network/file-output-stream;1";
+var nsIFileOutputStream = Components.interfaces.nsIFileOutputStream;
+var nsFileOutputStream = "@mozilla.org/network/file-output-stream;1";
 
-const nsICardObjTypeStr = "application/x-informationcard";
+var nsICardObjTypeStr = "application/x-informationcard";
                
 // **************************************************************************
 // Desc: Global services
 // **************************************************************************
 
-var gPrefService = Components.classes[
-                "@mozilla.org/preferences-service;1"].
-                        getService( Components.interfaces.nsIPrefBranch);
-var gConsoleService = Components.classes[ "@mozilla.org/consoleservice;1"].
-                        getService( Components.interfaces.nsIConsoleService);
-var gbLoggingEnabled = true;
 var gLastFailedGetTokenDate = null;
 var gDisableStartTime = null;
-var gDebugMode = true;
-
-// **************************************************************************
-// Desc: Other global variables
-// **************************************************************************
-
-var gNavPlat = navigator.platform;
-var gbIsWin = ((gNavPlat.indexOf( "Win") > -1) ? true : false);
-var gbIsMac = ((gNavPlat.indexOf( "Mac") > -1) ? true : false);
-var gbIsLinux = ((gNavPlat.indexOf( "Linux") > -1) ? true : false);
-                                       
-// **************************************************************************
-// Desc:
-// **************************************************************************
-
-var ICProgressListener =
-{
-        QueryInterface : function( aIID)
-        {
-                if( aIID.equals( Components.interfaces.nsIWebProgressListener) ||
-                         aIID.equals( Components.interfaces.nsISupportsWeakReference) ||
-                         aIID.equals( Components.interfaces.nsISupports))
-                {
-                        return( this);
-                }
-               
-                throw Components.results.NS_NOINTERFACE;
-        },
-       
-        onStateChange : function( aProgress, aRequest, aFlag, aStatus)
-        {
-                var progListIFace = Components.interfaces.nsIWebProgressListener;
-               
-                // Log the flags
-               
-                IdentitySelector.logMessage( "onStateChange", "flags = " + aFlag);
-               
-                if( aFlag & progListIFace.STATE_IS_DOCUMENT)
-                {
-                        IdentitySelector.logMessage( "onStateChange", "flag & document");
-                }
-                       
-                if( aFlag & progListIFace.STATE_IS_WINDOW)
-                {
-                        IdentitySelector.logMessage( "onStateChange", "flag & window");
-                }
-               
-                if( aFlag & progListIFace.STATE_START)
-                {
-                        IdentitySelector.logMessage( "onStateChange", "flag & start");
-                }
-               
-                if( aFlag & progListIFace.STATE_STOP)
-                {
-                        IdentitySelector.logMessage( "onStateChange", "flag & stop");
-                }
-               
-                // Process the document.  The 'STOP' state isn't reached until after
-                // the page is fully loaded and all onload events have completed.
-                // We need to re-process the page in case an onload event added
-                // information card elements or objects to the page.  An example of
-                // a page that does this is login.live.com.
-               
-                if( aFlag & progListIFace.STATE_STOP)
-                {
-                        if( aFlag & progListIFace.STATE_IS_WINDOW)
-                        {
-                                IdentitySelector.logMessage( "onStateChange",
-                                        "stop status code = " + aStatus);
-                                       
-                                if( aStatus == 0)
-                                {
-                                        // Process any information card items
-                                       
-                                        try
-                                        {
-                                                IdentitySelector.processICardItems(
-                                                        aProgress.DOMWindow.document, true);
-                                        }
-                                        catch( e)
-                                        {
-                                                alert( e);
-                                        }
-                                }
-                        }
-                }
-               
-                return( 0);
-        },
-       
-        onLocationChange : function( aProgress, aRequest, aURI)
-        {
-                // This fires when a load event has been confirmed or when the
-                // user switches tabs.  At this point, Firefox has created a skeletal
-                // document into which the source document will be loaded.  This is
-                // where we run our global intercept script.
-               
-                try
-                {
-                        IdentitySelector.runInterceptScript( aProgress.DOMWindow.document);
-                }
-                catch( e)
-                {
-                        if( gDebugMode)
-                        {
-                                IdentitySelector.reportError( "onLocationChange", e);
-                        }
-                }
-               
-                return( 0);
-        },
-       
-        onProgressChange : function()
-        {
-                return( 0);
-        },
-       
-        onStatusChange : function()
-        {
-                return( 0);
-        },
-       
-        onSecurityChange : function()
-        {
-                return( 0);
-        },
-       
-        onLinkIconAvailable : function()
-        {
-                return( 0);
-        }
-};
+var gSelectorRegistry = [];
 
 // **************************************************************************
 // Desc:
@@ -192,115 +55,11 @@ var ICProgressListener =
 var IdentitySelector =
 {
         // ***********************************************************************
-        // Method: reportError
-        // ***********************************************************************
-       
-        reportError : function( location, description)
-        {
-                alert( "IdentitySelector Error:" + location + ": " + description);
-                IdentitySelector.logMessage( location, "Error:" + description);
-        },
-
-        // ***********************************************************************
-        // Method: throwError
-        // ***********************************************************************
-       
-        throwError : function( location, description)
-        {
-                IdentitySelector.reportError( location, description);
-                throw( "IdentitySelector Exception:" + location + ": " + description);
-        },
-       
-        // ***********************************************************************
-        // Method: logMessage
-        // ***********************************************************************
-       
-        logMessage : function( location, message)
-        {
-                if( gbLoggingEnabled)
-                {
-                        gConsoleService.logStringMessage( "IdentitySelector:" +
-                                location + ": " + message);
-                }
-        },
-       
-        // ***********************************************************************
-        // Method: dumpConsoleToLogFile
-        // ***********************************************************************
-       
-        dumpConsoleLogToFile : function( filePath)
-        {
-                var messageArray = {};
-                var messageCount = {};
-                var logBuffer = "";
-               
-                try
-                {
-                        gConsoleService.getMessageArray( messageArray, messageCount);
-                       
-                        for( var i = 0; i < messageCount.value; i++)
-                        {
-                                var messageStr = messageArray.value[ i].message;
-                               
-                                if( messageStr.indexOf( "IdentitySelector:") > -1)
-                                {
-                                        logBuffer += messageStr + "\n";
-                                }
-                        }
-                       
-                        if( gbIsMac || gbIsLinux)
-                        {
-                                IdentitySelector.writeFile( "/tmp/icardxpi.log", logBuffer);
-                        }
-                }
-                catch( e)
-                {
-                        IdentitySelector.reportError( "dumpConsoleLogToFile", e);
-                }
-        },
-
-        // ***********************************************************************
-        // Method: logPlatformInfo
-        // ***********************************************************************
-       
-        logPlatformInfo : function()
-        {
-                try
-                {
-                        IdentitySelector.logMessage( "logPlatformInfo",
-                                "platform = " + navigator.platform);
-                               
-                        IdentitySelector.logMessage( "logPlatformInfo",
-                                "appName = " + navigator.appName);
-                               
-                        IdentitySelector.logMessage( "logPlatformInfo",
-                                "appVersion = " + navigator.appVersion);
-                               
-                        IdentitySelector.logMessage( "logPlatformInfo",
-                                "product = " + navigator.product);
-                               
-                        IdentitySelector.logMessage( "logPlatformInfo",
-                                "productSub = " + navigator.productSub);
-                               
-                        IdentitySelector.logMessage( "logPlatformInfo",
-                                "userAgent = " + navigator.userAgent);
-                               
-                        IdentitySelector.logMessage( "logPlatformInfo",
-                                "oscpu = " + navigator.oscpu);
-                }
-                catch( e)
-                {
-                }
-        },
-                       
-        // ***********************************************************************
         // Method: onInstall
         // ***********************************************************************
        
         onInstall : function( event)
         {
-        	IdentitySelector.logMessage( "IdentitySelector", "onInstall start");
-
                 var handlerAlreadyInstalled = false;
                
                 try
@@ -325,12 +84,12 @@ var IdentitySelector =
                        
                         if( !handlerAlreadyInstalled)
                         {
-                                var event = document.createEvent( "Event");
+                                var availEvent = document.createEvent( "Event");
 
-                                event.initEvent( "IdentitySelectorAvailable", true, true);
-                                top.dispatchEvent( event);
+                                availEvent.initEvent( "IdentitySelectorAvailable", true, true);
+                                top.dispatchEvent( availEvent);
                                
-                                if( top.IdentitySelectorAvailable == true)
+                                if( top.IdentitySelectorAvailable === true)
                                 {
                                         handlerAlreadyInstalled = true;
                                 }
@@ -386,13 +145,13 @@ var IdentitySelector =
                         }
                         else
                         {
-                                IdentitySelector.logMessage( "onInstall",
+                                IdentitySelectorDiag.logMessage( "onInstall",
                                         "Another identity selector is already installed.");
                         }
                 }
                 catch( e)
                 {
-                        IdentitySelector.throwError( "onInstall", e);
+                        IdentitySelectorDiag.throwError( "onInstall", e);
                 }
         },
        
@@ -445,7 +204,46 @@ var IdentitySelector =
                 }
                 catch( e)
                 {
-                        IdentitySelector.throwError( "onUninstall", e);
+                        IdentitySelectorDiag.throwError( "onUninstall", e);
+                }
+        },
+       
+        // ***********************************************************************
+        // Method: registerSelector
+        // ***********************************************************************
+       
+        registerSelector : function( selector)
+        {
+                var     bFound = false;
+               
+                for( var iLoop = 0; iLoop < gSelectorRegistry.length; iLoop++)
+                {
+                        if( gSelectorRegistry[ iLoop].guid() === selector.guid())
+                        {
+                                bFound = true;
+                                break;
+                        }
+                }
+               
+                if( !bFound)
+                {
+                        gSelectorRegistry.push( selector);
+                }
+        },
+
+        // ***********************************************************************
+        // Method: deregisterSelector
+        // ***********************************************************************
+       
+        deregisterSelector : function( selector)
+        {
+                for( var iLoop = 0; iLoop < gSelectorRegistry.length; iLoop++)
+                {
+                        if( gSelectorRegistry[ iLoop].guid() === selector.guid())
+                        {
+                                gSelectorRegistry.splice( iLoop, 1);
+                                break;
+                        }
                 }
         },
        
@@ -460,16 +258,17 @@ var IdentitySelector =
                         doc = doc.wrappedJSObject;
                 }
                
-                if( doc.__identityselector__ == undefined)
+                if( doc.__identityselector__ === undefined)
                 {
                         // Load and execute the script
                        
                         Components.classes[
                                 "@mozilla.org/moz/jssubscript-loader;1"].getService(
                                 Components.interfaces.mozIJSSubScriptLoader).loadSubScript(
-                                "chrome://infocard/content/Intercept.js", doc)
+                                "chrome://infocard/content/IdentitySelectorIntercept.js",
+                                doc);
                        
-                        IdentitySelector.logMessage( "runInterceptScript",
+                        IdentitySelectorDiag.logMessage( "runInterceptScript",
                                 "Executed script on " + doc.location);
                 }
         },
@@ -489,21 +288,18 @@ var IdentitySelector =
 
                 try
                 {
-                        if( (doc = target.ownerDocument) == undefined)
+                        if( (doc = target.ownerDocument) === undefined)
                         {
                                 return;
                         }
        
-                        var event = doc.createEvent( "Event");
-                        event.initEvent( "ICDOMChanged", true, true);
-                        target.dispatchEvent( event);
+                        var changedEvent = doc.createEvent( "Event");
+                        changedEvent.initEvent( "ICDOMChanged", true, true);
+                        target.dispatchEvent( changedEvent);
                 }
                 catch( e)
                 {
-                        if( gDebugMode)
-                        {
-                                IdentitySelector.reportError( "onDOMChanged", e);
-                        }
+                        IdentitySelectorDiag.debugReportError( "onDOMChanged", e);
                 }
         },
        
@@ -530,20 +326,16 @@ var IdentitySelector =
                         // If the intercept script was executed correctly,
                         // __identityselector__ should be defined.
                        
-                        if( doc.__identityselector__ == undefined)
+                        if( doc.__identityselector__ === undefined)
                         {
                                 // Since there are information card items on the page, warn
                                 // the user that the identity selector was unable to insert
                                 // itself properly.  This is most likely due to JavaScript being
                                 // disabled.
                                
-                                var jsEnabled = gPrefService.getBoolPref( "javascript.enabled");
-               
-                                // Warn if JavaScript is disabled
-                               
-                                if( !jsEnabled)
+                                if( !IdentitySelectorUtil.isJavaScriptEnabled())
                                 {
-                                        IdentitySelector.reportError( "onProcessItems",
+                                        IdentitySelectorDiag.reportError( "onProcessItems",
                                                 "This page contains information card objects, but " +
                                                 "JavaScript is disabled.  The information card " +
                                                 "selector may not run properly.  To enable, go to " +
@@ -551,7 +343,7 @@ var IdentitySelector =
                                 }
                                 else
                                 {
-                                        IdentitySelector.reportError( "onProcessItems",
+                                        IdentitySelectorDiag.reportError( "onProcessItems",
                                                 "This page contains information card objects, but " +
                                                 "the information card selector was unable to fully " +
                                                 "process the page.");
@@ -578,10 +370,7 @@ var IdentitySelector =
                 }
                 catch( e)
                 {
-                        if( gDebugMode)
-                        {
-                                IdentitySelector.reportError( "onProcessItems", e);
-                        }
+                        IdentitySelectorDiag.debugReportError( "onProcessItems", e);
                 }
         },
        
@@ -593,6 +382,7 @@ var IdentitySelector =
         {
                 try
                 {
+                        var iLoop;
                         var itemCount = 0;
                        
                         // Process all of the information card objects in the document
@@ -600,15 +390,15 @@ var IdentitySelector =
                         var objElems = doc.getElementsByTagName( "OBJECT");
                         var icardObjectCount = 0;
                        
-                        IdentitySelector.logMessage( "processICardItems", "Found " +
+                        IdentitySelectorDiag.logMessage( "processICardItems", "Found " +
                                 objElems.length + " object(s) on " + doc.location);
                                
-                        for( var i = 0; i < objElems.length; i++)
+                        for( iLoop = 0; iLoop < objElems.length; iLoop++)
                         {
-                                var objElem = objElems[ i];
+                                var objElem = objElems[ iLoop];
                                 var objTypeStr = objElem.getAttribute( "TYPE");
                                
-                                if( (objTypeStr != null &&
+                                if( (objTypeStr !== null &&
                                                 objTypeStr.toLowerCase() == nsICardObjTypeStr) ||
                                         objElem._type == nsICardObjTypeStr)
                                 {
@@ -623,7 +413,7 @@ var IdentitySelector =
                                 }
                         }
                        
-                        IdentitySelector.logMessage( "processICardItems", "Found " +
+                        IdentitySelectorDiag.logMessage( "processICardItems", "Found " +
                                 icardObjectCount + " ICard object(s) on " + doc.location);
                                
                         // Process all of the information card elements in the document
@@ -633,27 +423,24 @@ var IdentitySelector =
                        
                         if( dispatchEvents)
                         {
-                                for( var i = 0; i < icardElems.length; i++)
+                                for( iLoop = 0; iLoop < icardElems.length; iLoop++)
                                 {
-                                        var icardElem = icardElems[ i];
+                                        var icardElem = icardElems[ iLoop];
+                                        var elementEvent = doc.createEvent( "Event");
                                        
-                                        var event = doc.createEvent( "Event");
-                                        event.initEvent( "ICElementLoaded", true, true);
-                                        icardElem.dispatchEvent( event);
+                                        elementEvent.initEvent( "ICElementLoaded", true, true);
+                                        icardElem.dispatchEvent( elementEvent);
                                 }
                         }
                        
-                        IdentitySelector.logMessage( "processICardItems", "Found " +
+                        IdentitySelectorDiag.logMessage( "processICardItems", "Found " +
                                 icardElementCount + " ICard element(s) on " + doc.location);
                                
                         return( icardObjectCount + icardElementCount);
                 }
                 catch( e)
                 {
-                        if( gDebugMode)
-                        {
-                                IdentitySelector.reportError( "processICardItems", e);
-                        }
+                        IdentitySelectorDiag.debugReportError( "processICardItems", e);
                 }
         },
        
@@ -669,103 +456,100 @@ var IdentitySelector =
                        
                         // recipient
                        
-                        if( doc.location.href != undefined &&
-                                doc.location.href != null && doc.location.href != "")
+                        if( doc.location.href !== undefined &&
+                                doc.location.href !== null && doc.location.href !== "")
                         {
                                 data.recipient = doc.location.href;
                         }
                         else
                         {
-                                delete data[ "recipient"];
+                                delete data.recipient;
                         }
 
                         // tokenType
                        
-                        if( objElem.tokenType != undefined && objElem.tokenType != null)
+                        if( objElem.tokenType !== undefined && objElem.tokenType !== null)
                         {
                                 data.tokenType = objElem.tokenType;
                         }
                         else
                         {
-                                delete data[ "tokenType"];
+                                delete data.tokenType;
                         }
                        
                         // optionalClaims
                        
-                        if( objElem.optionalClaims != undefined &&
-                                objElem.optionalClaims != null)
+                        if( objElem.optionalClaims !== undefined &&
+                                objElem.optionalClaims !== null)
                         {
                                 data.optionalClaims = objElem.optionalClaims;
                         }
                         else
                         {
-                                delete data[ "optionalClaims"];
+                                delete data.optionalClaims;
                         }
                        
                         // requiredClaims
                        
-                        if( objElem.requiredClaims != undefined &&
-                                objElem.requiredClaims != null)
+                        if( objElem.requiredClaims !== undefined &&
+                                objElem.requiredClaims !== null)
                         {
                                 data.requiredClaims = objElem.requiredClaims;
                         }
                         else
                         {
-                                delete data[ "requiredClaims"];
+                                delete data.requiredClaims;
                         }
                        
                         // issuer
                        
-                        if( objElem.issuer != undefined && objElem.issuer != null)
+                        if( objElem.issuer !== undefined && objElem.issuer !== null)
                         {
                                 data.issuer = objElem.issuer;
                         }
                         else
                         {
-                                delete data[ "issuer"];
+                                delete data.issuer;
                         }
                        
                         // issuerPolicy
                        
-                        if( objElem.issuerPolicy != undefined && objElem.issuerPolicy != null)
+                        if( objElem.issuerPolicy !== undefined && objElem.issuerPolicy !== null)
                         {
                                 data.issuerPolicy = objElem.issuerPolicy;
                         }
                         else
                         {
-                                delete data[ "issuerPolicy"];
+                                delete data.issuerPolicy;
                         }
                        
                         // privacyUrl
                        
-                        if( objElem.privacyUrl != undefined &&
-                                objElem.privacyUrl != null)
+                        if( objElem.privacyUrl !== undefined &&
+                                objElem.privacyUrl !== null)
                         {
                                 data.privacyUrl = objElem.privacyUrl;
                         }
                         else
                         {
-                                delete data[ "privacyUrl"];
+                                delete data.privacyUrl;
                         }
                        
                         // privacyVersion
        
-                        if( objElem.privacyVersion != undefined &&
-                                objElem.privacyVersion != null)
+                        if( objElem.privacyVersion !== undefined &&
+                                objElem.privacyVersion !== null)
                         {
                                 data.privacyVersion = objElem.privacyVersion;
                         }
                         else
                         {
-                                delete data[ "privacyVersion"];
+                                delete data.privacyVersion;
                         }
                 }
                 catch( e)
                 {
-                        if( gDebugMode)
-                        {
-                                IdentitySelector.reportError( "setParamsFromElem", e);
-                        }
+                        IdentitySelectorDiag.debugReportError( "setParamsFromElem", e);
                 }
         },
        
@@ -782,6 +566,8 @@ var IdentitySelector =
                         var form;
                         var objElem;
                         var icardElem;
+                        var selectorEvent;
+                        var input;
                        
                         if( target.wrappedJSObject)
                         {
@@ -793,40 +579,39 @@ var IdentitySelector =
                        
                         // Determine if the form has an embedded information card object.
                        
-                        if( (objElem = IdentitySelector.getEmbeddedICardObject( form)) != null)
+                        if( (objElem = IdentitySelector.getEmbeddedICardObject( form)) !== null)
                         {
-                                IdentitySelector.logMessage( "onFormSubmit",
+                                IdentitySelectorDiag.logMessage( "onFormSubmit",
                                         "Intercepted submit of form with embedded ICard object");
                                        
                                 // Process the embedded object
                                
                                 if( !doc.__identityselector__.contentLoaded)
                                 {
-                                        var event = doc.createEvent( "Event");
-                                        event.initEvent( "ICObjectLoaded", true, true);
-                                        objElem.dispatchEvent( event);
+                                        var objectEvent = doc.createEvent( "Event");
+                                        objectEvent.initEvent( "ICObjectLoaded", true, true);
+                                        objElem.dispatchEvent( objectEvent);
                                 }
                                
                                 // If the embedded ICard object doesn't have a token attached to
                                 // it, invoke the selector
                                
-                                if( objElem.token == undefined)
+                                if( objElem.token === undefined)
                                 {
-                                        IdentitySelector.logMessage( "onFormSubmit",
+                                        IdentitySelectorDiag.logMessage( "onFormSubmit",
                                                 "Submit encountered in-line");
                                        
-                                        var event = doc.createEvent( "Event");
-                                        event.initEvent( "CallIdentitySelector", true, true);
+                                        selectorEvent = doc.createEvent( "Event");
+                                        selectorEvent.initEvent( "CallIdentitySelector", true, true);
                                         doc.__identityselector__.targetElem = objElem;
-                                        doc.dispatchEvent( event);
+                                        doc.dispatchEvent( selectorEvent);
                                        
                                         // If a token was retrieved, add it as a hidden field of
                                         // the form
                                        
-                                        if( objElem.token != undefined)
+                                        if( objElem.token !== undefined)
                                         {
-                                                var input = doc.createElement( "INPUT");
-                                       
+                                                input = doc.createElement( "INPUT");
                                                 input.setAttribute( "name",
                                                         objElem.getAttribute( "name"));
                                                 input.setAttribute( "type", "hidden");
@@ -836,40 +621,39 @@ var IdentitySelector =
                                 }
                         }
                         else if( (icardElem =
-                                IdentitySelector.getEmbeddedICardElement( form)) != null)
+                                IdentitySelector.getEmbeddedICardElement( form)) !== null)
                         {
-                                IdentitySelector.logMessage( "onFormSubmit",
+                                IdentitySelectorDiag.logMessage( "onFormSubmit",
                                         "Intercepted submit of form with embedded ICard element");
                                
                                 // Process the embedded element
                                
                                 if( !doc.__identityselector__.contentLoaded)
                                 {
-                                        var event = doc.createEvent( "Event");
-                                        event.initEvent( "ICElementLoaded", true, true);
-                                        icardElem.dispatchEvent( event);
+                                        var elementEvent = doc.createEvent( "Event");
+                                        elementEvent.initEvent( "ICElementLoaded", true, true);
+                                        icardElem.dispatchEvent( elementEvent);
                                 }
                                
                                 // If the embedded ICard element doesn't have a token attached to
                                 // it, invoke the selector
                                
-                                if( icardElem.token == undefined)
+                                if( icardElem.token === undefined)
                                 {
-                                        IdentitySelector.logMessage( "onFormSubmit",
+                                        IdentitySelectorDiag.logMessage( "onFormSubmit",
                                                 "Submit encountered in-line");
                                        
-                                        var event = doc.createEvent( "Event");
-                                        event.initEvent( "CallIdentitySelector", true, true);
+                                        selectorEvent = doc.createEvent( "Event");
+                                        selectorEvent.initEvent( "CallIdentitySelector", true, true);
                                         doc.__identityselector__.targetElem = icardElem;
-                                        doc.dispatchEvent( event);
+                                        doc.dispatchEvent( selectorEvent);
                                        
                                         // If a token was retrieved, add it as a hidden field of
                                         // the form
                                        
-                                        if( icardElem.token != undefined)
+                                        if( icardElem.token !== undefined)
                                         {
-                                                var input = doc.createElement( "INPUT");
-                                                       
+                                                input = doc.createElement( "INPUT");   
                                                 input.setAttribute( "name",
                                                         icardElem.getAttribute( "name"));
                                                 input.setAttribute( "type", "hidden");
@@ -880,7 +664,7 @@ var IdentitySelector =
                         }
                         else
                         {
-                                IdentitySelector.logMessage( "onFormSubmit",
+                                IdentitySelectorDiag.logMessage( "onFormSubmit",
                                         "Intercepted submit of standard form");
                         }
                        
@@ -888,10 +672,7 @@ var IdentitySelector =
                 }
                 catch( e)
                 {
-                        if( gDebugMode)
-                        {
-                                IdentitySelector.reportError( "onFormSubmit", e);
-                        }
+                        IdentitySelectorDiag.debugReportError( "onFormSubmit", e);
                 }
         },
 
@@ -915,21 +696,22 @@ var IdentitySelector =
                         targetElem = target;
                         doc = target.ownerDocument;
                        
-                        IdentitySelector.logMessage( "onGetTokenValue",
+                        IdentitySelectorDiag.logMessage( "onGetTokenValue",
                                 "Token value requested");
                                
-                        if( targetElem.__value == undefined)
+                        if( targetElem.__value === undefined)
                         {
-                                var event = doc.createEvent( "Event");
-                                event.initEvent( "CallIdentitySelector", true, true);
+                                var selectorEvent = doc.createEvent( "Event");
+                               
+                                selectorEvent.initEvent( "CallIdentitySelector", true, true);
                                 doc.__identityselector__.targetElem = targetElem;
-                                doc.dispatchEvent( event);
+                                doc.dispatchEvent( selectorEvent);
                                 targetElem.__value = targetElem.token;
                         }
                 }
                 catch( e)
                 {
-                        IdentitySelector.throwError( "onGetTokenValue", e);
+                        IdentitySelectorDiag.throwError( "onGetTokenValue", e);
                 }
         },
        
@@ -942,68 +724,52 @@ var IdentitySelector =
                 switch( sourceNode.name.toLowerCase())
                 {
                         case "tokentype":
-                        {
-                                IdentitySelector.logMessage( "extractParameter",
+                                IdentitySelectorDiag.logMessage( "extractParameter",
                                         "tokenType = " + sourceNode.value);
                                 dataObj.tokenType = sourceNode.value;
                                 break;
-                        }
                  
                         case "optionalclaims":
-                        {
-                                IdentitySelector.logMessage( "extractParameter",
+                                IdentitySelectorDiag.logMessage( "extractParameter",
                                         "optionalClaims = " + sourceNode.value);
                                 dataObj.optionalClaims = sourceNode.value;
                                 break;
-                        }
          
                         case "requiredclaims":
-                        {
-                                IdentitySelector.logMessage( "extractParameter",
+                                IdentitySelectorDiag.logMessage( "extractParameter",
                                         "requiredClaims = " + sourceNode.value);
                                 dataObj.requiredClaims = sourceNode.value;
                                 break;
-                        }
          
                         case "issuer":
-                        {
-                                IdentitySelector.logMessage( "extractParameter",
+                                IdentitySelectorDiag.logMessage( "extractParameter",
                                         "issuer = " + sourceNode.value);
                                 dataObj.issuer = sourceNode.value;
                                 break;
-                        }
          
                         case "issuerpolicy":
-                        {
-                                IdentitySelector.logMessage( "extractParameter",
+                                IdentitySelectorDiag.logMessage( "extractParameter",
                                         "issuerPolicy = " + sourceNode.value);
                                 dataObj.issuerPolicy = sourceNode.value;
                                 break;
-                        }
 
                         case "privacyurl":
-                        {
-                                IdentitySelector.logMessage( "extractParameter",
+                                IdentitySelectorDiag.logMessage( "extractParameter",
                                         "privacyUrl = " + sourceNode.value);
                                 dataObj.privacyUrl = sourceNode.value;
                                 break;
-                        }
 
                         case "privacyversion":
-                        {
-                                IdentitySelector.logMessage( "extractParameter",
+                                IdentitySelectorDiag.logMessage( "extractParameter",
                                         "privacyVersion = " + sourceNode.value);
                                 dataObj.privacyVersion = sourceNode.value;
                                 break;
-                        }
 
                         default:
-                        {
-                                IdentitySelector.logMessage( "extractParameter",
+                                IdentitySelectorDiag.logMessage( "extractParameter",
                                         "unknown parameter: " + sourceNode.name +
                                         " = " + sourceNode.value);
                                 break;
-                        }
                 }
         },
 
@@ -1023,7 +789,7 @@ var IdentitySelector =
 
                 try
                 {
-                        if( (doc = target.ownerDocument) == undefined)
+                        if( (doc = target.ownerDocument) === undefined)
                         {
                                 return;
                         }
@@ -1032,27 +798,24 @@ var IdentitySelector =
                         {
                                 var objTypeStr = target.getAttribute( "TYPE");
 
-                                IdentitySelector.logMessage( "onDOMChanged",
+                                IdentitySelectorDiag.logMessage( "onDOMChanged",
                                         "OBJECT changed, type = " + objTypeStr);
 
-                                if( (objTypeStr != null && objTypeStr.toLowerCase() ==
+                                if( (objTypeStr !== null && objTypeStr.toLowerCase() ==
                                                 "application/x-informationcard") ||
                                         target._type == "application/x-informationcard")
                                 {
                                         delete target.__processed;
                                        
-                                        var event = doc.createEvent( "Event");
-                                        event.initEvent( "ICObjectLoaded", true, true);
-                                        target.dispatchEvent( event);
+                                        var objectEvent = doc.createEvent( "Event");
+                                        objectEvent.initEvent( "ICObjectLoaded", true, true);
+                                        target.dispatchEvent( objectEvent);
                                 }
                         }
                 }
                 catch( e)
                 {
-                        if( gDebugMode)
-                        {
-                                IdentitySelector.reportError( "onDOMChanged", e);
-                        }
+                        IdentitySelectorDiag.debugReportError( "onDOMChanged", e);
                 }
         },
                                
@@ -1078,9 +841,9 @@ var IdentitySelector =
                         var form = objElem;
                         var browser = getBrowser();
                        
-                        if( objElem.__processed == true)
+                        if( objElem.__processed === true)
                         {
-                                IdentitySelector.logMessage( "onICardObjectLoaded",
+                                IdentitySelectorDiag.logMessage( "onICardObjectLoaded",
                                         "ICard object has already been processed.");
                         }
                         else
@@ -1088,14 +851,14 @@ var IdentitySelector =
                                 // Make sure the intercept script has been run on this document.
                                 // In the case of an iframe, it may not have been run.
                                
-                                if( doc.__identityselector__ == undefined)
+                                if( doc.__identityselector__ === undefined)
                                 {
                                         IdentitySelector.runInterceptScript( doc);
                                 }
                                
                                 // Override the value getter
                                
-                                delete objElem[ "value"];
+                                delete objElem.value;
                                
                                 objElem.__defineGetter__( "value",
                                         doc.__identityselector__.valueGetter);
@@ -1106,7 +869,7 @@ var IdentitySelector =
                                 if( typeof( browser.getNotificationBox) != "function")
                                 {
                                         if( (objElem._type = objElem.getAttribute(
-                                                "type")) != undefined)
+                                                "type")) !== undefined)
                                         {
                                                 objElem._type = objElem._type.toLowerCase();
                                                 objElem.removeAttribute( "type");
@@ -1116,9 +879,9 @@ var IdentitySelector =
                                 // Intercept all submit actions if the object is embedded within
                                 // a parent form
                                
-                                while( form != null)
+                                while( form !== null)
                                 {
-                                        if( form.tagName != undefined && form.tagName == "FORM")
+                                        if( form.tagName !== undefined && form.tagName == "FORM")
                                         {
                                                 // The form submit method has been hooked.  We still need
                                                 // to register for the submit event, however.
@@ -1137,7 +900,7 @@ var IdentitySelector =
                                
                                 // Log the event
                                
-                                IdentitySelector.logMessage( "onICardObjectLoaded",
+                                IdentitySelectorDiag.logMessage( "onICardObjectLoaded",
                                         "Processed ICard object.");
                                        
                                 // Mark the object as 'processed'
@@ -1147,10 +910,7 @@ var IdentitySelector =
                 }
                 catch( e)
                 {
-                        if( gDebugMode)
-                        {
-                                IdentitySelector.reportError( "onICardObjectLoaded", e);
-                        }
+                        IdentitySelectorDiag.debugReportError( "onICardObjectLoaded", e);
                 }
                
                 if( !("notificationBoxHidden" in doc.__identityselector__))
@@ -1181,16 +941,16 @@ var IdentitySelector =
                         var icardElem = target;
                         var form = icardElem;
                        
-                        if( icardElem.__processed == true)
+                        if( icardElem.__processed === true)
                         {
-                                IdentitySelector.logMessage( "onICardElementLoaded",
+                                IdentitySelectorDiag.logMessage( "onICardElementLoaded",
                                         "ICard element has already been processed.");
                         }
                         else
                         {
                                 // Override the value getter
                                
-                                delete icardElem[ "value"];
+                                delete icardElem.value;
                                
                                 icardElem.__defineGetter__( "value",
                                         doc.__identityselector__.valueGetter);
@@ -1198,9 +958,9 @@ var IdentitySelector =
                                 // Intercept all submit actions if the element is embedded within
                                 // a parent form
                                
-                                while( form != null)
+                                while( form !== null)
                                 {
-                                        if( form.tagName != undefined && form.tagName == "FORM")
+                                        if( form.tagName !== undefined && form.tagName == "FORM")
                                         {
                                                 // The form submit method has been hooked.  We still need
                                                 // to register for the submit event, however.
@@ -1219,7 +979,7 @@ var IdentitySelector =
                                
                                 // Log the event
                                
-                                IdentitySelector.logMessage( "onICardElementLoaded",
+                                IdentitySelectorDiag.logMessage( "onICardElementLoaded",
                                         "Processed ICard element.");
                                        
                                 // Mark the element as 'processed'
@@ -1229,10 +989,7 @@ var IdentitySelector =
                 }
                 catch( e)
                 {
-                        if( gDebugMode)
-                        {
-                                IdentitySelector.reportError( "onICardElementLoaded", e);
-                        }
+                        IdentitySelectorDiag.debugReportError( "onICardElementLoaded", e);
                 }
         },
        
@@ -1252,10 +1009,11 @@ var IdentitySelector =
                 var requiredClaims = null;
                 var currentTime = new Date();
                 var iDOSThreshold = 15;
+                var iLoop;
                
                 // Log the operation
                
-                IdentitySelector.logMessage( "onCallIdentitySelector",
+                IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
                         "Identity selector invoked.");
                        
                 // Configure the target
@@ -1271,20 +1029,20 @@ var IdentitySelector =
                
                 // Log information about the browser and platform
                
-                IdentitySelector.logPlatformInfo();
+                IdentitySelectorDiag.logPlatformInfo();
                
                 // Request a token from the selector
                        
                 try
                 {
-                        if( identObject.targetElem != null)
+                        if( identObject.targetElem !== null)
                         {
                                 IdentitySelector.setParamsFromElem( doc, identObject.targetElem);
-                                delete identObject.targetElem[ "token"];
+                                delete identObject.targetElem.token;
                         }
                         else
                         {
-                                IdentitySelector.throwError( "onCallIdentitySelector",
+                                IdentitySelectorDiag.throwError( "onCallIdentitySelector",
                                         "Invalid target element.");
                         }
                        
@@ -1298,19 +1056,19 @@ var IdentitySelector =
                                
                                 if( objElem.childNodes.length)
                                 {
-                                        IdentitySelector.logMessage( "onCallIdentitySelector",
+                                        IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
                                                 "Found " + objElem.childNodes.length +
                                                 " object child elements");
                                                
                                         // Process the parameter values
                                        
-                                        for( each in objElem.childNodes)
+                                        for( eachNode in objElem.childNodes)
                                         {
-                                                var childNode = objElem.childNodes[ each];
+                                                var childNode = objElem.childNodes[ eachNode];
                                        
-                                                if( childNode.tagName != undefined)
+                                                if( childNode.tagName !== undefined)
                                                 {
-                                                        IdentitySelector.logMessage( "onCallIdentitySelector",
+                                                        IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
                                                                 "Processing object child element = " +
                                                                 childNode.tagName);
        
@@ -1326,26 +1084,26 @@ var IdentitySelector =
                         {
                                 var icardElem = identObject.targetElem;
                                
-                                for( var i = 0; i < icardElem.attributes.length; i++)
+                                for( iLoop = 0; iLoop < icardElem.attributes.length; iLoop++)
                                 {
                                         IdentitySelector.extractParameter(
-                                                icardElem.attributes[ i], dataObj);
+                                                icardElem.attributes[ iLoop], dataObj);
                                 }
                                
                                 // Process the child nodes
                                
                                 var addElems = icardElem.getElementsByTagName( "IC:ADD");
                                
-                                for( var i = 0; i < addElems.length; i++)
+                                for( iLoop = 0; iLoop < addElems.length; iLoop++)
                                 {
-                                        var addElem = addElems[ i];
-                                        var claimTypeAttr = addElem.attributes[ "claimType"];
-                                        var optionalAttr = addElem.attributes[ "optional"];
+                                        var addElem = addElems[ iLoop];
+                                        var claimTypeAttr = addElem.attributes.claimType;
+                                        var optionalAttr = addElem.attributes.optional;
                                         var isOptional = false;
                                        
-                                        if( claimTypeAttr != null)
+                                        if( claimTypeAttr !== null)
                                         {
-                                                if( optionalAttr != null)
+                                                if( optionalAttr !== null)
                                                 {
                                                         if( optionalAttr.value == "true")
                                                         {
@@ -1376,7 +1134,7 @@ var IdentitySelector =
                                                         }
                                                 }
                                                
-                                                IdentitySelector.logMessage( "onCallIdentitySelector",
+                                                IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
                                                         "claimType = " + claimTypeAttr.value);
                                         }
                                 }
@@ -1384,32 +1142,51 @@ var IdentitySelector =
                                 if( optionalClaims)
                                 {
                                         dataObj.optionalClaims = optionalClaims;
-                                        IdentitySelector.logMessage( "onCallIdentitySelector",
+                                        IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
                                                 "optionalClaims = " + optionalClaims);
                                 }
                                
                                 if( requiredClaims)
                                 {
                                         dataObj.requiredClaims = requiredClaims;
-                                        IdentitySelector.logMessage( "onCallIdentitySelector",
+                                        IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
                                                 "requiredClaims = " + requiredClaims);
                                 }
                         }
                        
-                        // Get the selector class
+                        // Get the selector
                        
-                        if( (selectorClass = IdentitySelector.getStringPref(
-                                "identityselector", "selector_class")) == null)
+                        getSecurityToken = null;
+                       
+                        if( gSelectorRegistry.length > 1)
                         {
-                                selectorClass = "NoIdentitySelector";
+                                if( (selectorGuid = IdentitySelectorPrefs.getStringPref(
+                                        "identityselector", "selector_guid")) !== null)
+                                {
+                                        for( iLoop = 0; iLoop < gSelectorRegistry.length; iLoop++)
+                                        {
+                                                if( gSelectorRegistry[ iLoop].guid() === selectorGuid)
+                                                {
+                                                        getSecurityToken = gSelectorRegistry[
+                                                                iLoop].getSecurityToken;
+                                                        break;
+                                                }
+                                        }
+                                }
                         }
                        
-                        getSecurityToken = eval( selectorClass).getSecurityToken;
-                       
-                        if( typeof getSecurityToken != "function")
+                        if( getSecurityToken === null)
                         {
-                                selectorClass = "NoIdentitySelector";
-                                getSecurityToken = eval( selectorClass).getSecurityToken;
+                                if( gSelectorRegistry.length >= 1)
+                                {
+                                        getSecurityToken = gSelectorRegistry[ 0].getSecurityToken;
+                                }
+                                else
+                                {
+                                        IdentitySelectorDiag.reportError( "onCallIdentitySelector",
+                                                "Unable to locate an identity selector.  " +
+                                                "Please make sure one is installed.");
+                                }
                         }
                        
                         // Set the token to null
@@ -1418,7 +1195,7 @@ var IdentitySelector =
                        
                         // Check for a denial-of-service attack
                        
-                        if( gDisableStartTime != null)
+                        if( gDisableStartTime !== null)
                         {
                                 // If there haven't been any token requests in the last 15 seconds,
                                 // the selector can be re-enabled
@@ -1429,7 +1206,7 @@ var IdentitySelector =
                                         gDisableStartTime = null;
                                         gLastFailedGetTokenDate = null;
                                        
-                                        IdentitySelector.logMessage( "onCallIdentitySelector",
+                                        IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
                                                 "Selector re-enabled.");
                                 }
                                 else
@@ -1444,7 +1221,7 @@ var IdentitySelector =
                                 // Verify that it has been at least 10 seconds since the last
                                 // time a token was requested
                                
-                                if( gLastFailedGetTokenDate != null)
+                                if( gLastFailedGetTokenDate !== null)
                                 {
                                         if( currentTime.getTime() <
                                                 gLastFailedGetTokenDate.getTime() + (iDOSThreshold * 1000))
@@ -1464,9 +1241,9 @@ var IdentitySelector =
                                
                         // Invoke the selector
                        
-                        if( gDisableStartTime != null)
+                        if( gDisableStartTime !== null)
                         {
-                                IdentitySelector.logMessage( "onCallIdentitySelector",
+                                IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
                                         "Launching the selector has been disabled");
                                        
                                 doc.getElementsByTagName( "HTML")[ 0].innerHTML =
@@ -1485,7 +1262,7 @@ var IdentitySelector =
                                 gLastFailedGetTokenDate = null;
                                
                                 if( (identObject.targetElem.token =
-                                        getSecurityToken( dataObj)) == null)
+                                        getSecurityToken( dataObj)) === null)
                                 {
                                         gLastFailedGetTokenDate = new Date();
                                 }
@@ -1493,7 +1270,7 @@ var IdentitySelector =
                 }
                 catch( e)
                 {
-                        IdentitySelector.throwError( "onCallIdentitySelector", e);
+                        IdentitySelectorDiag.throwError( "onCallIdentitySelector", e);
                 }
         },
        
@@ -1542,12 +1319,12 @@ var IdentitySelector =
         {
                 var objElems = targetElem.getElementsByTagName( "OBJECT");
                
-                for( var i = 0; i < objElems.length; i++)
+                for( var iLoop = 0; iLoop < objElems.length; iLoop++)
                 {
-                        var objElem = objElems[ i];
+                        var objElem = objElems[ iLoop];
                         var objTypeStr = objElem.getAttribute( "TYPE");
                        
-                        if( (objTypeStr != null &&
+                        if( (objTypeStr !== null &&
                                         objTypeStr.toLowerCase() == nsICardObjTypeStr) ||
                                 objElem._type == nsICardObjTypeStr)
                         {
@@ -1607,7 +1384,7 @@ var IdentitySelector =
                         {
                                 var cert = caTreeView.getCert( iLoop);
                                
-                                if( cert == null)
+                                if( cert === null)
                                 {
                                         // Not all rows in the tree view are certificates.  Some are
                                         // display tags, placeholders, etc.
@@ -1638,241 +1415,6 @@ var IdentitySelector =
                 }
                
                 return( certListBuf);
-        },
-
-        // ***********************************************************************
-        // Method: arrayToHexStr
-        // ***********************************************************************
-       
-        arrayToHexStr : function( data)
-        {
-                var newStr = "";
-               
-                for( var i in data)
-                {
-                        newStr += ( "0" + data.charCodeAt( i).toString( 16)).slice( -2);
-                }
-               
-                return( newStr);
-        },
-
-        // ***********************************************************************
-        // Method: generateTmpFilePath
-        // ***********************************************************************
-       
-        generateTmpFilePath : function()
-        {
-                var file = Components.classes[
-                                "@mozilla.org/file/directory_service;1"].
-                                getService( Components.interfaces.nsIProperties).
-                                get( "TmpD", Components.interfaces.nsIFile);
-                var ch = Components.classes[
-                                "@mozilla.org/security/hash;1"].
-                                createInstance( Components.interfaces.nsICryptoHash);
-                var converter = Components.classes[
-                                "@mozilla.org/intl/scriptableunicodeconverter"].
-                                createInstance( Components.interfaces.nsIScriptableUnicodeConverter);
-                var result = {};
-                var data;
-                var now = new Date();
-                var datestr = (Date.UTC( now.getFullYear(),
-                                now.getMonth(), now.getDate(), now.getHours(),
-                                now.getMinutes(), now.getSeconds())).toString( 10);
-                var hash;
-               
-                converter.charset = "UTF-8";
-                data = converter.convertToByteArray( datestr, result);
-               
-                ch.init( ch.MD5);
-                ch.update( data, data.length);
-                hash = ch.finish( false);
-       
-                file.append( IdentitySelector.arrayToHexStr( hash));
-                file.createUnique(
-                        Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0x01B6);
-       
-                return( file.path);
-        },
-       
-        // ***********************************************************************
-        // Method: readFile
-        // ***********************************************************************
-       
-        readFile : function( filename)
-        {
-                try
-                {
-                        var file = Components.classes[
-                                "@mozilla.org/file/local;1"].createInstance(
-                                        Components.interfaces.nsILocalFile);
-                                       
-                        file.initWithPath( filename);
-                       
-                        if( file.exists() && file.isReadable())
-                        {
-                                var fileIStream = Components.classes[
-                                        "@mozilla.org/network/file-input-stream;1"].createInstance(
-                                                Components.interfaces.nsIFileInputStream);
-                                var sis = Components.classes[
-                                        "@mozilla.org/scriptableinputstream;1"].createInstance(
-                                                Components.interfaces.nsIScriptableInputStream);
-                                var fileData = null;
-                                               
-                                fileIStream.init( file, 0x01, 0x04, 0);
-                                sis.init( fileIStream);
-                                fileData = sis.read( sis.available());
-                                sis.close();
-                               
-                                return( fileData);
-                        }
-                        else 
-                        {
-                                IdentitySelector.reportError( "readFile", "Unable to open file.");
-                                return( null);
-                        }
-                }
-                catch( e)
-                {
-                        IdentitySelector.reportError( "readFile", "Unable to read file.");
-                }
-               
-                return( null);
-        },
-       
-        // ***********************************************************************
-        // Method: writeFile
-        // ***********************************************************************
-
-        writeFile : function( filename, data)
-        {
-                try
-                {
-                        var file = Components.classes[ nsLocalFile].
-                                                                createInstance( nsILocalFile);
-                        var fileOStream = Components.classes[ nsFileOutputStream].
-                                                                createInstance( nsIFileOutputStream);
-                                       
-                        file.initWithPath( filename);
-                        fileOStream.init( file, 0x02 | 0x08 | 0x20, 0x01B6, 0);
-                        fileOStream.write( data, data.length);
-                        fileOStream.close();
-                }               
-                catch( e)
-                {
-                        IdentitySelector.throwError( "writeFile", "Unable to write file.");
-                }
-        },
-       
-        // ***********************************************************************
-        // Method: hasPref
-        // ***********************************************************************
-       
-        hasPref : function( componentId, prefId)
-        {
-                var fullPrefId = "extensions." + componentId + "." + prefId;
-               
-                if( gPrefService.getPrefType( fullPrefId) != gPrefService.PREF_INVALID)
-                {
-                        return( true);
-                }
-               
-                return( false);
-        },
-       
-        // ***********************************************************************
-        // Method: getStringPref
-        // ***********************************************************************
-       
-        getStringPref : function( componentId, prefId)
-        {
-                var fullPrefId = "extensions." + componentId + "." + prefId;
-               
-                if( gPrefService.getPrefType( fullPrefId) == gPrefService.PREF_STRING)
-                {
-                        return( gPrefService.getCharPref( fullPrefId));
-                }
-               
-                return( null);
-        },
-       
-        // ***********************************************************************
-        // Method: setStringPref
-        // ***********************************************************************
-       
-        setStringPref : function( componentId, prefId, prefValue)
-        {
-                var fullPrefId = "extensions." + componentId + "." + prefId;
-                gPrefService.setCharPref( fullPrefId, prefValue);
-        },
-       
-        // ***********************************************************************
-        // Method: getBooleanPref
-        // ***********************************************************************
-       
-        getBooleanPref : function( componentId, prefId)
-        {
-                var fullPrefId = "extensions." + componentId + "." + prefId;
-               
-                if( gPrefService.getPrefType( fullPrefId) == gPrefService.PREF_BOOL)
-                {
-                        return( gPrefService.getBoolPref( fullPrefId));
-                }
-               
-                return( false);
-        },
-       
-        // ***********************************************************************
-        // Method: setBooleanPref
-        // ***********************************************************************
-       
-        setBooleanPref : function( componentId, prefId, prefValue)
-        {
-                var fullPrefId = "extensions." + componentId + "." + prefId;
-                gPrefService.setBoolPref( fullPrefId, prefValue);
-        },
-       
-        // ***********************************************************************
-        // Method: isWinPlatform
-        // ***********************************************************************
-       
-        isWinPlatform : function()
-        {
-                return( gbIsWin);
-        },
-       
-        // ***********************************************************************
-        // Method: isMacPlatform
-        // ***********************************************************************
-       
-        isMacPlatform : function()
-        {
-                return( gbIsMac);
-        },
-       
-        // ***********************************************************************
-        // Method: isLinuxPlatform
-        // ***********************************************************************
-       
-        isLinuxPlatform : function()
-        {
-                return( gbIsLinux);
-        },
-       
-        // ***********************************************************************
-        // Method: forceRefresh
-        // ***********************************************************************
-       
-        forceRefresh : function()
-        {
-                try
-                {
-                        window.open( "javascript:setTimeout( 'window.close();', 100);", "",
-                                "toolbar=0,scrollbars=0,location=0,statusbar=0," +
-                                "menubar=0,resizable=0,width=1,height=1,modal=yes");
-                }
-                catch( e)
-                {
-                }
         }
 };
 
@@ -1880,19 +1422,118 @@ var IdentitySelector =
 // Desc:
 // **************************************************************************
 
-var NoIdentitySelector =
+var ICProgressListener =
 {
-        // ***********************************************************************
-        // Method: getSecurityToken
-        // ***********************************************************************
-       
-        getSecurityToken : function( data)
+        QueryInterface : function( aIID)
         {
-                IdentitySelector.reportError( "getSecurityToken",
-                        "Unable to locate an identity selector.  " +
-                        "Please make sure one is installed.");
+                if( aIID.equals( Components.interfaces.nsIWebProgressListener) ||
+                         aIID.equals( Components.interfaces.nsISupportsWeakReference) ||
+                         aIID.equals( Components.interfaces.nsISupports))
+                {
+                        return( this);
+                }
                
-                return( null);
+                throw Components.results.NS_NOINTERFACE;
+        },
+       
+        onStateChange : function( aProgress, aRequest, aFlag, aStatus)
+        {
+                var progListIFace = Components.interfaces.nsIWebProgressListener;
+               
+                // Log the flags
+               
+                IdentitySelectorDiag.logMessage( "onStateChange", "flags = " + aFlag);
+               
+                if( aFlag & progListIFace.STATE_IS_DOCUMENT)
+                {
+                        IdentitySelectorDiag.logMessage( "onStateChange", "flag & document");
+                }
+                       
+                if( aFlag & progListIFace.STATE_IS_WINDOW)
+                {
+                        IdentitySelectorDiag.logMessage( "onStateChange", "flag & window");
+                }
+               
+                if( aFlag & progListIFace.STATE_START)
+                {
+                        IdentitySelectorDiag.logMessage( "onStateChange", "flag & start");
+                }
+               
+                if( aFlag & progListIFace.STATE_STOP)
+                {
+                        IdentitySelectorDiag.logMessage( "onStateChange", "flag & stop");
+                }
+               
+                // Process the document.  The 'STOP' state isn't reached until after
+                // the page is fully loaded and all onload events have completed.
+                // We need to re-process the page in case an onload event added
+                // information card elements or objects to the page.  An example of
+                // a page that does this is login.live.com.
+               
+                if( aFlag & progListIFace.STATE_STOP)
+                {
+                        if( aFlag & progListIFace.STATE_IS_WINDOW)
+                        {
+                                IdentitySelectorDiag.logMessage( "onStateChange",
+                                        "stop status code = " + aStatus);
+                                       
+                                if( aStatus === 0)
+                                {
+                                        // Process any information card items
+                                       
+                                        try
+                                        {
+                                                IdentitySelector.processICardItems(
+                                                        aProgress.DOMWindow.document, true);
+                                        }
+                                        catch( e)
+                                        {
+                                                alert( e);
+                                        }
+                                }
+                        }
+                }
+               
+                return( 0);
+        },
+       
+        onLocationChange : function( aProgress, aRequest, aURI)
+        {
+                // This fires when a load event has been confirmed or when the
+                // user switches tabs.  At this point, Firefox has created a skeletal
+                // document into which the source document will be loaded.  This is
+                // where we run our global intercept script.
+               
+                try
+                {
+                        IdentitySelector.runInterceptScript( aProgress.DOMWindow.document);
+                }
+                catch( e)
+                {
+                        IdentitySelectorDiag.debugReportError( "onLocationChange", e);
+                }
+               
+                return( 0);
+        },
+       
+        onProgressChange : function()
+        {
+                return( 0);
+        },
+       
+        onStatusChange : function()
+        {
+                return( 0);
+        },
+       
+        onSecurityChange : function()
+        {
+                return( 0);
+        },
+       
+        onLinkIconAvailable : function()
+        {
+                return( 0);
         }
 };
 
@@ -1902,7 +1543,6 @@ var NoIdentitySelector =
 
 try
 {
-	IdentitySelector.logMessage( "IdentitySelector", "start");
         window.addEventListener( "load",
                 IdentitySelector.onInstall, false);
                
@@ -1911,5 +1551,5 @@ try
 }
 catch( e)
 {
-        IdentitySelector.reportError( "window.addEventListener", e);
+        IdentitySelectorDiag.reportError( "window.addEventListener", e);
 }
