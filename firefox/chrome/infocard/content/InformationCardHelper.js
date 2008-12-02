@@ -12,7 +12,7 @@ function getSSLCertFromDocument(doc) {
             }
         }
         catch(e) {
-            IdentitySelector.logMessage("getSSLCertFromDocument: " + e);
+            IdentitySelectorDiag.logMessage("getSSLCertFromDocument: " + e);
         }
     }
     return sslCert;
@@ -20,28 +20,28 @@ function getSSLCertFromDocument(doc) {
 
 var InformationCardHelper = {
     parseRpPolicy: function(icLoginPolicy) {
-        // IdentitySelector.logMessage("parseRpPolicy",
+        // IdentitySelectorDiag.logMessage("parseRpPolicy",
         // "typeof(icLoginPolicy)=" +
         // typeof(icLoginPolicy)); // xml
-        IdentitySelector.logMessage("parseRpPolicy", "icLoginPolicy=" + icLoginPolicy.toString());
+        IdentitySelectorDiag.logMessage("parseRpPolicy", "icLoginPolicy=" + icLoginPolicy.toString());
         var data = new Object();
         // if( icLoginPolicy.wrappedJSObject)
         // {
-        // IdentitySelector.logMessage("parseRpPolicy", "icLoginPolicy =" +
+        // IdentitySelectorDiag.logMessage("parseRpPolicy", "icLoginPolicy =" +
         // icLoginPolicy.wrappedJSObject.toString());
         // icLoginPolicy = icLoginPolicy.wrappedJSObject;
         // }
         // var xmlPolicy = new XML(icLoginPolicy.toString());
-        // IdentitySelector.logMessage("parseRpPolicy",
+        // IdentitySelectorDiag.logMessage("parseRpPolicy",
         // "xmlPolicy.child(1).@name=" +
         // xmlPolicy.child(1).@name.toString());
         var params = icLoginPolicy.toString().split("<param");
-        IdentitySelector.logMessage("parseRpPolicy", "params.length=" + params.length);
+        IdentitySelectorDiag.logMessage("parseRpPolicy", "params.length=" + params.length);
         for (var i = 0; i < params.length; i++) {
             var name = null;
             var value = null;
             var param = params[i];
-            IdentitySelector.logMessage("parseRpPolicy", "param i=" + i + " param=" + param);
+            IdentitySelectorDiag.logMessage("parseRpPolicy", "param i=" + i + " param=" + param);
             var j = param.indexOf('name="');
             if (j != -1) {
                 var s1 = param.substring(j + 6);
@@ -57,26 +57,26 @@ var InformationCardHelper = {
                             value = s1.substring(0, j);
                         }
                         else {
-                            IdentitySelector.logMessage("parseRpPolicy", "no closing \" in value= in " + param);
+                            IdentitySelectorDiag.logMessage("parseRpPolicy", "no closing \" in value= in " + param);
                         }
                     }
                     else {
-                        IdentitySelector.logMessage("parseRpPolicy", "no value=\" in " + param);
+                        IdentitySelectorDiag.logMessage("parseRpPolicy", "no value=\" in " + param);
                     }
                 }
                 else {
-                    IdentitySelector.logMessage("parseRpPolicy", "no closing \" in name= in " + param);
+                    IdentitySelectorDiag.logMessage("parseRpPolicy", "no closing \" in name= in " + param);
                 }
             }
             else {
-                IdentitySelector.logMessage("parseRpPolicy", "no name= in " + param);
+                IdentitySelectorDiag.logMessage("parseRpPolicy", "no name= in " + param);
             }
             if ((name != null) && (name != "") && (value != null)) {
                 data[name] = value;
-                IdentitySelector.logMessage("parseRpPolicy", "data[" + name + "] =" + value);
+                IdentitySelectorDiag.logMessage("parseRpPolicy", "data[" + name + "] =" + value);
             }
             else {
-                IdentitySelector.logMessage("parseRpPolicy", "no name or no value in " + param);
+                IdentitySelectorDiag.logMessage("parseRpPolicy", "no name or no value in " + param);
             }
         }
         return data;
@@ -99,7 +99,7 @@ var InformationCardHelper = {
                 obj = obj.QueryInterface(Components.interfaces.IIdentitySelector);
             }
             else {
-                IdentitySelector.reportError("getObjectForClassId", "the class " + cid + " is not installed");
+                IdentitySelectorDiag.reportError("getObjectForClassId", "the class " + cid + " is not installed");
             }
         }
         catch(e) {
@@ -109,18 +109,18 @@ var InformationCardHelper = {
     },
 
     callIdentitySelector: function(doc) {
-        IdentitySelector.logMessage("IdentitySelector.callIdentitySelector", "doc.location.href=" + doc.location.href);
+        IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "doc.location.href=" + doc.location.href);
 
         var icLoginService = doc.__identityselector__.icLoginService;
         var icLoginPolicy = doc.__identityselector__.icLoginPolicy;
         // post token value to service
         var sameSchemeAndDomain = InformationCardHelper.sameSchemeAndDomain(doc, icLoginService);
         if (sameSchemeAndDomain == false) {
-            IdentitySelector.logMessage("IdentitySelector.callIdentitySelector", "sameSchemeAndDomain == false");
+            IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "sameSchemeAndDomain == false");
             return;
         }
         // Get the selector class
-        if ((selectorClass = IdentitySelector.getStringPref("identityselector", "selector_class")) == null) {
+        if ((selectorClass = IdentitySelectorPrefs.getStringPref("identityselector", "selector_class")) == null) {
             selectorClass = "NoIdentitySelector";
         }
 
@@ -146,7 +146,7 @@ var InformationCardHelper = {
         var token = getSecurityToken(data);
 
         if (token != null) {
-            IdentitySelector.logMessage("IdentitySelector.callIdentitySelector", "sending token " + token + " to " + icLoginService);
+            IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "sending token " + token + " to " + icLoginService);
             var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
             req.open('POST', icLoginService, false);
             req.setRequestHeader("Content-Length", token.length);
@@ -157,7 +157,7 @@ var InformationCardHelper = {
                 alert("posting the security token to " + icLoginService + " failed" + e);
                 return;
             }
-            IdentitySelector.logMessage("IdentitySelector.callIdentitySelector status=" + req.status);
+            IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector status=" + req.status);
             if (req.status == 200) {
                 doc.location.href = icLoginService;
                 return;
@@ -167,7 +167,7 @@ var InformationCardHelper = {
                 return;
             }
         } else {
-            IdentitySelector.logMessage("IdentitySelector.callIdentitySelector", "token == null for doc.location.href=" + doc.location.href + "!=" + "icLoginService=" + icLoginService);
+            IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "token == null for doc.location.href=" + doc.location.href + "!=" + "icLoginService=" + icLoginService);
         }
 
     }
@@ -189,13 +189,13 @@ var InformationCardHelper = {
                 continue;
             }
             if (objElem.icDropTargetId != undefined) {
-                IdentitySelector.logMessage("IdentitySelector.findRelatedObject", "dropTarget for object " + ((objElem.name != undefined) ? objElem.name: "") + " is " + objElem.icDropTargetId);
+                IdentitySelectorDiag.logMessage("IdentitySelector.findRelatedObject", "dropTarget for object " + ((objElem.name != undefined) ? objElem.name: "") + " is " + objElem.icDropTargetId);
                 if (targetId == objElem.icDropTargetId) {
                     return objElem;
                 }
             }
             else {
-                IdentitySelector.logMessage("IdentitySelector.findRelatedObject", "no dropTarget specified for object " + object.name);
+                IdentitySelectorDiag.logMessage("IdentitySelector.findRelatedObject", "no dropTarget specified for object " + object.name);
             }
         }
         return null;
@@ -203,17 +203,17 @@ var InformationCardHelper = {
 
     ,
     sameSchemeAndDomain: function(ownerDocument, htmlDoc) {
-        IdentitySelector.logMessage("sameSchemeAndDomain", "ownerDocument.location.href=" + ownerDocument.location.href);
+        IdentitySelectorDiag.logMessage("sameSchemeAndDomain", "ownerDocument.location.href=" + ownerDocument.location.href);
         topScheme = ownerDocument.location.protocol;
         topDomain = ownerDocument.location.host;
         // TODO this should go up to the top. Currently this code supports only
         // only
         // level deep nesting.
-        IdentitySelector.logMessage("sameSchemeAndDomain", " topURL:" + ownerDocument.location.href);
+        IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " topURL:" + ownerDocument.location.href);
         var subWindowScheme = "";
         if (htmlDoc.location == undefined) {
             // htmlDoc is a string
-            IdentitySelector.logMessage("sameSchemeAndDomain", " subWindowURL:" + htmlDoc);
+            IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " subWindowURL:" + htmlDoc);
             // it is a string not a doc
             var i = htmlDoc.indexOf(':');
             if (i != -1) {
@@ -222,12 +222,12 @@ var InformationCardHelper = {
             }
         }
         else {
-            IdentitySelector.logMessage("sameSchemeAndDomain", " subWindowURL:" + htmlDoc.location.href);
+            IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " subWindowURL:" + htmlDoc.location.href);
             subWindowScheme = htmlDoc.location.protocol;
         }
-        IdentitySelector.logMessage("sameSchemeAndDomain", " subWindowDomain:" + subWindowDomain);
+        IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " subWindowDomain:" + subWindowDomain);
         if (subWindowScheme == topScheme) {
-            IdentitySelector.logMessage("sameSchemeAndDomain", " topDomain:" + topDomain);
+            IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " topDomain:" + topDomain);
             var subWindowDomain = "";
             if (htmlDoc.location == undefined) {
                 // it is a string not a doc
@@ -246,16 +246,16 @@ var InformationCardHelper = {
             else {
                 subWindowDomain = htmlDoc.location.host;
             }
-            IdentitySelector.logMessage("sameSchemeAndDomain", " subWindowDomain:" + subWindowDomain);
+            IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " subWindowDomain:" + subWindowDomain);
             if (subWindowDomain == topDomain) {
                 return true;
             }
             else {
-                IdentitySelector.logMessage("sameSchemeAndDomain", "domains do not match. " + subWindowDomain + "!=" + topDomain);
+                IdentitySelectorDiag.logMessage("sameSchemeAndDomain", "domains do not match. " + subWindowDomain + "!=" + topDomain);
             }
         }
         else {
-            IdentitySelector.logMessage("sameSchemeAndDomain", "schemes do not match. " + subWindowScheme + "!=" + topScheme);
+            IdentitySelectorDiag.logMessage("sameSchemeAndDomain", "schemes do not match. " + subWindowScheme + "!=" + topScheme);
         }
         return false;
     }
