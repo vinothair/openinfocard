@@ -103,7 +103,7 @@ var InformationCardHelper = {
             }
         }
         catch(e) {
-            IdentitySelector.throwError("getObjectForClassId:", e);
+            IdentitySelectorDiag.throwError("getObjectForClassId:", e);
         }
         return obj;
     },
