@@ -137,7 +137,7 @@ var OpeninfocardSelector = {
 					return;
 				}
 			} catch (e) {
-				IdentitySelector.throwError("OpeninfocardSelector.getSecurityToken:", e);
+				IdentitySelectorDiag.throwError("OpeninfocardSelector.getSecurityToken:", e);
 			}
 //				IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 //						"ssl security mode=" + IdentitySelector.getMode(doc));
@@ -195,7 +195,7 @@ var OpeninfocardSelector = {
 					data.privacyVersion, sslCert, data.issuerPolicy,
 					extraParams.length, extraParams);
 		} catch (e1) {
-			IdentitySelector.throwError(SELECTOR_CLASS_NAME+".getSecurityToken", e1);
+			IdentitySelectorDiag.throwError(SELECTOR_CLASS_NAME+".getSecurityToken", e1);
 		}
 		return token;
 	}
