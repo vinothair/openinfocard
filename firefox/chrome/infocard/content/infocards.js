@@ -886,8 +886,9 @@ function load(policyParam){
 	 if (firstTimeVisit != null) {
 		 var labelText;
 		 try {
-		  labelText = stringsBundle.getString('firstTimeVisit');
+		  labelText = stringsBundle.getString('firsttimevisit');
 		 } catch (e) {
+		  icDebug("firstTime: exception=" + e);
 		  labelText = "This is your first visit to this site. Think!";
 		 }
 		 icDebug("firstTime: " + labelText);

@@ -184,7 +184,7 @@
                 <hbox align="center" id="selectcontrol" hidden="true">
                     <hbox>
                         <image src="chrome://infocard/content/img/select.png" width="19" height="19"/>
-                        <label id="select" value="Use this Card"/>
+                        <label id="select" value="&cardmanager.usethiscard;"/>
                     </hbox>
                 </hbox>
 
