@@ -1,0 +1,15 @@
+﻿<!ENTITY infocard.prefs.chooseSelector "seleccione un selector" >
+<!ENTITY infocard.prefs.encryption "cifre el almacen de tarjetas" >
+<!ENTITY infocard.prefs.profile "Perfil actual" >
+<!ENTITY infocard.prefs.title "Preferencias del selector de identidad de OpenInfocard" >
+<!ENTITY infocard.prefs.manageCards "tarjetas gestionadas" >
+<!ENTITY infocard.prefs.filePicker "..." >
+<!ENTITY infocard.prefs.URL "URL" >
+<!ENTITY infocard.prefs.localFile "Archivo local" >
+<!ENTITY infocard.prefs.groupboxCaption "Preferencias del almacen de clabes" >
+<!ENTITY infocard.prefs.advertiseSelectorNO "No anunciar el selector de identidad" >
+<!ENTITY infocard.prefs.advertiseSelectorInstallation "Anunciar el selector de identidad" >
+<!ENTITY infocard.prefs.advertiseSelectorName "Anunciar el nombre del selector de identidad" >
+<!ENTITY infocard.prefs.advertiseSelectorNameAndVersion "Anunciar el nombre y la versión del selector de identidad" >
+<!ENTITY infocard.prefs.advertiseSelector "Anunciar el selector de identidad" >
+<!ENTITY infocard.prefs.enabled "Selector de Identidad deshabilitado" >

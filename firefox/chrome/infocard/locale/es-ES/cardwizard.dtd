@@ -1,0 +1,6 @@
+﻿<!ENTITY cardwizard.selectatypeofcard "Selecccione un tipo de tarjeta:" >
+<!ENTITY cardwizard.title "Asistente para la creación de nueva tarjeta" >
+<!ENTITY cardwizard.first "Primero, seleccionemos de la variedad de tarjetas soportadas." >
+<!ENTITY cardwizard.selfasserted "Tarjeta auto-emitida" >
+<!ENTITY cardwizard.managed "Tarjeta gestionada" >
+<!ENTITY cardwizard.carddetails "Detalles de la tarjeta" >
