@@ -99,22 +99,30 @@ var IcXrdsRetrieveX = {
 };
 
 var IcXrdsComponent = {
+	logMessage : function(location, msg) {
+		Components.classes["@mozilla.org/consoleservice;1"]
+	                   .getService(Components.interfaces.nsIConsoleService)
+	                       .logStringMessage(location + ": " + msg);
+	}
+
 	// boolean handle(in nsIDOMElement service, in nsIDOMDocument doc)
 	// see xrds_pageinfo.idl
-	handlePolicy : function(service, doc) {
+	, handlePolicy : function(service, doc) {
+		this.logMessage("IcXrdsComponent:handlePolicy", doc.__identityselector__);
 		if (doc.__identityselector__ !== undefined) {
 			var uri = "" + service.getElementsByTagName("URI")[0].firstChild.nodeValue ;
 			doc.__identityselector__.icLoginPolicyUri = uri;
-			IdentitySelectorDiag.logMessage("xrdsListener:onReady", "IC Login Service Policy: " + doc.__identityselector__.icLoginPolicyUri);
+			this.logMessage("IcXrdsComponent:handlePolicy", "IC Login Service Policy: " + doc.__identityselector__.icLoginPolicyUri);
 			IcXrdsComponent.retrieveIcLoginServicePolicy(doc, doc.__identityselector__.icLoginPolicyUri);
 		}
 	}
 	
 	, handleLogin : function(service, doc) {
+		this.logMessage("IcXrdsComponent:handleLogin", doc.__identityselector__);
 		if (doc.__identityselector__ !== undefined) {
 			var uri = "" + service.getElementsByTagName("URI")[0].firstChild.nodeValue ;
 			doc.__identityselector__.icLoginService = uri;
-			IdentitySelectorDiag.logMessage("xrdsListener:onReady", "IC Login Service: " + doc.__identityselector__.icLoginService);
+			this.logMessage("IcXrdsComponent:handleLogin", "IC Login Service: " + doc.__identityselector__.icLoginService);
 		}
 	}
 
