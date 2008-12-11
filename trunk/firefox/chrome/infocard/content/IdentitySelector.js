@@ -1172,7 +1172,15 @@ var IdentitySelector =
                                                         break;
                                                 }
                                         }
+                                } else {
+                                	IdentitySelectorDiag.reportError( "onCallIdentitySelector",
+                                            "selector_guid === null");
                                 }
+                        } else {
+                        	if( gSelectorRegistry.length < 1) {
+                        		IdentitySelectorDiag.reportError( "onCallIdentitySelector",
+                                    "gSelectorRegistry.length = " + gSelectorRegistry.length);
+                        	}
                         }
                        
                         if( getSecurityToken === null)

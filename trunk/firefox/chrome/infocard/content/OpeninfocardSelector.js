@@ -77,7 +77,7 @@ var OpeninfocardSecurityStateChangeListener =
 	            } else {
 	            	doc.__identityselector__.sslMode = "low";
 	            }
-        		IdentitySelectorDiag.logMessage( "OpeninfocardSecurityStateChangeListener", "doc.location.href=" + doc.location.href + " doc.__identityselector__.sslMode=" + doc.__identityselector__.sslMode);
+        		//IdentitySelectorDiag.logMessage( "OpeninfocardSecurityStateChangeListener", "doc.location.href=" + doc.location.href + " doc.__identityselector__.sslMode=" + doc.__identityselector__.sslMode);
 	        } catch (e) {
         		IdentitySelectorDiag.reportError( "OpeninfocardSecurityStateChangeListener", "doc.location.href=" + doc.location.href + " exception=" + e);
 	        }
@@ -226,7 +226,7 @@ var OpeninfocardSelector = {
         window.getBrowser().addProgressListener( OpeninfocardSecurityStateChangeListener,
                 Components.interfaces.nsIWebProgress.NOTIFY_STATE_ALL &
                 Components.interfaces.nsIWebProgress.NOTIFY_SECURITY);
-
+        IdentitySelector.registerSelector(OpeninfocardSelector);
 	}
 	
 	, onUnload : function(event) {
@@ -237,6 +237,7 @@ var OpeninfocardSelector = {
 	               
 	        window.removeEventListener( "unload", OpeninfocardSelector.onUnload, false);
 	        window.getBrowser().removeProgressListener( OpeninfocardSecurityStateChangeListener );
+	        IdentitySelector.deregisterSelector(OpeninfocardSelector);
 		} catch (e) {}
 	}
 };
