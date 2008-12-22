@@ -89,6 +89,10 @@ var OpeninfocardSecurityStateChangeListener =
 // **************************************************************************
 
 var OpeninfocardSelector = {
+	guid : function() {
+		return CONTRACT_ID;
+	},
+	
 	// ***********************************************************************
 	// Method: getSecurityToken
 	// ***********************************************************************
