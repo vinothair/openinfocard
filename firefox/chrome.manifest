@@ -2,6 +2,7 @@ overlay chrome://browser/content/browser.xul           chrome://infocard/content
 overlay chrome://browser/content/preferences/preferences.xul          chrome://infocard/content/prefs.xul
 overlay chrome://browser/content/preferences/sanitize.xul	chrome://infocard/content/overlayPrefSanitizeUI.xul
 overlay chrome://browser/content/sanitize.xul	chrome://infocard/content/overlaySanitizeUI.xul
+overlay chrome://browser/content/pageinfo/pageInfo.xul chrome://infocard/content/xrds_pageinfo.xul
 
 content infocard chrome/infocard/content/
 locale infocard en-US chrome/infocard/locale/en-US/

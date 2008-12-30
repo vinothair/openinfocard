@@ -125,7 +125,7 @@ var OpeninfocardSelector = {
 
 		try {
 			// Launch the card selector
-			var sslCert = OpeninfocardSelector.getSSLCertFromDocument(document);
+			var sslCert = InformationCardHelper.getSSLCertFromDocument(document);
 			var cid = CONTRACT_ID;
 			// class id of selector
 			var obj = null;
@@ -204,26 +204,6 @@ var OpeninfocardSelector = {
 		return token;
 	}
 
-	, getSSLCertFromDocument : function(doc) {
-		   var sslCert = null;
-		   var browser = doc.getElementById( "content");
-		   var secureUi = browser.securityUI;
-		   var sslStatusProvider = null;
-		   sslStatusProvider = secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
-		   if( sslStatusProvider !== null) {
-		      try {
-		         var sslStatus = sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
-		         if( sslStatus !== null && sslStatus.serverCert !== undefined) {
-		            sslCert = sslStatus.serverCert;
-		         }
-		      }
-		      catch( e) {
-		         IdentitySelectorDiag.logMessage("getSSLCertFromDocument: " + e);
-		      }
-		   }
-		   return sslCert;
-	}
-	
 	, onLoad : function(event) {
 		IdentitySelectorDiag.logMessage( "OpeninfocardSelector", "onLoad: " + document.location.href);
 		gBrowser.removeEventListener( "load", OpeninfocardSelector.onLoad, false);

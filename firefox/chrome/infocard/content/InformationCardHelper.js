@@ -1,25 +1,35 @@
-function getSSLCertFromDocument(doc) {
-    var sslCert = null;
-    var browser = doc.getElementById("content");
-    var secureUi = browser.securityUI;
-    var sslStatusProvider = null;
-    sslStatusProvider = secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
-    if (sslStatusProvider != null) {
-        try {
-            sslStatus = sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
-            if (sslStatus != null && sslStatus.serverCert != undefined) {
-                sslCert = sslStatus.serverCert
-            }
-        }
-        catch(e) {
-            IdentitySelectorDiag.logMessage("getSSLCertFromDocument: " + e);
-        }
-    }
-    return sslCert;
-}
 
 var InformationCardHelper = {
-    parseRpPolicy: function(icLoginPolicy) {
+	getSSLCertFromDocument : function(doc) {
+	   var sslCert = null;
+	   var browser = doc.getElementById( "content");
+	   if (browser !== null) {
+		   if (browser.securityUI !== undefined) {
+			   var secureUi = browser.securityUI;
+			   var sslStatusProvider = null;
+			   sslStatusProvider = secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
+			   if( sslStatusProvider !== null) {
+			      try {
+			         var sslStatus = sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+			         if( sslStatus !== null && sslStatus.serverCert !== undefined) {
+			            sslCert = sslStatus.serverCert;
+			         }
+			      }
+			      catch( e) {
+			         IdentitySelectorDiag.logMessage("getSSLCertFromDocument: " + e);
+			      }
+			   }
+		   } else {
+			   IdentitySelectorDiag.logMessage("InformationCardHelper.getSSLCertFromDocument", "browser.securityUI === undefined");
+			   IdentitySelectorDiag.logMessage("InformationCardHelper.getSSLCertFromDocument", "doc.location.href="+doc.location.href);
+		   }
+	   } else {
+		   IdentitySelectorDiag.logMessage("InformationCardHelper.getSSLCertFromDocument", "content not found");
+	   }
+	   return sslCert;
+	}
+
+    , parseRpPolicy: function(icLoginPolicy) {
         // IdentitySelectorDiag.logMessage("parseRpPolicy",
         // "typeof(icLoginPolicy)=" +
         // typeof(icLoginPolicy)); // xml
