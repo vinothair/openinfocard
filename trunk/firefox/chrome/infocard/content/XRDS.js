@@ -1,19 +1,5 @@
 
-//var listObserver = {
-//   onDragOver : function (event, flavour, session) {
-//      IdentitySelectorDiag.logMessage("onDragOver: " + flavour.contentType);
-//      }
-//   , onDrop : function (evt, transferData, session) {
-//      IdentitySelectorDiag.logMessage("onDrop: " + transferData.data);
-//      // event.target.setAttribute("value",transferData.data);
-//      }
-//   , getSupportedFlavours : function () {
-//      var flavours = new FlavourSet();
-//      // flavours.appendFlavour("text/unicode");
-//      flavours.appendFlavour("application/x-informationcard+id");
-//      return flavours;
-//      }
-//};
+var gObj = null;
 
 var IcXrdsRetrieveX = {
 	retrieveX : function(doc, hrefStr, listenerO) {
@@ -102,27 +88,103 @@ var IcXrdsComponent = {
 	logMessage : function(location, msg) {
 		Components.classes["@mozilla.org/consoleservice;1"]
 	                   .getService(Components.interfaces.nsIConsoleService)
-	                       .logStringMessage(location + ": " + msg);
+	                       .logStringMessage( "IcXrdsComponent:" + location + ": " + msg);
+	}
+
+	, handlePolicyEvent : function(event) {
+		var doc = event.target;
+		var serviceType = "http://infocardfoundation.org/policy/1.0/login";
+		var xrdsStr = gObj.getXrdsForSite(doc.location.href, serviceType);
+		IcXrdsComponent.logMessage( "handlePolicyEvent", "type=" + serviceType + " doc.location.href="+doc.location.href + " xrds=" + xrdsStr);
+    	var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+		                                .createInstance(Components.interfaces.nsIDOMParser);
+		var serviceDoc = parser.parseFromString(xrdsStr, "text/xml");
+		IcXrdsComponent.handlePolicy(serviceDoc, doc);
+		
+//		const CONTRACT_ID = "@openinfocard.org/xrds;1";
+//		var doc = event.target;
+//		var root = doc.documentElement;
+//		var serviceType = "http://infocardfoundation.org/policy/1.0/login";
+//		var tagName = "xrdsService";
+//		var elements = root.getElementsByTagNameNS("urn:firefox:xrds:component", tagName);
+//		if (elements.length > 0) {
+//			for (var i=0; i<elements.length; i++) {
+//				var href = elements[i].getAttribute("href");
+//				if (href !== null && href === "serviceType") {
+//					IcXrdsComponent.logMessage( "handlePolicyEvent", "i=" + i + " type=" + serviceType + " found. doc.location.href="+doc.location.href);
+//					IcXrdsComponent.handlePolicy(elements[i], doc);
+//				}
+//			}
+//		} else {
+//			IcXrdsComponent.logMessage( "handlePolicyEvent", "type=" + serviceType + " not found. doc.location.href="+doc.location.href);
+//		}
 	}
 
 	// boolean handle(in nsIDOMElement service, in nsIDOMDocument doc)
 	// see xrds_pageinfo.idl
 	, handlePolicy : function(service, doc) {
+        if( doc.wrappedJSObject)
+        {
+                doc = doc.wrappedJSObject;
+        }
 		this.logMessage("IcXrdsComponent:handlePolicy", doc.__identityselector__);
+		if (doc.__identityselector__ === undefined) {
+			IdentitySelector.runInterceptScript(doc);
+		}
 		if (doc.__identityselector__ !== undefined) {
 			var uri = "" + service.getElementsByTagName("URI")[0].firstChild.nodeValue ;
 			doc.__identityselector__.icLoginPolicyUri = uri;
 			this.logMessage("IcXrdsComponent:handlePolicy", "IC Login Service Policy: " + doc.__identityselector__.icLoginPolicyUri);
 			IcXrdsComponent.retrieveIcLoginServicePolicy(doc, doc.__identityselector__.icLoginPolicyUri);
+		} else {
+			IcXrdsComponent.logMessage( "handlePolicy", "doc.location.href="+doc.location.href);
 		}
 	}
 	
+	, handleLoginEvent : function(event) {
+		var doc = event.target;
+		var serviceType = "http://infocardfoundation.org/service/1.0/login";
+		var xrdsStr = gObj.getXrdsForSite(doc.location.href, serviceType);
+		IcXrdsComponent.logMessage( "handleLoginEvent", "type=" + serviceType + " doc.location.href="+doc.location.href + " xrds=" + xrdsStr);
+    	var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+		                                .createInstance(Components.interfaces.nsIDOMParser);
+		var serviceDoc = parser.parseFromString(xrdsStr, "text/xml");
+		IcXrdsComponent.handleLogin(serviceDoc, doc);
+
+//		const CONTRACT_ID = "@openinfocard.org/xrds;1";
+//		var doc = event.target;
+//		var root = doc.documentElement;
+//		var serviceType = "http://infocardfoundation.org/service/1.0/login";
+//		var tagName = "xrdsService";
+//		var elements = root.getElementsByTagNameNS("urn:firefox:xrds:component", tagName);
+//		if (elements.length > 0) {
+//			for (var i=0; i<elements.length; i++) {
+//				var href = elements[i].getAttribute("href");
+//				if (href !== null && href === "serviceType") {
+//					IcXrdsComponent.logMessage( "handleLoginEvent", "i=" + i + " type=" + serviceType + " found. doc.location.href="+doc.location.href);
+//					IcXrdsComponent.handleLogin(elements[i], doc);
+//				}
+//			}
+//		} else {
+//			IcXrdsComponent.logMessage( "handleLoginEvent", "type=" + serviceType + " not found. doc.location.href="+doc.location.href);
+//		}
+	}
+
 	, handleLogin : function(service, doc) {
+        if( doc.wrappedJSObject)
+        {
+                doc = doc.wrappedJSObject;
+        }
 		this.logMessage("IcXrdsComponent:handleLogin", doc.__identityselector__);
+		if (doc.__identityselector__ === undefined) {
+			IdentitySelector.runInterceptScript(doc);
+		}
 		if (doc.__identityselector__ !== undefined) {
 			var uri = "" + service.getElementsByTagName("URI")[0].firstChild.nodeValue ;
 			doc.__identityselector__.icLoginService = uri;
 			this.logMessage("IcXrdsComponent:handleLogin", "IC Login Service: " + doc.__identityselector__.icLoginService);
+		} else {
+			IcXrdsComponent.logMessage( "handleLogin", "doc.location.href="+doc.location.href);
 		}
 	}
 
@@ -211,6 +273,17 @@ var InformationCardXrds = {
 	      IcXrdsRetrieveX.retrieveX(doc, hrefStr, InformationCardXrds.xrdsListener);
       }
 
+	, onDOMContentLoaded : function(event) {
+		var browser = gBrowser.selectedTab.linkedBrowser;
+		// browser is the XUL element of the browser that's just been selected
+		var doc = gBrowser.selectedBrowser.contentDocument;
+		IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMContentLoaded:", "doc=" + doc.location.href);
+
+    	doc.addEventListener("http://infocardfoundation.org/service/1.0/login", IcXrdsComponent.handleLoginEvent, false);
+    	doc.addEventListener("http://infocardfoundation.org/policy/1.0/login", IcXrdsComponent.handlePolicyEvent, false);
+
+	}
+	
 	  // ***********************************************************************
 	  // Method: processHtmlLinkElements
 	  // ***********************************************************************
@@ -278,18 +351,28 @@ var InformationCardXrds = {
 
 var IcXrdsStartHelper = {
 	onLoad : function(event) {
-		IdentitySelectorDiag.logMessage( "InformationCardXrds", "onLoad");
 		window.removeEventListener( "load", function(event){gBrowser.addEventListener("load", InformationCardXrds.onLoad(event), true);}, false);
+		if (!(event.originalTarget instanceof HTMLDocument)) {
+			IdentitySelectorDiag.logMessage( "IcXrdsStartHelper", "onLoad: is no HTMLDocument");
+			return;
+		}
+		if (event.originalTarget.defaultView.frameElement) {
+			IdentitySelectorDiag.logMessage( "IcXrdsStartHelper", "onLoad: inside frame");
+			return;
+		}
+		var doc = event.originalTarget;
+
+		IdentitySelectorDiag.logMessage( "InformationCardXrds", "onLoad: doc.location.href=" + doc.location.href);
 		
 		// try to use the xrds_pageinfo.xpi component
 		const CONTRACT_ID = "@openinfocard.org/xrds;1";
 
-	    var obj = null;
+	    gObj = null;
 	    try {
 		    var cidClass = Components.classes[CONTRACT_ID];
 			if (cidClass !== undefined) {
-				obj = cidClass.createInstance();
-				obj = obj.QueryInterface(Components.interfaces.IXrdsComponent);
+				gObj = cidClass.createInstance();
+				gObj = gObj.QueryInterface(Components.interfaces.IXrdsComponent);
 			} else {
 				IdentitySelectorDiag.logMessage("InformationCardXrds", "the class " + CONTRACT_ID + " is not installed");
 			}
@@ -297,9 +380,32 @@ var IcXrdsStartHelper = {
 	    	IdentitySelectorDiag.reportError("InformationCardXrds exception:", e1);
 	    }
 	    
-	    if (obj !== null) {
-	    	obj.addServiceHandler("http://infocardfoundation.org/service/1.0/login", IcXrdsComponent.handleLogin);
-	    	obj.addServiceHandler("http://infocardfoundation.org/policy/1.0/login", IcXrdsComponent.handlePolicy);
+	    if (gObj !== null) {
+//			window.addEventListener("DOMContentLoaded", 
+//					function(evnt) {InformationCardXrds.onDOMContentLoaded(evnt);}, false );
+
+	    	var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+			                                .createInstance(Components.interfaces.nsIDOMParser);
+
+    		var serviceType = "http://infocardfoundation.org/service/1.0/login";
+    		var xrdsStr = gObj.getXrdsForSite(doc.location.href, serviceType);
+    		if (xrdsStr !== null) {
+	    		IcXrdsComponent.logMessage( "InformationCardXrds::InformationCardXrds::onLoad", "type=" + serviceType + " doc.location.href="+doc.location.href + " xrds=" + xrdsStr);
+	    		var serviceDoc = parser.parseFromString(xrdsStr, "text/xml");
+	    		IcXrdsComponent.handleLogin(serviceDoc, doc);
+    		}
+    		serviceType = "http://infocardfoundation.org/policy/1.0/login";
+    		xrdsStr = gObj.getXrdsForSite(doc.location.href, serviceType);
+    		if (xrdsStr !== null) {
+	    		IcXrdsComponent.logMessage( "InformationCardXrds::InformationCardXrds::onLoad", "type=" + serviceType + " doc.location.href="+doc.location.href + " xrds=" + xrdsStr);
+	    		var serviceDoc = parser.parseFromString(xrdsStr, "text/xml");
+	    		IcXrdsComponent.handlePolicy(serviceDoc, doc);
+    		}
+
+    		IdentitySelectorDiag.logMessage("InformationCardXrds::InformationCardXrds::onLoad", "adding event listeners");
+	    	// add the event handlers. The events will be triggered by the component.
+	    	doc.addEventListener("http://infocardfoundation.org/service/1.0/login", IcXrdsComponent.handleLoginEvent, false);
+	    	doc.addEventListener("http://infocardfoundation.org/policy/1.0/login", IcXrdsComponent.handlePolicyEvent, false);
 	    } else {
 			IdentitySelectorDiag.logMessage("InformationCardXrds::InformationCardXrds::onLoad", "The class " + CONTRACT_ID + " is not installed");
 			window.addEventListener("DOMContentLoaded", 
