@@ -1270,7 +1270,7 @@ var IdentitySelector =
                                 gLastFailedGetTokenDate = null;
                                
                                 if( (identObject.targetElem.token =
-                                        getSecurityToken( dataObj)) === null)
+                                        getSecurityToken( dataObj, doc)) === null)
                                 {
                                         gLastFailedGetTokenDate = new Date();
                                 }

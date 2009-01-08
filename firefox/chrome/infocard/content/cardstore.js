@@ -1,5 +1,15 @@
 var db = "cardDb.xml";
 
+function isCardInStore(cardId) {
+    var cardFile = readCardStore();
+    for each (c in cardFile.infocard) {
+    	if ("" + c.id === cardId) {
+    		return true;
+    	}
+	}
+    return false;
+}
+
 function clearOpeninfocardHistory() {
     var cardFile = read(db);
     var nDB = newDB();
@@ -394,6 +404,182 @@ function getDir(){
 
     return path;
 
+}
+
+function newInfocard(){
+    var card = new XML("<infocard/>");
+    return card;
+}
+
+function newManagedCard(callback) {
+    var card = newInfocard();
+    card.name = "" + callback.cardName + "";
+    card.type = "" + callback.type;
+    card.version = "" + callback.cardVersion + "";
+    card.id = "" + callback.cardId + "";
+
+    var data = new XML("<managed/>");
+    data.issuer = "" + callback.issuer + "";
+    data.mex = "" + callback.mex + "";
+//        data.username = "" + callback.uid + "";
+//        data.KeyIdentifier = "" + callback.KeyIdentifier + "";
+//        data.hint = "" + callback.hint + "";
+    data.image = "data:image/png;base64," + callback.cardImage + "";
+    var supportedClaims; 
+    try {
+    	supportedClaims = new XML(callback.supportedClaims);
+    } catch (e) {
+    	cardstoreDebug("supportedClaims: " + callback.supportedClaims);
+    	alert("new card: supportedClaims: " + e);
+    	alert("card is not imported");
+    	return;
+    }
+    data.supportedClaims = supportedClaims;
+cardstoreDebug("new card" + callback.usercredential);
+	try {
+		data.usercredential = new XML(callback.usercredential);
+	} catch (e) {
+		alert("new card: usercredential: " + e);
+    	alert("card is not imported");
+    	return;
+	}
+	data.stsCert = "" + callback.stsCert + "";
+	if (callback.requireAppliesTo) {
+		data.requireAppliesTo = true;
+	}
+	if (callback.requireStrongRecipientIdentity) {
+		data.requireStrongRecipientIdentity = true;
+	}
+	
+	try {
+		data.supportedTokenTypeList = new XML(callback.supportedTokenTypeList);
+	} catch (e) {
+		alert("new card: supportedTokenTypeList: " + e);
+    	alert("card is not imported");
+    	return;
+	}
+    card.carddata.data = data;
+    cardstoreDebug("saving card: " + callback.cardName);
+//	alert("importedCard="+importedCard);
+//	//TODO remove return when it is working
+//	return;
+    return card;
+}
+
+function newSelfIssuedCard(callback) {
+    card = newInfocard();
+    
+    card.name = callback.cardName;
+    card.type = callback.type;
+    if (callback["cardVersion"] == undefined) {
+        card.version = 1;
+    } else {
+    	card.version = callback["cardVersion"];
+    }
+    var id = Math.floor(Math.random()*100000+1);
+    card.id = id;
+    card.privatepersonalidentifier = hex_sha1(callback.cardName + card.version + id);
+
+    var count = 0;
+    var data = new XML("<selfasserted/>");
+
+    var givenName = callback.givenname;
+    if (givenName) {
+        card.supportedclaim[count] = "givenname";
+        data.givenname = givenName;
+        count++;
+    }
+    var surname = callback.surname;
+    if (surname) {
+        card.supportedclaim[count] = "surname";
+        data.surname = surname;
+        count++;
+    }
+    var emailAddress = callback.email;
+    if (emailAddress) {
+        card.supportedclaim[count] = "emailaddress";
+        data.emailaddress = emailAddress;
+        count++;
+    }
+    var streetAddress = callback.streetAddress;
+    if (streetAddress) {
+        card.supportedclaim[count] = "streetaddress";
+        data.streetaddress = streetAddress;
+        count++;
+    }
+    var locality = callback.locality;
+    if (locality) {
+        card.supportedclaim[count] = "locality";
+        data.locality = locality;
+        count++;
+    }
+    var stateOrProvince = callback.stateOrProvince;
+    if (stateOrProvince) {
+        card.supportedclaim[count] = "stateorprovince";
+        data.stateorprovince = stateOrProvince;
+        count++;
+    }
+    var postalCode = callback.postalCode;
+    if (postalCode) {
+        card.supportedclaim[count] = "postalcode";
+        data.postalcode = postalCode;
+        count++;
+    }
+    var country = callback.country;
+    if (country) {
+        card.supportedclaim[count] = "country";
+        data.country = country;
+        count++;
+    }
+    var primaryPhone = callback.primaryPhone;
+    if (primaryPhone) {
+        card.supportedclaim[count] = "primaryphone";
+        data.primaryphone = primaryPhone;
+        count++;
+    }
+    var otherPhone = callback.otherPhone;
+    if (otherPhone) {
+        card.supportedclaim[count] = "otherphone";
+        data.otherphone = otherPhone;
+        count++;
+    }
+    var mobilePhone = callback.mobilePhone;
+    if (mobilePhone) {
+        card.supportedclaim[count] = "mobilephone";
+        data.mobilephone = mobilePhone;
+        count++;
+    }
+    var dateOfBirth = callback.dateOfBirth;
+    if (dateOfBirth) {
+        card.supportedclaim[count] = "dateofbirth";
+        data.dateofbirth = dateOfBirth;
+        count++;
+    }
+    var gender = callback.gender;
+    if (gender) {
+        card.supportedclaim[count] = "gender";
+        data.gender = gender;
+        count++;
+    }
+    var imgurl = callback.imgurl;
+    if (imgurl) {
+        card.supportedclaim[count] = "imgurl";
+        data.imgurl = imgurl;
+        count++;
+    }
+
+    card.carddata.data = data;
+    return card;
+}
+
+function newOpenIdCard(callback) {
+    var card = newInfocard();
+    card.name = "" + callback.cardName + "";
+    card.type = "" + callback.type;
+    var version = "1";
+    card.version = version;
+    card.id = "" + callback.cardId + "";
+    return card;
 }
 
 function newDB(){
