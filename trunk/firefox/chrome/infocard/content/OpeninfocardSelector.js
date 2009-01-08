@@ -56,7 +56,7 @@ var OpeninfocardSecurityStateChangeListener =
 
         onSecurityChange : function(aWebProgress, aRequest, aState)
         {
-    		IdentitySelectorDiag.logMessage( "OpeninfocardSecurityStateChangeListener", "onSecurityChange aState=" + aState);
+//    		IdentitySelectorDiag.logMessage( "OpeninfocardSecurityStateChangeListener", "onSecurityChange aState=" + aState);
         	try {
 	        	const wpl = Components.interfaces.nsIWebProgressListener;
 	        	var doc = aWebProgress.DOMWindow.document;
@@ -97,7 +97,7 @@ var OpeninfocardSelector = {
 	// Method: getSecurityToken
 	// ***********************************************************************
 
-	getSecurityToken : function(data) {
+	getSecurityToken : function(data, doc) {
 		var token = null;
 		
 		this.disabled = gPrefService.getBoolPref("identityselector.disabled");
@@ -125,7 +125,7 @@ var OpeninfocardSelector = {
 
 		try {
 			// Launch the card selector
-			var sslCert = InformationCardHelper.getSSLCertFromDocument(document);
+			var sslCert = InformationCardHelper.getSSLCertFromDocument(doc);
 			var cid = CONTRACT_ID;
 			// class id of selector
 			var obj = null;

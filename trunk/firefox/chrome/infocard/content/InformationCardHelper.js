@@ -1,8 +1,40 @@
 
 var InformationCardHelper = {
-	getSSLCertFromDocument : function(doc) {
+	isSslCertEV : function(doc) {
+		var browser = doc.defaultView.getBrowser();
+		if (browser !== null) {
+			if (browser.securityUI !== undefined) {
+			   var secureUi = browser.securityUI;
+			   return (secureUi.state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
+			}
+		}
+		return false;
+	}
+	, getSSLCertFromDocument : function(doc) {
 	   var sslCert = null;
-	   var browser = doc.getElementById( "content");
+	   var browser = null;
+	   var aContent = document.getElementById( "content");
+	   if (aContent !== null) {
+		   browser = aContent.mCurrentBrowser;
+	   }
+	   
+	   if (browser === null) {
+		   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+		                               .getService(Components.interfaces.nsIWindowMediator);
+		   var enumerator = wm.getEnumerator(null);
+		   while(enumerator.hasMoreElements()) {
+			  var win = enumerator.getNext();
+			  var winContent = win.document.getElementById( "content");
+			  if (winContent !== null) {
+				  var curBrowser = winContent.mCurrentBrowser;
+				  var contentDocument = curBrowser.contentDocument;
+				  if (contentDocument.location.href === doc.location.href) {
+					  browser = curBrowser;
+				  }
+			  }
+		   }
+	   }
+
 	   if (browser !== null) {
 		   if (browser.securityUI !== undefined) {
 			   var secureUi = browser.securityUI;
@@ -24,7 +56,7 @@ var InformationCardHelper = {
 			   IdentitySelectorDiag.logMessage("InformationCardHelper.getSSLCertFromDocument", "doc.location.href="+doc.location.href);
 		   }
 	   } else {
-		   IdentitySelectorDiag.logMessage("InformationCardHelper.getSSLCertFromDocument", "content not found");
+		   IdentitySelectorDiag.reportError("InformationCardHelper.getSSLCertFromDocument", "content not found");
 	   }
 	   return sslCert;
 	}
@@ -153,7 +185,7 @@ var InformationCardHelper = {
         }
 
         // call identity selector
-        var token = getSecurityToken(data);
+        var token = getSecurityToken(data, doc);
 
         if (token != null) {
             IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "sending token " + token + " to " + icLoginService);
@@ -205,9 +237,18 @@ var InformationCardHelper = {
                 }
             }
             else {
-                IdentitySelectorDiag.logMessage("IdentitySelector.findRelatedObject", "no dropTarget specified for object " + object.name);
+                IdentitySelectorDiag.logMessage("IdentitySelector.findRelatedObject", "no dropTarget specified for object " + objElem.name);
             }
         }
+        // if there is exactly one object then return that
+        if (objElems.length == 1) {
+        	objElem = objElems[0];
+        	var objTypeStr = objElem.getAttribute("TYPE");
+        	if (objTypeStr == null || objTypeStr.toLowerCase() === "application/x-informationcard") {
+        		return objElem;
+        	}
+        }
+        
         return null;
     }
 
