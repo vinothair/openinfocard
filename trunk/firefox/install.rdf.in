@@ -6,13 +6,12 @@
                    em:name="openinfocard Identity Selector"
                    em:id="{211DBAEA-CE99-11DA-8254-96BEC52F3316}"
                    em:version="@xpiVersion@"
-                   em:description="adds selector support to firefox"
+                   em:description="adds information card selector support to firefox"
                    em:creator="charliemortimore at gmail.com"
                    em:homepageURL="http://xmldap.org"
                    em:iconURL="chrome://infocard/content/xmldap.png"
                    em:contributor="Axel Nennker axel at nennker.de"
-                   em:updateURL="https://openinfocard.org/update.rdf"
-                   em:updateKey="MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDjIkRwSUF1J4q0ZOR87Ad1UW4u2eMnb09lXEWwri4CFfYCkFScsmqORv6RXzI23RI+fueODwpXJqFMqkC6hcdqhiwP/8eKi9pPPcKMJhwKtRAy184q0Mt7VUVDqYDPS8siPyS5OuD/fRDLbeHIC4W0sR5+mkXLNeTqWGuKGeLXqwIDAQAB">
+	>
     <em:targetApplication RDF:resource="rdf:#$IqH6Z2"/>
     <em:file RDF:resource="urn:mozilla:extension:file:infocard"/>
   </RDF:Description>
@@ -21,5 +20,5 @@
   <RDF:Description RDF:about="rdf:#$IqH6Z2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="1.5"
-                   em:maxVersion="3.0+" />
+                   em:maxVersion="3.0.*" />
 </RDF:RDF>
