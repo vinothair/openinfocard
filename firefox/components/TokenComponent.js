@@ -324,7 +324,8 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
     var urlClassLoaderClasz = java.lang.Class.forName("java.net.URLClassLoader");
     var bootstrapClassLoader; 
     try {
-    	bootstrapClassLoader = java.net.URLClassLoader.newInstance(urlArray);
+    	bootstrapClassLoader = new java.net.URLClassLoader(urlArray);
+//    	bootstrapClassLoader = java.net.URLClassLoader.newInstance(urlArray);
     } catch(e) {
     	alert("error instanciating new URLCalssLoader:" + urlArray + "\n" + e);
     }
@@ -387,7 +388,8 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
     
     var claszLoader;
     try {
-    	claszLoader = java.net.URLClassLoader.newInstance(urlArray);
+    	claszLoader = new java.net.URLClassLoader(urlArray);
+//    	claszLoader = java.net.URLClassLoader.newInstance(urlArray);
     } catch(e) {
     	_printToJSConsole("exiting TokenComponent.prototype._bootstrapClassLoader Error: error instanciating new URLClassLoader:" + urlArray + "\n" + e);
     	alert("error instanciating new URLClassLoader:" + urlArray + "\n" + e);
@@ -527,7 +529,8 @@ function WrappedPackages(java, classLoader) {
     ).newInstance();
     
     var argumentsToArray = function(args) {
-        var a = java.lang.reflect.Array.newInstance(java.lang.Object, args.length);
+        var a = java.lang.reflect.Array.newInstance(java.lang.Class.forName("java.lang.Object"), args.length);
+//        var a = java.lang.reflect.Array.newInstance(java.lang.Object, args.length);
         for (var i = 0; i < args.length; i++) {
             a[i] = args[i];
         }
@@ -544,7 +547,8 @@ function WrappedPackages(java, classLoader) {
         if (classWrapper) {
             return {
                 a : function(aString) { // call a constructor with one String argument
-                	var argsArray = java.lang.reflect.Array.newInstance(java.lang.String, 1);
+            		var argsArray = java.lang.reflect.Array.newInstance(java.lang.Class.forName("java.lang.String"), 1);
+//            		var argsArray = java.lang.reflect.Array.newInstance(java.lang.String, 1);
     				argsArray[0] = aString;
                     return classWrapper.callConstructor(argsArray);
                 },
