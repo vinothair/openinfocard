@@ -40,7 +40,7 @@ function loadClassData(fileName) {
     try {
 		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 	} catch (e) {
-		debug("Permission to read file was denied." + e);
+		_printToJSConsole("Permission to read file was denied." + e);
 		return null;
 	}
 
@@ -49,7 +49,7 @@ function loadClassData(fileName) {
 	file.initWithPath( fileName );
 
     if ( file.exists() == false ) {
-		debug("readLocalFile: " + fileName + " not found.");
+		_printToJSConsole("readLocalFile: " + fileName + " not found.");
         return null;
 
 	} else {
