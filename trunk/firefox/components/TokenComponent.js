@@ -331,7 +331,7 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
     	try {
         	bootstrapClassLoader = java.net.URLClassLoader.newInstance(urlArray); // try earlier versions of java
     	} catch(ee) {
-    		_printToJSConsole("error: java.net.URLClassLoader.newInstance(" + urlArray + ")\n" + e);
+    		_printToJSConsole("error: java.net.URLClassLoader.newInstance(" + urlArray + ")\n" + ee);
         	return false;
     	}
     }
