@@ -100,7 +100,7 @@ var OpeninfocardSelector = {
 	getSecurityToken : function(data, doc) {
 		var token = null;
 		
-		this.disabled = gPrefService.getBoolPref("identityselector.disabled");
+		this.disabled = gIcPrefService.getBoolPref("identityselector.disabled");
 		if (this.disabled === true) {
 			IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
 					" Id selector is disabled. Exiting");

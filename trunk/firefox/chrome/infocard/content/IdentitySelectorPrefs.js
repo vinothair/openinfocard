@@ -21,7 +21,7 @@
 // Desc: Global services
 // **************************************************************************
 
-var gPrefService = Components.classes[
+var gIcPrefService = Components.classes[
                 "@mozilla.org/preferences-service;1"].
                         getService( Components.interfaces.nsIPrefBranch);
 
@@ -39,7 +39,7 @@ var IdentitySelectorPrefs =
         {
                 var fullPrefId = "extensions." + componentId + "." + prefId;
                
-                if( gPrefService.getPrefType( fullPrefId) != gPrefService.PREF_INVALID)
+                if( gIcPrefService.getPrefType( fullPrefId) != gIcPrefService.PREF_INVALID)
                 {
                         return( true);
                 }
@@ -55,9 +55,9 @@ var IdentitySelectorPrefs =
         {
                 var fullPrefId = "extensions." + componentId + "." + prefId;
                
-                if( gPrefService.getPrefType( fullPrefId) == gPrefService.PREF_STRING)
+                if( gIcPrefService.getPrefType( fullPrefId) == gIcPrefService.PREF_STRING)
                 {
-                        return( gPrefService.getCharPref( fullPrefId));
+                        return( gIcPrefService.getCharPref( fullPrefId));
                 }
                
                 return( null);
@@ -70,7 +70,7 @@ var IdentitySelectorPrefs =
         setStringPref : function( componentId, prefId, prefValue)
         {
                 var fullPrefId = "extensions." + componentId + "." + prefId;
-                gPrefService.setCharPref( fullPrefId, prefValue);
+                gIcPrefService.setCharPref( fullPrefId, prefValue);
         },
        
         // ***********************************************************************
@@ -81,9 +81,9 @@ var IdentitySelectorPrefs =
         {
                 var fullPrefId = "extensions." + componentId + "." + prefId;
                
-                if( gPrefService.getPrefType( fullPrefId) == gPrefService.PREF_BOOL)
+                if( gIcPrefService.getPrefType( fullPrefId) == gIcPrefService.PREF_BOOL)
                 {
-                        return( gPrefService.getBoolPref( fullPrefId));
+                        return( gIcPrefService.getBoolPref( fullPrefId));
                 }
                
                 return( false);
@@ -96,6 +96,6 @@ var IdentitySelectorPrefs =
         setBooleanPref : function( componentId, prefId, prefValue)
         {
                 var fullPrefId = "extensions." + componentId + "." + prefId;
-                gPrefService.setBoolPref( fullPrefId, prefValue);
+                gIcPrefService.setBoolPref( fullPrefId, prefValue);
         }
 };
