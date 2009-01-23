@@ -324,10 +324,16 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
     var urlClassLoaderClasz = java.lang.Class.forName("java.net.URLClassLoader");
     var bootstrapClassLoader; 
     try {
-    	bootstrapClassLoader = new java.net.URLClassLoader(urlArray);
+    	bootstrapClassLoader = new java.net.URLClassLoader(urlArray); // try java6u12
 //    	bootstrapClassLoader = java.net.URLClassLoader.newInstance(urlArray);
     } catch(e) {
-    	alert("error instanciating new URLCalssLoader:" + urlArray + "\n" + e);
+		_printToJSConsole("error: new java.net.URLClassLoader(" + urlArray + ")\n" + e);
+    	try {
+        	bootstrapClassLoader = java.net.URLClassLoader.newInstance(urlArray); // try earlier versions of java
+    	} catch(ee) {
+    		_printToJSConsole("error: java.net.URLClassLoader.newInstance(" + urlArray + ")\n" + e);
+        	return false;
+    	}
     }
     if (!(bootstrapClassLoader.getClass().isInstance(java.lang.Class.forName("java.net.URLClassLoader")))) {
 //    if (!(bootstrapClassLoader instanceof java.net.URLClassLoader)) {
@@ -392,7 +398,7 @@ TokenComponent.prototype._bootstrapClassLoader = function(java, extensionPath) {
 //    	claszLoader = java.net.URLClassLoader.newInstance(urlArray);
     } catch(e) {
     	_printToJSConsole("exiting TokenComponent.prototype._bootstrapClassLoader Error: error instanciating new URLClassLoader:" + urlArray + "\n" + e);
-    	alert("error instanciating new URLClassLoader:" + urlArray + "\n" + e);
+//    	_printToJSConsole("error instanciating new URLClassLoader:" + urlArray + "\n" + e);
     }
     
     var firefoxClassLoaderPackages = new WrappedPackages(
