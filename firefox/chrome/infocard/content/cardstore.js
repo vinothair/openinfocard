@@ -99,8 +99,8 @@ function login(cardStorePath) {
 		        var pass = e.getNext().QueryInterface(Components.interfaces.nsIPassword);
 		        if (pass.host == queryString) {
 		             // found it!
-		             alert(pass.user); // the username
-		             alert(pass.password); // the password
+//		             alert(pass.user); // the username
+//		             alert(pass.password); // the password
 		             break;
 		        }
 		    } catch (ex) {
