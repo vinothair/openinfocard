@@ -204,6 +204,19 @@ TokenComponent.prototype.QueryInterface = function(iid) {
 };
 
 /*
+ *  Finalizes this component
+ */
+TokenComponent.prototype.finalize = function () {
+	this._trace("TokenComponent.finalize");
+    this.wrappedJSObject = null;
+    delete this._packages;
+    delete this._test;
+    delete this._policy;
+    delete this._tracingClassLoaderClass;
+    this._initialized = false;
+};
+
+/*
  *  Initializes this component, including loading JARs.
  */
 TokenComponent.prototype.initialize = function (java, trace) {

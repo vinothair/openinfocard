@@ -391,8 +391,13 @@ function getCardId(extraParams){
 //	return undefined;
 }
 
-function load(policyParam){
-	icDebug("load start. href=" + window.document.location.href );
+function cardManagerUnload(){
+	icDebug("cardManagerUnload start. href=" + window.document.location.href );
+	TokenIssuer.finalize();
+}
+
+function cardManagerLoad(policyParam){
+	icDebug("cardManagerLoad start. href=" + window.document.location.href );
 	
 	var controlarea = document.getElementById('selectcontrol');
 	if (controlarea) {
@@ -1206,7 +1211,7 @@ function reload(policyParam) {
 	
     selectedCard = null;
 
-    load(policyParam);
+    cardManagerLoad(policyParam);
 }
 
 function deleteCard(){
