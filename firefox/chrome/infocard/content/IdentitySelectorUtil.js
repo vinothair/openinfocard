@@ -65,7 +65,7 @@ var IdentitySelectorUtil =
        
         isJavaScriptEnabled : function()
         {
-                return( gPrefService.getBoolPref( "javascript.enabled"));
+                return( gIcPrefService.getBoolPref( "javascript.enabled"));
         },
        
         // ***********************************************************************
