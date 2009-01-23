@@ -1068,19 +1068,25 @@ function validateSignature(callback) {
 	}
 	if (tokenIssuerInitialized = TokenIssuer.initialize() == false) {
 		icDebug("digestNewCard: could not initialize TokenIssuer. Signature will not be validated");
-		idDebug("processCard: window.java = " + window.java + "window.document.location.href=" + window.document.location.href);
+		icDebug("processCard: window.java = " + window.java + "window.document.location.href=" + window.document.location.href);
 //		alert("Could not initialize java. The card's signature will not be validated!");
 	} else {
 		var currentRoamingStore = readRoamingStore();
 		icDebug2("currentRoamingStore = " + currentRoamingStore, 120);
 		var importedCardStr = null;
 		try {
-	        var jvm = Components.classes["@mozilla.org/oji/jvm-mgr;1"].getService(Components.interfaces.nsIJVMManager);
-	        jvm.showJavaConsole();
-
-			importedCardStr = TokenIssuer.importManagedCard(importedCardJSONStr, currentRoamingStore);
+			var clasz = Components.classes["@mozilla.org/oji/jvm-mgr;1"];
+			if ((clasz !== null) && (Components.interfaces.nsIJVMManager !== null)) {
+				var jvm = clasz.getService(Components.interfaces.nsIJVMManager);
+				jvm.showJavaConsole();
+			}
 		} catch (e) {
-			icDebug("TokenIssuer.importManagedCard threw exception " + e);
+			icDebug("Components.classes['@mozilla.org/oji/jvm-mgr;1'].getService(Components.interfaces.nsIJVMManager); threw exception " + e);
+		}
+		try {
+			importedCardStr = TokenIssuer.importManagedCard(importedCardJSONStr, currentRoamingStore);
+		} catch (e1) {
+			icDebug("TokenIssuer.importManagedCard threw exception " + e1);
 		}
     	if (importedCardStr != null) {
 	    	icDebug2("importedCardStr = " + importedCardStr, 120);
@@ -1378,15 +1384,22 @@ function setOptionalClaimsSelf(policy) {
     }
 }
 function processCard(policy, enableDebug){
-
+	icDebug("processCard: start");
     if (enableDebug) {
-        var jvm = Components.classes["@mozilla.org/oji/jvm-mgr;1"].getService(Components.interfaces.nsIJVMManager);
-        jvm.showJavaConsole();
+    	try {
+    		var clasz = Components.classes["@mozilla.org/oji/jvm-mgr;1"];
+    		if ((clasz !== null) && (Components.interfaces.nsIJVMManager !== undefined)) {
+		        var jvm = clasz.getService(Components.interfaces.nsIJVMManager);
+		        jvm.showJavaConsole();
+    		}
+    	} catch (ee) {
+    		icDebug("processCard: Components.classes['@mozilla.org/oji/jvm-mgr;1'].getService(Components.interfaces.nsIJVMManager) threw exception:" + ee);
+    	}
     }
     
 	if (tokenIssuerInitialized = TokenIssuer.initialize() == false) {
-		idDebug("processCard: could not initialize TokenIssuer. window.document.location.href=" + window.document.location.href);
-		idDebug("processCard: window.java=" + window.java);
+		icDebug("processCard: could not initialize TokenIssuer. window.document.location.href=" + window.document.location.href);
+		icDebug("processCard: window.java=" + window.java);
 		//		alert("Could not initialize the TokenIssuer. This is probably an java issuer");
 		return null;
 	}
