@@ -47,6 +47,7 @@
     <script src="chrome://infocard/content/json.js"/>
     <script src="chrome://infocard/content/openid.js"/>
     <script src="chrome://infocard/content/cmDebug.js"/>
+    <script src="chrome://infocard/content/cmSelfIssued.js"/>
     <script src="chrome://infocard/content/cmManagedCard.js"/>
     <script src="chrome://infocard/content/infocards.js"/>
     <script src="chrome://infocard/content/cardstore.js"/>
