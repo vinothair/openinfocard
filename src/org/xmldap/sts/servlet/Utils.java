@@ -234,7 +234,12 @@ public class Utils {
         	}
         }
         if (ppid != null) {
-        	token.setPrivatePersonalIdentifier(ppid);
+        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        	String cardPPID = card.getPrivatePersonalIdentifier(); // unique for this STS
+        	baos.write(cardPPID.getBytes());
+        	baos.write(ppid.getBytes());
+        	String digest = CryptoUtils.digest(baos.toByteArray());
+        	token.setPrivatePersonalIdentifier(digest);
         } else {
         	String cardPPID = card.getPrivatePersonalIdentifier();
         	// String restrictedTo, String relyingPartyCertB64
