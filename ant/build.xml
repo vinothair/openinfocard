@@ -18,7 +18,6 @@
 	           <include name="**/*.jar"/>
             </fileset>
         </path>
-        <property name="java.ver" value="15" />
     	<property name="xpiVersion" value="${openinfocard.version}.${DSTAMP}${TSTAMP}" />
     </target>
 
@@ -39,7 +38,7 @@
                dest="${build.jars.dir}"/>
 
 
-        <unzip src="${lib.dir}/bcprov-jdk${java.ver}-136.jar"
+        <unzip src="${lib.dir}/bcprov-jdk16-141.jar"
                dest="${build.jars.dir}"/>
 
         <delete dir="${build.jars.dir}/META-INF"/>
@@ -53,7 +52,6 @@
         <javac srcdir="${src.dir}"
                 destdir="${build.classes.dir}"
                 debug="true"
-		target="1.5"
                 deprecation="true"
                 fork="true"
                 includeAntRuntime="false">
@@ -316,8 +314,7 @@
         </jar>
         <copy file="${lib.dir}/xom-1.1.jar" todir="${objc.lib.dir}/"/>
         <copy file="${lib.dir}/lightcrypto.jar" todir="${objc.lib.dir}/"/>
-        <copy file="${lib.dir}/bcprov-jdk${java.ver}-135.jar" todir="${objc.lib.dir}/"/>
-        <copy file="${lib.dir}/bcprov-jdk${java.ver}-135.jar" todir="${objc.lib.dir}/"/>
+        <copy file="${lib.dir}/bcprov-jdk16-141.jar" todir="${objc.lib.dir}/"/>
         <zip destfile="${build.dir}/xmldap-objc-support-files.zip"  basedir="${objc.lib.dir}"/>
 
     </target>
