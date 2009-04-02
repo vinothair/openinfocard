@@ -32,10 +32,25 @@ function readRoamingStore() {
 }
 
 function getCard(cardid){
-
+//	cardstoreDebug("storeCard: cardid=" + cardid);
+//	cardstoreDebug("storeCard: typeof(cardid)=" + typeof(cardid));
     var cardFile = read(db);
-    var card = cardFile.infocard.(id == cardid);
-    return card;
+//	cardstoreDebug("storeCard: cardFile=" + cardFile);
+//	cardstoreDebug("storeCard: typeof(cardFile)=" + typeof(cardFile));
+//	cardstoreDebug("storeCard: typeof(cardFile.infocard)=" + typeof(cardFile.infocard));
+    
+    for each (c in cardFile.infocard) {
+    	if (c.id == cardid) {
+    		cardstoreDebug("getCard: c.id=" + c.id + "==" + cardid);
+    		return c;
+    	} else {
+    		cardstoreDebug("getCard: c.id=" + c.id + "!=" + cardid);
+    	}
+    }
+    return null;
+// the following line stopped to work in Firefox 3.1    
+//    var card = cardFile.infocard.(id == cardid);
+//    return card;
 }
 
 function readCardStore() {
@@ -318,11 +333,37 @@ function readALocalFile(fileName) {
         return null;
 	}
 
-    var is = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance( Components.interfaces.nsIFileInputStream );
-	is.init( file,0x01, 00004, null);
-	var sis = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance( Components.interfaces.nsIScriptableInputStream );
-	sis.init( is );
-	var output = sis.read( sis.available() );
+    var output = null;
+    
+    var is = null;
+    try {
+    	is = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance( Components.interfaces.nsIFileInputStream );
+		is.init( file,0x01, 00004, null);
+		var sis = null;
+		try {
+			sis = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance( Components.interfaces.nsIScriptableInputStream );
+			sis.init( is );
+			output = sis.read( sis.available() );
+		} catch (e) {
+			cardstoreDebug("readALocalFile threw exception " + e);
+			if (sis != null) {
+				sis.close();
+			}
+		} finally {
+			if (sis != null) {
+				sis.close();
+			}
+		}
+    } catch (e) {
+		cardstoreDebug("readALocalFile threw an exception " + e);
+		if (is != null) {
+			is.close();
+		}
+	} finally {
+		if (is != null) {
+			is.close();
+		}
+	}
 	return output;
 } 
 
