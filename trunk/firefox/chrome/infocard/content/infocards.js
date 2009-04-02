@@ -578,7 +578,7 @@ function setCard(card){
     var policy = getPolicy();
 
     icDebug("TYPE: " + selectedCard.type);
-//    icDebug(selectedCard);
+    icDebug("selectedCard: " + selectedCard);
 
     var selfassertedClaims = document.getElementById('selfassertedClaims');
     var managedClaims = document.getElementById('managedClaims');
@@ -657,7 +657,14 @@ function dblclick(event) {
 function handleCardChoice(event){
 
     var choice = event.originalTarget;
+    if (choice == undefined) {
+    	alert("internal error: handleCardChoice: choice == undefined");
+    }
     var selectedCardId = choice.getAttribute("cardid");
+    if (selectedCardId == undefined) {
+    	alert("internal error: handleCardChoice: selectedCardId == undefined");
+    }
+    icDebug("selectedCardId="+selectedCardId);
     var choosenCard = getCard(selectedCardId);
     setCard(choosenCard);
 
