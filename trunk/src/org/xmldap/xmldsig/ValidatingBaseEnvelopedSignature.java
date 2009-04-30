@@ -64,7 +64,7 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		if (!digest.equals(b64EncodedDigest)) {
 
 			System.out
-					.println("Digest of the Reference did not match the provided Digest.  Exiting.");
+					.println("Digest of the reference did not match the provided Digest.  Exiting.");
 			return false;
 
 		}

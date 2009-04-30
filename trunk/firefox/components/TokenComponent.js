@@ -93,7 +93,7 @@ var TokenModule = {
      *  This flag specifies whether this factory will create only a
      *  single instance of the component.
      */
-    _singleton :     true,
+    _singleton :     false,
     _myFactory : {
         createInstance : function(outer, iid) {
             if (outer != null) {
@@ -149,6 +149,17 @@ var TokenModule = {
         /*
          *  Do any unloading task you want here
          */
+        if ((this.theInstance !== undefined) && (this.theInstance !== null)) {
+        	var tk;
+        	if (this.theInstance.wrappedJSObject) {
+        		tk = this.theInstance.wrappedJSObject;
+        	} else {
+        		tk = this.theInstance;
+        	}
+            tk._initialized = false;
+            tk.finalize();
+            this.theInstance = null;
+        }
         return true;
     }
 };

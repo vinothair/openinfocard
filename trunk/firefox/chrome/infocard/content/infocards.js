@@ -666,6 +666,12 @@ function handleCardChoice(event){
     }
     icDebug("selectedCardId="+selectedCardId);
     var choosenCard = getCard(selectedCardId);
+    if (choosenCard === null) {
+    	icDebug("internal error: card not found: " + selectedCardId);
+    	alert("internal error: card not found: " + selectedCardId);
+    	return;
+    }
+    icDebug("choosenCard="+choosenCard);
     setCard(choosenCard);
 
 }
@@ -902,6 +908,9 @@ function computeCardClass(card, policy) {
 }
 
 function saveCard(card){
+	if (card === undefined) {
+		throw "saveCard: internal error: the card is undefined";
+	}
     storeCard(card);
     var cardArea = document.getElementById("cardselection");
     if (cardArea) {
@@ -947,21 +956,13 @@ function validateSignature(callback) {
 		var currentRoamingStore = readRoamingStore();
 		icDebug2("currentRoamingStore = " + currentRoamingStore, 120);
 		var importedCardStr = null;
-		try {
-			var clasz = Components.classes["@mozilla.org/oji/jvm-mgr;1"];
-			if ((clasz !== null) && (Components.interfaces.nsIJVMManager !== null)) {
-				var jvm = clasz.getService(Components.interfaces.nsIJVMManager);
-				jvm.showJavaConsole();
-			}
-		} catch (e) {
-			icDebug("Components.classes['@mozilla.org/oji/jvm-mgr;1'].getService(Components.interfaces.nsIJVMManager); threw exception " + e);
-		}
+
 		try {
 			importedCardStr = TokenIssuer.importManagedCard(importedCardJSONStr, currentRoamingStore);
 		} catch (e1) {
 			icDebug("TokenIssuer.importManagedCard threw exception " + e1);
 		}
-    	if (importedCardStr != null) {
+    	if ((importedCardStr !== null) && (importedCardStr !== undefined)){
 	    	icDebug2("importedCardStr = " + importedCardStr, 120);
 	    	icDebug("importedCardStr type=" + typeof(importedCardStr));
 	    	var importedCard = JSON.parse("" + importedCardStr + ""); // convert java.lang.String to javascript string
@@ -1005,7 +1006,8 @@ function digestNewCard(callback) {
     var cardName = callback.cardName;
     var type = "" + callback.type;
     var cardId = "" + callback.cardId;
-
+    var card = null;
+    
     if (isCardInStore(cardId)) {
     	alert("This card is already in the card store. Please delete it first.");
 		return;
@@ -1013,7 +1015,12 @@ function digestNewCard(callback) {
 	
     if ( type === "selfAsserted") {
     	
-        var card = newSelfIssuedCard(callback);
+        card = newSelfIssuedCard(callback);
+        if (card === null) {
+        	icDebug("digestNewCard: card is null. callback = " + callback);
+        	alert("This card is null. This might be an internal error");
+        	return;
+        }
         saveCard(card);
         return;
     }
@@ -1021,12 +1028,22 @@ function digestNewCard(callback) {
     if ( type === "managedCard") {
     	validateSignature(callback);
     	card = newManagedCard(callback);
+        if (card === null) {
+        	icDebug("digestNewCard: card is null. callback = " + callback);
+        	alert("This card is null. This might be an internal error");
+        	return;
+        }
         saveCard(card);
     }
 
 
     if ( type == "openid") {
     	card = newOpenIdCard(callback);
+        if (card === null) {
+        	icDebug("digestNewCard: card is null. callback = " + callback);
+        	alert("This card is null. This might be an internal error");
+        	return;
+        }
         saveCard(card);
 
     }
@@ -1087,7 +1104,6 @@ function deleteCard(){
 	if (selectedCard == undefined) return;
 	if (selectedCard == null) return;
 	
-    
     var selectedCardId = selectedCard.id;
     icDebug("Delete Card : " + selectedCardId);
     removeCard(selectedCardId);
@@ -1095,31 +1111,25 @@ function deleteCard(){
 }
 
 function processCard(policy, enableDebug){
-	icDebug("processCard: start");
-    if (enableDebug) {
-    	try {
-    		var clasz = Components.classes["@mozilla.org/oji/jvm-mgr;1"];
-    		if ((clasz !== null) && (Components.interfaces.nsIJVMManager !== undefined)) {
-		        var jvm = clasz.getService(Components.interfaces.nsIJVMManager);
-		        jvm.showJavaConsole();
-    		}
-    	} catch (ee) {
-    		icDebug("processCard: Components.classes['@mozilla.org/oji/jvm-mgr;1'].getService(Components.interfaces.nsIJVMManager) threw exception:" + ee);
-    	}
-    }
-    
-	if (tokenIssuerInitialized = TokenIssuer.initialize() == false) {
-		icDebug("processCard: could not initialize TokenIssuer. window.document.location.href=" + window.document.location.href);
-		icDebug("processCard: window.java=" + window.java);
-		//		alert("Could not initialize the TokenIssuer. This is probably an java issuer");
-		return null;
-	}
+	icDebug("processCard: {");
+    try {
+    	var tokenIssuerInitialized = TokenIssuer.initialize();
+		if (tokenIssuerInitialized == false) {
+			icDebug("processCard: could not initialize TokenIssuer. window.document.location.href=" + window.document.location.href);
+			icDebug("processCard: window.java=" + window.java);
+			//		alert("Could not initialize the TokenIssuer. This is probably an java issuer");
+			return null;
+		}
+		icDebug("processCard: here");
+	    var token;
+	    
+	    var serializedPolicy = JSON.stringify(policy);
+	    token = TokenIssuer.getToken(serializedPolicy);
 	
-    var token;
-    
-    var serializedPolicy = JSON.stringify(policy);
-    token = TokenIssuer.getToken(serializedPolicy);
-
-    return token;
-
+	    return token;
+    } catch (e) {
+    	icDebug("processCard: threw " + e);
+    } finally {
+    	icDebug("processCard: }");
+    }
 }

@@ -5,9 +5,10 @@ import java.io.IOException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
+
 import nu.xom.*;
 
-public class RoamingInformationCard implements org.xmldap.xml.Serializable {
+public class RoamingInformationCard implements org.xmldap.xml.Serializable, Comparable<RoamingInformationCard> {
 //	  <ic:RoamingInformationCard> +
 //	    <ic:InformationCardMetaData>
 //	      [Information Card]
@@ -32,6 +33,49 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable {
 	InformationCardMetaData informationCardMetaData = null;
 	InformationCardPrivateData informationCardPrivateData = null;
 	
+    public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if ((obj == null) || (obj.getClass() != this.getClass())) return false;
+		RoamingInformationCard test = (RoamingInformationCard) obj;
+		return (this.compareTo(test) == 0);
+	}
+
+    public int hashCode() {
+		int hash = 7;
+		hash = 31 * hash + (null == informationCardMetaData ? 0 : informationCardMetaData.hashCode());
+		hash = 31 * hash + (null == informationCardPrivateData ? 0 : informationCardPrivateData.hashCode());
+		return hash;
+	}
+
+    public int compareTo(RoamingInformationCard obj) {
+    	if (this == obj) return 0;
+    	
+    	int comparison = informationCardMetaData.compareTo(obj.informationCardMetaData);
+    	if (comparison != 0) return comparison;
+    	
+    	if (informationCardPrivateData != null) {
+    		if (informationCardPrivateData instanceof SelfIssuedInformationCardPrivateData) {
+    			SelfIssuedInformationCardPrivateData thisSelfIssuedInformationCardPrivateData = (SelfIssuedInformationCardPrivateData)informationCardPrivateData;
+    			SelfIssuedInformationCardPrivateData thatSelfIssuedInformationCardPrivateData = (SelfIssuedInformationCardPrivateData)obj.informationCardPrivateData;
+    	    	comparison = thisSelfIssuedInformationCardPrivateData.compareTo(thatSelfIssuedInformationCardPrivateData);
+    	    	return comparison;
+    		}
+    		if (informationCardPrivateData instanceof ManagedInformationCardPrivateData) {
+    			ManagedInformationCardPrivateData thisManagedInformationCardPrivateData = (ManagedInformationCardPrivateData)informationCardPrivateData;
+    			ManagedInformationCardPrivateData thatManagedInformationCardPrivateData = (ManagedInformationCardPrivateData)obj.informationCardPrivateData;
+    	    	comparison = thisManagedInformationCardPrivateData.compareTo(thatManagedInformationCardPrivateData);
+    	    	return comparison;
+    		}
+        	throw new ClassCastException();
+    	}
+    	if (obj.informationCardPrivateData == null) {
+    		return 0;
+    	} else {
+    		return 1;
+    	}
+    	
+    }
+    
 //    public RoamingInformationCard(InfoCard card) {
 //        this.informationCardMetaData.card = card;
 //        informationCardPrivateData = new InformationCardPrivateData();

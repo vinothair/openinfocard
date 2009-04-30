@@ -29,9 +29,6 @@
 package org.xmldap.infocard.roaming;
 
 import org.xmldap.exceptions.SerializationException;
-import org.xmldap.infocard.InfoCard;
-import org.xmldap.infocard.SelfIssuedClaims;
-import org.xmldap.util.Base64;
 import org.xmldap.util.XmlFileUtil;
 import org.xmldap.ws.WSConstants;
 
@@ -43,8 +40,9 @@ import nu.xom.ValidityException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.Iterator;
 
@@ -73,13 +71,13 @@ import java.util.Iterator;
 
 public class RoamingStore implements org.xmldap.xml.Serializable {
 
-    private List<RoamingInformationCard> roamingInformationCards = null;
+    private SortedSet<RoamingInformationCard> roamingInformationCards = null;
 
     public RoamingStore() {
-        roamingInformationCards = new Vector<RoamingInformationCard>();
+        roamingInformationCards = new TreeSet<RoamingInformationCard>();
     }
 
-    public RoamingStore(List<RoamingInformationCard> roamingInformationCards) {
+    public RoamingStore(SortedSet<RoamingInformationCard> roamingInformationCards) {
         this.roamingInformationCards = roamingInformationCards;
     }
 
@@ -87,70 +85,31 @@ public class RoamingStore implements org.xmldap.xml.Serializable {
     	this(XmlFileUtil.readXml(new ByteArrayInputStream(roamingStoreStr.getBytes())));
     }
 
-//    public RoamingStore(Infocards infocards) throws org.xmldap.exceptions.ParsingException {
-//    	Collection<JsInfocard> infocardsList = infocards.getInfocards();
-//    	for (JsInfocard jsInfocard : infocardsList) {
-//			if (roamingInformationCards == null) {
-//				roamingInformationCards = new Vector<RoamingInformationCard>();
-//			}
-//			InformationCardPrivateData informationCardPrivateData;
-//			if ("selfAsserted".equals(jsInfocard.type)) {
-//				JsCardDataSelfAsserted cardData = (JsCardDataSelfAsserted)jsInfocard.cardData.foo;
-//				SelfIssuedClaims sic = new SelfIssuedClaims();
-//				for (String key : cardData.avps.keySet()) {
-//					if ("givenname".equals(key)) {
-//						sic.setGivenName(cardData.avps.get(key));
-//					} else if ("surname".equals(key)) {
-//						sic.setSurname(cardData.avps.get(key));
-//					} else if ("email".equals(key)) {
-//						sic.setEmailAddress(cardData.avps.get(key));
-//					} else if ("streetAddress".equals(key)) {
-//						sic.setStreetAddress(cardData.avps.get(key));
-//					} else if ("locality".equals(key)) {
-//						sic.setLocality(cardData.avps.get(key));
-//					} else if ("stateOrProvince".equals(key)) {
-//						sic.setStateOrProvince(cardData.avps.get(key));
-//					} else if ("postalCode".equals(key)) {
-//						sic.setPostalCode(cardData.avps.get(key));
-//					} else if ("country".equals(key)) {
-//						sic.setCountry(cardData.avps.get(key));
-//					} else if ("primaryPhone".equals(key)) {
-//						sic.setPrimaryPhone(cardData.avps.get(key));
-//					} else if ("otherPhone".equals(key)) {
-//						sic.setOtherPhone(cardData.avps.get(key));
-//					} else if ("mobilePhone".equals(key)) {
-//						sic.setMobilePhone(cardData.avps.get(key));
-//					} else if ("dateOfBirth".equals(key)) {
-//						sic.setDateOfBirth(cardData.avps.get(key));
-//					} else if ("gender".equals(key)) {
-//						sic.setGender(cardData.avps.get(key));
-//					} else {
-//						throw new IllegalArgumentException("unsupported self-issued attribute:"  + key);
-//					}
-//					byte[] ppid = Base64.decode(jsInfocard.privatepersonalidentifier);
-//					informationCardPrivateData = new SelfIssuedInformationCardPrivateData(sic, ppid);
-//				}
-//			} else if ("managedCard".equals(jsInfocard.type)) {
-//				informationCardPrivateData = new ManagedInformationCardPrivateData();
-//			} else {
-//				throw new IllegalArgumentException("Information Card type is not supported:" + jsInfocard.type);
-//			}
-//			InfoCard infocard = new InfoCard();
-//			{
-//				infocard.setCardId(jsInfocard.getId(), 1);
-//				infocard.setCardName(jsInfocard.getName());
-//				if ("managedCard".equals(jsInfocard.type)) {
-//					infocard.setIssuer(jsInfocard.getIssuer());
-//					infocard.setRequireAppliesTo(jsInfocard.getRequireApplisTo());
-//					infocard.set
-//				}
-//			}
-//			InformationCardMetaData informationCardMetaData = new InformationCardMetaData(infocard);
-//			RoamingInformationCard roamingInformationCard = new RoamingInformationCard(informationCardMetaData, informationCardPrivateData);
-//			roamingInformationCards.add(roamingInformationCard);
-//    	}
-//    }
+    public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if ((obj == null) || (obj.getClass() != this.getClass())) return false;
+		RoamingStore test = (RoamingStore) obj;
+		if (roamingInformationCards == test.roamingInformationCards) return true;
+		if (roamingInformationCards != null) {
+			if (roamingInformationCards.size() != test.roamingInformationCards.size()) return false;
+			Iterator<RoamingInformationCard> thisIter=roamingInformationCards.iterator();
+			Iterator<RoamingInformationCard> thatIter=test.roamingInformationCards.iterator();
+			while ( thisIter.hasNext() && thatIter.hasNext() ) {
+				RoamingInformationCard thisElt = thisIter.next();
+				RoamingInformationCard thatElt = thatIter.next();
+				if (!thisElt.equals(thatElt)) return false;
+			}
+		}
+		return true;
+	}
 
+    public int hashCode() {
+		int hash = 7;
+		hash = 31 * hash + (null == roamingInformationCards ? 0 : roamingInformationCards.hashCode());
+		return hash;
+	}
+
+    
     public RoamingStore(Document roamingStoreDoc) throws IOException, org.xmldap.exceptions.ParsingException, ParsingException {
     	Element root = roamingStoreDoc.getRootElement();
     	if ("RoamingStore".equals(root.getLocalName())) {
@@ -158,7 +117,7 @@ public class RoamingStore implements org.xmldap.xml.Serializable {
     		for (int i=0; i<roamingCardsElts.size(); i++) {
     			Element roamingCardElt = roamingCardsElts.get(i);
     			if (roamingInformationCards == null) {
-    				roamingInformationCards = new Vector<RoamingInformationCard>();
+    				roamingInformationCards = new TreeSet<RoamingInformationCard>();
     			}
     			RoamingInformationCard roamingInformationCard = new RoamingInformationCard(roamingCardElt);
     			roamingInformationCards.add(roamingInformationCard);
@@ -174,7 +133,7 @@ public class RoamingStore implements org.xmldap.xml.Serializable {
 
     }
 
-    public List<RoamingInformationCard> getRoamingInformationCards() {
+    public SortedSet<RoamingInformationCard> getRoamingInformationCards() {
 
         return roamingInformationCards;
 

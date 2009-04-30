@@ -34,41 +34,46 @@
 var TokenIssuer = new Object();
 
 TokenIssuer.initialize = function() {
-    try {
-
-        var tokenIssuer = this.getTokenIssuer();
-        
-        if (java == undefined) {
-        	TokenIssuer._trace("TokenIssuer.initialize: java is undefined: " + win.document.location.href);
-//        	alert("TokenIssuer.initialize: java is undefined");
-        	return false;
-        }
-        
-        {
-        	TokenIssuer._trace( "java.verion=" + java.lang.System.getProperty("java.version") );
-        }
-        
-        /*
-         *  Initialize it. The trick is to get past its IDL interface
-         *  and right into its Javascript implementation, so that we
-         *  can pass it the LiveConnect "java" object, which it will
-         *  then use to load its JARs. Note that XPCOM Javascript code
-         *  is not given LiveConnect by default.
-         */
-        if (!tokenIssuer.wrappedJSObject.initialize(java, true)) {
-            alert(tokenIssuer.wrappedJSObject.error);
-            return false;
-        }
-    } catch (e) {
-        this._fail(e);
-        return false;
-    }
-    return true;
+	TokenIssuer._trace("TokenIssuer.initialize");
+	this.tokenIssuer = this.getTokenIssuer();
 };
+
+//TokenIssuer.initialize = function() {
+//    try {
+//
+//        var tokenIssuer = this.getTokenIssuer();
+//        
+//        if (java == undefined) {
+//        	TokenIssuer._trace("TokenIssuer.initialize: java is undefined: " + win.document.location.href);
+////        	alert("TokenIssuer.initialize: java is undefined");
+//        	return false;
+//        }
+//        
+//        {
+//        	TokenIssuer._trace( "java.verion=" + java.lang.System.getProperty("java.version") );
+//        }
+//        
+//        /*
+//         *  Initialize it. The trick is to get past its IDL interface
+//         *  and right into its Javascript implementation, so that we
+//         *  can pass it the LiveConnect "java" object, which it will
+//         *  then use to load its JARs. Note that XPCOM Javascript code
+//         *  is not given LiveConnect by default.
+//         */
+//        if (!tokenIssuer.wrappedJSObject.initialize(java, true)) {
+//            alert(tokenIssuer.wrappedJSObject.error);
+//            return false;
+//        }
+//    } catch (e) {
+//        this._fail(e);
+//        return false;
+//    }
+//    return true;
+//};
 
 TokenIssuer.getAllCards = function(dirName, password) {
     try {
-        var tokenIssuer = this.getTokenIssuer();
+    	var tokenIssuer = this.getTokenIssuer();
         
         var issuer = tokenIssuer.wrappedJSObject.getTokenIssuer();
         var result = issuer.getAllCards(dirName, password);
@@ -182,16 +187,95 @@ TokenIssuer.importManagedCard = function(importedCardJSONStr, cardFileJSONStr) {
     return null;
 };
 
+/*
+ *  Get the file path to the installation directory of this 
+ *  extension.
+ */
+TokenIssuer._getExtensionPath = function(extensionName) {
+    var chromeRegistry =
+        Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+            .getService(Components.interfaces.nsIChromeRegistry);
+            
+    var uri =
+        Components.classes["@mozilla.org/network/standard-url;1"]
+            .createInstance(Components.interfaces.nsIURI);
+    
+    uri.spec = "chrome://" + extensionName + "/content/";
+    
+    var path = chromeRegistry.convertChromeURL(uri);
+    if (typeof(path) == "object") {
+        path = path.spec;
+    }
+    
+    path = path.substring(0, path.indexOf("/chrome/") + 1);
+    
+    return path;
+};
+
+//TokenIssuer.getTokenIssuer = function() {
+//    return Components.classes["@xmldap.org/token-issuer;1"]
+//        .getService(Components.interfaces.nsIHelloWorld);
+//}
+
 TokenIssuer.getTokenIssuer = function() {
-    return Components.classes["@xmldap.org/token-issuer;1"]
-        .getService(Components.interfaces.nsIHelloWorld);
-}
+	this._trace("getTokenIssuer {");
+    	
+	try {
+		if (this.tokenIssuer)
+	    	return this.tokenIssuer;
+		} else {
+			var extensionPath = this._getExtensionPath("infocard");
+			var libPath = extensionPath + "components/lib/";
+			var xmldapUrl = new java.net.URL(libPath+"xmldap.jar");
+			var cl = new java.net.URLClassLoader( [ xmldapUrl ]  );
+			if (cl === null) {
+				this._trace("class loader is null");
+				return null;
+			}
+			// xmldapPolicy gives us read/write permission on all files that are named cardDB.xml
+			var xmldapPolicyClass = java.lang.Class.forName("org.xmldap.firefox.XmldapPolicy", true, cl);
+			if (xmldapPolicyClass === null) {
+				this._trace("xmldapPolicyClass is null");
+				return null;
+			}
+			var policyConstructor = xmldapPolicyClass.getConstructor([java.lang.Class.forName("java.lang.String")]);
+			if (policyConstructor === null) {
+				this._trace("policyConstructor is null");
+				return null;
+			}
+			var xmldapPolicy = policyConstructor.newInstance( [extensionPath] );
+			if (xmldapPolicy === null) {
+				this._trace("xmldapPolicy is null");
+				return null;
+			}
+			java.security.Policy.setPolicy(xmldapPolicy);
+			
+			var tiClass = java.lang.Class.forName("org.xmldap.firefox.TokenIssuer", true, cl);
+			if (tiClass === null) {
+				this._trace("tiClass is null");
+				return null;
+			}
+			var constructor = tiClass.getConstructor([java.lang.Class.forName("java.lang.String")]);
+			if (constructor === null) {
+				this._trace("constructor is null");
+				return null;
+			}
+			this.tokenIssuer = constructor.newInstance( [extensionPath] );
+			return this.tokenIssuer;
+		}
+	} catch (e) {
+		this._trace("getTokenIssuer threw: " + e);
+		return null;
+	} finally {
+		this._trace("getTokenIssuer }");
+	}
+};
 
 TokenIssuer._trace = function (msg) {
     Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService)
             .logStringMessage(msg);
-}
+};
 
 TokenIssuer._fail = function(e) {
     var msg;
