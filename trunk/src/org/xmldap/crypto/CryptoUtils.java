@@ -92,21 +92,7 @@ public class CryptoUtils {
      * @throws CryptoException
      */
     public static String digest(byte[] data) throws CryptoException {
-
-
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("SHA");
-        } catch (NoSuchAlgorithmException e) {
-            throw new CryptoException(e);
-        }
-        md.reset();
-        md.update(data);
-        byte[] digest = md.digest();
-
-
-        return Base64.encodeBytesNoBreaks(digest);
-
+        return Base64.encodeBytesNoBreaks(byteDigest(data));
     }
 
 	/**
