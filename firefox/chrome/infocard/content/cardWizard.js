@@ -192,47 +192,6 @@
          var mex = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
          var wss = new Namespace("wss", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
 
-// default xml namespace = "http://www.w3.org/2000/09/xmldsig#";
-      
-// the following line does not work with the openidcards.sxip.com cards. It
-// works down to the mexReference but failes to retrieve the address
-// var mexEP =
-// cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference.wsa::Metadata.mex::Metadata.mex::MetadataSection.mex::MetadataReference.wsa::Address;
-
-         var tokenservice =    cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService;
-         // cardWizardDebug("tokenservice:" + tokenservice.toXMLString());
-         var epr = tokenservice.wsa::EndpointReference;
-         // cardWizardDebug("EndpointReference:" + epr.toXMLString());
-         var mexOuter = epr.wsa::Metadata;
-         // cardWizardDebug("outer Metadata:" + mexOuter.toXMLString());
-         var mexInner = mexOuter.mex::Metadata;
-         // cardWizardDebug("inner Metadata:" + mexInner.toXMLString());
-         var mexSection = mexInner.mex::MetadataSection;
-         // cardWizardDebug("MetadataSection:" + mexSection.toXMLString());
-         var mexReference = mexSection.mex::MetadataReference;
-         // cardWizardDebug("MetadataReference: " + mexReference.toXMLString());
-         var mexEP = mexReference.wsa::Address; // this does not work with the
-												// sxip openidinfocards
-         cardWizardDebug("mexAddress: " + mexEP.toXMLString());
-         if (mexEP == undefined) {
-            var address = "" + mexReference.toString() + "";
-            var ia = address.indexOf("Address");
-            if (ia > 0) {
-            	var lt = String.fromCharCode(60); 
-            	ia += "Address".length+1;
-            	address = address.substring(ia);
-            	var ib = address.indexOf(lt);
-            	address = address.substring(0, ib);
-            	cardWizardDebug("address:" + address);
-            	mexEP = address;
-            } else {
-            	alert("Could not find Metadata Address in imported card");
-	            window.arguments[1](null);
-                document.getElementById('card-window').cancel();
-            	return;
-            }
-         }
-
          var cardId = cardxml.dsig::Object.ic::InformationCard.ic::InformationCardReference.ic::CardId;
          var cardVersion = cardxml.dsig::Object.ic::InformationCard.ic::InformationCardReference.ic::CardVersion;
          var cardName = cardxml.dsig::Object.ic::InformationCard.ic::CardName;
@@ -242,60 +201,13 @@
          var tokenServiceList = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService;
 // alert("tokenServiceList=" + tokenServiceList);
          
-         var stsCert;
-         if (tokenServiceList.length > 1) {
-        	 alert("multiple tokenservices are currently not supported. Using the first one only");
-         }
-         var tokenService = tokenServiceList[0];
-// alert("tokenService=" + tokenService);
-         
-         stsCert = tokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data.dsig::X509Certificate;
-// alert("wsa::EndpointReference" +
-// cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.wsa::EndpointReference);
-         var identity = tokenService.wsa::EndpointReference.wsid::Identity;
-// alert("wsid::Identity" + identity);
-		 var keyInfo = identity.dsig::KeyInfo;
-		 var identityStr = "" + identity;
-		 if ((typeof(keyInfo) == 'xml') && (""+keyInfo == "") && ((keyInfoIndex = identityStr.indexOf("KeyInfo>")) != -1)) {
-			 // I think this is a bug in Mozilla javascript XML
-				// implementation.
-			 // It does not handle default namespaces well...
-			 var keyInfoStr = identityStr.substring(keyInfoIndex); 
-			 var certIndex = keyInfoStr.indexOf("X509Certificate>") + "X509Certificate>".length; // start
-																									// of
-																									// value
-																									// of
-																									// X509Certificate
-																									// element
-			 if (certIndex == -1) {
-				 alert("Could not find STS certificate");
-				 return;
-			 }
-			 var certSubStr = keyInfoStr.substring(certIndex);
-			 var certStopIndex = certSubStr.indexOf("<"); // < ist not in the
-															// Base64 alphabet
-			 if (certStopIndex == -1) {
-				 alert("Could not find STS certificate!");
-				 return;
-			 }
-			 stsCert = certSubStr.substring(0,certStopIndex);
-// alert("stsCert String="+stsCert);
-			 cardWizardDebug("stsCert String="+stsCert);
-		 } else {
-			 cardWizardDebug("KeyInfo="+keyInfo);
-		 }
-		 
-// alert("dsig::KeyInfo" + keyInfo + "type=" + typeof(keyInfo));
-// alert("KeyInfo" +
-// tokenService.wsa::EndpointReference.wsid::Identity.KeyInfo);
-// alert("dsig::X509Data" +
-// tokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data);
-// alert("dsig::X509Certificate" +
-// tokenService.wsa::EndpointReference.wsid::Identity.dsig::KeyInfo.dsig::X509Data.dsig::X509Certificate);
+         var stsCert = cardxml.dsig::KeyInfo;
 
 		 var supportedTokenTypeList = cardxml.dsig::Object.ic::InformationCard.ic::SupportedTokenTypeList;
 
-		 var cardUserCredential = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.toXMLString();
+		 var tokenServiceList = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList;
+//		 var cardUserCredential = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential;
+		 
 // var cardHint =
 // cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
 // var cardUid =
@@ -310,12 +222,11 @@
           cardWizardDebug(cardId);
           cardWizardDebug(cardName);
           cardWizardDebug(issuer);
-          cardWizardDebug(mexEP);
 // cardWizardDebug(cardHint);
 // cardWizardDebug(cardUid);
 // cardWizardDebug(cardKeyIdentifier);
 // cardWizardDebug(cardPrivatePersonalIdentifier);
-		  cardWizardDebug(cardUserCredential);
+		  cardWizardDebug(tokenServiceList);
 		  cardWizardDebug("stsCert: " + stsCert);
 		  cardWizardDebug("requireAppliesTo:" + requireAppliesTo);
 		  cardWizardDebug("SupportedTokenTypeList:"+ supportedTokenTypeList);
@@ -330,15 +241,14 @@
           callbackdata["cardName"] = cardName;
           callbackdata["cardImage"] = cardImage;
           callbackdata["issuer"] = issuer;
-          callbackdata["mex"] = mexEP;
 // callbackdata["hint"] = cardHint;
 // callbackdata["uid"] = cardUid;
 // callbackdata["KeyIdentifier"] = cardKeyIdentifier;
 // callbackdata["PrivatePersonalIdentifier"] = cardPrivatePersonalIdentifier;
-		  callbackdata["usercredential"] = cardUserCredential;
+		  callbackdata["tokenServiceList"] = tokenServiceList;
           callbackdata["stsCert"] = stsCert;
-          callbackdata["supportedClaims"] = cardxml.dsig::Object.ic::InformationCard.ic::SupportedClaimTypeList.toXMLString();
-          callbackdata["supportedTokenTypeList"] = supportedTokenTypeList.toXMLString();
+          callbackdata["supportedClaims"] = cardxml.dsig::Object.ic::InformationCard.ic::SupportedClaimTypeList;
+          callbackdata["supportedTokenTypeList"] = supportedTokenTypeList;
           if (requireAppliesTo != null) {
               callbackdata["requireAppliesTo"] = true;
           }

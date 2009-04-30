@@ -140,6 +140,14 @@ public class SelfIssuedToken implements Serializable {
 		this.selfIssuedClaims.setLocality(locality);
 	}
 
+	public String getWebPage() {
+		return selfIssuedClaims.getWebPage();
+	}
+
+	public void setWebPage(String locality) {
+		this.selfIssuedClaims.setWebPage(locality);
+	}
+
 	public String getStateOrProvince() {
 		return selfIssuedClaims.getStateOrProvince();
 	}
@@ -331,6 +339,7 @@ public class SelfIssuedToken implements Serializable {
 		addAttribute(attributes, "dateofbirth",	claimsNamespace, selfIssuedClaims.getDateOfBirth());
 		addAttribute(attributes, "privatepersonalidentifier", claimsNamespace,selfIssuedClaims.getPrivatePersonalIdentifier());
 		addAttribute(attributes, "gender", claimsNamespace, selfIssuedClaims.getGender());
+		addAttribute(attributes, "webpage", claimsNamespace, selfIssuedClaims.getWebPage());
 
 		AttributeStatement statement = new AttributeStatement();
 		statement.setSubject(subject);

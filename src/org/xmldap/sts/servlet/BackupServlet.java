@@ -182,7 +182,12 @@ public class BackupServlet extends HttpServlet {
 			}
 
 			String issuerName = cert.getIssuerX500Principal().getName();
-            InformationCardMetaData informationCardMetaData = new InformationCardMetaData(card, issuerName);
+        	String hashSalt = "salt1234";
+        	String timeLastUpdated = card.getTimeIssued();
+        	String issuerId = card.getIssuer();
+        	String backgroundColor = "16777215";
+        	InformationCardMetaData informationCardMetaData = 
+            	new InformationCardMetaData(card, false, null, hashSalt, timeLastUpdated, issuerId, issuerName, backgroundColor);
             SelfIssuedInformationCardPrivateData informationCardPrivateData = new SelfIssuedInformationCardPrivateData();
             RoamingInformationCard ric = new RoamingInformationCard(informationCardMetaData, informationCardPrivateData);
             store.addRoamingInformationCard(ric);

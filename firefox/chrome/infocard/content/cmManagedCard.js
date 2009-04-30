@@ -36,7 +36,9 @@ icDebug("getMex: mex POST request status="+req.status);
     if(req.status == 200) {
 icDebug("getMex: mex POST request status 200");
 
-        mexResponse = req.responseText;
+        mexResponse = req.responseText; // bug 270553
+        mexResponse = mexResponse.replace(/^<\?xml\s+version\s*=\s*(["'])[^\1]+\1[^?]*\?>/, ""); // bug 336551
+        
 icDebug("getMex POST 200: " + mexResponse);
         return mexResponse;
     } else {
@@ -59,7 +61,8 @@ icDebug("getMex POST " + req.status + ": " + req.responseText);
 icDebug("getMex: mex GET request status="+req.status);
     if(req.status == 200) {
 icDebug("getMex: mex GET request status 200");
-        mexResponse = req.responseText;
+        mexResponse = req.responseText; // bug 270553
+        mexResponse = mexResponse.replace(/^<\?xml\s+version\s*=\s*(["'])[^\1]+\1[^?]*\?>/, ""); // bug 336551
 icDebug("getMex: " + mexResponse);
         return mexResponse;
     } else {
@@ -76,226 +79,228 @@ function getMexForCard(managedCard) {
 	return mexResponse;
 }
 
-function processManagedCard(
-		managedCard, requiredClaims, optionalClaims, tokenType, clientPseudonym, 
-		relyingPartyURL, relyingPartyCertB64, issuerPolicy) {
+function sendRST(sendRstParameter) {
 
-		if (issuerPolicy != null) {
-			var to = xmlreplace(managedCard.carddata.managed.issuer);
-			var mexAddress = issuerPolicy;
-			var issuerMex = getMex1(to, mexAddress);
-			icDebug("issuerMex=" + issuerMex);
-		}
-		
-	    var tokenToReturn = null;
-	    var mexResponse = getMexForCard(managedCard);
+	var tsEndpointAddressStr = sendRstParameter.tsEndpointAddressStr;
+	var usercredential = sendRstParameter.icUserCredential;
+	var managedCard = sendRstParameter.managedCard;
+	var requiredClaims = sendRstParameter.requiredClaims;
+	var optionalClaims = sendRstParameter.optionalClaims;
+	var tokenType = sendRstParameter.tokenType;
+	var clientPseudonym = sendRstParameter.clientPseudonym;
+	var relyingPartyURL = sendRstParameter.relyingPartyURL;
+	var relyingPartyCertB64 = sendRstParameter.relyingPartyCertB64;
+	var issuerPolicy = sendRstParameter.issuerPolicy;
 
-	    if(mexResponse != null) {
-	        //Start with TransportBinding support
-	        var tb = mexResponse.indexOf("TransportBinding");
-	        if (tb < 0) {
-	           alert("The Selector currently supports only the TransportBinding");
-	           return null;
-	        } else {
+	//		if (issuerPolicy != null) {
+	//			var to = xmlreplace(managedCard.carddata.managed.issuer);
+	//			var mexAddress = issuerPolicy;
+	//			var issuerMex = getMex1(to, mexAddress);
+	//			icDebug("issuerMex=" + issuerMex);
+	//		}
+			
+	//	    var mexResponse = getMexForCard(managedCard);
 
-	            var bodyIndex = mexResponse.indexOf("Body>");
-	            bodyIndex += 5;
-	            var body = mexResponse.substring(bodyIndex);
+    icDebug("sendRST::usercredential:" + usercredential);
+    if (usercredential === undefined) {
+    	Components.utils.reportError("sendRST::usercredential === undefined");
+    	return null;
+    }
+    if (usercredential === null) {
+    	Components.utils.reportError("sendRST::usercredential === null");
+    	return null;
+    }
+    if (tsEndpointAddressStr === undefined) {
+    	Components.utils.reportError("sendRST::tsEndpointAddressStr === undefined");
+    	return null;
+    }
+    if (tsEndpointAddressStr === null) {
+    	Components.utils.reportError("sendRST::tsEndpointAddressStr === null");
+    	return null;
+    }
+    icDebug("sendRST::tsEndpointAddressStr:" + tsEndpointAddressStr);
+    
+    var rst = "<s:Envelope " + 
+		"xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" " + 
+		"xmlns:a=\"http://www.w3.org/2005/08/addressing\" " +
+		"xmlns:u=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">" + 
+		"<s:Header>" + 
+      	 "<a:Action u:Id=\"_1\">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a:Action>" +
+      	 "<a:To s:mustUnderstand=\"1\">" + xmlreplace(tsEndpointAddressStr) + "</a:To>" +
+		 "<o:Security s:mustUnderstand=\"1\" xmlns:o=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">"; 
 
-	            var addrIndex = body.indexOf("Address>");
-	            addrIndex += 8;
-	            var subStr = body.substring(addrIndex);
-
-	            var endAddr = subStr.indexOf("</");
-	            var address = subStr.substring(0,endAddr);
-
-
-	            icDebug(address);
-
-	            var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
-
-				var usercredential = managedCard.carddata.managed.ic::UserCredential;
-	icDebug("processManagedCard::usercredential>>>" + usercredential);
-
-	            var rst = "<s:Envelope " + 
-	    			"xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" " + 
-	    			"xmlns:a=\"http://www.w3.org/2005/08/addressing\" " +
-	    			"xmlns:u=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">" + 
-	    			"<s:Header>" + 
-	              	 "<a:Action u:Id=\"_1\">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a:Action>" +
-	    			 "<o:Security s:mustUnderstand=\"1\" xmlns:o=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">"; 
-
-				if (!(usercredential.ic::UsernamePasswordCredential == undefined)) {
-		            var hint = usercredential.ic::DisplayCredentialHint;
-		            icDebug("hint:" + hint);
+    var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+	if (!(usercredential.ic::UsernamePasswordCredential == undefined)) {
+        var hint = usercredential.ic::DisplayCredentialHint;
+        icDebug("hint:" + hint);
 //		            var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-		            var prompts = Components.classes["@mozilla.org/network/default-auth-prompt;1"].getService(Components.interfaces.nsIAuthPrompt);
-		            username = {value:usercredential.ic::UsernamePasswordCredential.ic::Username};
-		            password = {value:""};
+        var prompts = Components.classes["@mozilla.org/network/default-auth-prompt;1"].getService(Components.interfaces.nsIAuthPrompt);
+        username = {value:usercredential.ic::UsernamePasswordCredential.ic::Username};
+        password = {value:""};
 //		            var check = {value: false};
-		            hint = hint + "("+ username.value + ")";
+        hint = hint + "("+ username.value + ")";
 //		            okorcancel = prompts.promptUsernameAndPassword(window, 'Card Authentication', hint, username, password, null, check);
-		            okorcancel = prompts.promptUsernameAndPassword('Card Authentication', hint, address, prompts.SAVE_PASSWORD_PERMANENTLY, username, password);
-		            if (okorcancel == false) {
-		            	return null;
-		            }
-		            var uid =  username.value;
-		            var pw =  password.value;
+        okorcancel = prompts.promptUsernameAndPassword('Card Authentication', hint, tsEndpointAddressStr, prompts.SAVE_PASSWORD_PERMANENTLY, username, password);
+        if (okorcancel == false) {
+        	return null;
+        }
+        var uid =  username.value;
+        var pw =  password.value;
 
-		            var messageIdInt = Math.floor(Math.random()*100000+1);
-		            var messageId = "urn:uuid:" + messageIdInt;
-		
-		
-		            rst = rst + "<o:UsernameToken u:Id=\"" + messageId + "\"><o:Username>";
-		
-		            rst = rst + xmlreplace(uid);
-		
-		            rst = rst + "</o:Username><o:Password o:Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">";
-		
-		            rst = rst + xmlreplace(pw);
-		
-		            rst = rst + "</o:Password></o:UsernameToken>";
-		        }  else if (!(usercredential.ic::KerberosV5Credential == undefined)) {
-					alert("unimplemented user credential type: KerberosV5Credential");
-					return null;
-		        } else if (!(usercredential.ic::X509V3Credential == undefined)) {
-		            var dsig = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
-		            var wsa = new Namespace("wsa", "http://www.w3.org/2005/08/addressing");
-		            var mex = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
-		            var wss = new Namespace("wss", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
-					alert("unimplemented user credential type: X509V3Credential");
-					return null;
-		        } else if (!(usercredential.ic::SelfIssuedCredential == undefined)) {
-		            var hint = usercredential.ic::DisplayCredentialHint;
-		            icDebug("hint:" + hint);
-		            var usercredential = usercredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier;
-		            icDebug("usercredential:" + usercredential);
-		            icDebug("stsCert:" + managedCard.carddata.managed.stsCert);
-					alert("unimplemented user credential type: SelfIssuedCredential");
-					return null;
-				} else {
-					alert("undefined user credential type");
-					return null;
-				}	        
-		            
-		        rst = rst + "</o:Security></s:Header>" +
-	            "<s:Body><wst:RequestSecurityToken Context=\"ProcessRequestSecurityToken\" " +
-	            "xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">";
-	            
-	            if (!(managedCard.carddata.managed.requireAppliesTo == undefined)) {
-	            	var appliesTo = "<p:AppliesTo xmlns:p=\"http://schemas.xmlsoap.org/ws/2004/09/policy\"><a:EndpointReference>" + 
-	            		"<a:Address>" + xmlreplace(relyingPartyURL) + "</a:Address>";
-	            	if (relyingPartyCertB64 != null) {
-	            		appliesTo = appliesTo + 
-	                    "<i:Identity xmlns:i=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\">" + 
-	                    "<ds:KeyInfo xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><ds:X509Data>" +
-						"<ds:X509Certificate>" + relyingPartyCertB64 + "</ds:X509Certificate>" +
-						"</ds:X509Data></ds:KeyInfo></i:Identity>";
-	            	}
-	            	appliesTo = appliesTo + "</a:EndpointReference></p:AppliesTo>";
-	icDebug("requireAppliesTo" + appliesTo);
-				    rst = rst + appliesTo;
-	            }
-	            
-	            rst = rst + "<wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType>" +
-	            "<wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
-	            "<wsid:CardId>";
-	icDebug("cardid:"+ managedCard.id);
-	icDebug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
-	            rst = rst + xmlreplace(managedCard.id);
+        var messageIdInt = Math.floor(Math.random()*100000+1);
+        var messageId = "urn:uuid:" + messageIdInt;
 
-	            rst = rst + "</wsid:CardId>";
-	            
-	            rst = rst + "<wsid:CardVersion>" + xmlreplace(managedCard.version) + "</wsid:CardVersion>" + "</wsid:InformationCardReference>";
-	            
-	            {
-	               var claims = requiredClaims + " " + optionalClaims;
-	               var claimsArray = claims.split(/\s+/);
-		           var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
-				   var list = managedCard.carddata.managed.ic::SupportedClaimTypeList.ic::SupportedClaimType;
-				   var count=0;
-				   var requestedClaims = "";
-				   for (var index = 0; index<list.length(); index++) {
-					 var supportedClaim = list[index];
-					 var uri = supportedClaim.@Uri;
-					 var claim = isClaimChecked("label_"+uri, uri);
-					 if (claim != null) {
-					  var i = claim.indexOf("?");
-					  if (i > 0) { // dynamic claim. Uris starting with ? are not allowed
-					   icDebug("dynamic claim: " + claim);
-					   var prefix = claim.substr(0,i);
-					   var foundit = false;
-	                   for (var index = 0; (index<claimsArray.length) && (foundit == false); index++) {
-	                    var requestedUri = claimsArray[index];
-	                    if (requestedUri.indexOf(prefix) == 0) {
-					     icDebug("dynamic claim match: " + requestedUri);
-					     requestedClaims = requestedClaims + "<wsid:ClaimType Uri=\"" + xmlreplace(requestedUri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
-					     foundit = true;
-	                    }
-	                   }
-	                   if (foundit == false) {
-	                   	icDebug("dynamic claim: " + claim + " not found in " + claimsArray);
-	                   }
-					  } else {
-					  	icDebug("static claim: " + claim);
-					  	requestedClaims = requestedClaims + "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
-					  }
-					  count++;
-					 } else {
-					 	icDebug("claim is null: " + uri);
-					 }
-	               }
-	               if (count == 0) {
-	                icDebug("no claims were requested!");
-	               }
-	               rst = rst + "<wst:Claims>" + requestedClaims + "</wst:Claims>";
-	            }
-	            
-	            rst = rst + "<wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>";
-	            
-//	            if (managedCard.carddata.managed.requireAppliesTo == undefined) {
-	            // if a ppid is requested, then provide some selector entropy (clientPseudonym). The STS uses this to generate a RP depended ppid
-	            // even if the STS does not know the RP
-	            if (requiredClaims.indexOf("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") >= 0) {
-		            rst = rst + "<ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>" + xmlreplace(clientPseudonym) + "</PPID></ClientPseudonym>";
-				}
-//	          }
-	            // tokenType is optional. http://docs.oasis-open.org/ws-sx/ws-trust/200512/ws-trust-1.3-os.html
-	            if (tokenType != null) {
-		            rst = rst + "<wst:TokenType>" + xmlreplace(tokenType) + "</wst:TokenType>";
-		        }
-	            rst = rst + "<wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
-	            "</wst:RequestSecurityToken></s:Body></s:Envelope>";
 
-	icDebug("processManagedCard: request: " + rst);
-	            var rstr;
-	            var rstReq = new XMLHttpRequest();
-	            rstReq.open('POST', address, false);
-	            rstReq.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
-	            rstReq.setRequestHeader("Cache-Control", "no-cache");
-	            rstReq.setRequestHeader("accept-language", "en-us");
-	            rstReq.setRequestHeader("User-Agent", "xmldap infocard stack");
-	            try {
-		            rstReq.send(rst);
-	            } 
-	            catch (e) {
-					icDebug(e);
-					alert("posting the request to get the security tokens failed. " + e);
-					return null;            	
-	            }
-	            if(rstReq.status == 200) {
-	icDebug("processManagedCard: request status 200");
+        rst = rst + "<o:UsernameToken u:Id=\"" + messageId + "\"><o:Username>";
 
-	                rstr = rstReq.responseText;
-	icDebug("processManagedCard: RSTR:" + rstr);
+        rst = rst + xmlreplace(uid);
 
-	    var j = rstReq.responseText.indexOf("RequestedSecurityToken");
-	    if (j<0) {
-	     alert("token server did not sent a RequestedSecurityToken.\n" + rstReq.responseText);
-	     return null;
-	    }
-	    var prefix;
-	    if (rstReq.responseText.charAt(j-1) == ':') {
+        rst = rst + "</o:Username><o:Password o:Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">";
+
+        rst = rst + xmlreplace(pw);
+
+        rst = rst + "</o:Password></o:UsernameToken>";
+    }  else if (!(usercredential.ic::KerberosV5Credential == undefined)) {
+		alert("unimplemented user credential type: KerberosV5Credential");
+		return null;
+    } else if (!(usercredential.ic::X509V3Credential == undefined)) {
+        var dsig = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
+        var wsa = new Namespace("wsa", "http://www.w3.org/2005/08/addressing");
+        var mex = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
+        var wss = new Namespace("wss", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
+		alert("unimplemented user credential type: X509V3Credential");
+		return null;
+    } else if (!(usercredential.ic::SelfIssuedCredential == undefined)) {
+        var hint = usercredential.ic::DisplayCredentialHint;
+        icDebug("hint:" + hint);
+        var usercredential = usercredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier;
+        icDebug("usercredential:" + usercredential);
+        icDebug("stsCert:" + managedCard.carddata.managed.stsCert);
+		alert("unimplemented user credential type: SelfIssuedCredential");
+		return null;
+	} else {
+		Components.utils.reportError("undefined user credential type: " + usercredential);
+		alert("undefined user credential type");
+		return null;
+	}	        
+            
+    rst = rst + "</o:Security></s:Header>" +
+    "<s:Body><wst:RequestSecurityToken Context=\"ProcessRequestSecurityToken\" " +
+    "xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">";
+    
+    if (!(managedCard.carddata.managed.requireAppliesTo == undefined)) {
+    	var appliesTo = "<p:AppliesTo xmlns:p=\"http://schemas.xmlsoap.org/ws/2004/09/policy\"><a:EndpointReference>" + 
+    		"<a:Address>" + xmlreplace(relyingPartyURL) + "</a:Address>";
+    	if (relyingPartyCertB64 != null) {
+    		appliesTo = appliesTo + 
+            "<i:Identity xmlns:i=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\">" + 
+            "<ds:KeyInfo xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><ds:X509Data>" +
+			"<ds:X509Certificate>" + relyingPartyCertB64 + "</ds:X509Certificate>" +
+			"</ds:X509Data></ds:KeyInfo></i:Identity>";
+    	}
+    	appliesTo = appliesTo + "</a:EndpointReference></p:AppliesTo>";
+icDebug("requireAppliesTo" + appliesTo);
+	    rst = rst + appliesTo;
+    }
+        
+    rst = rst + "<wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType>" +
+    "<wsid:InformationCardReference xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
+    "<wsid:CardId>";
+icDebug("cardid:"+ managedCard.id);
+icDebug("cardid xmlreplaced:"+ xmlreplace(managedCard.id));
+    rst = rst + xmlreplace(managedCard.id);
+
+    rst = rst + "</wsid:CardId>";
+    
+    rst = rst + "<wsid:CardVersion>" + xmlreplace(managedCard.version) + "</wsid:CardVersion>" + "</wsid:InformationCardReference>";
+        
+    {
+       var claims = requiredClaims + " " + optionalClaims;
+       var claimsArray = claims.split(/\s+/);
+	   var list = managedCard.carddata.managed.ic::SupportedClaimTypeList.ic::SupportedClaimType;
+	   var count=0;
+	   var requestedClaims = "";
+	   for (var index = 0; index<list.length(); index++) {
+		 var supportedClaim = list[index];
+		 var uri = supportedClaim.@Uri;
+		 var claim = isClaimChecked("label_"+uri, uri);
+		 if (claim != null) {
+		  var i = claim.indexOf("?");
+		  if (i > 0) { // dynamic claim. Uris starting with ? are not allowed
+		   icDebug("dynamic claim: " + claim);
+		   var prefix = claim.substr(0,i);
+		   var foundit = false;
+           for (var index = 0; (index<claimsArray.length) && (foundit == false); index++) {
+            var requestedUri = claimsArray[index];
+            if (requestedUri.indexOf(prefix) == 0) {
+		     icDebug("dynamic claim match: " + requestedUri);
+		     requestedClaims = requestedClaims + "<wsid:ClaimType Uri=\"" + xmlreplace(requestedUri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+		     foundit = true;
+            }
+           }
+           if (foundit == false) {
+           	icDebug("dynamic claim: " + claim + " not found in " + claimsArray);
+           }
+		  } else {
+		  	icDebug("static claim: " + claim);
+		  	requestedClaims = requestedClaims + "<wsid:ClaimType Uri=\"" + xmlreplace(uri) + "\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+		  }
+		  count++;
+		 } else {
+		 	icDebug("claim is null: " + uri);
+		 }
+       }
+       if (count == 0) {
+        icDebug("no claims were requested!");
+       }
+       rst = rst + "<wst:Claims>" + requestedClaims + "</wst:Claims>";
+    }
+        
+    rst = rst + "<wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>";
+    
+    if (requiredClaims.indexOf("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") >= 0) {
+        rst = rst + "<ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><PPID>" + xmlreplace(clientPseudonym) + "</PPID></ClientPseudonym>";
+	}
+    if (tokenType != null) {
+        rst = rst + "<wst:TokenType>" + xmlreplace(tokenType) + "</wst:TokenType>";
+    }
+    rst = rst + "<wsid:RequestDisplayToken xml:lang=\"en\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>" +
+    "</wst:RequestSecurityToken></s:Body></s:Envelope>";
+
+    icDebug("sendRST: request: " + rst);
+    var rstr;
+    var rstReq = new XMLHttpRequest();
+    rstReq.open('POST', tsEndpointAddressStr, false);
+    rstReq.setRequestHeader("Content-type", "application/soap+xml; charset=utf-8");
+    rstReq.setRequestHeader("Cache-Control", "no-cache");
+    rstReq.setRequestHeader("accept-language", "en-us");
+    rstReq.setRequestHeader("User-Agent", "xmldap infocard stack");
+    try {
+        rstReq.send(rst);
+    } 
+    catch (e) {
+		icDebug("rstReq.send(rst) failed: " + e);
+		alert("posting the request to get the security tokens failed. " + e);
+			return null;            	
+    }
+    if(rstReq.status == 200) {
+//		  // should you replace the string voodoo below through something 
+//    	  // more elaborate like E4X-handling then think of these two bugs
+//        rstResponse = req.responseText; // bug 270553
+//        rstResponse = mexResponse.replace(/^<\?xml\s+version\s*=\s*(["'])[^\1]+\1[^?]*\?>/, ""); // bug 336551
+
+        icDebug("processManagedCard: request status 200");
+		
+		                rstr = rstReq.responseText;
+		icDebug("processManagedCard: RSTR:" + rstr);
+		
+		var j = rstReq.responseText.indexOf("RequestedSecurityToken");
+		if (j<0) {
+		 alert("token server did not sent a RequestedSecurityToken.\n" + rstReq.responseText);
+		 return null;
+		}
+		var prefix;
+		if (rstReq.responseText.charAt(j-1) == ':') {
 		    var start = rstReq.responseText.substring(0,j-1);
 		    var i = start.lastIndexOf("<");
 		    if (i<0) {
@@ -305,39 +310,200 @@ function processManagedCard(
 		    var prefix = start.substring(i+1) + ":";
 		} else {
 		 	prefix = "";
-		}    
-	icDebug("prefix=" + prefix);
-	    var rest = rstReq.responseText.substring(j);
-	icDebug("rest=" + rest);
-	    var l = rest.indexOf(">");
-	    rest = rest.substring(l+1);
-	icDebug("Rest=" + rest);
-	    var k = rest.indexOf("</" + prefix + "RequestedSecurityToken");
-	    var tokenToReturn = rest.substring(0,k);
-	    
-	icDebug("RSTR: " + tokenToReturn);
-	            } else {
-		            icDebug("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
-		            alert("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
-//	            	var responseXml = new XML(rstReq.responseText);
-//	            	var soap = new Namespace("soap", "http://www.w3.org/2003/05/soap-envelope");
-//	            	var text = responseXml..soap::Text;
-//	            	if (text == undefined) {
-//		            	alert("token request (" + address + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
-//		            } else {
-//		            	alert("token request (" + address + ") failed. (" + rstReq.status +")\n" + text);
-//		            }	
-	            }
+			}    
+		icDebug("prefix=" + prefix);
+		    var rest = rstReq.responseText.substring(j);
+		icDebug("rest=" + rest);
+		var l = rest.indexOf(">");
+		    rest = rest.substring(l+1);
+		icDebug("Rest=" + rest);
+		var k = rest.indexOf("</" + prefix + "RequestedSecurityToken");
+		    var tokenToReturn = rest.substring(0,k);
+		    
+		icDebug("RSTR: " + tokenToReturn);
+    } else {
+        icDebug("token request (" + tsEndpointAddressStr + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
+        alert("token request (" + tsEndpointAddressStr + ") failed. (" + rstReq.status +")\n" + rstReq.responseText);
+    }
+    return tokenToReturn;
+}
 
-	        }
+function processManagedCard(
+		managedCard, requiredClaims, optionalClaims, tokenType, clientPseudonym, 
+		relyingPartyURL, relyingPartyCertB64, issuerPolicy) {
 
-	    } else {
-	    	alert("mex request (" + managedCard.carddata.managed.mex + ") failed. ");
-	    }
+    var tokenToReturn = null;
 
-	    return tokenToReturn;
+    var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+    var wsa = new Namespace("wsa", "http://www.w3.org/2005/08/addressing");
+    
+    var tokenServiceList = managedCard.carddata.managed.ic::TokenServiceList;
+    icDebug("processManagedCard::tokenServiceList>>>" + tokenServiceList);
+    if (tokenServiceList === null || tokenServiceList.length() == 0) {
+    	alert("This is probably a managed card that is stored in an old and now unsupported internal format.\n" +
+    			"Please delete the card. Sorry for the inconvenience.");
+    	return null;
+    }
+    var usercredential = null;
+    var mexResponse = null;
+    
+    var mexes = {}; // mex response cache
+    
+    var tokenServices = tokenServiceList.ic::TokenService;
+	for each (var ts in tokenServices) {
+		icDebug("processManagedCard::tokenService>>>" + ts);
+		
+		var icUserCredential = ts.ic::UserCredential;
+		icDebug("processManagedCard::icUserCredential>>>" + icUserCredential);
+		var icUserCredentialChild;
+		if (icUserCredential.*.length() == 1) {
+			icUserCredentialChild = icUserCredential.child(0);
+		} else {
+			icUserCredentialChild = icUserCredential.child(1);
+		}
+		icDebug("processManagedCard::isUserCredentialChild>>>" + icUserCredentialChild);
+		var localName = icUserCredentialChild.name().localName;
+		icDebug("processManagedCard::isUserCredentialChild.name().localname>>>" + localName);
+		if (localName === "UsernamePasswordCredential") { // currently only UsernamePasswordCredential is supported
+			var tsEndpointAddress = ts.wsa::EndpointReference.wsa::Address; 
+			icDebug("processManagedCard::tsEndpointAddress>>>" + tsEndpointAddress);
+			
+			var tsWsaMetadata = ts.wsa::EndpointReference.wsa::Metadata;
+			icDebug("processManagedCard::tsMetadata>>>" + tsWsaMetadata);
+			var wsx = new Namespace("wsx", "http://schemas.xmlsoap.org/ws/2004/09/mex");
+			var tsWsxMetadata = tsWsaMetadata.wsx::Metadata;
+			icDebug("processManagedCard::tsWsxMetadata>>>" + tsWsxMetadata);
+			var tsMetadataSection = tsWsxMetadata.wsx::MetadataSection; 
+			icDebug("processManagedCard::tsMetadataSection>>>" + tsMetadataSection);
+			var tsMetadataReference = tsMetadataSection.wsx::MetadataReference;
+			icDebug("processManagedCard::tsMetadataReference>>>" + tsMetadataReference);
+			var tsMexAddress = tsMetadataReference.wsa::Address;
+			if ((tsMexAddress === null) || (tsMexAddress.length() == 0)) {
+				icDebug("processManagedCard::wsa:tsMexAddress not found in >>>" + tsMetadataReference.toXMLString());
+				return null;
+			}
+			icDebug("processManagedCard::tsMexAddress>>>" + tsMexAddress);
+			var tsMexAddressStr = tsMexAddress.toString();
+			if (mexes[tsMexAddressStr] !== undefined) {
+				mexResponse = mexes[tsMexAddressStr];
+			} else {
+				mexResponse = getMex1(xmlreplace(tsMexAddress), tsMexAddress);
+			}
+			if (mexResponse !== null) {
+				icDebug("processManagedCard::mexResponse>>>" + mexResponse);
+				mexes[tsMexAddressStr] = mexResponse;
+				
+				var mexXml = new XML(mexResponse);
+				var wsdl = new Namespace("http://schemas.xmlsoap.org/wsdl/");
+				var wsa10 = new Namespace("http://www.w3.org/2005/08/addressing");
+				var wsp = new Namespace("http://schemas.xmlsoap.org/ws/2004/09/policy");
+				var wsu = new Namespace("http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
+				
+				var addresses = mexXml..wsdl::port.wsa10::EndpointReference.wsa10::Address;
+				var tsEndpointAddressStr = tsEndpointAddress.toString();
 
+				for each (var anAddress in addresses) {
+					var theAddress = anAddress.child(0);
+//					icDebug("processManagedCard::typeof("+theAddress+")>>>" + typeof(theAddress));
+//					icDebug("processManagedCard::typeof("+tsEndpointAddress+")>>>" + typeof(tsEndpointAddress));
+					if (theAddress.toString() === tsEndpointAddressStr) {
+						icDebug("processManagedCard::address>>>" + theAddress);
+						var addressParent = anAddress.parent(); // EndpointReference
+						icDebug("processManagedCard::parent >>>" + addressParent);
+						var endpointReferenceParent = addressParent.parent(); // wsdl::port
+						icDebug("processManagedCard::port   >>>" + endpointReferenceParent);
+						var binding = endpointReferenceParent.@binding;
+						icDebug("processManagedCard::port.@binding>>>" + binding);
+						var colonIndex = binding.indexOf(":");
+						binding = binding.substring(colonIndex+1); // works even if colonIndex == -1
+						var bindingStr = binding.toString();
+						
+						var bindings = mexXml..wsdl::binding;
+						for each (var aBinding in bindings) {
+							var bindingNameAttrValueStr = aBinding.@name.toString();
+							if (bindingNameAttrValueStr === bindingStr) {
+								icDebug("processManagedCard::bindingNameAttrValueStr>>>" + bindingNameAttrValueStr);
+								var wspPolicyReference = aBinding.wsp::PolicyReference;
+								if (wspPolicyReference !== null) {
+									icDebug("processManagedCard::wspPolicyReference>>>" + wspPolicyReference.toXMLString());
+									var wspPolicyReferenceURIStr = wspPolicyReference.@URI.toString();
+									icDebug("processManagedCard::wspPolicyReferenceURI>>>" + wspPolicyReferenceURIStr);
+									var hashmarkIndex = wspPolicyReferenceURIStr.indexOf("#");
+									if (hashmarkIndex == 0) {
+										var wspPolicyReferenceURIStr = wspPolicyReferenceURIStr.substring(1);
+										icDebug("processManagedCard::wspPolicyReferenceURIStr>>>" + wspPolicyReferenceURIStr);
+										var wsdlPolicies = mexXml..wsdl::definitions.wsp::Policy;
+										icDebug("processManagedCard::wsdlPolicies.length()>>>" + wsdlPolicies.length());
+										for each (var aPolicy in wsdlPolicies) {
+											//icDebug("processManagedCard::aPolicy>>>" + aPolicy.toXMLString());
+											var wsuId = aPolicy.@wsu::Id;
+											var wsuIdStr = wsuId.toString();
+											if (wsuIdStr === wspPolicyReferenceURIStr) {
+												icDebug("processManagedCard::wsuIdStr>>>" + wsuIdStr);
+												// try both security policies
+												var sp2005 = new Namespace("http://schemas.xmlsoap.org/ws/2005/07/securitypolicy");
+												var sp2007 = new Namespace("http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702");
+												var spTransportBinding = aPolicy..sp2005::TransportBinding;
+												if (spTransportBinding === null || spTransportBinding.length() == 0) {
+													icDebug("processManagedCard::spTransportBinding (2005) null in sPolicy>>>" + aPolicy.toString());
+//													var spTransportBinding = aPolicy..sp2007::TransportBinding;
+//													if (spTransportBinding === null || spTransportBinding.length() == 0) {
+//														icDebug("processManagedCard::spTransportBinding (2007) null too>>>");
+//														continue;
+//													}
+													continue;
+												}
+												icDebug("processManagedCard::before sendRST: tsEndpointAddressStr=" + tsEndpointAddressStr);
+											    icDebug("processManagedCard::typeof(tsEndpointAddressStr):" + typeof(tsEndpointAddressStr));
+												icDebug("processManagedCard::before sendRST: icUserCredential=" + icUserCredential);
+											    icDebug("processManagedCard::typeof(icUserCredential):" + typeof(icUserCredential));
+												try {
+													var sendRstParameter = {};
+													sendRstParameter.tsEndpointAddressStr = tsEndpointAddressStr;
+													sendRstParameter.icUserCredential = icUserCredential;
+													sendRstParameter.managedCard = managedCard;
+													sendRstParameter.requiredClaims = requiredClaims;
+													sendRstParameter.optionalClaims = optionalClaims;
+													sendRstParameter.tokenType = tokenType;
+													sendRstParameter.clientPseudonym = clientPseudonym;
+													sendRstParameter.relyingPartyURL = relyingPartyURL;
+													sendRstParameter.relyingPartyCertB64 = relyingPartyCertB64;
+													sendRstParameter.issuerPolicy = issuerPolicy;
+													var aToken = sendRST(sendRstParameter);
+													if ((aToken !== undefined) && (aToken !== null)) {
+														return aToken;
+													} else {
+														icDebug("processManagedCard: sendRST returned null or undefined for: " + tsEndpointAddressStr);
+													}
+												} catch (sendRstException) {
+													icDebug("processManagedCard: sendRST threw: " + sendRstException);
+												}
+											} else {
+												//icDebug("processManagedCard::WSUID   >>>" + wsuIdStr);
+											}
+										}
+									} else {
+										icDebug("processManagedCard::hasmarkIndex>>>" + hashmarkIndex);
+									}
+								} else {
+									Components.utils.reportError("processManagedCard::wspPolicyReference===null! aBinding=" + aBinding);
+									return null;
+								}
+							}
+						}
+					} else {
+						// icDebug("processManagedCard::ADDRESS>>>" + theAddress);		
+					}
+				}
+			} else {
+				icDebug("processManagedCard::mexResponse is null for " + tsMexAddress);
+			}
+		} else {
+			icDebug("processManagedCard::authenticationmethod not supported>>>" + localname);
+		}
 	}
+    return null;
+}
 
 function setCardManaged(requiredClaims, optionalClaims) {
 	icDebug("setCardManaged requiredClaims: " + requiredClaims);

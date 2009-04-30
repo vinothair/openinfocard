@@ -11,7 +11,7 @@ import org.xmldap.infocard.SelfIssuedClaims;
 import org.xmldap.util.Base64;
 import org.xmldap.ws.WSConstants;
 
-public class SelfIssuedInformationCardPrivateData implements InformationCardPrivateData {
+public class SelfIssuedInformationCardPrivateData implements InformationCardPrivateData, Comparable<SelfIssuedInformationCardPrivateData> {
 //    <ic:InformationCardPrivateData> ?
 //    <ic:MasterKey> xs:base64Binary </ic:MasterKey>
 //    <ic:ClaimValueList> ?
@@ -146,7 +146,7 @@ public class SelfIssuedInformationCardPrivateData implements InformationCardPriv
 			   					String value = valueElement.getValue();
 			   					selfIssuedClaims.setCountry(value);
 			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_PRIMARYPHONE.equals(uri)) {
+		   				} else if (org.xmldap.infocard.Constants.IC_NS_HOMEPHONE.equals(uri)) {
 		   					if (selfIssuedClaims == null) {
 		   						selfIssuedClaims = new SelfIssuedClaims();
 		   					}
@@ -206,6 +206,30 @@ public class SelfIssuedInformationCardPrivateData implements InformationCardPriv
 			   					String value = valueElement.getValue();
 			   					selfIssuedClaims.setGender(value);
 			   				}
+		   				} else if (org.xmldap.infocard.Constants.IC_NS_LOCALITY.equals(uri)) {
+		   					if (selfIssuedClaims == null) {
+		   						selfIssuedClaims = new SelfIssuedClaims();
+		   					}
+		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
+			   				if (valueElements.size() != 1) {
+			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
+			   				} else {
+			   					Element valueElement = valueElements.get(0);
+			   					String value = valueElement.getValue();
+			   					selfIssuedClaims.setLocality(value);
+			   				}
+		   				} else if (org.xmldap.infocard.Constants.IC_NS_WEBPAGE.equals(uri)) {
+		   					if (selfIssuedClaims == null) {
+		   						selfIssuedClaims = new SelfIssuedClaims();
+		   					}
+		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
+			   				if (valueElements.size() != 1) {
+			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
+			   				} else {
+			   					Element valueElement = valueElements.get(0);
+			   					String value = valueElement.getValue();
+			   					selfIssuedClaims.setWebPage(value);
+			   				}
 		   				} else {
 		   					throw new ParsingException("Found unknown Uri in self-issued ic:InformationCardPrivateData: " + uri);
 		   				}
@@ -253,7 +277,20 @@ public class SelfIssuedInformationCardPrivateData implements InformationCardPriv
 			addClaimValue(claimValueList, "dateofbirth",	claimsNamespace, selfIssuedClaims.getDateOfBirth());
 			addClaimValue(claimValueList, "privatepersonalidentifier", claimsNamespace,selfIssuedClaims.getPrivatePersonalIdentifier());
 			addClaimValue(claimValueList, "gender", claimsNamespace, selfIssuedClaims.getGender());
+			addClaimValue(claimValueList, "webpage", claimsNamespace, selfIssuedClaims.getWebPage());
         }
         return informationCardPrivateData;
+	}
+
+	@Override
+	public int compareTo(SelfIssuedInformationCardPrivateData obj) {
+	    	if (this == obj) return 0;
+	    	
+	    	SelfIssuedInformationCardPrivateData anObj = (SelfIssuedInformationCardPrivateData)obj;
+	    	int comparison = masterKey.compareTo(anObj.masterKey);
+	    	if (comparison != 0) return comparison;
+	    	
+	    	comparison = selfIssuedClaims.compareTo(obj.selfIssuedClaims);
+	    	return comparison;
 	}
 }

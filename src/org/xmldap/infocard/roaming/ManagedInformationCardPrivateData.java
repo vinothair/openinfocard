@@ -10,7 +10,7 @@ import nu.xom.Element;
 import nu.xom.Elements;
 
 public class ManagedInformationCardPrivateData implements
-		InformationCardPrivateData {
+		InformationCardPrivateData, Comparable<InformationCardPrivateData>  {
 	String masterKey = null;
 
 	public ManagedInformationCardPrivateData(Element managedInformationCardPrivateData) throws ParsingException {
@@ -45,5 +45,14 @@ public class ManagedInformationCardPrivateData implements
         masterKeyElt.appendChild(masterKey);
         informationCardPrivateData.appendChild(masterKeyElt);
         return informationCardPrivateData;
+	}
+
+	@Override
+	public int compareTo(InformationCardPrivateData obj) {
+    	if (this == obj) return 0;
+    	
+    	ManagedInformationCardPrivateData anObj = (ManagedInformationCardPrivateData)obj;
+    	int comparison = masterKey.compareTo(anObj.masterKey);
+    	return comparison;
 	}
 }

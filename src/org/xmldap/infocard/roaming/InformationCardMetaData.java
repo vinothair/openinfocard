@@ -35,6 +35,69 @@ public class InformationCardMetaData extends InfoCard {
 	String issuerName = null;
 	String backgroundColor = null;
 	
+    public int compareTo(InformationCardMetaData obj) {
+    	if (this == obj) return 0;
+    	
+    	int comparison = super.compareTo(obj);
+    	if (comparison != 0) return comparison;
+    	
+    	comparison = new Boolean(isSelfIssued).compareTo(new Boolean(obj.isSelfIssued));
+    	if (comparison != 0) return comparison;
+
+    	if (pinDigest == null) {
+    		if (obj.pinDigest != null) return -1;
+    	} else {
+    		if (obj.pinDigest == null) return 1;
+    		comparison = pinDigest.compareTo(obj.pinDigest);
+    		if (comparison != 0) return comparison;
+    	}
+
+    	if (HashSalt == null) {
+    		if (obj.HashSalt != null) return -1;
+    	} else {
+    		if (obj.HashSalt == null) return 1;
+    		comparison = HashSalt.compareTo(obj.HashSalt);
+    		if (comparison != 0) return comparison;
+    	}
+
+    	if (timeLastUpdated == null) {
+    		if (obj.timeLastUpdated != null) return -1;
+    	} else {
+    		if (obj.timeLastUpdated == null) return 1;
+    		if (timeLastUpdated == obj.timeLastUpdated) {
+    			return 0;
+    		}
+    		comparison = timeLastUpdated.compareTo(obj.timeLastUpdated);
+    		if (comparison != 0) return comparison;
+    	}
+
+    	if (issuerId == null) {
+    		if (obj.issuerId != null) return -1;
+    	} else {
+    		if (obj.issuerId == null) return 1;
+    		comparison = issuerId.compareTo(obj.issuerId);
+    		if (comparison != 0) return comparison;
+    	}
+
+    	if (issuerName == null) {
+    		if (obj.issuerName != null) return -1;
+    	} else {
+    		if (obj.issuerName == null) return 1;
+    		comparison = issuerName.compareTo(obj.issuerName);
+    		if (comparison != 0) return comparison;
+    	}
+
+    	if (backgroundColor == null) {
+    		if (obj.backgroundColor != null) return -1;
+    	} else {
+    		if (obj.backgroundColor == null) return 1;
+    		comparison = backgroundColor.compareTo(obj.backgroundColor);
+    		if (comparison != 0) return comparison;
+    	}
+    	
+    	return 0;
+    }
+
     //InfoCard card;
 
     public InformationCardMetaData(Element informationCardMetaDataElement) throws ParsingException {
@@ -150,7 +213,7 @@ public class InformationCardMetaData extends InfoCard {
 
         Element timeLastUpdated = new Element("TimeLastUpdated", WSConstants.INFOCARD_NAMESPACE);
         informationCardMetaData.appendChild(timeLastUpdated);
-        timeLastUpdated.appendChild(super.getTimeIssued());
+        timeLastUpdated.appendChild(this.timeLastUpdated);
 
         Element issuerIdElt = new Element("IssuerId", WSConstants.INFOCARD_NAMESPACE);
         informationCardMetaData.appendChild(issuerIdElt);
@@ -189,17 +252,45 @@ public class InformationCardMetaData extends InfoCard {
         Element backgroundColor = new Element("BackgroundColor", WSConstants.INFOCARD_NAMESPACE);
         informationCardMetaData.appendChild(backgroundColor);
         if (this.backgroundColor == null) {
-        	backgroundColor.appendChild("16777215");
+        	throw new SerializationException("required element backgroundColor is null");
         } else {
         	backgroundColor.appendChild(this.backgroundColor);
         }
         return informationCardMetaData;
     }
     
-    public InformationCardMetaData(InfoCard card, String issuerName) {
+//	boolean isSelfIssued;
+//	String pinDigest = null;			// optional
+//	String HashSalt = null;
+//	String timeLastUpdated = null;
+//	String issuerId = null;
+//	String issuerName = null;
+//	String backgroundColor = null;
+
+    public InformationCardMetaData(
+    		InfoCard card, 
+    		boolean isSelfIssued,
+    		String pinDigest, // optional
+    		String HashSalt,
+    		String timeLastUpdated,
+    		String issuerId,
+    		String issuerName,
+    		String backgroundColor) {
     	super(card);
-    	this.isSelfIssued = org.xmldap.infocard.Constants.ISSUER_XMLSOAP.equals(card.getIssuer());
+    	this.isSelfIssued = isSelfIssued;
+    	this.pinDigest = pinDigest;
+    	
+    	if (HashSalt == null) throw new IllegalArgumentException("HashSalt is required");
+    	this.HashSalt = HashSalt;
+    	
+    	if (timeLastUpdated == null) throw new IllegalArgumentException("timeLastUpdated is required");
+    	this.timeLastUpdated = timeLastUpdated;
+    	if (issuerId == null) throw new IllegalArgumentException("issuerId is required");
+    	this.issuerId = issuerId;
+    	if (issuerName == null) throw new IllegalArgumentException("issuerName is required");
     	this.issuerName = issuerName;
+    	if (backgroundColor == null) throw new IllegalArgumentException("backgroundColor is required");
+    	this.backgroundColor = backgroundColor;
     }
 
 	public String getPinDigest() {

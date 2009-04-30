@@ -62,6 +62,9 @@ function readCardStore() {
 function storeCard(card){
 cardstoreDebug("storeCard");
 cardstoreDebug(card);
+	if (card === undefined) {
+		throw "storeCard: internal error: the card is undefined";
+	}
     var cardFile = read(db);
     cardFile.infocard += card;
     save(db,cardFile.toString());
@@ -461,30 +464,20 @@ function newManagedCard(callback) {
 
     var data = new XML("<managed/>");
     data.issuer = "" + callback.issuer + "";
-    data.mex = "" + callback.mex + "";
-//        data.username = "" + callback.uid + "";
-//        data.KeyIdentifier = "" + callback.KeyIdentifier + "";
-//        data.hint = "" + callback.hint + "";
-    data.image = "data:image/png;base64," + callback.cardImage + "";
-    var supportedClaims; 
-    try {
-    	supportedClaims = new XML(callback.supportedClaims);
-    } catch (e) {
-    	cardstoreDebug("supportedClaims: " + callback.supportedClaims);
-    	alert("new card: supportedClaims: " + e);
-    	alert("card is not imported");
-    	return;
+    if (callback.cardImage !== undefined) {
+	    if (callback.cardImageMimeType === undefined) {
+	    	data.image = "data:image/png;base64," + callback.cardImage + "";
+	    } else {
+	    	data.image = "data:" + callback.cardImageMimeType + ";base64," + callback.cardImage + "";
+	    }
     }
-    data.supportedClaims = supportedClaims;
-cardstoreDebug("new card" + callback.usercredential);
-	try {
-		data.usercredential = new XML(callback.usercredential);
-	} catch (e) {
-		alert("new card: usercredential: " + e);
-    	alert("card is not imported");
-    	return;
-	}
-	data.stsCert = "" + callback.stsCert + "";
+
+    data.supportedClaims = callback.supportedClaims;
+
+    	  cardstoreDebug("new card: tokenServiceList:" + callback.tokenServiceList);
+	data.tokenServiceList = callback.tokenServiceList;
+
+	data.stsCert = callback.stsCert;
 	if (callback.requireAppliesTo) {
 		data.requireAppliesTo = true;
 	}
@@ -492,13 +485,8 @@ cardstoreDebug("new card" + callback.usercredential);
 		data.requireStrongRecipientIdentity = true;
 	}
 	
-	try {
-		data.supportedTokenTypeList = new XML(callback.supportedTokenTypeList);
-	} catch (e) {
-		alert("new card: supportedTokenTypeList: " + e);
-    	alert("card is not imported");
-    	return;
-	}
+	data.supportedTokenTypeList = callback.supportedTokenTypeList;
+
     card.carddata.data = data;
     cardstoreDebug("saving card: " + callback.cardName);
 //	alert("importedCard="+importedCard);

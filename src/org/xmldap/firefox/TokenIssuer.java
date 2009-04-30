@@ -44,6 +44,7 @@ import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
+import org.xmldap.exceptions.SigningException;
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.SelfIssuedToken;
@@ -57,8 +58,10 @@ import org.xmldap.saml.Subject;
 import org.xmldap.util.Base64;
 import org.xmldap.util.CertsAndKeys;
 import org.xmldap.util.KeystoreUtil;
+import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.XmlUtils;
+import org.xmldap.xmldsig.Jsr105Signatur;
 import org.xmldap.xmldsig.ValidatingEnvelopedSignature;
 import org.xmldap.xmlenc.EncryptedData;
 
@@ -70,11 +73,19 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.*;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Random;
+import java.util.TreeSet;
 import java.util.Vector;
 
 public class TokenIssuer {
@@ -111,7 +122,7 @@ public class TokenIssuer {
 			throws TokenIssuanceException {
 		try {
 			KeyStore ks = KeyStore.getInstance("JKS");
-			ks.load(new FileInputStream(keystorePath), storePassword
+			ks.load(new FileInputStream(new File(keystorePath)), storePassword
 					.toCharArray());
 			if (ks.containsAlias(cardCertNickname)) {
 				if (!overwrite) {
@@ -122,7 +133,7 @@ public class TokenIssuer {
 			Certificate[] chain = { cardCert };
 			ks.setKeyEntry(cardCertNickname, signingKey, keyPassword
 					.toCharArray(), chain);
-			FileOutputStream fos = new java.io.FileOutputStream(keystorePath);
+			FileOutputStream fos = new java.io.FileOutputStream(new File(keystorePath));
 			ks.store(fos, storePassword.toCharArray());
 			fos.close();
 
@@ -163,30 +174,30 @@ public class TokenIssuer {
 	// }
 	// }
 	//
-	private String dirname(String path) {
-		int i = path.lastIndexOf("firefox.jks");
-		return path.substring(0, i);
-	}
+//	private String dirname(String path) {
+//		int i = path.lastIndexOf("firefox.jks");
+//		return path.substring(0, i);
+//	}
 
-	private void storeCardCertPem(String cardCertNickname,
-			X509Certificate cardCert) throws TokenIssuanceException,
-			CertificateEncodingException, IOException {
-
-		String dirName = dirname(keystorePath);
-		FileOutputStream fos = new FileOutputStream(dirName + cardCertNickname
-				+ ".pem");
-		String certb64 = Base64.encodeBytes(cardCert.getEncoded());
-		fos.write("-----BEGIN CERTIFICATE-----\n".getBytes());
-		fos.write(certb64.getBytes());
-		fos.write("\n-----END CERTIFICATE-----\n".getBytes());
-
-		String keyb64 = Base64.encodeBytes(signingKey.getEncoded());
-
-		fos.write("-----BEGIN PRIVATE KEY-----\n".getBytes());
-		fos.write(keyb64.getBytes());
-		fos.write("\n-----END PRIVATE KEY-----\n".getBytes());
-		fos.close();
-	}
+//	private void storeCardCertPem(String cardCertNickname,
+//			X509Certificate cardCert) throws TokenIssuanceException,
+//			CertificateEncodingException, IOException {
+//
+//		String dirName = dirname(keystorePath);
+//		FileOutputStream fos = new FileOutputStream(dirName + cardCertNickname
+//				+ ".pem");
+//		String certb64 = Base64.encodeBytes(cardCert.getEncoded());
+//		fos.write("-----BEGIN CERTIFICATE-----\n".getBytes());
+//		fos.write(certb64.getBytes());
+//		fos.write("\n-----END CERTIFICATE-----\n".getBytes());
+//
+//		String keyb64 = Base64.encodeBytes(signingKey.getEncoded());
+//
+//		fos.write("-----BEGIN PRIVATE KEY-----\n".getBytes());
+//		fos.write(keyb64.getBytes());
+//		fos.write("\n-----END PRIVATE KEY-----\n".getBytes());
+//		fos.close();
+//	}
 
 	/**
 	 * Store the signingCert and the signingKey into firefox.jks This is called
@@ -598,13 +609,22 @@ public class TokenIssuer {
 				// card is not valid
 				throw new TokenIssuanceException("the imported information card is not valid");
 			}
-            InformationCardMetaData informationCardMetaData = new InformationCardMetaData(card, issuerName);
+			Random random = new Random();
+        	byte[] bytes = new byte[256];
+        	random.nextBytes(bytes);
+        	String hashSalt = Base64.encodeBytesNoBreaks(bytes);
+	    	String timeLastUpdated = new XSDDateTime().getDateTime();
+	    	String issuerId = card.getIssuer();
+	    	String backgroundColor = "16777215";
+
+			InformationCardMetaData informationCardMetaData = 
+				new InformationCardMetaData(card, false, null, hashSalt, timeLastUpdated, issuerId, issuerName, backgroundColor);
 			byte[] masterKeyBytes = new SecureRandom().generateSeed(32);
 			String masterKey = Base64.encodeBytes(masterKeyBytes);
 			InformationCardPrivateData informationCardPrivateData = new ManagedInformationCardPrivateData(masterKey);
 			RoamingInformationCard ric = new RoamingInformationCard(informationCardMetaData, informationCardPrivateData);
 			if (roamingStore == null) {
-				Vector<RoamingInformationCard> v = new Vector<RoamingInformationCard>(1);
+				TreeSet<RoamingInformationCard> v = new TreeSet<RoamingInformationCard>();
 				v.add(ric);
 				roamingStore = new RoamingStore(v);
 			} else {
@@ -621,81 +641,117 @@ public class TokenIssuer {
 	public String importManagedCard(String importedCardJSONStr, String cardFileJSONStr)
 			throws TokenIssuanceException {
 		JSONObject result = new JSONObject();
-        try {
-
-        	JSONObject importedCard = new JSONObject(importedCardJSONStr);
-            if (importedCard.has("crdFileContent")) {
-            	String crdFileContent = (String) importedCard.get("crdFileContent");
-            	Document doc;
+		JSONObject importedCard;
+		try {
+			importedCard = new JSONObject(importedCardJSONStr);
+		} catch (JSONException e) {
+			throw new TokenIssuanceException(e);
+		}
+		if (importedCard.has("crdFileContent")) {
+			String crdFileContent;
+			try {
+				crdFileContent = (String) importedCard.get("crdFileContent");
+			} catch (JSONException e) {
+				throw new TokenIssuanceException(e);
+			}
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(crdFileContent.getBytes());
+			try {
+				boolean valid = Jsr105Signatur.validateSignature(inputStream);
 				try {
-					doc = XmlUtils.parse(crdFileContent);
-				} catch (IOException e1) {
-					throw new TokenIssuanceException(e1);
-				} catch (nu.xom.ParsingException e1) {
-					throw new TokenIssuanceException(e1);
-				}
-            	ValidatingEnvelopedSignature signature;
-				try {
-					signature = new ValidatingEnvelopedSignature(doc);
-					Element validElement = signature.validate();
-					if (validElement == null) {
-	            		result.put("error", "The signature is not valid");
-	                	return result.toString();
-					}
-					
-					
-					try {
-						if (cardFileJSONStr != null) {
-							System.out.println(cardFileJSONStr);
-							doc = XmlUtils.parse(cardFileJSONStr);
-						} else {
-							doc = null;
-						}
-						String ns = validElement.getNamespaceURI();
-						String name = validElement.getLocalName();
-						if ("Object".equals(name) && WSConstants.DSIG_NAMESPACE.equals(ns)) {
-//							Element validInfocardElement = validElement.getFirstChildElement("InformationCard", WSConstants.INFOCARD_NAMESPACE);
-							if (validElement.getChildCount() == 1) {
-								Element validInfocardElement = (Element) validElement.getChild(0);
-								X509Certificate signingCert = signature.getCert(); 
-								String issuerName = signingCert.getSubjectX500Principal().getName();
-								String newStore = importManagedCard(validInfocardElement, doc, issuerName);
-								result.put("result", newStore);
-			                	return result.toString();
-							} else {
-								throw new TokenIssuanceException("Signature is valid but has more than one child element: \n" + validElement.toXML());
-							}
-						} else {
-							throw new TokenIssuanceException("Signature is valid but could not find 'dsig:Object': \n" + validElement.toXML());
-						}
-					} catch (IOException e) {
-						throw new TokenIssuanceException(e);
-					} catch (nu.xom.ParsingException e) {
-						throw new TokenIssuanceException(e);
-					}
-				} catch (ParsingException e) {
+					result.put("result", String.valueOf(valid));
+				} catch (JSONException e) {
 					throw new TokenIssuanceException(e);
 				}
-             } else {
-				result.put("error", "crdFileContent not found");
-            	return result.toString();
-            }
-        } catch (JSONException e) {
-			try {
-				result.put("error", e.getMessage());
-			} catch (JSONException e1) {
-				throw new TokenIssuanceException(e1);
+	        	return result.toString();
+			} catch (SigningException e) {
+				throw new TokenIssuanceException(e);
 			}
-        	return result.toString();
-		} catch (CryptoException e) {
+		} else {
 			try {
-				result.put("error", e.getMessage());
-			} catch (JSONException e1) {
-				throw new TokenIssuanceException(e1);
+				result.put("result", "no content");
+			} catch (JSONException e) {
+				throw new TokenIssuanceException(e);
 			}
         	return result.toString();
 		}
 	}
+
+//	public String importManagedCard(String importedCardJSONStr, String cardFileJSONStr)
+//			throws TokenIssuanceException {
+//		JSONObject result = new JSONObject();
+//        try {
+//
+//        	JSONObject importedCard = new JSONObject(importedCardJSONStr);
+//            if (importedCard.has("crdFileContent")) {
+//            	String crdFileContent = (String) importedCard.get("crdFileContent");
+//            	Document doc;
+//				try {
+//					doc = XmlUtils.parse(crdFileContent);
+//				} catch (IOException e1) {
+//					throw new TokenIssuanceException(e1);
+//				} catch (nu.xom.ParsingException e1) {
+//					throw new TokenIssuanceException(e1);
+//				}
+//				try {
+//	            	ValidatingEnvelopedSignature signature = new ValidatingEnvelopedSignature(doc);
+//					Element validElement = signature.validate();
+//					if (validElement == null) {
+//	            		result.put("error", "The signature is not valid");
+//	                	return result.toString();
+//					}
+//					
+//					try {
+//						if (cardFileJSONStr != null) {
+//							System.out.println(cardFileJSONStr);
+//							doc = XmlUtils.parse(cardFileJSONStr);
+//						} else {
+//							doc = null;
+//						}
+//						String ns = validElement.getNamespaceURI();
+//						String name = validElement.getLocalName();
+//						if ("Object".equals(name) && WSConstants.DSIG_NAMESPACE.equals(ns)) {
+////							Element validInfocardElement = validElement.getFirstChildElement("InformationCard", WSConstants.INFOCARD_NAMESPACE);
+//							if (validElement.getChildCount() == 1) {
+//								Element validInfocardElement = (Element) validElement.getChild(0);
+//								X509Certificate signingCert = signature.getCert(); 
+//								String issuerName = signingCert.getSubjectX500Principal().getName();
+//								String newStore = importManagedCard(validInfocardElement, doc, issuerName);
+//								result.put("result", newStore);
+//			                	return result.toString();
+//							} else {
+//								throw new TokenIssuanceException("Signature is valid but has more than one child element: \n" + validElement.toXML());
+//							}
+//						} else {
+//							throw new TokenIssuanceException("Signature is valid but could not find 'dsig:Object': \n" + validElement.toXML());
+//						}
+//					} catch (IOException e) {
+//						throw new TokenIssuanceException(e);
+//					} catch (nu.xom.ParsingException e) {
+//						throw new TokenIssuanceException(e);
+//					}
+//				} catch (ParsingException e) {
+//					throw new TokenIssuanceException(e);
+//				}
+//             } else {
+//				result.put("error", "crdFileContent not found");
+//            	return result.toString();
+//            }
+//        } catch (JSONException e) {
+//			try {
+//				result.put("error", e.getMessage());
+//			} catch (JSONException e1) {
+//				throw new TokenIssuanceException(e1);
+//			}
+//        	return result.toString();
+//		} catch (CryptoException e) {
+//			try {
+//				result.put("error", e.getMessage());
+//			} catch (JSONException e1) {
+//				throw new TokenIssuanceException(e1);
+//			}
+//        	return result.toString();
+//		}
+//	}
 
 	public String getToken(String serializedPolicy)
 			throws TokenIssuanceException {

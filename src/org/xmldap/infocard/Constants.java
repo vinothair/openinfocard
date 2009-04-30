@@ -41,11 +41,12 @@ public class Constants {
     public static final String IC_STATEORPROVINCE					= "stateorprovince";
     public static final String IC_POSTALCODE						= "postalcode";
     public static final String IC_COUNTRY							= "country";
-    public static final String IC_PRIMARYPHONE						= "primaryphone";
+    public static final String IC_HOMEPHONE							= "homephone";
     public static final String IC_OTHERPHONE						= "otherphone";
     public static final String IC_MOBILEPHONE						= "mobilephone";
     public static final String IC_DATEOFBIRTH						= "dateofbirth";
     public static final String IC_GENDER							= "gender";
+    public static final String IC_WEBPAGE							= "webpage";
     
 //    public static final String IC_STREETADDRESS 						= "streetaddress";
 //    public static final String IC_NS_STREETADDRESS 						= IC_NAMESPACE_PREFIX + IC_STREETADDRESS;
@@ -60,11 +61,12 @@ public class Constants {
     public static final String IC_NS_STATEORPROVINCE				= IC_NAMESPACE_PREFIX + IC_STATEORPROVINCE;
     public static final String IC_NS_POSTALCODE						= IC_NAMESPACE_PREFIX + IC_POSTALCODE;
     public static final String IC_NS_COUNTRY						= IC_NAMESPACE_PREFIX + IC_COUNTRY;
-    public static final String IC_NS_PRIMARYPHONE					= IC_NAMESPACE_PREFIX + IC_PRIMARYPHONE;
+    public static final String IC_NS_HOMEPHONE						= IC_NAMESPACE_PREFIX + IC_HOMEPHONE;
     public static final String IC_NS_OTHERPHONE						= IC_NAMESPACE_PREFIX + IC_OTHERPHONE;
     public static final String IC_NS_MOBILEPHONE					= IC_NAMESPACE_PREFIX + IC_MOBILEPHONE;
     public static final String IC_NS_DATEOFBIRTH					= IC_NAMESPACE_PREFIX + IC_DATEOFBIRTH;
     public static final String IC_NS_GENDER							= IC_NAMESPACE_PREFIX + IC_GENDER;
+    public static final String IC_NS_WEBPAGE							= IC_NAMESPACE_PREFIX + IC_WEBPAGE;
 
     public static final String IC_NS_PRIVATEPERSONALIDENTIFIER 		= IC_NAMESPACE_PREFIX + IC_PRIVATEPERSONALIDENTIFIER;
     

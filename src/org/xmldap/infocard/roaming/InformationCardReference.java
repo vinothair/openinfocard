@@ -6,7 +6,7 @@ import org.xmldap.ws.WSConstants;
 import nu.xom.Element;
 import nu.xom.Elements;
 
-public class InformationCardReference {
+public class InformationCardReference implements Comparable<InformationCardReference>{
 	String cardId = null;
 	long cardVersion = 1;
 	
@@ -60,5 +60,18 @@ public class InformationCardReference {
 			throw new IllegalArgumentException("CardVersion must be at least 1");
 		}
 		this.cardVersion = cardVersion;
+	}
+
+	@Override
+	public int compareTo(InformationCardReference obj) {
+		if (this == obj) return 0;
+		
+		int comparison = cardId.compareTo(obj.cardId);
+    	if (comparison != 0) return comparison;
+
+    	if (this.cardVersion < obj.cardVersion) return -1;
+    	if (this.cardVersion > obj.cardVersion) return 1;
+    	
+		return 0;
 	}
 }
