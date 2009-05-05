@@ -54,6 +54,7 @@
    }
 
    if (xml == null) {
+		response.setContentType("application/xhtml+xml");
 
 %>
 
