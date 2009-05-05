@@ -86,6 +86,7 @@
  {
 	String method = request.getMethod();
 	if ("POST".equals(method)) {
+		response.setContentType("application/xhtml+xml");
     	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
         out.println("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\"><head><title>XMLDAP Relying Party token digester</title><style type=\"text/css\">BODY {color:#000;font-family: verdana, arial, sans-serif;}</style></head><body>");
         java.io.BufferedReader reader = request.getReader();
