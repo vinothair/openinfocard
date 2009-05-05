@@ -54,7 +54,8 @@
 	 		basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort();
 	 	}
 	 }
-    
+	response.setContentType("application/xhtml+xml");
+
 %>
 <!DOCTYPE html 
      PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
