@@ -73,7 +73,7 @@ public class CardServlet extends HttpServlet {
     private String domainname = null;
     private String servletPath = null;
 
-    private SupportedClaims supportedClaimsImpl = null;
+    protected SupportedClaims supportedClaimsImpl = null;
 
 
     public void init(ServletConfig config) throws ServletException {
