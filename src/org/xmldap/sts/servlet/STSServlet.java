@@ -35,7 +35,6 @@ import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.util.*;
-import org.xmldap.ws.WSConstants;
 import org.xmldap.sts.db.CardStorage;
 import org.xmldap.sts.db.ManagedCard;
 import org.xmldap.sts.db.SupportedClaims;
@@ -63,6 +62,7 @@ public class STSServlet  extends HttpServlet {
     RSAPrivateKey key = null;
     X509Certificate cert = null;
     String domain = null;
+    String issuerName = null;
     private String servletPath = null;
 
     CardStorage storage = null;
@@ -98,6 +98,10 @@ public class STSServlet  extends HttpServlet {
             servletPath = properties.getProperty("servletPath");
             if (servletPath == null) {
             	throw new ServletException("servletPath is null");
+            }
+            issuerName = properties.getProperty("issuerName");
+            if (issuerName == null) {
+            	issuerName = "https://" + domain + servletPath;
             }
 
             String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
@@ -224,12 +228,11 @@ public class STSServlet  extends HttpServlet {
         System.out.println("STS Issuing Managed Card " + (String)requestElements.get("cardId") + " for " + card.getClaim(org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS));
 
         Locale clientLocale = request.getLocale();
-        String issuer = "https://" + domain + servletPath;
         String stsResponse = "";
 		try {
 			stsResponse = Utils.issue(
 					card, requestElements, clientLocale, cert, key, 
-					issuer, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
+					issuerName, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
 		} catch (CryptoException e) {
 			response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             e.printStackTrace();
