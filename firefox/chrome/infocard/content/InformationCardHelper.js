@@ -153,30 +153,44 @@ var InformationCardHelper = {
     callIdentitySelector: function(doc) {
         IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "doc.location.href=" + doc.location.href);
 
-        var icLoginService = doc.__identityselector__.icLoginService;
-        var icLoginPolicy = doc.__identityselector__.icLoginPolicy;
-        // post token value to service
-        var sameSchemeAndDomain = InformationCardHelper.sameSchemeAndDomain(doc, icLoginService);
-        if (sameSchemeAndDomain == false) {
-            IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "sameSchemeAndDomain == false");
-            return;
-        }
+        var selectorClass;
         // Get the selector class
         if ((selectorClass = IdentitySelectorPrefs.getStringPref("identityselector", "selector_class")) == null) {
             selectorClass = "NoIdentitySelector";
         }
 
-        getSecurityToken = eval(selectorClass).getSecurityToken;
+        var getSecurityToken = eval(selectorClass).getSecurityToken;
 
         if (typeof getSecurityToken != "function") {
             selectorClass = "NoIdentitySelector";
             getSecurityToken = eval(selectorClass).getSecurityToken;
         }
 
-        var data = InformationCardHelper.parseRpPolicy(icLoginPolicy);
+        var data;
+        
+        var openidReturnToUri = doc.__identityselector__.openidReturnToUri;
+        if (openidReturnToUri === undefined) {
+	        var icLoginService = doc.__identityselector__.icLoginService;
+	        if (icLoginService === undefined) {
+	        	throw "internal error in callIdentitySelector: icLoginService === undefined\ndoc=" + doc.location.href;
+	        }
+	        var icLoginPolicy = doc.__identityselector__.icLoginPolicy;
+	        if (icLoginPolicy === undefined) {
+	        	throw "internal error in callIdentitySelector: icLoginPolicy === undefined\ndoc=" + doc.location.href;
+	        }
+	        var sameSchemeAndDomain = InformationCardHelper.sameSchemeAndDomain(doc, icLoginService);
+	        if (sameSchemeAndDomain === false) {
+	        	Components.utils.reportError("IdentitySelector.callIdentitySelector: Ignoring: sameSchemeAndDomain === false");
+	        }
+	        data = InformationCardHelper.parseRpPolicy(icLoginPolicy);
+        } else {
+        	data = {};
+        	data.openidReturnToUri = openidReturnToUri;
+        }
         
         if (doc.__identityselector__.cardId != undefined) {
             data.cardid = "" + doc.__identityselector__.cardId;
+            IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "cardid=" + data.cardid);
         }
         data.recipient = doc.location.href;
         
@@ -262,6 +276,9 @@ var InformationCardHelper = {
         // level deep nesting.
         IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " topURL:" + ownerDocument.location.href);
         var subWindowScheme = "";
+        if (htmlDoc === undefined) {
+        	throw "htmlDoc === undefined. caller=" + InformationCardHelper.sameSchemeAndDomain.caller;
+        }
         if (htmlDoc.location == undefined) {
             // htmlDoc is a string
             IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " subWindowURL:" + htmlDoc);
@@ -277,7 +294,7 @@ var InformationCardHelper = {
             subWindowScheme = htmlDoc.location.protocol;
         }
         IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " subWindowDomain:" + subWindowDomain);
-        if (subWindowScheme == topScheme) {
+        if ((subWindowScheme == topScheme) || ((topScheme === "https" ) && (subWindowScheme === "http"))) {
             IdentitySelectorDiag.logMessage("sameSchemeAndDomain", " topDomain:" + topDomain);
             var subWindowDomain = "";
             if (htmlDoc.location == undefined) {

@@ -2,21 +2,51 @@
 
          var callbackdata = {};
          callbackdata["type"] = "selfAsserted";
-         callbackdata["cardName"] = document.getElementById("cardname").value;
-         callbackdata["givenname"] = document.getElementById("givenname").value;
-         callbackdata["surname"] = document.getElementById("surname").value;
-         callbackdata["email"] = document.getElementById("email").value;
-         callbackdata["streetAddress"] = document.getElementById("streetAddress").value;
-         callbackdata["locality"] = document.getElementById("locality").value;
-         callbackdata["stateOrProvince"] = document.getElementById("stateOrProvince").value;
-         callbackdata["postalCode"] = document.getElementById("postalCode").value;
-         callbackdata["country"] = document.getElementById("country").value;
-         callbackdata["primaryPhone"] = document.getElementById("primaryPhone").value;
-         callbackdata["otherPhone"] = document.getElementById("otherPhone").value;
-         callbackdata["mobilePhone"] = document.getElementById("mobilePhone").value;
-         callbackdata["dateOfBirth"] = document.getElementById("dateOfBirth").value;
-         callbackdata["gender"] = document.getElementById("gender").value;
-         callbackdata["imgurl"] = document.getElementById("imgurl").value;
+         
+         var selfAssertedRows = document.getElementById("selfAssertedRows");
+         if (selfAssertedRows === undefined || selfAssertedRows === null) {
+        	 // internal error
+        	 Components.utils.reportError("cardWizard:selfAssertedCallback: could not find element with id=" + 
+        			 "selfAssertedRows");
+        	 return;
+         }
+         if (!selfAssertedRows.hasChildNodes()) { 
+        	 Components.utils.reportError("cardWizard:selfAssertedCallback: no rows");
+        	 selfAssertedRows.removeChild(selfAssertedRows.childNodes[0]);
+    	 }
+         for (var i=0; i<selfAssertedRows.childNodes.length; i++) {
+        	 var aRow = selfAssertedRows.childNodes[i];
+        	 var aLabel = aRow.childNodes[0];
+        	 var aText = aRow.childNodes[1];
+        	 if ((aText.value !== undefined) && (aText.value !== "")) {
+	        	 var id = aText.getAttribute("id");
+	        	 if (id === "cardName") {
+        			 callbackdata[id] = aText.value;
+        		 } else {
+        			 var object = {};
+        			 object.displayTag = aLabel.value;
+    	        	 object.claimValue = aText.value;
+    	        	 callbackdata[id] = object;
+    	        	 cardWizardDebug("selfAssertedCallback: callbackdata[" + id + "] = " + callbackdata[id]);
+    	         }
+        	 }
+         }
+         
+//         callbackdata["cardName"] = document.getElementById("cardName").value;
+//         callbackdata["givenname"] = document.getElementById("givenname").value;
+//         callbackdata["surname"] = document.getElementById("surname").value;
+//         callbackdata["email"] = document.getElementById("email").value;
+//         callbackdata["streetAddress"] = document.getElementById("streetAddress").value;
+//         callbackdata["locality"] = document.getElementById("locality").value;
+//         callbackdata["stateOrProvince"] = document.getElementById("stateOrProvince").value;
+//         callbackdata["postalCode"] = document.getElementById("postalCode").value;
+//         callbackdata["country"] = document.getElementById("country").value;
+//         callbackdata["primaryPhone"] = document.getElementById("primaryPhone").value;
+//         callbackdata["otherPhone"] = document.getElementById("otherPhone").value;
+//         callbackdata["mobilePhone"] = document.getElementById("mobilePhone").value;
+//         callbackdata["dateOfBirth"] = document.getElementById("dateOfBirth").value;
+//         callbackdata["gender"] = document.getElementById("gender").value;
+//         callbackdata["imgurl"] = document.getElementById("imgurl").value;
 
          window.arguments[1](callbackdata);
 

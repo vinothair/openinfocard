@@ -47,8 +47,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.xmldap.exceptions.TokenIssuanceException;
-
 /**
  * Lets us grant a set of specified permissions to any URL in a set of specified
  * codesources.
@@ -99,7 +97,10 @@ public class URLSetPolicy extends Policy {
      * @see java.security.Policy#getPermissions(java.security.CodeSource)
      */
     public PermissionCollection getPermissions(CodeSource codesource) {
-    	System.out.println("getPermissions codesource: " + codesource.getLocation().toExternalForm());
+        URL location = (codesource == null) ? null : codesource.getLocation();
+    	if (location != null) {
+    		System.out.println("getPermissions codesource: " + location.toExternalForm());
+    	}
         PermissionCollection pc = m_outerPolicy != null ?
                 m_outerPolicy.getPermissions(codesource) :
                 new Permissions();
@@ -115,9 +116,8 @@ public class URLSetPolicy extends Policy {
 	        }
         }
 
-        URL url = codesource.getLocation();
-        if (url != null) {
-            String s = url.toExternalForm();
+        if (location != null) {
+            String s = location.toExternalForm();
             if (m_urls.contains(s) || "file:".equals(s)) {
                 Enumeration<Permission> e = m_permissions.elements();
                 while (e.hasMoreElements()) {

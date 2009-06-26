@@ -510,94 +510,130 @@ function newSelfIssuedCard(callback) {
     card.privatepersonalidentifier = hex_sha1(callback.cardName + card.version + id);
 
     var count = 0;
-    var data = new XML("<selfasserted/>");
-
-    var givenName = callback.givenname;
-    if (givenName) {
-        card.supportedclaim[count] = "givenname";
-        data.givenname = givenName;
-        count++;
-    }
-    var surname = callback.surname;
-    if (surname) {
-        card.supportedclaim[count] = "surname";
-        data.surname = surname;
-        count++;
-    }
-    var emailAddress = callback.email;
-    if (emailAddress) {
-        card.supportedclaim[count] = "emailaddress";
-        data.emailaddress = emailAddress;
-        count++;
-    }
-    var streetAddress = callback.streetAddress;
-    if (streetAddress) {
-        card.supportedclaim[count] = "streetaddress";
-        data.streetaddress = streetAddress;
-        count++;
-    }
-    var locality = callback.locality;
-    if (locality) {
-        card.supportedclaim[count] = "locality";
-        data.locality = locality;
-        count++;
-    }
-    var stateOrProvince = callback.stateOrProvince;
-    if (stateOrProvince) {
-        card.supportedclaim[count] = "stateorprovince";
-        data.stateorprovince = stateOrProvince;
-        count++;
-    }
-    var postalCode = callback.postalCode;
-    if (postalCode) {
-        card.supportedclaim[count] = "postalcode";
-        data.postalcode = postalCode;
-        count++;
-    }
-    var country = callback.country;
-    if (country) {
-        card.supportedclaim[count] = "country";
-        data.country = country;
-        count++;
-    }
-    var primaryPhone = callback.primaryPhone;
-    if (primaryPhone) {
-        card.supportedclaim[count] = "primaryphone";
-        data.primaryphone = primaryPhone;
-        count++;
-    }
-    var otherPhone = callback.otherPhone;
-    if (otherPhone) {
-        card.supportedclaim[count] = "otherphone";
-        data.otherphone = otherPhone;
-        count++;
-    }
-    var mobilePhone = callback.mobilePhone;
-    if (mobilePhone) {
-        card.supportedclaim[count] = "mobilephone";
-        data.mobilephone = mobilePhone;
-        count++;
-    }
-    var dateOfBirth = callback.dateOfBirth;
-    if (dateOfBirth) {
-        card.supportedclaim[count] = "dateofbirth";
-        data.dateofbirth = dateOfBirth;
-        count++;
-    }
-    var gender = callback.gender;
-    if (gender) {
-        card.supportedclaim[count] = "gender";
-        data.gender = gender;
-        count++;
-    }
-    var imgurl = callback.imgurl;
-    if (imgurl) {
-        card.supportedclaim[count] = "imgurl";
-        data.imgurl = imgurl;
-        count++;
+    
+    var supportedClaims = "";
+    var claims = "";
+    
+    for (var claim in callback) {
+    	if (claim === "type") continue;
+    	if (claim === "cardName") continue;
+    	if (callback.hasOwnProperty(claim)) {
+    		if (callback[claim]) {
+    		    var displayTag = callback[claim].displayTag;
+    		    supportedClaims += "<ic:SupportedClaimType Uri=\"" + claim + "\">" + 
+    		    	"<ic:DisplayTag>" + displayTag +"</ic:DisplayTag></ic:SupportedClaimType>";
+    		    var claimValue = callback[claim].claimValue;
+	    		claims += "<ic:ClaimValue Uri=\"" + claim + "\"><ic:Value>" + claimValue + "</ic:Value></ic:ClaimValue>";
+	    		count++;
+    		}
+    	}
     }
 
-    card.carddata.data = data;
+    var masterKey = "<ic:MasterKey>" + card.privatepersonalidentifier + "</ic:MasterKey>";
+    
+    var privateCardData;
+    if (count > 0) {
+    	var claimValueList = "<ic:ClaimValueList>" + claims + "</ic:ClaimValueList>";
+    	privateCardData = "<ic:InformationCardPrivateData xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">"
+    		+ claimValueList + "</ic:InformationCardPrivateData>";
+    } else {
+    	privateCardData = "<ic:InformationCardPrivateData xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+    }
+    
+    supportedClaims += "<ic:SupportedClaimType " +
+    	"Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier\"/>";
+    var supportedClaimTypeList = "<ic:SupportedClaimTypeList xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
+    	supportedClaims + "</ic:SupportedClaimTypeList>";
+
+    card.carddata += new XML(privateCardData);
+    card.carddata += new XML(supportedClaimTypeList);
+    
+//    var givenName = callback.givenname;
+//    if (givenName) {
+//        card.supportedclaim[count] = "givenname";
+//        data.givenname = givenName;
+//        count++;
+//    }
+//    var surname = callback.surname;
+//    if (surname) {
+//        card.supportedclaim[count] = "surname";
+//        data.surname = surname;
+//        count++;
+//    }
+//    var emailAddress = callback.email;
+//    if (emailAddress) {
+//        card.supportedclaim[count] = "emailaddress";
+//        data.emailaddress = emailAddress;
+//        count++;
+//    }
+//    var streetAddress = callback.streetAddress;
+//    if (streetAddress) {
+//        card.supportedclaim[count] = "streetaddress";
+//        data.streetaddress = streetAddress;
+//        count++;
+//    }
+//    var locality = callback.locality;
+//    if (locality) {
+//        card.supportedclaim[count] = "locality";
+//        data.locality = locality;
+//        count++;
+//    }
+//    var stateOrProvince = callback.stateOrProvince;
+//    if (stateOrProvince) {
+//        card.supportedclaim[count] = "stateorprovince";
+//        data.stateorprovince = stateOrProvince;
+//        count++;
+//    }
+//    var postalCode = callback.postalCode;
+//    if (postalCode) {
+//        card.supportedclaim[count] = "postalcode";
+//        data.postalcode = postalCode;
+//        count++;
+//    }
+//    var country = callback.country;
+//    if (country) {
+//        card.supportedclaim[count] = "country";
+//        data.country = country;
+//        count++;
+//    }
+//    var primaryPhone = callback.primaryPhone;
+//    if (primaryPhone) {
+//        card.supportedclaim[count] = "primaryphone";
+//        data.primaryphone = primaryPhone;
+//        count++;
+//    }
+//    var otherPhone = callback.otherPhone;
+//    if (otherPhone) {
+//        card.supportedclaim[count] = "otherphone";
+//        data.otherphone = otherPhone;
+//        count++;
+//    }
+//    var mobilePhone = callback.mobilePhone;
+//    if (mobilePhone) {
+//        card.supportedclaim[count] = "mobilephone";
+//        data.mobilephone = mobilePhone;
+//        count++;
+//    }
+//    var dateOfBirth = callback.dateOfBirth;
+//    if (dateOfBirth) {
+//        card.supportedclaim[count] = "dateofbirth";
+//        data.dateofbirth = dateOfBirth;
+//        count++;
+//    }
+//    var gender = callback.gender;
+//    if (gender) {
+//        card.supportedclaim[count] = "gender";
+//        data.gender = gender;
+//        count++;
+//    }
+//    var imgurl = callback.imgurl;
+//    if (imgurl) {
+//        card.supportedclaim[count] = "imgurl";
+//        data.imgurl = imgurl;
+//        count++;
+//    }
+//
+//    card.carddata.data = data;
     return card;
 }
 

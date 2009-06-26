@@ -121,17 +121,29 @@ var InformationCardDragAndDrop = {
 		if (fired == false) {
 			IdentitySelectorDiag.logMessage(
 					"InformationCardDragAndDrop.onWindowDragDrop", "cardId="+cardId);
-			if (doc.__identityselector__.icLoginService != undefined) {
+			if (doc.__identityselector__.icLoginService !== undefined) {
 				IdentitySelectorDiag.logMessage(
 						"InformationCardDragAndDrop.onWindowDragDrop",
 						"doc.__identityselector__.icLoginService="
 								+ doc.__identityselector__.icLoginService);
+			} else {
+				Components.utils.reportError("InformationCardDragAndDrop.onWindowDragDrop" + 
+						" doc.__identityselector__.icLoginService === undefined" +
+						"\ndoc=" + doc.location.href);
+				alert("login service is unknown");
+				return false;
 			}
-			if (doc.__identityselector__.icLoginPolicy != undefined) {
+			if (doc.__identityselector__.icLoginPolicy !== undefined) {
 				IdentitySelectorDiag.logMessage(
 						"InformationCardDragAndDrop.onWindowDragDrop",
 						"doc.__identityselector__.icLoginPolicy="
 								+ doc.__identityselector__.icLoginPolicy);
+			} else {
+				Components.util.reportError("InformationCardDragAndDrop.onWindowDragDrop" + 
+						" doc.__identityselector__.icLoginPolicy === undefined" +
+						"\ndoc=" + doc.location.href);
+				alert("login policy is unknown");
+				return false;
 			}
 			doc.__identityselector__.cardId = cardId;
 			InformationCardHelper.callIdentitySelector(doc);

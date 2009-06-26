@@ -28,7 +28,45 @@
 
 package org.xmldap.firefox;
 
-import nu.xom.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Random;
+import java.util.TreeSet;
+import java.util.Vector;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+import javax.security.auth.x500.X500Principal;
+
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Nodes;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Sequence;
@@ -40,7 +78,6 @@ import org.json.JSONObject;
 import org.xmldap.asn1.Logotype;
 import org.xmldap.asn1.LogotypeDetails;
 import org.xmldap.asn1.LogotypeInfo;
-import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
@@ -48,7 +85,6 @@ import org.xmldap.exceptions.SigningException;
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.SelfIssuedToken;
-import org.xmldap.infocard.SignedInfoCard;
 import org.xmldap.infocard.roaming.InformationCardMetaData;
 import org.xmldap.infocard.roaming.InformationCardPrivateData;
 import org.xmldap.infocard.roaming.ManagedInformationCardPrivateData;
@@ -59,34 +95,12 @@ import org.xmldap.util.Base64;
 import org.xmldap.util.CertsAndKeys;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.XSDDateTime;
-import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.XmlUtils;
 import org.xmldap.xmldsig.Jsr105Signatur;
-import org.xmldap.xmldsig.ValidatingEnvelopedSignature;
 import org.xmldap.xmlenc.EncryptedData;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
-import javax.security.auth.x500.X500Principal;
-
-import java.io.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.security.*;
-import java.security.cert.Certificate;
-import java.security.cert.*;
-import java.security.interfaces.RSAPublicKey;
-import java.util.Random;
-import java.util.TreeSet;
-import java.util.Vector;
+import de.dtag.tlabs.mwallet.card.Card;
+import de.dtag.tlabs.mwallet.card.CardManager;
 
 public class TokenIssuer {
 
@@ -753,6 +767,113 @@ public class TokenIssuer {
 //		}
 //	}
 
+	public String phoneFini()
+		throws TokenIssuanceException {
+		try {
+			CardManager cardManager = CardManager.getInstance();
+			cardManager.fini();
+		} catch (Exception e) {
+			throw new TokenIssuanceException(e);
+		}
+		
+		return null;
+	}
+	
+	public CardManager getCardManager() throws TokenIssuanceException {
+		CardManager cardManager;
+		try {
+			cardManager = CardManager.getInstance();
+		} catch (Exception e) {
+			throw new TokenIssuanceException(e);
+		}
+		return cardManager;
+	}
+
+	public boolean isPhoneAvailable() throws TokenIssuanceException {
+		CardManager cardManager;
+		try {
+			cardManager = CardManager.getInstance();
+			return cardManager.isPhoneAvailable();
+		} catch (Exception e) {
+			throw new TokenIssuanceException(e);
+		}
+	}
+
+	public String phoneSelectCard(String policyParams)
+		throws TokenIssuanceException {
+
+		JSONObject policy = null;
+
+		try {
+            policy = new JSONObject(policyParams);
+           	String der =  policy.optString("cert", null);
+    		String tokenType = policy.optString("tokenType", null);
+    		String issuer = policy.optString("issuer", null);
+    		String requiredClaims = policy.optString("requiredClaims", null);
+    		String optionalClaims = policy.optString("optionalClaims", null);
+    		String privacyPolicy = policy.optString("privacyUrl", null);
+    		String privacyPolicyVersion = policy.optString("privacyVersion", null);
+    		String issuerPolicy = policy.optString("issuerPolicy", null);
+    		String extraParamsLenght = policy.optString("extraParamsLenght", null);
+    		String extraParams = policy.optString("extraParams", null);
+            String audience = (String) policy.optString("url", null);
+            
+            try {
+            	CardManager cardManager = CardManager.getInstance();
+				Vector<Card> cards = cardManager.getCardsByType("InfoCard");
+				if (cards == null) {
+					return null;
+				}
+				for (int i=0; i<cards.size(); i++) {
+					Card card = cards.get(i);
+					System.out.println("card#" + i + ": " + card.toString());
+				}
+				if (cards.size() > 0) {
+					return cards.get(0).toString(); // return the first card FIXME
+				}
+			} catch (Exception e) {
+				throw new TokenIssuanceException(e);
+			}
+        } catch (JSONException e) {
+            throw new TokenIssuanceException(e);
+        }
+		return null;
+	}
+	
+	public void endCardSelection()
+			throws TokenIssuanceException {
+		try {
+			CardManager cardManager = CardManager.getInstance();
+			cardManager.endCardSelection();
+		} catch (Exception e) {
+			throw new TokenIssuanceException(e);
+		}
+	}
+		
+	public void beginCardSelection()
+				throws TokenIssuanceException {
+		try {
+			CardManager cardManager = CardManager.getInstance();
+			cardManager.beginCardSelection(CardManager.DOMAIN_IDENTITY);
+		} catch (Exception e) {
+			throw new TokenIssuanceException(e);
+		}
+	}
+	
+	public String getSelectedCard() throws TokenIssuanceException {
+		try {
+			CardManager cardManager = CardManager.getInstance();
+			Card card = cardManager.getSelectedCard();
+			if (card != null) {
+				return card.toString();
+			}
+			return null;
+		} catch (Exception e) {
+			throw new TokenIssuanceException(e);
+		}
+
+	}
+	
 	public String getToken(String serializedPolicy)
 			throws TokenIssuanceException {
 

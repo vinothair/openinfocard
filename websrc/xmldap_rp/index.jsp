@@ -121,12 +121,15 @@
 		}
 	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 %>
-
+<%
+ String linkElement = "<link rel=\"xrds.metadata\" href=\"" + request.getServletPath() + "?xmldap_rp.xrds" + "\"/>";
+ String metaElement = "<meta http-equiv=\"X-XRDS-Location\" content=\"" + request.getRequestURL() + "?xmldap_rp.xrds" + "\"/>";
+%>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Java Based Relying Party</title>
-	<link rel="xrds.metadata" href="?xmldap_rp.xrds"/>
-
+	<%= metaElement %>
+    
     <style type="text/css">
     BODY {background: #FFF url(./img/banner.png) repeat-x;
          color:#000;

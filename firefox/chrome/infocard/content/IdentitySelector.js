@@ -227,6 +227,8 @@ var IdentitySelector =
                
                 if( !bFound)
                 {
+                	IdentitySelectorDiag.logMessage( "registerSelector",
+                            "registering " + selector.guid());
                         gSelectorRegistry.push( selector);
                 }
         },
@@ -270,36 +272,6 @@ var IdentitySelector =
                        
                         IdentitySelectorDiag.logMessage( "runInterceptScript",
                                 "Executed script on " + doc.location);
-                }
-        },
-       
-        // ***********************************************************************
-        // Method: onDOMChanged
-        // ***********************************************************************
-        onDOMChanged : function( event)
-        {
-                var target = event ? event.target : this;
-                var doc;
-
-                if( target.wrappedJSObject)
-                {
-                        target = target.wrappedJSObject;
-                }
-
-                try
-                {
-                        if( (doc = target.ownerDocument) === undefined)
-                        {
-                                return;
-                        }
-       
-                        var changedEvent = doc.createEvent( "Event");
-                        changedEvent.initEvent( "ICDOMChanged", true, true);
-                        target.dispatchEvent( changedEvent);
-                }
-                catch( e)
-                {
-                        IdentitySelectorDiag.debugReportError( "onDOMChanged", e);
                 }
         },
        
@@ -992,7 +964,45 @@ var IdentitySelector =
                         IdentitySelectorDiag.debugReportError( "onICardElementLoaded", e);
                 }
         },
+        
+        // ***********************************************************************
+        // Method: onCallIdentitySelector
+        // ***********************************************************************
        
+        _getSelectorClass : function()
+        {
+            if( gSelectorRegistry.length > 1)
+            {
+            	var selectorGuid = IdentitySelectorPrefs.getStringPref(
+                        "identityselector", "selector_guid");
+                    if( (selectorGuid !== null) && (selectorGuid !== undefined))
+                    {
+                            for( iLoop = 0; iLoop < gSelectorRegistry.length; iLoop++)
+                            {
+                            	var aSelectorClasz = gSelectorRegistry[ iLoop];
+                                    if( aSelectorClasz.guid() === selectorGuid)
+                                    {
+                                    	IdentitySelectorDiag.logMessage( "onCallIdentitySelector", 
+                                    			"using class " + aSelectorClasz.guid() );
+                                            return aSelectorClasz;
+                                    }
+                            }
+                    } else {
+                    	IdentitySelectorDiag.reportError( "onCallIdentitySelector",
+                                "selector_guid === " + selector_guid);
+                    	return null;
+                    }
+            } else {
+            	if( gSelectorRegistry.length < 1) {
+            		IdentitySelectorDiag.reportError( "onCallIdentitySelector",
+                        "gSelectorRegistry.length = " + gSelectorRegistry.length);
+            		return null;
+            	}
+            }
+            // guid did not match return the first on -- internal error???
+            return gSelectorRegistry[0];
+        },
+        
         // ***********************************************************************
         // Method: onCallIdentitySelector
         // ***********************************************************************
@@ -1155,54 +1165,19 @@ var IdentitySelector =
                         }
                        
                         // Get the selector
-                       
-                        getSecurityToken = null;
-                       
-                        if( gSelectorRegistry.length > 1)
-                        {
-                                if( (selectorGuid = IdentitySelectorPrefs.getStringPref(
-                                        "identityselector", "selector_guid")) !== null)
-                                {
-                                        for( iLoop = 0; iLoop < gSelectorRegistry.length; iLoop++)
-                                        {
-                                                if( gSelectorRegistry[ iLoop].guid() === selectorGuid)
-                                                {
-                                                        getSecurityToken = gSelectorRegistry[
-                                                                iLoop].getSecurityToken;
-                                                        break;
-                                                }
-                                        }
-                                } else {
-                                	IdentitySelectorDiag.reportError( "onCallIdentitySelector",
-                                            "selector_guid === null");
-                                }
-                        } else {
-                        	if( gSelectorRegistry.length < 1) {
-                        		IdentitySelectorDiag.reportError( "onCallIdentitySelector",
-                                    "gSelectorRegistry.length = " + gSelectorRegistry.length);
-                        	}
+                        var aSelectorClasz = IdentitySelector._getSelectorClass();
+                        if (aSelectorClasz === null) {
+                        	IdentitySelectorDiag.reportError( "onCallIdentitySelector",
+                                    "Unable to locate an identity selector.  " +
+                                    "Please make sure one is installed.");
+                        	return null;
                         }
-                       
-                        if( getSecurityToken === null)
-                        {
-                                if( gSelectorRegistry.length >= 1)
-                                {
-                                        getSecurityToken = gSelectorRegistry[ 0].getSecurityToken;
-                                }
-                                else
-                                {
-                                        IdentitySelectorDiag.reportError( "onCallIdentitySelector",
-                                                "Unable to locate an identity selector.  " +
-                                                "Please make sure one is installed.");
-                                }
-                        }
-                       
+                        var getSecurityToken = aSelectorClasz.getSecurityToken;
+                        
                         // Set the token to null
-                       
                         identObject.targetElem.token = null;
                        
                         // Check for a denial-of-service attack
-                       
                         if( gDisableStartTime !== null)
                         {
                                 // If there haven't been any token requests in the last 15 seconds,
@@ -1498,6 +1473,18 @@ var ICProgressListener =
                                         {
                                                 alert( e);
                                         }
+                                        var aSelectorClasz = IdentitySelector._getSelectorClass();
+                                        if (aSelectorClasz !== null) {
+                                        	IdentitySelectorDiag.logMessage( "onStateChange", "aSelectorClasz.guid=" + aSelectorClasz.guid()); 
+                                        	if (aSelectorClasz.onStateStop) {
+                                        		aSelectorClasz.onStateStop(aProgress.DOMWindow.document);
+                                        	} else {
+                                            	IdentitySelectorDiag.logMessage( "onStateChange", 
+                                            			"aSelectorClasz has no onStateStop function"); 
+                                        	}
+                                        } else {
+                                        	IdentitySelectorDiag.logMessage( "onStateChange", "aSelectorClasz === null");
+                                        }
                                 }
                         }
                 }
@@ -1551,6 +1538,8 @@ var ICProgressListener =
 
 try
 {
+		window.addEventListener("dragdrop", InformationCardDragAndDrop.onWindowDragDrop, false);
+		
         window.addEventListener( "load",
                 IdentitySelector.onInstall, false);
                

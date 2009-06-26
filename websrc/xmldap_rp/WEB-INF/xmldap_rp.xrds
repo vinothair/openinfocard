@@ -1,68 +1,52 @@
 <XRDS xmlns:simple="xri://$xrds">
-	<xrd:XRD xmlns:xrd="xri://$XRD*($v*2.0)" version="2.0">
+	<xrd:XRD xmlns:xrd="xri://$xrd*($v*2.0)" version="2.0">
 		<xrd:Type>xri://$xrds*simple</xrd:Type>
 		<xrd:Service>
 			<!--
 				Service specification that identifies the endpoint of the infocard
 				policy for login claims
 			-->
-			<xrd:Type>http://infocardfoundation.org/policy/1.0/login
-			</xrd:Type>
-			<xrd:URI simple:httpMethod="GET">https://@domain@/relyingparty/?login.xml
-			</xrd:URI>
+			<xrd:Type>http://infocardfoundation.org/policy/1.0/login</xrd:Type>
+			<xrd:URI simple:httpMethod="GET">https://@domain@/relyingparty/?login.xml</xrd:URI>
 		</xrd:Service>
 		<xrd:Service>
 			<!--
 				Service specification that identifies the endpoint of the infocard
 				policy for registration claims
 			-->
-			<xrd:Type>http://infocardfoundation.org/policy/1.0/registration
-			</xrd:Type>
-			<xrd:URI simple:httpMethod="GET">
-				https://@domain@/relyingparty/registration.xml</xrd:URI>
+			<xrd:Type>http://infocardfoundation.org/policy/1.0/registration</xrd:Type>
+			<xrd:URI simple:httpMethod="GET">https://@domain@/relyingparty/registration.xml</xrd:URI>
 		</xrd:Service>
 		<xrd:Service>
 			<!--
 				Service specification that identifies the endpoint for submitting
 				login claims
 			-->
-			<Type>http://infocardfoundation.org/service/1.0/login
-			</Type>
-			<URI simple:httpMethod="POST">https://@domain@/relyingparty/link.jsp
-			</URI>
+			<xrd:Type>http://infocardfoundation.org/service/1.0/login</xrd:Type>
+			<xrd:URI simple:httpMethod="POST">https://@domain@/relyingparty/link.jsp</xrd:URI>
 		</xrd:Service>
 		<xrd:Service>
 			<!--
 				Which Identity Providers are trusted
 			-->
-			<xrd:Type>
-				http://infocardfoundation.org/service/1.0/trusted_identity_providers
-			</xrd:Type>
-			<xrd:URI>https://@domain@/sts/cardmanager/
-			</xrd:URI>
-			<xrd:URI>https://higgins.eclipse.org/TokenService/services/Trust
-			</xrd:URI>
+			<xrd:Type>http://infocardfoundation.org/service/1.0/trusted_identity_providers</xrd:Type>
+			<xrd:URI>https://@domain@/sts/cardmanager/</xrd:URI>
+			<xrd:URI>https://higgins.eclipse.org/TokenService/services/Trust</xrd:URI>
 		</xrd:Service>
 		<xrd:Service>
 			<!--
 				Service specification that identifies the endpoint of the infocard
 				policy for login claims
 			-->
-			<xrd:Type>
-				http://xrd.oasis-open.org/service/1.0/username_password_registration
-			</xrd:Type>
-			<xrd:URI simple:httpMethod="GET">https://@domain@/sts/cardmanager/
-			</xrd:URI>
+			<xrd:Type>http://xrd.oasis-open.org/service/1.0/username_password_registration</xrd:Type>
+			<xrd:URI simple:httpMethod="GET">https://@domain@/sts/cardmanager/</xrd:URI>
 		</xrd:Service>
 		<xrd:Service>
 			<!--
 				Where to get the privacy policy
 			-->
-			<xrd:Type>http://xrd.oasis-open.org/service/1.0/privacy.txt
-			</xrd:Type>
-			<xrd:URI simple:httpMethod="GET">
-				https://@domain@/relyingparty/?privacy.txt
-			</xrd:URI>
+			<xrd:Type>http://xrd.oasis-open.org/service/1.0/privacy.txt</xrd:Type>
+			<xrd:URI simple:httpMethod="GET">https://@domain@/relyingparty/?privacy.txt</xrd:URI>
 		</xrd:Service>
 	</xrd:XRD>
 </XRDS>

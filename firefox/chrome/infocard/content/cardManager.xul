@@ -45,11 +45,10 @@
 
     <script src="chrome://infocard/content/crypto/hash.js"/>
     <script src="chrome://infocard/content/json.js"/>
-    <script src="chrome://infocard/content/openid.js"/>
     <script src="chrome://infocard/content/cmDebug.js"/>
+    <script src="chrome://infocard/content/openid2.js"/>
     <script src="chrome://infocard/content/cmCommon.js"/>
     <script src="chrome://infocard/content/tokenissuerXul.js"/>
-    <script src="chrome://infocard/content/cmSelfIssued.js"/>
     <script src="chrome://infocard/content/cmManagedCard.js"/>
     <script src="chrome://infocard/content/infocards.js"/>
     <script src="chrome://infocard/content/cardstore.js"/>
@@ -84,7 +83,6 @@
 
 
         <hbox id="listarea">
-            <hbox id="openID"></hbox>
             <arrowscrollbox flex="1" orient="horizontal" id="cardselection"></arrowscrollbox>
         </hbox>
 
@@ -115,60 +113,12 @@
                 	<label id="privacy_label" value="&cardmanager.privacy;" class="cardcontrols" hidden="true"/>
                 </hbox>
 
-                <hbox id="selfassertedClaims" hidden="true">
-                    <vbox>
-                        <spacer height="5"/>
-
-                    <grid id="editgrid" class="editgrid_left" hidden="true">
-                        <columns><column id="colText"/><column id="colData"/></columns>
-                        <rows id="rows0">
-                            <row class="rowClass">
-                             <checkbox id="_givenname" crop="end" class="claimLabel" label="&cardmanager.givenname;"   />
-                             <textbox class="claimText" id="givenname"    value=""/>
-                            </row>
-                            <row class="rowClass"><checkbox id="_surname" crop="end" class="claimLabel" label="&cardmanager.surname;"  /><textbox class="claimText" id="surname"   value=""/></row>
-                            <row class="rowClass"><checkbox id="_streetAddress" crop="end" class="claimLabel" label="&cardmanager.streetaddress;"  /><textbox class="claimText" id="streetAddress"   value=""/></row>
-                            <row class="rowClass"><checkbox id="_locality" crop="end" class="claimLabel" label="&cardmanager.locality;"  /><textbox class="claimText" id="locality"   value=""/></row>
-                            <row class="rowClass"><checkbox id="_stateOrProvince" crop="end" class="claimLabel" label="&cardmanager.stateorprovince;"  /><textbox class="claimText" id="stateOrProvince"   value=""/></row>
-                            <row class="rowClass"><checkbox id="_postalCode" crop="end" class="claimLabel" label="&cardmanager.postalcode;"  /><textbox class="claimText" id="postalCode"   value=""/></row>
-                            <row class="rowClass"><checkbox id="_country" crop="end" class="claimLabel" label="&cardmanager.country;"  /><textbox class="claimText" id="country"   value=""/></row>
-                        </rows>
-                    </grid>
-
-                    </vbox>
-                    <vbox>
-                        <spacer height="5"/>
-                    <grid id="editgrid1" class="editgrid_right" hidden="true">
-                        <columns><column id="colText"/><column id="colData"/></columns>
-                        <rows id="rows1">
-                            <row class="rowClass"><checkbox id="_email" crop="end" class="claimLabel" label="&cardmanager.email;"  /><textbox class="claimText" id="email"   value=""/></row>
-                            <row class="rowClass"><checkbox id="_primaryPhone" crop="end" class="claimLabel" label="&cardmanager.primaryphone;"  /><textbox class="claimText" id="primaryPhone"   value=""/></row>
-                            <row class="rowClass"><checkbox id="_mobilePhone" crop="end" class="claimLabel" label="&cardmanager.mobilephone;" /><textbox class="claimText" id="mobilePhone"  value=""/></row>
-                            <row class="rowClass"><checkbox id="_otherPhone" crop="end" class="claimLabel" label="&cardmanager.otherphone;"    /><textbox class="claimText" id="otherPhone"     value=""/></row>
-                            <row class="rowClass"><checkbox id="_dateOfBirth" crop="end" class="claimLabel" label="&cardmanager.dateofbirth;"    /><textbox class="claimText" id="dateOfBirth"     value=""/></row>
-                            <row class="rowClass"><checkbox id="_gender" crop="end" class="claimLabel" label="&cardmanager.gender;"    /><textbox class="claimText" id="gender"     value=""/></row>
-                            <row class="rowClass"><label crop="end" class="claimLabel" value="&cardmanager.imgurl;"    /><textbox class="claimText" id="imgurl"     value=""/></row>
-                        </rows>
-                    </grid>
-
-                    </vbox>
-                </hbox>
-
                 <hbox id="managedClaims" class="managedClaims" hidden="true">
                     <vbox>
                         <spacer height="5"/>
-	                    <grid id="editgrid2" class="editgrid_left" hidden="true">
+	                    <grid id="editgrid2" class="editgrid" hidden="true">
 	                        <columns><column id="colText"/><column id="colData"/></columns>
 	                        <rows id="managedRows0">
-	                        </rows>
-	                    </grid>
-
-                    </vbox>
-                    <vbox>
-                        <spacer height="5"/>
-	                    <grid id="editgrid3" class="editgrid_right" hidden="true">
-	                        <columns><column id="colText"/><column id="colData"/></columns>
-	                        <rows id="managedRows1">
 	                        </rows>
 	                    </grid>
 

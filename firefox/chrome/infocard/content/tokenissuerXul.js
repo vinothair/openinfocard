@@ -8,7 +8,7 @@ var TokenIssuer = {
 	          .logStringMessage(msg);
 		},
 		
-		_fail : function(msg) {
+		_fail : function(e) {
 			var msg;
 		    if (e.getMessage) {
 		        msg = e + ": " + e.getMessage() + "\n";
@@ -49,7 +49,7 @@ var TokenIssuer = {
 			var xmldapUrl = new java.net.URL(libPath+"xmldap.jar");
 			var cl = new java.net.URLClassLoader( [ xmldapUrl ]  );
 			if (cl === null) {
-				this._trace("class loader is null");
+				this._fail("class loader is null");
 				return null;
 			}
 			
@@ -77,6 +77,24 @@ var TokenIssuer = {
 			anInstance.addPermission(new java.util.PropertyPermission("org.bouncycastle.*", "read"));
 			anInstance.addPermission(new java.util.PropertyPermission("jsr105Provider", "read"));
 			
+			// anInstance.addPermission(new javax.smartcardio.CardPermission("*", "*")); // all terminals, all action
+			var cpClasz = java.lang.Class.forName("javax.smartcardio.CardPermission", true, cl);
+			if (cpClasz === null) {
+				this._trace("javax.smartcardio.CardPermission is not available");
+			} else {
+				var cpConstructor = cpClasz.getConstructor([java.lang.Class.forName("java.lang.String"),java.lang.Class.forName("java.lang.String")]);
+				if (cpConstructor === null) {
+					this._trace("javax.smartcardio.CardPermission(String, String) is not available");
+				} else {
+					var cardPermission = cpConstructor.newInstance(["*", "*"]);// all terminals, all action
+					if (cardPermission === null) {
+						this._trace("javax.smartcardio.CardPermission(String, String) failed");
+					} else {
+						anInstance.addPermission(cardPermission);
+					}
+				}
+			}
+			
 //			anInstance.addPermission(new java.security.AllPermission());
 			anInstance.addURL(xmldapUrl);
 
@@ -86,7 +104,7 @@ var TokenIssuer = {
 				this._trace("class loader is NULL");
 				return null;
 			}
-			
+
 			var tiClass = java.lang.Class.forName("org.xmldap.firefox.TokenIssuer", true, cl);
 			if (tiClass === null) {
 				this._trace("tiClass is null");
@@ -124,6 +142,66 @@ var TokenIssuer = {
 				this._fail(e);
 		    }
 		    return null;
+		},
+		
+		isPhoneAvailable : function() {
+			this._trace("isPhoneAvailable");
+			try {
+				var result = this.tokenIssuer.isPhoneAvailable();
+				return result;
+			} catch(e) {
+				this._fail(e);
+			}
+		},
+		
+		endCardSelection : function() {
+			this._trace("endCardSelection");
+			try {
+				var result = this.tokenIssuer.endCardSelection();
+				return result;
+			} catch(e) {
+				this._fail(e);
+			}
+		},
+		
+		beginCardSelection : function() {
+			this._trace("beginCardSelection");
+			try {
+				var result = this.tokenIssuer.beginCardSelection();
+				return result;
+			} catch(e) {
+				this._fail(e);
+			}
+		},
+		
+		getSelectedCard : function() {
+			this._trace("getSelectedCard");
+			try {
+				var result = this.tokenIssuer.getSelectedCard();
+				return result;
+			} catch(e) {
+				this._fail(e);
+			}
+		},
+		
+		phoneFini : function() {
+			this._trace("phoneFini");
+			try {
+				var result = this.tokenIssuer.phoneFini();
+				return result;
+			} catch(e) {
+				this._fail(e);
+			}
+		},
+		
+		phoneSelectCard : function(policyParams) {
+			this._trace("phoneSelectCard: policyParams=" + policyParams);
+			try {
+				var result = this.tokenIssuer.phoneSelectCard(policyParams);
+				return result;
+			} catch(e) {
+				this._fail(e);
+			}
 		},
 		
 		finalize : function() {}
