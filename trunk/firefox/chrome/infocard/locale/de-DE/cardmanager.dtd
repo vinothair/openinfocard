@@ -14,6 +14,7 @@
 <!ENTITY cardmanager.otherphone "Andere Telefonnr:">
 <!ENTITY cardmanager.dateofbirth "Geburtsdatum:">
 <!ENTITY cardmanager.gender "Geschlecht:">
+<!ENTITY cardmanager.webpage "Webseite:">
 <!ENTITY cardmanager.imgurl "Bild URL:"> 
 <!ENTITY cardmanager.disableSelector "Abschalten">
 <!ENTITY cardmanager.newcard "Neue Karte">
