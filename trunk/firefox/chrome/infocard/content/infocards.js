@@ -168,6 +168,60 @@ function computeClientPseudonymPost20080829(policy){
 	return window.btoa(clientPseudonymPpidBytes);
 }
 
+function finalizeOpenId(openid_nickname, openid_fullname, openid_email, verified_id, openidServer) {
+    icDebug('finalizeOpenId: start');
+
+    openidServer.stopServer();
+    
+    var tokenToReturn;
+    var policy = getPolicy();
+
+    policy["type"] = "selfAsserted";
+    selectedCard.privatepersonalidentifier = hex_sha1(selectedCard.cardName + selectedCard.version + selectedCard.id);
+
+    var count = 0;
+    var data = new XML("<selfasserted/>");
+
+    selectedCard.supportedclaim[count] = "givenname";
+    data.givenname = openid_nickname;
+    count++;
+
+    selectedCard.supportedclaim[count] = "surname";
+    data.surname = openid_fullname;
+    count++;
+
+    selectedCard.supportedclaim[count] = "emailaddress";
+    data.emailaddress = openid_email;
+    count++;
+
+    selectedCard.carddata.data = data;
+    policy["card"] = selectedCard.toString();
+
+    tokenToReturn = processCard(policy,false);
+
+    icDebug('2');
+
+    finish(tokenToReturn);
+}
+
+function getOpenIdReturnTo(extraParams){
+	try {
+		for (var i=0; i<extraParams.length; i++) {
+			var val = JSON.parse(extraParams[i]);
+			if ((val !== null) && (val !== false) && val.hasOwnProperty("openidReturnToUri")) {
+				var openidReturnToUri = "" + val.openidReturnToUri;
+				icDebug("getOpenIdReturnTo: openidReturnToUri = " + openidReturnToUri);
+				return openidReturnToUri;
+			} else {
+				icDebug("getOpenIdReturnTo: extraParams[" + i + "] = " + extraParams[i]);
+			}
+		}
+	} catch (e) {
+		icDebug("getOpenIdReturnTo threw exception: " + e);
+	}
+//	return undefined;
+}
+
 function ok(){
 
     var tokenToReturn;
@@ -180,8 +234,12 @@ function ok(){
     if (selectedCard.type == "selfAsserted") {
         policy["type"] = "selfAsserted";
         policy["card"] = selectedCard.toString();
+        try {
+        	setOptionalClaimsSelf(policy);
+        } catch (e) {
+        	icDebug("setOptionalClaimsSelf failed:" + e);
+        }
         //TRUE or FALSE on the second param enabled debug
-        setOptionalClaimsSelf(policy);
         tokenToReturn = processCard(policy,selectorDebugging);
         finish(tokenToReturn);
 		updateRPs();
@@ -227,57 +285,27 @@ function ok(){
 
 
     } else if (selectedCard.type == "openid"){
-        openid(selectedCard.id);
+    	icDebug("ok: openid setup");
+    	try {
+    	    var extraParamsOpenIdReturnTo = null;
+    	    if ((policy !== null) && policy.hasOwnProperty("extraParams")) {
+    	    	extraParams = policy.extraParams;
+    	    	extraParamsOpenIdReturnTo = getOpenIdReturnTo(extraParams);
+    	    	icDebug("ok: extraParamsOpenIdReturnTo=" + extraParamsOpenIdReturnTo);
+    	    }
+    		
+    		var openidServer = new openid2(selectedCard.id, finalizeOpenId, document, extraParamsOpenIdReturnTo);
+        	icDebug("ok: openid 1");
+    		openidServer.doit();
+        	icDebug("ok: openid started");
+    	} catch (e) {
+    		icDebug("ok: openid setup failed: " + e);
+    	}
     }
 
 }
 
-
-function finalizeOpenId() {
-
-
-    icDebug('1');
-
-
-    var tokenToReturn;
-    var policy = getPolicy();
-
-
-    policy["type"] = "selfAsserted";
-    selectedCard.privatepersonalidentifier = hex_sha1(selectedCard.cardName + selectedCard.version + selectedCard.id);
-
-    var count = 0;
-    var data = new XML("<selfasserted/>");
-
-    selectedCard.supportedclaim[count] = "givenname";
-    data.givenname = openid_nickname;
-    count++;
-
-    selectedCard.supportedclaim[count] = "surname";
-    data.surname = openid_fullname;
-    count++;
-
-    selectedCard.supportedclaim[count] = "emailaddress";
-    data.emailaddress = openid_email;
-    count++;
-
-    selectedCard.carddata.data = data;
-    policy["card"] = selectedCard.toString();
-
-
-    tokenToReturn = processCard(policy,false);
-
-    icDebug('2');
-
-
-    finish(tokenToReturn);
-
-}
-
-
 function finish(tokenToReturn) {
-
-    stopServer();
 
     if (tokenToReturn != null) {
 
@@ -332,8 +360,7 @@ function cancel(){
     event.initEvent("CancelIdentitySelector", true, true);
     window.dispatchEvent(event);
 
-    stopServer();
-   	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+   	if ((window.arguments !== undefined) && (window.arguments.length > 0)) {
 	    window.arguments[1](null);
 	}
     window.close();
@@ -341,7 +368,7 @@ function cancel(){
 
 function getPolicy(){
 	var policy = null;
-	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+	if ((window.hasOwnProperty(arguments)) && (window.arguments !== undefined) && (window.arguments.length > 0)) {
 	    policy = window.arguments[0];
 	}
 	return policy;
@@ -351,8 +378,8 @@ function getCardId(extraParams){
 	try {
 		for (var i=0; i<extraParams.length; i++) {
 			var val = JSON.parse(extraParams[i]);
-			if ((val !== null) && val.hasOwnProperty("cardid")) {
-				var cardId = val.cardid;
+			if ((val !== null) && (val !== false) && val.hasOwnProperty("cardid")) {
+				var cardId = "" + val.cardid;
 				icDebug("getCardId: cardId = " + cardId);
 				return cardId;
 			} else {
@@ -409,7 +436,7 @@ function cardManagerLoad(policyParam){
     }
 
     var extraParams = null;
-    var extraParamsCardId;
+    var extraParamsCardId = null;
     if ((policy !== null) && policy.hasOwnProperty("extraParams")) {
     	extraParams = policy.extraParams;
     	extraParamsCardId = getCardId(extraParams);
@@ -543,9 +570,20 @@ function cardManagerLoad(policyParam){
 		}
 	}
 	
-	if (extraParamsCardId !== undefined) {
+	if ((extraParamsCardId !== undefined) && (extraParamsCardId !== null)) {
 		var choosenCard = getCard(extraParamsCardId);
+		if ((choosenCard === undefined) || (choosenCard === null)) {
+			Components.utils.reportError("cardManagerLoad: extraParamsCardId=" + extraParamsCardId + " but card not found");
+			alert("internal error: card not found in cardstore.");
+			window.close();
+			return;
+		}
 		setCard(choosenCard);
+		var chossenCardElement = document.getElementById(extraParamsCardId);
+		if (chossenCardElement !== null) {
+			var xpcomInterface = cardArea.scrollBoxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+			xpcomInterface.ensureElementIsVisible(chossenCardElement);
+		}
 	} else {
 		 icDebug("extraParamsCardId === undefined");
 	}
@@ -554,9 +592,11 @@ function cardManagerLoad(policyParam){
 
 function setCard(card){
 
-	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-	    var select = document.getElementById('selectcontrol');
-    	select.setAttribute('hidden', 'false');
+	if ((window.hasOwnProperty(arguments) && window.arguments !== undefined)) {
+		if (window.arguments.length > 0) {
+			var select = document.getElementById('selectcontrol');
+			select.setAttribute('hidden', 'false');
+		}
 	}
 	
     var showPrivacyStatementElm = document.getElementById('privacy_label');
@@ -584,18 +624,32 @@ function setCard(card){
     var managedClaims = document.getElementById('managedClaims');
 
     if (selectedCard.type == "selfAsserted" )  {
+	    var requiredClaims = null;
+	    var optionalClaims = null;
+ 	    if (policy != null) {
+		  requiredClaims = policy["requiredClaims"];
+   	      optionalClaims = policy["optionalClaims"];
+	    }	
     	if (selfassertedClaims != null) {
-    		selfassertedClaims.setAttribute("hidden", "false");
+    		selfassertedClaims.setAttribute("hidden", "true");
     	}
     	if (managedClaims != null) {
-    		managedClaims.setAttribute("hidden", "true");
+    		managedClaims.setAttribute("hidden", "false");
     	}
 		var cardname = document.getElementById("cardname");
 		if (cardname != null) {
 			cardname.value = selectedCard.name;
 			cardname.hidden = false;
 		}
-		setCardSelf(selectedCard, policy);
+
+		var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+		var list = selectedCard.ic::SupportedClaimTypeList.ic::SupportedClaimType;
+
+		var claimValues = selectedCard.ic::InformationCardPrivateData.ic::ClaimValueList.ic::ClaimValue;
+		icDebug("claimValues: typeof(claimValues)=" + typeof(claimValues));
+		icDebug("claimValues: claimValues.length()=" + claimValues.length());
+		
+		setCardManaged(requiredClaims, optionalClaims, list, "managedRows0", "managedRows1", claimValues);
     }  else if (selectedCard.type == "managedCard" )   {
 	    var requiredClaims = null;
 	    var optionalClaims = null;
@@ -615,7 +669,10 @@ function setCard(card){
 	        cardname.value = selectedCard.name;
 	        cardname.hidden = false;
 		}
-		setCardManaged(requiredClaims, optionalClaims);
+		var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+		var list = selectedCard.carddata.managed.ic::SupportedClaimTypeList.ic::SupportedClaimType;
+
+		setCardManaged(requiredClaims, optionalClaims, list, "managedRows0", "managedRows1", null);
     } else if (selectedCard.type == "openid" )  {
 
 
@@ -645,7 +702,7 @@ function setCard(card){
 
 function dblclick(event) {
 	handleCardChoice(event);
-	if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+	if ((window.arguments !== undefined) && (window.arguments.length > 0)) {
 		icDebug("dblclick: ok");
 		ok();
 	} else {
@@ -667,7 +724,7 @@ function handleCardChoice(event){
     icDebug("selectedCardId="+selectedCardId);
     var choosenCard = getCard(selectedCardId);
     if (choosenCard === null) {
-    	icDebug("internal error: card not found: " + selectedCardId);
+    	Component.utils.reportError("internal error: card not found: " + selectedCardId);
     	alert("internal error: card not found: " + selectedCardId);
     	return;
     }
@@ -949,8 +1006,8 @@ function validateSignature(callback) {
 		icDebug("error JSON.stringifying(cardFile) " + e);
 	}
 	if (tokenIssuerInitialized = TokenIssuer.initialize() == false) {
-		icDebug("digestNewCard: could not initialize TokenIssuer. Signature will not be validated");
-		icDebug("processCard: window.java = " + window.java + "window.document.location.href=" + window.document.location.href);
+		icDebug("validateSignature: could not initialize TokenIssuer. Signature will not be validated");
+		icDebug("validateSignature: window.java = " + window.java + "window.document.location.href=" + window.document.location.href);
 //		alert("Could not initialize java. The card's signature will not be validated!");
 	} else {
 		var currentRoamingStore = readRoamingStore();
@@ -1003,7 +1060,7 @@ function digestNewCard(callback) {
 	 return;
 	}
 	
-    var cardName = callback.cardName;
+    var cardName = callback.cardname;
     var type = "" + callback.type;
     var cardId = "" + callback.cardId;
     var card = null;

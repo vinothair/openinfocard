@@ -10,8 +10,7 @@
 #cardselection{ margin-left:auto; margin-right:auto; }
 #managedClaims{ float:left; }
 #selfassertedClaims{ float:left; }
-#editgrid_left{min-width:390px;max-width:49%;}
-#editgrid_right{min-width:390px;max-width:49%;}
+#editgrid{min-width:390px;}
 #openid_iframe{width:100%; height:100px;}
 
 .cardClass{background-color:#FFFFFF; min-height:110px; max-height:110px; min-width:215px; max-width:215px; border: 1px solid #475059;}
@@ -22,20 +21,20 @@
 .contactRed{padding:8px;border-bottom:1px dashed #800000;background-color:#800000;}
 .contact:hover{background:none;background-color:#b7b7b7;}
 
-#mainlabel{padding:5px;font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:3.6em;text-align:left; color: white;}
-#select{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
-.lblTitle{padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;color: white;}
-.notify{padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;color: white;}
-.cardname{padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;color: white;}
-.lblFirstTimeVisit{padding:10px; font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: #FF0000;}
-.lblText{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:right; color: white;}
-.rowClass{max-width:49%; max-height:72px;}
-.claimText{font-family:trebuchet ms,verdana,helvetica;font-size:1.4em;text-align:left; color: black;}
-.claimLabel{min-width:100px; font-family:trebuchet ms,verdana,helvetica;font-size:1.4em;text-align:left; color: white;}
-.cardcontrols{font-family:trebuchet ms,verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
+#mainlabel{padding:5px;font-family:verdana,helvetica;font-weight:bold;font-size:3.6em;text-align:left; color: white;}
+#select{font-family:verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
+.lblTitle{padding:10px; font-family:verdana,helvetica;font-weight:bold;font-size:2.0em;color: white;}
+.notify{padding:10px; font-family:verdana,helvetica;font-weight:bold;font-size:2.0em;color: white;}
+.cardname{padding:10px; font-family:verdana,helvetica;font-weight:bold;font-size:2.0em;color: white;}
+.lblFirstTimeVisit{padding:10px; font-family:verdana,helvetica;font-weight:bold;font-size:2.0em;text-align:right; color: #FF0000;}
+.lblText{font-family:verdana,helvetica;font-weight:bold;font-size:1.4em;text-align:right; color: white;}
+.rowClass{max-height:72px;}
+.claimText{font-family:verdana,helvetica;font-size:1.4em;text-align:left; color: black;}
+.claimLabel{min-width:100px; font-family:verdana,helvetica;font-size:1.4em;text-align:left; color: white;}
+.cardcontrols{font-family:verdana,helvetica;font-weight:bold;font-size:1.8em;text-align:right; color: white;}
 
 .prefText{float:right; text-align:left;}
 .prefLabel{float:left; max-width:16%;text-align:left;}
 
-#colText{width:16%;}
-#colData{width:33%;}
+#colText{}
+#colData{}

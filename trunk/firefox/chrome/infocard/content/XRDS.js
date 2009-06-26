@@ -26,26 +26,29 @@ var IcXrdsRetrieveX = {
             }
          // else not string but document
          var sameSchemeAndDomain = InformationCardHelper.sameSchemeAndDomain(doc, hrefStr);
-         if (sameSchemeAndDomain === true) {
-            var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-            req.open('GET', hrefStr, true);
-            req.setRequestHeader ('Content-Type', 'text/xml');
-            req.overrideMimeType ('text/xml');
-            var listener = new listenerO(doc, hrefStr);
-            
-            if (doc.__identityselector__.timer === undefined) {
-	            var event = { notify: function(timer) { InformationCardStatusbar.onProgress(doc, null); } };
-	            doc.__identityselector__.timerUrlArray = [];
-	            doc.__identityselector__.timerUrlArray[hrefStr] = true;
-	            doc.__identityselector__.timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-	            doc.__identityselector__.timer.initWithCallback( event, 1000, Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
-	            IdentitySelectorDiag.logMessage("IcXrdsRetrieveX::retrieveX", "started timer: " + doc.location.href);
-            } else {
-            	IdentitySelectorDiag.logMessage("IcXrdsRetrieveX::retrieveX", "timer already started: " + doc.location.href);
-            	// a statusbar time is already running. Just add the hrefStr to the list of outstanding requests
-	            doc.__identityselector__.timerUrlArray[doc.__identityselector__.timerUrlArray.length] = hrefStr;
-            }
-            
+         if (sameSchemeAndDomain !== true) {
+        	 Components.utils.reportError("IcXrdsRetrieveX: ignoring scheme resp domain mismatch");
+         }
+         
+        var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+        req.open('GET', hrefStr, true);
+        req.setRequestHeader('Content-Type', 'text/xml');
+        req.overrideMimeType('text/xml');
+        var listener = new listenerO(doc, hrefStr);
+        
+        if (doc.__identityselector__.timer === undefined) {
+            var event = { notify: function(timer) { InformationCardStatusbar.onProgress(doc, null); } };
+            doc.__identityselector__.timerUrlArray = [];
+            doc.__identityselector__.timerUrlArray[hrefStr] = true;
+            doc.__identityselector__.timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
+            doc.__identityselector__.timer.initWithCallback( event, 1000, Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+            IdentitySelectorDiag.logMessage("IcXrdsRetrieveX::retrieveX", "started timer: " + doc.location.href);
+        } else {
+        	IdentitySelectorDiag.logMessage("IcXrdsRetrieveX::retrieveX", "timer already started: " + doc.location.href);
+        	// a statusbar time is already running. Just add the hrefStr to the list of outstanding requests
+            doc.__identityselector__.timerUrlArray[doc.__identityselector__.timerUrlArray.length] = hrefStr;
+        }
+        
 //            var timeoutId = doc.defaultView.setInterval(function(){InformationCardStatusbar.onProgress(doc, null);}, 500, true);
 //            var timeoutId = window.setInterval(function(){InformationCardStatusbar.onProgress(doc, null);}, 1000, true);
 //            if ((InformationCardStatusbar !== undefined) &&(typeof(InformationCardStatusbar.onProgress) === "function")) {
@@ -56,42 +59,38 @@ var IcXrdsRetrieveX = {
 //            } else {
 //            	IdentitySelectorDiag.logMessage("IcXrdsRetrieveX::retrieveX", " InformationCardStatusbar is undefined: " + doc.location.href);
 //            }
-            req.onreadystatechange = function (aEvent) {
-               if (req.readyState == 4) {
-            	  IdentitySelectorDiag.logMessage("IcXrdsRetrieveX::retrieveX", " deleting timer: " + hrefStr);
-            	  delete doc.__identityselector__.timerUrlArray[hrefStr];
-            	  if (doc.__identityselector__.timerUrlArray.length === 0) {
-            		  InformationCardStatusbar.cancelTimer(doc);
-            	  }
-                  if (!req.responseXML) {
-                     listener.onError (req.responseText);
-                     return;
-                     }
-                  if (req.status != 200) {
-                     listener.onError (req.statusText);
-                     return;
-                     }
-                  listener.onReady(req.responseXML);
-                  }
-               };
-            req.send(null);
-            }
-         }
-      catch(e) {
+        req.onreadystatechange = function (aEvent) {
+           if (req.readyState == 4) {
+        	  IdentitySelectorDiag.logMessage("IcXrdsRetrieveX::retrieveX", " deleting timer: " + hrefStr);
+        	  delete doc.__identityselector__.timerUrlArray[hrefStr];
+        	  if (doc.__identityselector__.timerUrlArray.length === 0) {
+        		  InformationCardStatusbar.cancelTimer(doc);
+        	  }
+              if (!req.responseXML) {
+                 listener.onError(req.responseText);
+                 return;
+                 }
+              if (req.status != 200) {
+                 listener.onError(req.statusText);
+                 return;
+                 }
+              listener.onReady(req.responseXML);
+              }
+           };
+        req.send(null);
+      } catch(e) {
          IdentitySelectorDiag.logMessage("IcXrdsRetrieveX::retrieveXrds: ", e);
-         }
       }
+   }
 	
 };
 
 var IcXrdsComponent = {
 	logMessage : function(location, msg) {
-		Components.classes["@mozilla.org/consoleservice;1"]
-	                   .getService(Components.interfaces.nsIConsoleService)
-	                       .logStringMessage( "IcXrdsComponent:" + location + ": " + msg);
-	}
+		Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService).logStringMessage( "IcXrdsComponent:" + location + ": " + msg);
+	},
 
-	, handlePolicyEvent : function(event) {
+	handlePolicyEvent : function(event) {
 		var doc = event.target;
 		var serviceType = "http://infocardfoundation.org/policy/1.0/login";
 		var xrdsStr = gObj.getXrdsForSite(doc.location.href, serviceType);
@@ -118,11 +117,11 @@ var IcXrdsComponent = {
 //		} else {
 //			IcXrdsComponent.logMessage( "handlePolicyEvent", "type=" + serviceType + " not found. doc.location.href="+doc.location.href);
 //		}
-	}
+	},
 
 	// boolean handle(in nsIDOMElement service, in nsIDOMDocument doc)
 	// see xrds_pageinfo.idl
-	, handlePolicy : function(service, doc) {
+	handlePolicy : function(service, doc) {
         if( doc.wrappedJSObject)
         {
                 doc = doc.wrappedJSObject;
@@ -132,16 +131,16 @@ var IcXrdsComponent = {
 			IdentitySelector.runInterceptScript(doc);
 		}
 		if (doc.__identityselector__ !== undefined) {
-			var uri = "" + service.getElementsByTagName("URI")[0].firstChild.nodeValue ;
+			var uri = "" + service.getElementsByTagNameNS(InformationCardXrds.xrdNamespaceUriStr, "URI")[0].firstChild.nodeValue;
 			doc.__identityselector__.icLoginPolicyUri = uri;
 			this.logMessage("IcXrdsComponent:handlePolicy", "IC Login Service Policy: " + doc.__identityselector__.icLoginPolicyUri);
 			IcXrdsComponent.retrieveIcLoginServicePolicy(doc, doc.__identityselector__.icLoginPolicyUri);
 		} else {
 			IcXrdsComponent.logMessage( "handlePolicy", "doc.location.href="+doc.location.href);
 		}
-	}
+	},
 	
-	, handleLoginEvent : function(event) {
+	handleLoginEvent : function(event) {
 		var doc = event.target;
 		var serviceType = "http://infocardfoundation.org/service/1.0/login";
 		var xrdsStr = gObj.getXrdsForSite(doc.location.href, serviceType);
@@ -168,9 +167,9 @@ var IcXrdsComponent = {
 //		} else {
 //			IcXrdsComponent.logMessage( "handleLoginEvent", "type=" + serviceType + " not found. doc.location.href="+doc.location.href);
 //		}
-	}
+	},
 
-	, handleLogin : function(service, doc) {
+	handleLogin : function(service, doc) {
         if( doc.wrappedJSObject)
         {
                 doc = doc.wrappedJSObject;
@@ -180,18 +179,45 @@ var IcXrdsComponent = {
 			IdentitySelector.runInterceptScript(doc);
 		}
 		if (doc.__identityselector__ !== undefined) {
-			var uri = "" + service.getElementsByTagName("URI")[0].firstChild.nodeValue ;
+			var uri = "" + service.getElementsByTagNameNS(InformationCardXrds.xrdNamespaceUriStr, "URI")[0].firstChild.nodeValue;
 			doc.__identityselector__.icLoginService = uri;
-			this.logMessage("IcXrdsComponent:handleLogin", "IC Login Service: " + doc.__identityselector__.icLoginService);
+			this.logMessage("IcXrdsComponent:handleLogin", 
+					"IC Login Service: " + doc.__identityselector__.icLoginService +
+					"\ndoc.location.href="+doc.location.href);
 		} else {
-			IcXrdsComponent.logMessage( "handleLogin", "doc.location.href="+doc.location.href);
+			Components.utils.reportError( "IcXrdsComponent.handleLogin doc.__identityselector__ === undefined for " + 
+					"doc.location.href="+doc.location.href);
 		}
-	}
+	},
+
+	handleOpenId2ReturnTo : function(service, doc) {
+        if( doc.wrappedJSObject)
+        {
+                doc = doc.wrappedJSObject;
+        }
+		this.logMessage("IcXrdsComponent:handleOpenId2ReturnTo", doc.__identityselector__);
+		if (doc.__identityselector__ === undefined) {
+			IdentitySelector.runInterceptScript(doc);
+		}
+		if (doc.__identityselector__ !== undefined) {
+			var uri = "" + service.getElementsByTagNameNS(InformationCardXrds.xrdNamespaceUriStr, "URI")[0].firstChild.nodeValue;
+			doc.__identityselector__.openidReturnToUri = uri;
+			this.logMessage("IcXrdsComponent:handleOpenId2ReturnTo", 
+					"openid return_to uri: " + doc.__identityselector__.openidReturnToUri +
+					"\ndoc.location.href="+doc.location.href);
+			if (InformationCardStatusbar !== undefined) {
+           	 InformationCardStatusbar.showStatusbarIcon(document, true);
+            }
+		} else {
+			Components.utils.reportError( "IcXrdsComponent.handleOpenId2ReturnTo doc.__identityselector__ === undefined for " + 
+					"doc.location.href="+doc.location.href);
+		}
+	},
 
 	/***************************************************************************
 	 * Desc:
     ***********************************************************************/
-	, icLoginServiceListener : function(doc, hrefStr) {
+	icLoginServiceListener : function(doc, hrefStr) {
 	   this.doc = doc;
 	   this.hrefStr = hrefStr;
 	   this.onError = function(error) {
@@ -199,9 +225,11 @@ var IcXrdsComponent = {
 	      };
 	   this.onReady = function(xrds) {
 	      try {
-	         var response = new XML (Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance (Components.interfaces.nsIDOMSerializer).serializeToString(xrds.documentElement));
+	         var response = new XML(Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance(Components.interfaces.nsIDOMSerializer).serializeToString(xrds.documentElement));
 	         doc.__identityselector__.icLoginPolicy = response;
-	         IdentitySelectorDiag.logMessage("IcXrdsComponent::icLoginServiceListener:onReady", "response=" + response);
+	         IdentitySelectorDiag.logMessage("IcXrdsComponent::icLoginServiceListener:onReady", 
+	        		 "response=" + response +
+	        		 "\ndoc.location.href=" + doc.location.href);
 	         if ((doc.defaultView !== undefined) && (doc.defaultView)) {
 	             var docWindow = doc.defaultView;
 	             docWindow.addEventListener("dragdrop", InformationCardDragAndDrop.onWindowDragDrop, false);
@@ -216,16 +244,17 @@ var IcXrdsComponent = {
 	         IdentitySelectorDiag.logMessage("IcXrdsComponent::icLoginServiceListener:onReady", "Error: " + e);
 	         }
 	      };
-	}
+	},
 	
-	, retrieveIcLoginServicePolicy : function(doc, hrefStr) {
+	retrieveIcLoginServicePolicy : function(doc, hrefStr) {
 		IcXrdsRetrieveX.retrieveX(doc, hrefStr, IcXrdsComponent.icLoginServiceListener);
     }
 	
 };
 
 var InformationCardXrds = {
-
+	xrdNamespaceUriStr : "xri://$xrd*($v*2.0)",
+	
 	/***************************************************************************
 	 * Desc:
 	 **************************************************************************/
@@ -237,61 +266,125 @@ var InformationCardXrds = {
 	      };
 	   this.onReady = function(xrds) {
 	      try {
-	         var elts = xrds.getElementsByTagName("Service");
+	         var elts = xrds.getElementsByTagNameNS(InformationCardXrds.xrdNamespaceUriStr, "Service");
+	         IdentitySelectorDiag.logMessage("InformationCardXrds::xrdsListener:onReady", "elts.length="+elts.length);
 	         for (var i = 0; i < elts.length; i++) {
-	            var type = "" + elts[i].getElementsByTagName("Type")[0].firstChild.nodeValue + "";
+	        	var types = elts[i].getElementsByTagNameNS(InformationCardXrds.xrdNamespaceUriStr, "Type");
+	        	if (types.length == 0) {
+	        		continue;
+	        	}
+	            var type = "" + types[0].firstChild.nodeValue + "";
+	            IdentitySelectorDiag.logMessage("InformationCardXrds::xrdsListener: type=" + type);
 	            var uri;
 	            if (type.indexOf("http://infocardfoundation.org/policy/1.0/login") === 0) {
 	            	IcXrdsComponent.handlePolicy(elts[i], doc);
-	               }
-	            else {
+	            } else {
 	               if (type.indexOf("http://infocardfoundation.org/service/1.0/login") === 0) {
 	               		IcXrdsComponent.handleLogin(elts[i], doc);
-	                  }
-	               else {
-	                  IdentitySelectorDiag.logMessage("InformationCardXrds::xrdsListener:onReady", "Service: type=" + type + ":" + typeof(type) + " URI=" + elts[i].getElementsByTagName("URI")[0].firstChild.nodeValue);
+	               } else {
+	            	   if (type.indexOf("http://specs.openid.net/auth/2.0/return_to") === 0) {
+		               		IcXrdsComponent.handleOpenId2ReturnTo(elts[i], doc);
+		               } else {	                  
+		            	   IdentitySelectorDiag.logMessage("InformationCardXrds::xrdsListener:onReady", 
+	                		  "Service: type=" + type + ":" + typeof(type) + 
+	                		  " URI=" + 
+	                		  elts[i].getElementsByTagNameNS(InformationCardXrds.xrdNamespaceUriStr, "URI")[0].firstChild.nodeValue);
 	                  }
 	               }
 	            }
-	         // for (var i in xrds) {
-	         // IdentitySelectorDiag.logMessage("InformationCardXrds::xrdsListener:onReady", "i=" + i
-				// + " type=" +
-	         // typeof(i));
-	         // }
-	         var response = new XML (Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance (Components.interfaces.nsIDOMSerializer).serializeToString(xrds.documentElement));
+	         }
+	         var response = new XML(Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance(Components.interfaces.nsIDOMSerializer).serializeToString(xrds.documentElement));
 	         doc.__identityselector__.xrds = response;
-	         IdentitySelectorDiag.logMessage("InformationCardXrds::xrdsListener:onReady", "response=" + response);
-	         }
-	      catch(e) {
+	         IdentitySelectorDiag.logMessage("InformationCardXrds::xrdsListener:onReady", 
+	        		 "response=" + doc.__identityselector__.xrds +
+	        		 "doc.location.href=" + doc.location.href);
+	      } catch(e) {
 	         IdentitySelectorDiag.logMessage("InformationCardXrds::xrdsListener:onReady", "Error: " + e);
-	         }
-	      };
-	}
+	      }
+	   };
+	},
 
-	, retrieveXrds : function(doc, hrefStr) {
+	retrieveXrds : function(doc, hrefStr) {
 	      IdentitySelectorDiag.logMessage("InformationCardXrds::retrieveXrds: doc=" + doc.location.href + " href=", hrefStr);
 	      IcXrdsRetrieveX.retrieveX(doc, hrefStr, InformationCardXrds.xrdsListener);
-      }
+    },
 
-	, onDOMContentLoaded : function(event) {
-		var browser = gBrowser.selectedTab.linkedBrowser;
-		// browser is the XUL element of the browser that's just been selected
-		var doc = gBrowser.selectedBrowser.contentDocument;
-		IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMContentLoaded:", "doc=" + doc.location.href);
+	  // ***********************************************************************
+	  // Method: processHtmlMetaElements
+	  // <meta http-equiv="X-XRDS-Location" content="http://pamelaproject.com/wptest091/?xrds" />
+	  // ***********************************************************************
+	processHtmlMetaElements : function(event) {
+		  var browser = gBrowser.selectedTab.linkedBrowser;
+		  // browser is the XUL element of the browser that's just been selected
+		  var doc = gBrowser.selectedBrowser.contentDocument;
 
-    	doc.addEventListener("http://infocardfoundation.org/service/1.0/login", IcXrdsComponent.handleLoginEvent, false);
-    	doc.addEventListener("http://infocardfoundation.org/policy/1.0/login", IcXrdsComponent.handlePolicyEvent, false);
+		  var dispatchEvents = true;
+		  
+		  IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements", " start: " + doc.location.href);
+	      if( doc.wrappedJSObject !== undefined) {
+	         doc = doc.wrappedJSObject;
+	         }
+	      if (IdentitySelector.disabled === true) {
+	         IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements", " ID selector is disabled. Exiting");
+	         return;
+	         }
+	      
+	      if (!(doc instanceof HTMLDocument)) {
+		      IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements", " no html document. Exiting");
+	    	  return;
+	      }
+	      
+	      if( doc.__identityselector__ === undefined) {
+	         IdentitySelector.runInterceptScript(doc);
+	      }
 
-	}
-	
+	      // <meta http-equiv="X-XRDS-Location" content="http://pamelaproject.com/wptest091/?xrds" />
+	      var linkElems = doc.getElementsByTagName( "META");
+          IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: number of META elements=", linkElems.length);
+	      for( var i = 0; i < linkElems.length; i++) {
+	         var linkElem = linkElems[ i];
+	         IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: meta element=", linkElem);
+	         var relStr = linkElem.getAttribute( "HTTP-EQUIV");
+	         if (relStr === null) { continue; }
+	         if ((relStr === "x-xrds-location") || (relStr === "X-XRDS-Location")) {
+	            IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: X-XRDS-Location i=", i);
+	            var hrefStr = linkElem.getAttribute( "CONTENT");
+	            if (hrefStr === null) {
+	               continue;
+	               }
+	            else {
+	               IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: href=", hrefStr);
+	               if (doc.__identityselector__.xrds_metadata_href === undefined) {
+	            	   doc.__identityselector__.xrds_metadata_href = hrefStr;
+	            	   InformationCardXrds.retrieveXrds(doc, hrefStr);
+	               }
+//	               if( doc.__identityselector__.xrds === undefined) {
+//		                  var data = doc.__identityselector__.data;
+//		                  InformationCardXrds.retrieveXrds(doc, hrefStr);
+////		                  if (doc.__identityselector__.data.xrds_metadata_href === undefined) {
+////		                	  doc.__identityselector__.data.xrds_metadata_href = hrefStr;
+////			                  InformationCardXrds.retrieveXrds(doc, hrefStr);
+////		                  }	               
+//		               }
+	               else {
+	                  IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: already loaded: href=", hrefStr);
+	                  }
+	               return;
+	               }
+	            }
+	         else {
+	            continue;
+	            }
+	         }
+	  },
+
 	  // ***********************************************************************
 	  // Method: processHtmlLinkElements
 	  // ***********************************************************************
-	  , processHtmlLinkElements : function(event) {
-//		  var doc = event.originalTarget;
-		var browser = gBrowser.selectedTab.linkedBrowser;
-			// browser is the XUL element of the browser that's just been selected
-			var doc = gBrowser.selectedBrowser.contentDocument;
+	  processHtmlLinkElements : function(event) {
+		  var browser = gBrowser.selectedTab.linkedBrowser;
+		  // browser is the XUL element of the browser that's just been selected
+		  var doc = gBrowser.selectedBrowser.contentDocument;
 
 		  var dispatchEvents = true;
 		  
@@ -327,26 +420,147 @@ var InformationCardXrds = {
 	            	   doc.__identityselector__.xrds_metadata_href = hrefStr;
 	            	   InformationCardXrds.retrieveXrds(doc, hrefStr);
 	               }
-//	               if( doc.__identityselector__.xrds === undefined) {
-//		                  var data = doc.__identityselector__.data;
-//		                  InformationCardXrds.retrieveXrds(doc, hrefStr);
-////		                  if (doc.__identityselector__.data.xrds_metadata_href === undefined) {
-////		                	  doc.__identityselector__.data.xrds_metadata_href = hrefStr;
-////			                  InformationCardXrds.retrieveXrds(doc, hrefStr);
-////		                  }	               
-//		               }
 	               else {
 	                  IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlLinkElements: already loaded: href=", hrefStr);
 	                  }
 	               return;
-	               }
 	            }
-	         else {
+	         } else {
 	            continue;
-	            }
 	         }
 	      }
-	  
+	  },
+	      
+	      onDOMChanged : function(event) {
+              var target = event ? event.target : this;
+              var doc;
+
+              if( target.wrappedJSObject)
+              {
+            	  target = target.wrappedJSObject;
+              }
+
+              try
+              {
+                  if( (doc = target.ownerDocument) === undefined)
+                  {
+                          return;
+                  }
+//        	      if (!(doc instanceof HTMLDocument)) {
+//        		      IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMChanged", " no html document." + doc.location.href);
+//        	    	  return;
+//        	      }
+
+                  if( target instanceof HTMLLinkElement)
+                  {
+                	  var linkElem = target;
+        		      IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMChanged", "HTMLLinkElement");
+        		      var relStr = linkElem.getAttribute( "REL");
+						if( (relStr !== null) && (relStr === "xrds.metadata")) {
+						   var hrefStr = linkElem.getAttribute( "HREF");
+						   if (hrefStr === null) {
+						      return;
+						   }
+						  IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMChanged: href=", hrefStr);
+						  if (doc.__identityselector__.xrds_metadata_href === undefined) {
+						   doc.__identityselector__.xrds_metadata_href = hrefStr;
+						   InformationCardXrds.retrieveXrds(doc, hrefStr);
+						  }
+						  else {
+						     IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMChanged: already loaded: href=", hrefStr);
+						     }
+						  return;
+						}
+                  }
+                  if( target instanceof HTMLMetaElement)
+                  {
+            	      // <meta http-equiv="X-XRDS-Location" content="http://pamelaproject.com/wptest091/?xrds" />
+                	  var linkElem = target;
+        		      IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMChanged", "HTMLMetaElement");
+					   var relStr = linkElem.getAttribute( "HTTP-EQUIV");
+					   if( (relStr !== null) && (relStr === "X-XRDS-Location")) {
+					    IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMChanged: X-XRDS-Location");
+					    var hrefStr = linkElem.getAttribute( "CONTENT");
+					    if (hrefStr !== null) {
+							  IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMChanged: href=", hrefStr);
+							  if (doc.__identityselector__.xrds_metadata_href === undefined) {
+							   doc.__identityselector__.xrds_metadata_href = hrefStr;
+							   InformationCardXrds.retrieveXrds(doc, hrefStr);
+							  }
+					    }
+					   }
+                  }
+
+			  }
+              catch( e)
+              {
+                      IdentitySelectorDiag.debugReportError( "InformationCardXrds::onDOMChanged", e);
+              }
+	    	  
+	      },
+	      
+	  	  onDOMContentLoaded : function(event) {
+	  		var browser = gBrowser.selectedTab.linkedBrowser;
+	  		// browser is the XUL element of the browser that's just been selected
+	  		var doc = gBrowser.selectedBrowser.contentDocument;
+	  		IdentitySelectorDiag.logMessage("InformationCardXrds::onDOMContentLoaded:", "doc=" + doc.location.href);
+
+	  		if (gObj !== null) {
+	  	    	doc.addEventListener("http://infocardfoundation.org/service/1.0/login", IcXrdsComponent.handleLoginEvent, false);
+	  	    	doc.addEventListener("http://infocardfoundation.org/policy/1.0/login", IcXrdsComponent.handlePolicyEvent, false);
+	  		} else {
+	  			var target = event.originalTarget;
+	  			if (target instanceof HTMLDocument) {
+	  				this.processHtmlMetaElements(null);
+	  				this.processHtmlLinkElements(null);
+	  			}
+	  		}
+	  	  }
+};
+
+//**************************************************************************
+//Desc:
+//**************************************************************************
+
+var XrdsStateChangeListener =
+{
+    QueryInterface : function( aIID)
+    {
+            if( aIID.equals( Components.interfaces.nsIWebProgressListener) ||
+                     aIID.equals( Components.interfaces.nsISupportsWeakReference) ||
+                     aIID.equals( Components.interfaces.nsISupports))
+            {
+                    return( this);
+            }
+           
+            throw Components.results.NS_NOINTERFACE;
+    },
+
+    onProgressChange : function() { return( 0); },
+   
+    onStatusChange : function() { return( 0); },
+   
+    onLocationChange: function(aProgress, aRequest, aURI) {},
+    
+    onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
+  	  var progListIFace = Components.interfaces.nsIWebProgressListener;
+        if( aFlag & progListIFace.STATE_STOP) {
+      	  if( aFlag & progListIFace.STATE_IS_WINDOW) {
+      		  IdentitySelectorDiag.logMessage( "XrdsStateChangeListener.onStateChange",
+                                "stop status code = " + aStatus);
+                if( aStatus === 0) {
+              	  try {
+              		  var doc = aWebProgress.DOMWindow.document;
+              		  InformationCardXrds.processHtmlMetaElements(doc);
+                    } catch(e) {
+                  	  IdentitySelectorDiag.logMessage("XrdsStateChangeListener.onStateChange", "Error: " + e);
+                    }
+                }
+      	  }
+        }
+    },
+
+    onSecurityChange : function(aWebProgress, aRequest, aState) {}
 };
 
 var IcXrdsStartHelper = {
@@ -365,7 +579,7 @@ var IcXrdsStartHelper = {
 		IdentitySelectorDiag.logMessage( "InformationCardXrds", "onLoad: doc.location.href=" + doc.location.href);
 		
 		// try to use the xrds_pageinfo.xpi component
-		const CONTRACT_ID = "@openinfocard.org/xrds;1";
+		var CONTRACT_ID = "@openinfocard.org/xrds;1";
 
 	    gObj = null;
 	    try {
@@ -398,8 +612,8 @@ var IcXrdsStartHelper = {
     		xrdsStr = gObj.getXrdsForSite(doc.location.href, serviceType);
     		if (xrdsStr !== null) {
 	    		IcXrdsComponent.logMessage( "InformationCardXrds::InformationCardXrds::onLoad", "type=" + serviceType + " doc.location.href="+doc.location.href + " xrds=" + xrdsStr);
-	    		var serviceDoc = parser.parseFromString(xrdsStr, "text/xml");
-	    		IcXrdsComponent.handlePolicy(serviceDoc, doc);
+	    		var policyDoc = parser.parseFromString(xrdsStr, "text/xml");
+	    		IcXrdsComponent.handlePolicy(policyDoc, doc);
     		}
 
     		IdentitySelectorDiag.logMessage("InformationCardXrds::InformationCardXrds::onLoad", "adding event listeners");
@@ -408,13 +622,23 @@ var IcXrdsStartHelper = {
 	    	doc.addEventListener("http://infocardfoundation.org/policy/1.0/login", IcXrdsComponent.handlePolicyEvent, false);
 	    } else {
 			IdentitySelectorDiag.logMessage("InformationCardXrds::InformationCardXrds::onLoad", "The class " + CONTRACT_ID + " is not installed");
+			window.addEventListener("ICDOMChanged",
+                    function(evnt) {InformationCardXrds.onDOMChanged(evnt);}, false);
 			window.addEventListener("DOMContentLoaded", 
-				function(evnt) {InformationCardXrds.processHtmlLinkElements(evnt);}, false );		    }
-	}
-	, onUnload : function(event) {
+					function(evnt) {InformationCardXrds.processHtmlLinkElements(evnt);}, false );
+			window.addEventListener("DOMContentLoaded", 
+					function(evnt) {InformationCardXrds.processHtmlMetaElements(evnt);}, false );
+			window.getBrowser().addProgressListener( XrdsStateChangeListener,
+	                Components.interfaces.nsIWebProgress.NOTIFY_STATE_ALL);
+		}
+	},
+	
+	onUnload : function(event) {
 		IdentitySelectorDiag.logMessage("InformationCardXrds::InformationCardXrds", "onUnload");
 		window.removeEventListener("DOMContentLoaded", 
 				function(evnt) {InformationCardXrds.processHtmlLinkElements(evnt);}, false );
+		window.removeEventListener("DOMContentLoaded", 
+				function(evnt) {InformationCardXrds.processHtmlMetaElements(evnt);}, false );
 	}
 	
 };

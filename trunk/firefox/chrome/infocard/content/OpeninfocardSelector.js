@@ -1,8 +1,5 @@
 
-const CONTRACT_ID = "@xmldap.org/identityselector;1";
-const SELECTOR_CLASS_NAME = "OpeninfocardSelector";
-
-function debugObject(prefix, object, indent) {
+function oisDebugObject(prefix, object, indent) {
 	var msg = "";
 	var count = 0;
 	//if (indent > 3) return;
@@ -89,8 +86,52 @@ var OpeninfocardSecurityStateChangeListener =
 // **************************************************************************
 
 var OpeninfocardSelector = {
+	_identityselectorPrefListener : null,
+	CONTRACT_ID : "@xmldap.org/identityselector;1",
+	SELECTOR_CLASS_NAME : "OpeninfocardSelector",
+
+	prefListenerCallback : function(branch, data) {
+		var value;
+		switch (data)
+		{
+		case ".selector_guid": 
+		case "selector_guid": 
+			value = IdentitySelectorPrefs.getStringPref("identityselector", "selector_guid");
+			IdentitySelectorDiag.logMessage( "OpeninfocardSelector.prefListenerCallback", "was called for: " + branch + "::" + data + " new value=" + value);
+			break;
+		case ".contractid":
+		case "contractid":
+			value = IdentitySelectorPrefs.getStringPref("identityselector", "contractid");
+			IdentitySelectorDiag.logMessage( "OpeninfocardSelector.prefListenerCallback", "was called for: " + branch + "::" + data + " new value=" + value);
+			if (OpeninfocardSelector.CONTRACT_ID === value) {
+				IdentitySelectorPrefs.setStringPref("identityselector", "selector_guid", OpeninfocardSelector.CONTRACT_ID);
+			} else {
+				IdentitySelectorDiag.logMessage( "OpeninfocardSelector.prefListenerCallback", "contractid: " + OpeninfocardSelector.CONTRACT_ID + "!==" + value);
+			}
+			break;
+		case "selector_class":
+		case ".selector_class":
+			value = IdentitySelectorPrefs.getStringPref("identityselector", "selector_class");
+			IdentitySelectorDiag.logMessage( "OpeninfocardSelector.prefListenerCallback", "was called for: " + branch + "::" + data + " new value=" + value);
+			if (OpeninfocardSelector.SELECTOR_CLASS_NAME === value) {
+				IdentitySelectorPrefs.setStringPref("identityselector", "selector_guid", OpeninfocardSelector.CONTRACT_ID);
+			} else {
+				IdentitySelectorDiag.logMessage( "OpeninfocardSelector.prefListenerCallback", "contractid: " + OpeninfocardSelector.CONTRACT_ID + "!==" + value);
+			}
+			break;
+		default:
+			IdentitySelectorDiag.logMessage( "OpeninfocardSelector.prefListenerCallback", "WAS called for: " + branch + "::" + data);			
+		break;
+		}
+	},
+
 	guid : function() {
-		return CONTRACT_ID;
+		return OpeninfocardSelector.CONTRACT_ID;
+	},
+	
+	onStateStop : function(doc) {
+		IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".onStateStop",
+		"invoked.");
 	},
 	
 	// ***********************************************************************
@@ -100,9 +141,9 @@ var OpeninfocardSelector = {
 	getSecurityToken : function(data, doc) {
 		var token = null;
 		
-		this.disabled = gIcPrefService.getBoolPref("identityselector.disabled");
+		this.disabled = gIcPrefService.getBoolPref("extensions.identityselector.disabled");
 		if (this.disabled === true) {
-			IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+			IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
 					" Id selector is disabled. Exiting");
 			return null;
 		}
@@ -112,7 +153,7 @@ var OpeninfocardSelector = {
 //			doc = doc.getElementById( "content");
 ////			doc = doc.contentDocument;
 //		} catch (e) {
-//			IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//			IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
 //			" doc.contentDocument threw exception: " + e);
 //		}
 //		if( doc.wrappedJSObject)
@@ -120,13 +161,13 @@ var OpeninfocardSelector = {
 //                doc = doc.wrappedJSObject;
 //        }
 		
-		IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+		IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
 				"Identity selector invoked.");
 
 		try {
 			// Launch the card selector
 			var sslCert = InformationCardHelper.getSSLCertFromDocument(doc);
-			var cid = CONTRACT_ID;
+			var cid = OpeninfocardSelector.CONTRACT_ID;
 			// class id of selector
 			var obj = null;
 			try {
@@ -136,62 +177,73 @@ var OpeninfocardSelector = {
 					obj = obj
 							.QueryInterface(Components.interfaces.IIdentitySelector);
 				} else {
-					IdentitySelectorDiag.reportError(SELECTOR_CLASS_NAME+".getSecurityToken",
+					IdentitySelectorDiag.reportError(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
 							"the class " + cid + " is not installed");
 					return;
 				}
 			} catch (e) {
 				IdentitySelectorDiag.throwError("OpeninfocardSelector.getSecurityToken:", e);
 			}
-//				IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//				IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
 //						"ssl security mode=" + IdentitySelector.getMode(doc));
 			
 			var extraParams = function(){
 				var extraParams = [];
 				var len = 0;
 				for (var i in data) {
-					if (("issuer" !== ""+i) 
-						&& ("recipient" !== ""+i)
-						&& ("requiredClaims" !== ""+i)
-						&& ("optionalClaims" !== ""+i)
-						&& ("tokenType" !== ""+i)
-						&& ("privacyUrl" !== ""+i)
-						&& ("privacyVersion" !== ""+i)
-						&& ("issuerPolicy" !== ""+i)) 
-					{
-						var obj = {};
-						obj[i] = data[i];
-						len = extraParams.length;
-						extraParams[len] = JSON.stringify(obj);
-						IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
-								"extraParams[" + len + "] = " + extraParams[len]);
-					} else {
-						IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
-								"i=" + i + "; value=" + data[i] + ";");
+					if (data.hasOwnProperty(i)) {
+						IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken", "data[" + i + "]=" + data[i]); 
+						if (("issuer" !== ""+i) 
+							&& ("recipient" !== ""+i)
+							&& ("requiredClaims" !== ""+i)
+							&& ("optionalClaims" !== ""+i)
+							&& ("tokenType" !== ""+i)
+							&& ("privacyUrl" !== ""+i)
+							&& ("privacyVersion" !== ""+i)
+							&& ("issuerPolicy" !== ""+i)) 
+						{
+							var obj = {};
+							obj[i] = data[i];
+							len = extraParams.length;
+							extraParams[len] = JSON.stringify(obj);
+							IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
+									"extraParams[" + len + "] = " + extraParams[len]);
+						} else {
+							IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
+									"i=" + i + "; value=" + data[i] + ";");
+						}
 					}
 				}
 				return extraParams;
 			}();
 			
+			if (doc.__identityselector__.cardId !== undefined) {
+				var aCardIdObject = {};
+				aCardIdObject.cardid = "" + doc.__identityselector__.cardId;
+				len = extraParams.length;
+				extraParams[len] = JSON.stringify(aCardIdObject);
+				IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
+						"len=" + len + "; value=" + extraParams[len] + ";");
+			}
 //			if (doc.__identityselector__ != undefined && doc.__identityselector__.sslMode != undefined) {
 //				extraParams[extraParams.length] = "{" + "sslMode" + "," + doc.__identityselector__.sslMode + "}";
 //			} else {
 //				if (doc.__identityselector__ == undefined) {
-//					IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//					IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
 //							"doc.__identityselector__ == undefined doc.location.href=" + doc.location.href);
 //				} else if (doc.__identityselector__.sslMode == undefined ) {
-//					IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//					IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
 //							"doc.__identityselector__.sslMode == undefined doc.location.href=" + doc.location.href);
 //				} else {
-//					IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+//					IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
 //							"??? doc.location.href=" + doc.location.href);
 //				}
 //			}
 			
-			IdentitySelectorDiag.logMessage(SELECTOR_CLASS_NAME+".getSecurityToken",
+			IdentitySelectorDiag.logMessage(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken",
 					"extraParams.length="+extraParams.length);
 			
-			debugObject("OpeninfocardSelector", data, 0);
+			oisDebugObject("OpeninfocardSelector", data, 0);
 			/* Make the call to the selector */
 			token = obj.GetBrowserToken(data.issuer,
 					data.recipient, data.requiredClaims,
@@ -199,7 +251,7 @@ var OpeninfocardSelector = {
 					data.privacyVersion, sslCert, data.issuerPolicy,
 					extraParams.length, extraParams);
 		} catch (e1) {
-			IdentitySelectorDiag.throwError(SELECTOR_CLASS_NAME+".getSecurityToken", e1);
+			IdentitySelectorDiag.throwError(OpeninfocardSelector.SELECTOR_CLASS_NAME+".getSecurityToken", e1);
 		}
 		return token;
 	}
@@ -207,10 +259,16 @@ var OpeninfocardSelector = {
 	, onLoad : function(event) {
 		IdentitySelectorDiag.logMessage( "OpeninfocardSelector", "onLoad: " + document.location.href);
 		gBrowser.removeEventListener( "load", OpeninfocardSelector.onLoad, false);
-        window.getBrowser().addProgressListener( OpeninfocardSecurityStateChangeListener,
+
+//		this.disabled = gIcPrefService.getBoolPref("extensions.identityselector.disabled");
+//		if (this.disabled === true) {
+//			IdentitySelectorDiag.logMessage( "OpeninfocardSelector", "onLoad: selector is disabled");
+//			return;
+//		}
+		
+		window.getBrowser().addProgressListener( OpeninfocardSecurityStateChangeListener,
                 Components.interfaces.nsIWebProgress.NOTIFY_STATE_ALL &
                 Components.interfaces.nsIWebProgress.NOTIFY_SECURITY);
-        IdentitySelector.registerSelector(OpeninfocardSelector);
 	}
 	
 	, onUnload : function(event) {
@@ -222,6 +280,11 @@ var OpeninfocardSelector = {
 	        window.removeEventListener( "unload", OpeninfocardSelector.onUnload, false);
 	        window.getBrowser().removeProgressListener( OpeninfocardSecurityStateChangeListener );
 	        IdentitySelector.deregisterSelector(OpeninfocardSelector);
+	        
+	        if (this._identityselectorPrefListener) {
+	        	this._identityselectorPrefListener.unregister();
+	        	this._identityselectorPrefListener = null;
+	        }
 		} catch (e) {}
 	}
 };
@@ -229,6 +292,15 @@ var OpeninfocardSelector = {
 try
 {
 	IdentitySelectorDiag.logMessage( "OpeninfocardSelector", "start");
+
+	IdentitySelector.registerSelector(OpeninfocardSelector);
+	try {
+		OpeninfocardSelector._identityselectorPrefListener = new IdentitySelectorPrefListener("extensions.identityselector", OpeninfocardSelector.prefListenerCallback);
+		OpeninfocardSelector._identityselectorPrefListener.register();
+	} catch (e) {
+		IdentitySelectorDiag.reportError( "OpeninfocardSelector IdentitySelectorPrefListener", e);
+	}
+
     window.addEventListener( "load", function(event){gBrowser.addEventListener("load", OpeninfocardSelector.onLoad, true);}, false);
            
     window.addEventListener( "unload",
@@ -236,5 +308,5 @@ try
 }
 catch( e)
 {
-        IdentitySelectorDiag.reportError( "window.addEventListener", e);
+        IdentitySelectorDiag.reportError( "OpeninfocardSelector window.addEventListener", e);
 }

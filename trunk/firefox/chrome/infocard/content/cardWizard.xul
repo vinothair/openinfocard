@@ -47,7 +47,7 @@
   <script src="chrome://infocard/content/cardWizard.js"/>
   <script src="chrome://infocard/content/cardstore.js"/>
   <script src="chrome://infocard/content/infocards.js"/>
-  <script src="chrome://infocard/content/tokenissuer.js"/>
+  <script src="chrome://infocard/content/tokenissuerXUL.js"/>
 
   <wizardpage pageid="type" onpageadvanced="next(); return false;">
 
@@ -69,21 +69,22 @@
       <vbox id="editarea" flex="1">
         <grid>
             <columns><column id="colText"/><column id="colData"/></columns>
-            <rows>
-                <row><label class="lblText" value="&cardmanager.cardname;"   /><textbox id="cardname"    value=""/></row>
-                <row><label class="lblText" value="&cardmanager.givenname;"   /><textbox id="givenname"    value=""/></row>
-                <row><label class="lblText" value="&cardmanager.surname;"  /><textbox id="surname"   value=""/></row>
-                <row><label class="lblText" value="&cardmanager.email;"  /><textbox id="email"   value=""/></row>
-                <row><label class="lblText" value="&cardmanager.streetaddress;"  /><textbox id="streetAddress"   value=""/></row>
-                <row><label class="lblText" value="&cardmanager.locality;"  /><textbox id="locality"   value=""/></row>
-                <row><label class="lblText" value="&cardmanager.stateorprovince;"  /><textbox id="stateOrProvince"   value=""/></row>
-                <row><label class="lblText" value="&cardmanager.postalcode;"  /><textbox id="postalCode"   value=""/></row>
-                <row><label class="lblText" value="&cardmanager.country;"  /><textbox id="country"   value=""/></row>
-                <row><label class="lblText" value="&cardmanager.primaryphone;"  /><textbox id="primaryPhone"   value=""/></row>
-                <row><label class="lblText" value="&cardmanager.mobilephone;" /><textbox id="mobilePhone"  value=""/></row>
-                <row><label class="lblText" value="&cardmanager.otherphone;"    /><textbox id="otherPhone"     value=""/></row>
-                <row><label class="lblText" value="&cardmanager.dateofbirth;"    /><textbox id="dateOfBirth"     value=""/></row>
-                <row><label class="lblText" value="&cardmanager.gender;"    /><textbox id="gender"     value=""/></row>
+            <rows id="selfAssertedRows">
+                <row><label class="lblText" value="&cardmanager.cardname;"   /><textbox id="cardName"    value=""/></row>
+                <row><label class="lblText" value="&cardmanager.givenname;"   /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"    value=""/></row>
+                <row><label class="lblText" value="&cardmanager.surname;"  /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.email;"  /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.streetaddress;"  /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.locality;"  /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.stateorprovince;"  /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.postalcode;"  /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.country;"  /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.primaryphone;"  /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/primaryphone"   value=""/></row>
+                <row><label class="lblText" value="&cardmanager.mobilephone;" /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone"  value=""/></row>
+                <row><label class="lblText" value="&cardmanager.otherphone;"    /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone"     value=""/></row>
+                <row><label class="lblText" value="&cardmanager.dateofbirth;"    /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth"     value=""/></row>
+                <row><label class="lblText" value="&cardmanager.gender;"    /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender"     value=""/></row>
+                <row><label class="lblText" value="&cardmanager.webpage;"    /><textbox id="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/webpage"     value=""/></row>
                 <row><label class="lblText" value="&cardmanager.imgurl;"    /><textbox id="imgurl"     value=""/></row>
             </rows>
         </grid>

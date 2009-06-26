@@ -30,7 +30,7 @@
 <!DOCTYPE page SYSTEM "chrome://infocard/locale/cardmanager.dtd">
 <page title="&cardmanager.title;"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	xmlns:html="http://www.w3.org/1999/xhtml" onload="load();">
+	xmlns:html="http://www.w3.org/1999/xhtml" onload="cardManagerLoad()">
 	<stringbundleset id="stringbundleset">
 		<stringbundle id="string-bundle"
 			src="chrome://infocard/locale/infocards.properties" />
@@ -42,9 +42,10 @@
 	<script src="chrome://infocard/content/crypto/hash.js" />
 	<script src="chrome://infocard/content/json.js" />
 	<script src="chrome://infocard/content/openid.js" />
+	<script src="chrome://infocard/content/cmDebug.js" />
 	<script src="chrome://infocard/content/infocards.js" />
 	<script src="chrome://infocard/content/cardstore.js" />
-	<script src="chrome://infocard/content/tokenissuer.js" />
+	<script src="chrome://infocard/content/tokenissuerXUL.js" />
 	<!--
 	<script> 
 		if (TokenIssuer.initialize() == true) { 

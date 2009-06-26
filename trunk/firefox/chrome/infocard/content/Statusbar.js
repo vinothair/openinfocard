@@ -107,9 +107,9 @@ var InformationCardStatusbar = {
 		}
 
 	
-    }
+    },
     
-    , onDomContentLoaded : function(event) {
+    onDomContentLoaded : function(event) {
     	var doc = event.originalTarget;
         if (doc instanceof HTMLDocument) {
             if( doc.wrappedJSObject !== undefined) {
@@ -125,9 +125,9 @@ var InformationCardStatusbar = {
     			}
     		}
         }
-    }
+    },
     
-    , cancelTimer : function(doc) {
+    cancelTimer : function(doc) {
     	if( doc.wrappedJSObject !== undefined) {
             doc = doc.wrappedJSObject;
         }
@@ -135,44 +135,77 @@ var InformationCardStatusbar = {
 			doc.__identityselector__.timer.cancel();
 			delete doc.__identityselector__.timer;
 		}
-    }
+    },
     
-    , statusbarClick : function() {
+    statusbarClick : function() {
         var doc = gBrowser.selectedBrowser.contentDocument;
+        if( doc.wrappedJSObject !== undefined) {
+            doc = doc.wrappedJSObject;
+        }
         IdentitySelectorDiag.logMessage( "statusbarClick", "clicked doc.location.href=" + doc.location.href);
-        if (doc instanceof HTMLDocument) {
-           if( doc.wrappedJSObject !== undefined) {
-              doc = doc.wrappedJSObject;
-              }
-           if( !(doc.__identityselector__ === undefined)) {
-              if ((doc.__identityselector__.icLoginService !== undefined) && (doc.__identityselector__.icLoginPolicy !== undefined)) {
-            	  InformationCardHelper.callIdentitySelector(doc);
-                 }
-              else {
-                 if (doc.location !== undefined) {
-                    IdentitySelectorDiag.logMessage( "statusbarClick", "The site " + doc.location.href + " does not support Information Cards on this page.\n" + "To learn more about Information Cards please visit the Information Card Foundation at\n" + "https://informationcard.net/");
-                    alert("The site " + doc.location.href + " does not support Information Cards.\n" + "To learn more about Information Cards please visit the Information Card Foundation at\n" + "https://informationcard.net/");
-                    }
-                 else {
-                    IdentitySelectorDiag.logMessage( "statusbarClick", "Information Cards are not supported here.\n" + "To learn more about Information Cards please visit the Information Card Foundation at\n" + "https://informationcard.net/");
-                    alert("Information Cards are not supported here.\n" + "To learn more about Information Cards please visit the Information Card Foundation at\n" + "https://informationcard.net/");
-                    }
-                 }
+        if (!(doc instanceof HTMLDocument)) { return; }
+
+        if( !(doc.__identityselector__ === undefined)) {
+           if ((doc.__identityselector__.icLoginService !== undefined) && (doc.__identityselector__.icLoginPolicy !== undefined)) {
+         	  InformationCardHelper.callIdentitySelector(doc);
               }
            else {
-              if (doc.location !== undefined) {
-                 IdentitySelectorDiag.logMessage( "statusbarClick", "The site " + doc.location.href + " does not support Information Cards on this page.\n" + "To learn more about Information Cards please visit the Information Card Foundation at\n" + "https://informationcard.net/");
-                 alert("The site " + doc.location.href + " does not support Information Cards.\n" + "To learn more about Information Cards please visit the Information Card Foundation at\n" + "https://informationcard.net/");
-                 }
-              else {
-                 IdentitySelectorDiag.logMessage( "statusbarClick", "Information Cards are not supported here.\n" + "To learn more about Information Cards please visit the Information Card Foundation at\n" + "https://informationcard.net/");
-                 alert("Information Cards are not supported here.\n" + "To learn more about Information Cards please visit the Information Card Foundation at\n" + "https://informationcard.net/");
-                 }
+				if (doc.__identityselector__.openidReturnToUri !== undefined) {
+					InformationCardHelper.callIdentitySelector(doc);
+				} else {
+					var msg = "";
+					if (doc.__identityselector__.icLoginService === undefined) {
+						msg = "doc.__identityselector__.icLoginService === undefined ";
+					}
+					if (doc.__identityselector__.icLoginPolicy === undefined) {
+						msg = "doc.__identityselector__.icLoginPolicy === undefined ";
+					}
+					if (doc.location !== undefined) {
+						IdentitySelectorDiag
+								.logMessage(
+										"statusbarClick",
+										"The site "
+												+ doc.location.href
+												+ " does not support Information Cards on this page.\n"
+												+ msg);
+						alert("The site "
+								+ doc.location.href
+								+ " does not support Information Cards.\n"
+								+ "To learn more about Information Cards please visit the Information Card Foundation at\n"
+								+ "https://informationcard.net/");
+					} else {
+						IdentitySelectorDiag.logMessage("statusbarClick",
+								"Information Cards are not supported here.\n"
+										+ msg);
+						alert("Information Cards are not supported here.\n"
+								+ "To learn more about Information Cards please visit the Information Card Foundation at\n"
+								+ "https://informationcard.net/");
+					}
+				}
+			}
+           }
+        else {
+           if (doc.location !== undefined) {
+              IdentitySelectorDiag.logMessage( "statusbarClick", 
+             		 "The site " + doc.location.href + " does not support Information Cards on this page. " + 
+             		 "doc.__identityselector__ === undefined");
+              alert("The site " + doc.location.href + " does not support Information Cards.\n" + 
+             		 "To learn more about Information Cards please visit the Information Card Foundation at\n" + 
+             		 "https://informationcard.net/");
+              }
+           else {
+              IdentitySelectorDiag.logMessage( "statusbarClick", 
+             		 "Information Cards are not supported here.\n" + 
+             		 "doc.__identityselector__ === undefined");
+              alert("Information Cards are not supported here.\n" + 
+             		 "To learn more about Information Cards please visit the Information Card Foundation at\n" + 
+             		 "https://informationcard.net/");
               }
            }
-        }
-
-    , onProgress : function(doc, e) {
+        
+        }, 
+        
+        onProgress : function(doc, e) {
 //    	var req = e.target;
     	if ((e !== null) && (e.totalSize !== 0)) {
     		IdentitySelectorDiag.logMessage( "statusbarOnProgress", "progress " + (e.position / e.totalSize)*100);

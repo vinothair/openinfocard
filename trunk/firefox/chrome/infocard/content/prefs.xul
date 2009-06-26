@@ -20,11 +20,11 @@
 					name="extensions.infocard.cardStoreLocalFilePath" type="unichar" />
 				<preference id="pref_cardStoreUrl" name="extensions.infocard.cardStoreUrl"
 					type="unichar" />
-				<preference id="pref_identityselector" name="identityselector.contractid"
+				<preference id="pref_identityselector" name="extensions.identityselector.contractid"
 					type="unichar" />
 				<preference id="pref_selector_class" name="extensions.identityselector.selector_class"
 					type="unichar" />
-				<preference id="pref_advertiseSelector" name="identityselector.advertise"
+				<preference id="pref_advertiseSelector" name="extensions.identityselector.advertise"
 					type="unichar" />
 				<preference id="pref_enabledDisabledCb" name="identityselector.disabled"
 					type="bool" />

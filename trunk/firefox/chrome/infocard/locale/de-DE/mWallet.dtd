@@ -1,0 +1,26 @@
+<!ENTITY mWallet.title "Infokarten">
+<!ENTITY mWallet.daylabel "Identity Selector">
+<!ENTITY mWallet.cardname "Kartenname:">
+<!ENTITY mWallet.givenname "Vorname:">
+<!ENTITY mWallet.surname "Nachname:">
+<!ENTITY mWallet.email "Email:">
+<!ENTITY mWallet.streetaddress "Stra&#223;e:">
+<!ENTITY mWallet.locality "Stadt:">
+<!ENTITY mWallet.stateorprovince "Bundesland:">
+<!ENTITY mWallet.postalcode "Postleitzahl:">
+<!ENTITY mWallet.country "Staat:">
+<!ENTITY mWallet.primaryphone "Telefonnummer:">
+<!ENTITY mWallet.mobilephone "Handynummer:">
+<!ENTITY mWallet.otherphone "Andere Telefonnr:">
+<!ENTITY mWallet.dateofbirth "Geburtsdatum:">
+<!ENTITY mWallet.gender "Geschlecht:">
+<!ENTITY mWallet.imgurl "Bild URL:"> 
+<!ENTITY mWallet.disableSelector "Abschalten">
+<!ENTITY mWallet.newcard "Neue Karte">
+<!ENTITY mWallet.deletecard "Karte l&#246;schen">
+<!ENTITY mWallet.updatecard "Karte speichern">
+<!ENTITY mWallet.cancel "Abbrechen">
+<!ENTITY mWallet.selectcard "Karte ausw&#228;hlen">
+<!ENTITY mWallet.privacy "Datenschutzerkl&#228;rung">
+<!ENTITY mWallet.firstTimeVisit "Dies ist Ihr erster Besuch auf dieser Websiete. Nachdenken!">
+<!ENTITY mWallet.usethiscard "Daten senden">

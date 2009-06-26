@@ -205,7 +205,7 @@
 		     %>
         <object type="application/x-informationcard" name="xmlToken">
 		<%
-		    out.println("<param name=\"issuer\" value=\"" + basePath + href + "\">");
+		    out.println("<param name=\"issuer\" value=\"" + basePath + href + "\"/>");
 		%>
 		    <param name="tokenType" value="urn:oasis:names:tc:IC:1.0:managedcard"/>
 		

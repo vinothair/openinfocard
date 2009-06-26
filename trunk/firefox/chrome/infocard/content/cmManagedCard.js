@@ -505,242 +505,165 @@ function processManagedCard(
     return null;
 }
 
-function setCardManaged(requiredClaims, optionalClaims) {
-	icDebug("setCardManaged requiredClaims: " + requiredClaims);
-	icDebug("setCardManaged optionalClaims: " + optionalClaims);
-	
-		var managedRows = document.getElementById("managedRows0");
-		
-		// remove child rows before appending new ones
-		while (managedRows.hasChildNodes()) { 
-  		 managedRows.removeChild(managedRows.childNodes[0]);
-		}
-		
+function createCheckbox(optionalClaims, requiredClaims, displayTag, uri) {
+	 var checkbox = document.createElement("checkbox");
+	 var label;
+//  		 if (displayTag.length > 10) {
+//  		  label = displayTag.substring(0,9);
+//  		 } else {
+//  		  label = displayTag;
+//  		 }
+	 label = displayTag;
+	 icDebug("setCardManaged: label=" + label);
+	 label = xmlreplace(label);
+	 checkbox.setAttribute("label", label);
+	 checkbox.setAttribute("id", "label_"+uri);
+	 checkbox.setAttribute("class", "claimLabel");
+	 checkbox.setAttribute("crop", "end");
+     checkbox.setAttribute("checked", "false");
+	 checkbox.setAttribute("disabled", "true");
+	 
+	 if (optionalClaims != null) {
+  		  var ui = optionalClaims.indexOf(uri);
+  		  if (ui != -1) {
+  		   checkbox.setAttribute("checked", "false");
+  		   checkbox.setAttribute("disabled", "false");
+  		  }
+	 }
+	 if (requiredClaims != null) {
+  		  ui = requiredClaims.indexOf(uri);
+  		  if (ui != -1) {
+  		   checkbox.setAttribute("checked", "true");
+  		   checkbox.setAttribute("disabled", "true");
+  		  }
+	 }
+	 try {
+	 	  // DisplayTag should be changed to Description when description is supported
+		 checkbox.setAttribute("tooltiptext", displayTag); // this is not cropped
+	 }
+	 catch (err) {
+	  // tooltiptext barfs on "invalid character" while value does not... Axel
+	  icDebug(err + "(" + displayTag + ")");
+	 }
+	 return checkbox;
+}
+
+function getVariableClaimValue() {
+   var value = "";
+   var ws = thisClaim.indexOf(' '); // space
+   if (ws == -1) {
+   	ws = thisClaim.indexOf('	'); // tab
+   	if (ws == -1) {
+   		ws = thisClaim.indexOf(String.fromCharCode(10));  // line-feed
+   		if (ws == -1) {
+   			ws = thisClaim.indexOf(String.fromCharCode(13)); // carriage return
+   		}
+   	}
+   }
+   if (ws != -1) {
+   	thisClaim = thisClaim.substring(0,ws);
+   	icDebug("thisClaim: " + thisClaim);
+   }
+   var qi = thisClaim.indexOf('?');
+   icDebug("qi claim:" + thisClaim + " " + qi);
+   if (qi >= 0) {
+		value = thisClaim.substr(qi);
+		icDebug("variable claim value: " + value);	
+   }
+   return value;
+}
+
+function setCardManaged(requiredClaims, optionalClaims, list, row1Id, row2Id, claimValues) {
+	try {
 		var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
-		var list = selectedCard.carddata.managed.ic::SupportedClaimTypeList.ic::SupportedClaimType;
-		//alert("root type:" + typeof(selectedCard));
-		//alert("list type:" + typeof(list));
-		//alert("list[0] type:" + typeof(list[0]));
-		//alert(list[0]);
-		//alert("length:" + list.length());
-		//alert(list.toXMLString());
-		icDebug("number of supported claims: " + list.length());
-		var half = list.length() / 2;
-		var index=0;
-		for (; index<half; index++) {
-		 var supportedClaim = list[index];
-		 var uri = supportedClaim.@Uri;
-  		 var row = document.createElement("row");
-  		 row.setAttribute("class", "rowClass");
-  		 var checkbox = document.createElement("checkbox");
-  		 var label;
-  		 var displayTag = "" + supportedClaim.ic::DisplayTag;
-  		 if (displayTag.length > 10) {
-  		  label = displayTag.substring(0,9);
-  		 } else {
-  		  label = displayTag;
-  		 }
-  		 label = xmlreplace(label);
-		 checkbox.setAttribute("label", label);
-		 checkbox.setAttribute("id", "label_"+uri);
- 		 checkbox.setAttribute("class", "claimLabel");
- 		 checkbox.setAttribute("crop", "end");
-	     checkbox.setAttribute("checked", "false");
- 		 checkbox.setAttribute("disabled", "true");
- 		 var value = "";
-		 if (optionalClaims != null) {
-		  var ui = optionalClaims.indexOf(uri);
-		  if (ui != -1) {
- 		   checkbox.setAttribute("checked", "false");
- 		   checkbox.setAttribute("disabled", "false");
-icDebug("optional claim:" + uri);
- 		   var thisClaim = optionalClaims.substr(ui);
- 		   var ws = thisClaim.indexOf(' '); // space
- 		   if (ws == -1) {
- 		   	ws = thisClaim.indexOf('	'); // tab
- 		   	if (ws == -1) {
- 		   		ws = thisClaim.indexOf(String.fromCharCode(10));  // line-feed
- 		   		if (ws == -1) {
- 		   			ws = thisClaim.indexOf(String.fromCharCode(13)); // carriage return
- 		   		}
- 		   	}
- 		   }
- 		   if (ws != -1) {
- 		   	thisClaim = thisClaim.substring(0,ws);
- 		   	icDebug("thisClaim: " + thisClaim);
- 		   }
-		   var qi = thisClaim.indexOf('?');
-icDebug("qi claim:" + thisClaim + " " + qi);
-		   if (qi >= 0) {
-				value = thisClaim.substr(qi);
-				icDebug("variable claim value: " + value);	
-		   }
-		  }
-		 }
-		 if (requiredClaims != null) {
-		  var ui = requiredClaims.indexOf(uri);
-		  if (ui != -1) {
- 		   checkbox.setAttribute("checked", "true");
- 		   checkbox.setAttribute("disabled", "true");
-icDebug("requiredClaim claim:" + uri);
- 		   var thisClaim = requiredClaims.substr(ui);
-icDebug("thisClaim=" + thisClaim);
- 		   var ws = thisClaim.indexOf(' '); // space
- 		   if (ws == -1) {
- 		   	ws = thisClaim.indexOf('	'); // tab
- 		   	if (ws == -1) {
- 		   		ws = thisClaim.indexOf(String.fromCharCode(10));  // line-feed
- 		   		if (ws == -1) {
- 		   			ws = thisClaim.indexOf(String.fromCharCode(13)); // carriage return
- 		   		}
- 		   	}
- 		   }
- 		   if (ws != -1) {
- 		   	thisClaim = thisClaim.substring(0,ws);
- 		   	icDebug("thisClaim: " + thisClaim);
- 		   }
-		   var qi = thisClaim.indexOf('?');
-icDebug("qi Claim:" + thisClaim + " " + qi);
-		   if (qi >= 0) {
-				value = thisClaim.substr(qi);
-				icDebug("variable Claim value: " + value);	
-		   }
-		  }
-		 }
-		 try {
-		 	  // DisplayTag should be changed to Description when description is supported
-			 checkbox.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
-		 }
-		 catch (err) {
-		  // tooltiptext barfs on "invalid character" while value does not... Axel
-		  icDebug(err + "(" + supportedClaim.ic::DisplayTag + ")");
-		 }
-		 var textbox = document.createElement("textbox");
-		 textbox.setAttribute("id", uri);
-		 textbox.setAttribute("class", "claimText");
-		 textbox.setAttribute("value", value);
-		 textbox.setAttribute("readonly", "true");
-		 row.appendChild(checkbox);
-		 row.appendChild(textbox);
-		 managedRows.appendChild(row);
-		}
-		if (managedRows.hasChildNodes()) {
-	        var grid = document.getElementById("editgrid2");
-	        grid.setAttribute("hidden", "false");
-		}
+
+		icDebug("setCardManaged requiredClaims: " + requiredClaims);
+		icDebug("setCardManaged optionalClaims: " + optionalClaims);
 		
-		managedRows = document.getElementById("managedRows1");
-		
-		// remove child rows before appending new ones
-		while (managedRows.hasChildNodes()) { 
-  		 managedRows.removeChild(managedRows.childNodes[0]);
-		}
-		for (; index<list.length(); index++) {
-		 var supportedClaim = list[index];
-		 var uri = supportedClaim.@Uri;
-  		 var row = document.createElement("row");
-  		 row.setAttribute("class", "rowClass");
-  		 var checkbox = document.createElement("checkbox");
-  		 var label;
-  		 var displayTag = "" + supportedClaim.ic::DisplayTag;
-  		 if (displayTag.length > 10) {
-  		  label = displayTag.substring(0,9);
-  		 } else {
-  		  label = displayTag;
-  		 }
-  		 label = xmlreplace(label);
-		 checkbox.setAttribute("id", "label_"+uri);
-		 checkbox.setAttribute("label", label);
- 		 checkbox.setAttribute("class", "claimLabel");
- 		 checkbox.setAttribute("crop", "end");
- 		 checkbox.setAttribute("checked", "false");
- 		 checkbox.setAttribute("disabled", "true");
-		 if (optionalClaims != null) {
-		  var ui = optionalClaims.indexOf(uri);
-		  if (ui != -1) {
- 		   checkbox.setAttribute("checked", "false");
- 		   checkbox.setAttribute("disabled", "false");
-icDebug("optional claim:" + uri);
- 		   var thisClaim = optionalClaims.substr(ui);
- 		   var ws = thisClaim.indexOf(' '); // space
- 		   if (ws == -1) {
- 		   	ws = thisClaim.indexOf('	'); // tab
- 		   	if (ws == -1) {
- 		   		ws = thisClaim.indexOf(String.fromCharCode(10));  // line-feed
- 		   		if (ws == -1) {
- 		   			ws = thisClaim.indexOf(String.fromCharCode(13)); // carriage return
- 		   		}
- 		   	}
- 		   }
- 		   if (ws != -1) {
- 		   	thisClaim = thisClaim.substring(0,ws);
- 		   	icDebug("thisClaim: " + thisClaim);
- 		   }
-		   var qi = thisClaim.indexOf('?');
-icDebug("qi claim:" + thisClaim + " " + qi);
-		   if (qi >= 0) {
-				value = thisClaim.substr(qi);
-				icDebug("variable claim value: " + value);	
-		   }
-		  }
-		 }
-		 if (requiredClaims != null) {
-		  var ui = requiredClaims.indexOf(uri);
-		  if (ui != -1) {
- 		   checkbox.setAttribute("checked", "true");
- 		   checkbox.setAttribute("disabled", "true");
-icDebug("requiredClaim claim:" + uri);
- 		   var thisClaim = requiredClaims.substr(ui);
-icDebug("thisClaim=" + thisClaim);
- 		   var ws = thisClaim.indexOf(' '); // space
- 		   if (ws == -1) {
- 		   	ws = thisClaim.indexOf('	'); // tab
- 		   	if (ws == -1) {
- 		   		ws = thisClaim.indexOf(String.fromCharCode(10));  // line-feed
- 		   		if (ws == -1) {
- 		   			ws = thisClaim.indexOf(String.fromCharCode(13)); // carriage return
- 		   		}
- 		   	}
- 		   }
- 		   if (ws != -1) {
- 		   	thisClaim = thisClaim.substring(0,ws);
- 		   	icDebug("thisClaim: " + thisClaim);
- 		   }
-		   var qi = thisClaim.indexOf('?');
-icDebug("qi Claim:" + thisClaim + " " + qi);
-		   if (qi >= 0) {
-				value = thisClaim.substr(qi);
-				icDebug("variable Claim value: " + value);	
-		   }
-		  }
-		 }
-		 try {
-		 	  // DisplayTag should be changed to Description when description is supported
-			 checkbox.setAttribute("tooltiptext", supportedClaim.ic::DisplayTag); // this is not cropped
-		 }
-		 catch (err) {
-		  // tooltiptext barfs on "invalid character" while value does not... Axel
-		  icDebug(err + "(" + supportedClaim.ic::DisplayTag + ")");
-		 }
-		 var textbox = document.createElement("textbox");
-		 textbox.setAttribute("id", uri);
-		 textbox.setAttribute("class", "claimText");
-		 textbox.setAttribute("value", value);
-		 textbox.setAttribute("readonly", "true");
-		 row.appendChild(checkbox);
-		 row.appendChild(textbox);
-		 managedRows.appendChild(row);
-		}
-		if (managedRows.hasChildNodes()) {
-	        var grid1 = document.getElementById("editgrid3");
-    	    grid1.setAttribute("hidden", "false");
-		}
-		
-		var stringsBundle = document.getElementById("string-bundle");
-		var managedcardfromissuer = stringsBundle.getFormattedString('managedcardfromissuer', [selectedCard.carddata.managed.issuer]);
-        var label = document.getElementById("notify");
-        if (label != null) {
-        	label.setAttribute("value", managedcardfromissuer );
-        }
+			var managedRows = document.getElementById(row1Id);
+			
+			// remove child rows before appending new ones
+			while (managedRows.hasChildNodes()) { 
+	  		 managedRows.removeChild(managedRows.childNodes[0]);
+			}
+			
+			icDebug("setCardManaged: number of supported claims: " + list.length());
+			
+			for (var index=0; index<list.length(); index++) {
+			 var supportedClaim = list[index];
+			 var uri = supportedClaim.@Uri.toXMLString();
+			 icDebug("setCardManaged: uri=" + uri);
+			 
+			 if (uri == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") {
+				 continue;
+			 }
+			 
+	  		 var row = document.createElement("row");
+	  		 row.setAttribute("class", "rowClass");
+
+	  		 var displayTag = "" + supportedClaim.ic::DisplayTag;
+	  		 var checkbox = createCheckbox(optionalClaims, requiredClaims, displayTag, uri);
+	  		 var value = "";
+	  		 if (optionalClaims != null) {
+	  		  var ui = optionalClaims.indexOf(uri);
+	  		  if (ui != -1) {
+	  			  icDebug("optional claim:" + uri);
+	  			  var thisClaim = optionalClaims.substr(ui);
+	  			  value = getVariableClaimValue(thisClaim);
+	  		  }
+	  		 }
+	  		 if (requiredClaims != null) {
+	  		  var ui = requiredClaims.indexOf(uri);
+	  		  if (ui != -1) {
+	  			  icDebug("requiredClaim claim:" + uri);
+	  	 		  var thisClaim = requiredClaims.substr(ui);
+	  	 		  value = getVariableClaimValue(thisClaim);
+	  		  }
+	  		 }
+	  		 
+	  		 if ((claimValues !== undefined) && (claimValues !== null)) {
+				icDebug("setCardManaged: number of claimValues: " + claimValues.length());
+				for (var ci=0; ci<claimValues.length(); ci++) {
+					var claimValue = claimValues[ci];
+					icDebug("setCardManaged: claimValue=" + claimValue.toXMLString());
+					var claimUri = claimValue.@Uri.toXMLString();
+					if (claimUri === uri) {
+						value = claimValue.ic::Value.text();
+					} else {
+						icDebug("setCardManaged: claimUri=" + claimUri + " uri=" + uri);
+					}
+				}
+			 }
+
+			 var textbox = document.createElement("textbox");
+			 textbox.setAttribute("id", uri);
+			 textbox.setAttribute("class", "claimText");
+			 textbox.setAttribute("value", value);
+			 textbox.setAttribute("readonly", "true");
+			 row.appendChild(checkbox);
+			 row.appendChild(textbox);
+			 managedRows.appendChild(row);
+			}
+			if (managedRows.hasChildNodes()) {
+		        var grid = document.getElementById("editgrid2");
+		        grid.setAttribute("hidden", "false");
+			}
+			
+			var stringsBundle = document.getElementById("string-bundle");
+	        var label = document.getElementById("notify");
+	        if (label != null) {
+				if (selectedCard.type == "managedCard" ) {
+					var managedcardfromissuer = stringsBundle.getFormattedString('managedcardfromissuer', [selectedCard.carddata.managed.issuer]);
+		        	label.setAttribute("value", managedcardfromissuer );
+				} else {
+					if (selectedCard.type == "selfAsserted" )  {
+						var selfassertedcard = stringsBundle.getString('selfassertedcard');
+			        	label.setAttribute("value", selfassertedcard);
+					}
+				}
+	        }
+	} catch (e) {
+		Components.utils.reportError("setCardManaged: threw: " + e);
+	}
 }
 
