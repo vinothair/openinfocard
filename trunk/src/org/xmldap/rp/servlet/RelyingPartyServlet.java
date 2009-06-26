@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -91,14 +90,14 @@ public class RelyingPartyServlet extends HttpServlet {
 
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+    	response.setContentType("application/xhtml+xml");
         PrintWriter out = response.getWriter();
     	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 
-        out.println("<html><title>Sample Relying Party</title><style>BODY {color:#000;font-family: verdana, arial, sans-serif;}</style>\n" +
+        out.println("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\"><head><title>Sample Relying Party</title><style>BODY {color:#000;font-family: verdana, arial, sans-serif;}</style></head>\n" +
                 "<body>\n" +
-                "<b>Your certificate:</b><br><br>" +
-                "<textarea cols=80 rows=20>" + cert + "</textarea>\n" +
+                "<b>Your certificate:</b><br/><br/>" +
+                "<textarea cols=\"80\" rows=\"20\">" + escapeHtmlEntities(cert.toString()) + "</textarea>\n" +
                 "</body>\n" +
                 "</html>");
         out.close();
@@ -129,7 +128,7 @@ public class RelyingPartyServlet extends HttpServlet {
 	}
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+    	response.setContentType("application/xhtml+xml");
         PrintWriter out = response.getWriter();
         	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 
@@ -137,7 +136,7 @@ public class RelyingPartyServlet extends HttpServlet {
 
             String encryptedXML = request.getParameter("xmlToken");
             if ((encryptedXML == null) || (encryptedXML.equals(""))) {
-                out.println("Sorry - you did not POST a security token.  Something went wrong with your selector");
+                out.println("Sorry - you did not POST a security token.  Something went wrong with your selector</body></html>");
                 out.close();
                 return;
             }
