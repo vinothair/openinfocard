@@ -65,71 +65,87 @@ import java.util.List;
 
 public class CardServlet extends HttpServlet {
 
-    private static CardStorage storage = null;
-    private String base64ImageFile = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	protected static CardStorage storage = null;
+    protected String base64ImageFile = null;
 
-    private X509Certificate[] certChain = null;
-    private PrivateKey privateKey = null;
-    private String domainname = null;
-    private String servletPath = null;
+    protected X509Certificate[] certChain = null;
+    protected PrivateKey privateKey = null;
+    protected String domainname = null;
+    protected String issuerName = null;
+    protected String servletPath = null;
 
     protected SupportedClaims supportedClaimsImpl = null;
 
 
     public void init(ServletConfig config) throws ServletException {
 
-        super.init(config);
+		super.init(config);
 
-        try {
-            PropertiesManager properties = new PropertiesManager(PropertiesManager.SECURITY_TOKEN_SERVICE, config.getServletContext());
-            String keystorePath = properties.getProperty("keystore");
-            String keystorePassword = properties.getProperty("keystore.password");
-            String key = properties.getProperty("key.name");
-            String keyPassword = properties.getProperty("key.password");
-            String imageFilePathString = properties.getProperty("image.file");
-            String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
-            supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
-            storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
-            
-            KeystoreUtil keystore = new KeystoreUtil(keystorePath, keystorePassword);
-            privateKey = keystore.getPrivateKey(key,keyPassword);
-            if (privateKey == null) {
-            	throw new ServletException("privateKey is null");
-            }
-            certChain = keystore.getCertificateChain(key);
-            if (certChain == null) {
-            	throw new ServletException("certChain is null");
-            }
-            if (certChain.length == 0) {
-            	throw new ServletException("certChain.length is zero");
-            }
-            domainname = properties.getProperty("domain");
-            if (domainname == null) {
-            	throw new ServletException("domainname is null");
-            }
-            servletPath = properties.getProperty("servletPath");
-            if (servletPath == null) {
-            	throw new ServletException("servletPath is null");
-            }
-            
-            {
-            	java.io.InputStream fis = getServletContext().getResourceAsStream(imageFilePathString);
-                base64ImageFile = getImageFileEncodedAsBase64(fis);
-            }
-            
-        } catch (IOException e) {
-            throw new ServletException(e);
-        } catch (KeyStoreException e) {
-            throw new ServletException(e);
-        } catch (InstantiationException e) {
-        	throw new ServletException(e);
+		try {
+			PropertiesManager properties = new PropertiesManager(
+					PropertiesManager.SECURITY_TOKEN_SERVICE, config
+							.getServletContext());
+			String keystorePath = properties.getProperty("keystore");
+			String keystorePassword = properties
+					.getProperty("keystore.password");
+			String key = properties.getProperty("key.name");
+			String keyPassword = properties.getProperty("key.password");
+			String imageFilePathString = properties.getProperty("image.file");
+			String supportedClaimsClass = properties
+					.getProperty("supportedClaimsClass");
+			supportedClaimsImpl = SupportedClaims
+					.getInstance(supportedClaimsClass);
+			storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
+
+			KeystoreUtil keystore = new KeystoreUtil(keystorePath,
+					keystorePassword);
+			privateKey = keystore.getPrivateKey(key, keyPassword);
+			if (privateKey == null) {
+				throw new ServletException("privateKey is null");
+			}
+			certChain = keystore.getCertificateChain(key);
+			if (certChain == null) {
+				throw new ServletException("certChain is null");
+			}
+			if (certChain.length == 0) {
+				throw new ServletException("certChain.length is zero");
+			}
+			domainname = properties.getProperty("domain");
+			if (domainname == null) {
+				throw new ServletException("domainname is null");
+			}
+			servletPath = properties.getProperty("servletPath");
+			if (servletPath == null) {
+				throw new ServletException("servletPath is null");
+			}
+			issuerName = properties.getProperty("issuerName");
+			if (issuerName == null) {
+				issuerName = "https://" + domainname + servletPath;
+			}
+
+			{
+				java.io.InputStream fis = getServletContext()
+						.getResourceAsStream(imageFilePathString);
+				base64ImageFile = getImageFileEncodedAsBase64(fis);
+			}
+
+		} catch (IOException e) {
+			throw new ServletException(e);
+		} catch (KeyStoreException e) {
+			throw new ServletException(e);
+		} catch (InstantiationException e) {
+			throw new ServletException(e);
 		} catch (IllegalAccessException e) {
 			throw new ServletException(e);
 		} catch (ClassNotFoundException e) {
 			throw new ServletException(e);
-    }
+		}
 
-    }
+	}
 
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -173,7 +189,7 @@ public class CardServlet extends HttpServlet {
         InfoCard card = new InfoCard(certChain, privateKey);
         card.setCardId("https://" + domainname + "/" + servletPath + "/" + "card/" + managedCard.getCardId(), 1);
         card.setCardName(managedCard.getCardName());
-        card.setIssuer(tokenServiceEndpoint);
+        card.setIssuer(issuerName);
 
         if (managedCard.getRequireAppliesTo()) {
         	// optional
@@ -184,7 +200,7 @@ public class CardServlet extends HttpServlet {
         	card.setRequireStrongRecipientIdentity(true);
         }
         
-        // set card logo/image if available . . . if not available it will default to Milo :-)
+        // set card logo/image if available . . . 
         if (base64ImageFile != null) {
             card.setBase64BinaryCardImage(base64ImageFile);
         }
