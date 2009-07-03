@@ -125,7 +125,8 @@
  String linkElement = "<link rel=\"xrds.metadata\" href=\"" + request.getServletPath() + "?xmldap_rp.xrds" + "\"/>";
  String metaElement = "<meta http-equiv=\"X-XRDS-Location\" content=\"" + request.getRequestURL() + "?xmldap_rp.xrds" + "\"/>";
 %>
-<html xmlns="http://www.w3.org/1999/xhtml">
+
+<%@page import="java.net.URLEncoder"%><html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Java Based Relying Party</title>
 	<%= metaElement %>
@@ -197,6 +198,22 @@
     <table border="0">
         <tr>
             <td>
+<% if (request.getHeader("User-Agent").contains("iPhone") || 
+		request.getHeader("User-Agent").contains("iPod")) { 
+      String policy = "<object type=\"application/x-informationcard\" name=\"xmlToken\">" +
+      	"<param name=\"privacyUrl\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>" +
+      	"<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>" +
+      	"<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>" +
+      	"<param name=\"tokenType\" value=\"" + tokentype + "\"/>" +
+      	"<param name=\"privacyVersion\" value=\"1\"/>" +
+      	"</object>";
+      	String encodedPolicy = URLEncoder.encode(policy, "UTF-8");
+      String iPhoneLink = "<a href=\"icard-https://xmldap.org/relyingparty/infocard?_policy=" + 
+      	encodedPolicy +
+      	"\">Click here to send i-card</a>";
+      out.println(iPhoneLink);
+      %>
+<% } else { %>
 
 <form method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
 <p>
@@ -232,11 +249,14 @@
 </p>
 </form>
                     <br/>Click on the image above to login with and Infocard.<br/>
+<% } %>
                     <br/><a href="/sts/cardmanager/">Click here to create a managed card.</a>
 
             </td>
         </tr>
     </table>
+
+	
 
     <h2>Or, if you don't yet have CardSpace installed, I can make a security token for you...</h2>
 
