@@ -99,9 +99,6 @@ import org.xmldap.xml.XmlUtils;
 import org.xmldap.xmldsig.Jsr105Signatur;
 import org.xmldap.xmlenc.EncryptedData;
 
-import de.dtag.tlabs.mwallet.card.Card;
-import de.dtag.tlabs.mwallet.card.CardManager;
-
 public class TokenIssuer {
 
 	static final String defaultSubjectConfirmationMethod = Subject.BEARER;
@@ -767,113 +764,6 @@ public class TokenIssuer {
 //		}
 //	}
 
-	public String phoneFini()
-		throws TokenIssuanceException {
-		try {
-			CardManager cardManager = CardManager.getInstance();
-			cardManager.fini();
-		} catch (Exception e) {
-			throw new TokenIssuanceException(e);
-		}
-		
-		return null;
-	}
-	
-	public CardManager getCardManager() throws TokenIssuanceException {
-		CardManager cardManager;
-		try {
-			cardManager = CardManager.getInstance();
-		} catch (Exception e) {
-			throw new TokenIssuanceException(e);
-		}
-		return cardManager;
-	}
-
-	public boolean isPhoneAvailable() throws TokenIssuanceException {
-		CardManager cardManager;
-		try {
-			cardManager = CardManager.getInstance();
-			return cardManager.isPhoneAvailable();
-		} catch (Exception e) {
-			throw new TokenIssuanceException(e);
-		}
-	}
-
-	public String phoneSelectCard(String policyParams)
-		throws TokenIssuanceException {
-
-		JSONObject policy = null;
-
-		try {
-            policy = new JSONObject(policyParams);
-           	String der =  policy.optString("cert", null);
-    		String tokenType = policy.optString("tokenType", null);
-    		String issuer = policy.optString("issuer", null);
-    		String requiredClaims = policy.optString("requiredClaims", null);
-    		String optionalClaims = policy.optString("optionalClaims", null);
-    		String privacyPolicy = policy.optString("privacyUrl", null);
-    		String privacyPolicyVersion = policy.optString("privacyVersion", null);
-    		String issuerPolicy = policy.optString("issuerPolicy", null);
-    		String extraParamsLenght = policy.optString("extraParamsLenght", null);
-    		String extraParams = policy.optString("extraParams", null);
-            String audience = (String) policy.optString("url", null);
-            
-            try {
-            	CardManager cardManager = CardManager.getInstance();
-				Vector<Card> cards = cardManager.getCardsByType("InfoCard");
-				if (cards == null) {
-					return null;
-				}
-				for (int i=0; i<cards.size(); i++) {
-					Card card = cards.get(i);
-					System.out.println("card#" + i + ": " + card.toString());
-				}
-				if (cards.size() > 0) {
-					return cards.get(0).toString(); // return the first card FIXME
-				}
-			} catch (Exception e) {
-				throw new TokenIssuanceException(e);
-			}
-        } catch (JSONException e) {
-            throw new TokenIssuanceException(e);
-        }
-		return null;
-	}
-	
-	public void endCardSelection()
-			throws TokenIssuanceException {
-		try {
-			CardManager cardManager = CardManager.getInstance();
-			cardManager.endCardSelection();
-		} catch (Exception e) {
-			throw new TokenIssuanceException(e);
-		}
-	}
-		
-	public void beginCardSelection()
-				throws TokenIssuanceException {
-		try {
-			CardManager cardManager = CardManager.getInstance();
-			cardManager.beginCardSelection(CardManager.DOMAIN_IDENTITY);
-		} catch (Exception e) {
-			throw new TokenIssuanceException(e);
-		}
-	}
-	
-	public String getSelectedCard() throws TokenIssuanceException {
-		try {
-			CardManager cardManager = CardManager.getInstance();
-			Card card = cardManager.getSelectedCard();
-			if (card != null) {
-				return card.toString();
-			}
-			return null;
-		} catch (Exception e) {
-			throw new TokenIssuanceException(e);
-		}
-
-	}
-	
 	public String getToken(String serializedPolicy)
 			throws TokenIssuanceException {
 
