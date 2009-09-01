@@ -84,23 +84,14 @@ public class AttributeStatement implements Serializable {
 
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws KeyStoreException {
 
         //Get my keystore
         KeystoreUtil keystore = null;
-        try {
-            keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
+        keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
         
         AsymmetricKeyInfo keyInfo = null;
-		try {
-			keyInfo = new AsymmetricKeyInfo(keystore.getCertificate("xmldap"));
-		} catch (KeyStoreException e1) {
-			e1.printStackTrace();
-		}
+		keyInfo = new AsymmetricKeyInfo(keystore.getCertificate("xmldap"));
         Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
         Attribute given = new Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName", "Chuck");
         Attribute sur = new Attribute("surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/SurName", "Mortimore");

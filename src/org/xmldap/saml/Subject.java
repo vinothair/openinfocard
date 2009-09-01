@@ -83,23 +83,15 @@ public class Subject implements Serializable {
 
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws KeyStoreException {
 
         //Get my keystore
         KeystoreUtil keystore = null;
-        try {
-            keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
+        keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
 
 
         AsymmetricKeyInfo keyInfo = null;
-		try {
-			keyInfo = new AsymmetricKeyInfo(keystore.getCertificate("xmldap"));
-		} catch (KeyStoreException e1) {
-			e1.printStackTrace();
-		}
+		keyInfo = new AsymmetricKeyInfo(keystore.getCertificate("xmldap"));
 
         Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
         try {

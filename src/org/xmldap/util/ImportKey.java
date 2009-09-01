@@ -143,7 +143,7 @@ public class ImportKey  {
                 certs[0] = cert;
             } else {
                 System.out.println("Certificate chain length: "+c.size());
-                certs = (Certificate[])c.toArray();
+                certs = (Certificate[])c.toArray(new Certificate[c.size()]);
             }
 
             // storing keystore

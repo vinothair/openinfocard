@@ -211,7 +211,14 @@ public class EncryptedStore {
 
         clearText = CryptoUtils.decryptAESCBC(new StringBuffer(Base64.encodeBytesNoBreaks(ivPlusData)), keyBytes);
 
-        byte[] hashedIntegrityCode = getHashedIntegrityCode(iv, keys.getIntegrityKey(),  clearText.toString());
+        byte[] hashedIntegrityCode;
+        try {
+        	hashedIntegrityCode = getHashedIntegrityCode(iv, keys.getIntegrityKey(),  clearText.toString());
+        } catch (NoSuchAlgorithmException e) {
+        	throw new CryptoException("NoSuchAlgorithmException while Parsing Roaming Store", e);
+        } catch (UnsupportedEncodingException e) {
+        	throw new CryptoException("UnsupportedEncodingException while Error Parsing Roaming Store", e);
+		}
         boolean valid = Arrays.equals(integrityCode, hashedIntegrityCode);
         if (!valid) {
             throw new CryptoException("The cardstore did not pass the integrity check - it may have been tampered with");
@@ -275,14 +282,21 @@ public class EncryptedStore {
         } catch (SerializationException e) {
             throw new CryptoException("Error getting RoamingStore XML", e);
         }
-        byte[] integrityCode = getHashedIntegrityCode(iv, keys.getIntegrityKey(),roamingStoreString);
+        byte[] integrityCode;
+        try {
+        	integrityCode= getHashedIntegrityCode(iv, keys.getIntegrityKey(),roamingStoreString);
+        } catch (NoSuchAlgorithmException e) {
+        	throw new CryptoException("NoSuchAlgorithmException while getting getHashedIntegrityCode", e);
+        } catch (UnsupportedEncodingException e) {
+        	throw new CryptoException("UnsupportedEncodingException while getting getHashedIntegrityCode", e);
+		}
 
         ByteArrayOutputStream dataBytes = new ByteArrayOutputStream();
         try {
             dataBytes.write(bom);
             dataBytes.write(roamingStoreString.getBytes("UTF8"));
         } catch (IOException e) {
-            e.printStackTrace();
+        	throw new CryptoException("IOException while writing to ByteArrayOutputStream", e);
         }
 
 
@@ -346,26 +360,15 @@ public class EncryptedStore {
 
 
 
-    private static byte[] getHashedIntegrityCode(byte[] iv, byte[] integrityKey,  String clearText) {
+    private static byte[] getHashedIntegrityCode(byte[] iv, byte[] integrityKey,  String clearText) throws UnsupportedEncodingException, NoSuchAlgorithmException {
 
         byte[] clearBytes = new byte[0];
-        try {
-            clearBytes = clearText.getBytes("UTF8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        clearBytes = clearText.getBytes("UTF8");
         byte[] lastBlock = new byte[16];
         System.arraycopy(clearBytes,clearBytes.length - 16 ,lastBlock, 0, 16);
 
-
         MessageDigest digest = null;
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-
-            e.printStackTrace();
-        }
-
+        digest = MessageDigest.getInstance("SHA-256");
 
         byte[] integrityCheck = new byte[64];
         System.arraycopy(iv, 0, integrityCheck, 0, 16);

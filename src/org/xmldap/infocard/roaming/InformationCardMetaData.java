@@ -41,7 +41,7 @@ public class InformationCardMetaData extends InfoCard {
     	int comparison = super.compareTo(obj);
     	if (comparison != 0) return comparison;
     	
-    	comparison = new Boolean(isSelfIssued).compareTo(new Boolean(obj.isSelfIssued));
+    	comparison = Boolean.valueOf(isSelfIssued).compareTo(new Boolean(obj.isSelfIssued));
     	if (comparison != 0) return comparison;
 
     	if (pinDigest == null) {
@@ -64,7 +64,7 @@ public class InformationCardMetaData extends InfoCard {
     		if (obj.timeLastUpdated != null) return -1;
     	} else {
     		if (obj.timeLastUpdated == null) return 1;
-    		if (timeLastUpdated == obj.timeLastUpdated) {
+    		if (obj.timeLastUpdated.equals(timeLastUpdated)) {
     			return 0;
     		}
     		comparison = timeLastUpdated.compareTo(obj.timeLastUpdated);

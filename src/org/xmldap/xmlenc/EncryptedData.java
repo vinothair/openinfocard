@@ -132,7 +132,7 @@ public class EncryptedData implements Serializable {
         try {
             keyBytes.setText(secretKey);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new SerializationException("keyBytes.setText threw:", e);
         }
         StringBuffer clearTextBuffer = new StringBuffer(data);
         StringBuffer cipherText = null;

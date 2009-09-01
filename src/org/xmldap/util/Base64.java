@@ -912,7 +912,7 @@ public class Base64 {
         }   // end catch: IOException
         finally {
             try {
-                bis.close();
+            	if (bis != null) { bis.close(); }
             } catch (Exception e) {
             }
         }   // end finally
