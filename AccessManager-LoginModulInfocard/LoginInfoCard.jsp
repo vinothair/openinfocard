@@ -41,6 +41,9 @@
 
 <%
 String ServiceURI = (String) viewBean.getDisplayFieldValue(viewBean.SERVICE_URI);
+String linkElement = "<link rel=\"xrds.metadata\" href=\"" + request.getServletPath() + "?xmldap_rp.xrds" + "\"/>";
+String metaElement = "<meta http-equiv=\"X-XRDS-Location\" content=\"" + request.getServletPath() + "?xmldap_rp.xrds" + "\"/>";
+
 %>
 <link rel="stylesheet" href="<%= ServiceURI %>/css/styles.css" type="text/css">
 <script language="JavaScript" src="<%= ServiceURI %>/js/browserVersion.js"></script>

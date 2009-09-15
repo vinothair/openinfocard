@@ -763,7 +763,25 @@ function createItem(c, classStr){
 
     var imgurl = "";
     if ( c.type == "selfAsserted") {
-        imgurl = c.carddata.selfasserted.imgurl;
+//        imgurl = c.carddata.selfasserted.imgurl;
+		var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+		var claimValues = c.ic::InformationCardPrivateData.ic::ClaimValueList.ic::ClaimValue;
+		var value;
+		if ((claimValues !== undefined) && (claimValues !== null)) {
+			var uri = "imgurl";
+			icDebug("createItem: number of claimValues: " + claimValues.length());
+			for (var ci=0; ci<claimValues.length(); ci++) {
+				var claimValue = claimValues[ci];
+				icDebug("createItem: claimValue=" + claimValue.toXMLString());
+				var claimUri = claimValue.@Uri.toXMLString();
+				if (claimUri === uri) {
+					imgurl = claimValue.ic::Value.text();
+					icDebug("createItem: CLAIMVALUE=" + claimValue.toXMLString());
+				} else {
+					icDebug("createItem: claimUri=" + claimUri + " uri=" + uri);
+				}
+			}
+		}
     } else if ( c.type == "managedCard") {
         imgurl = c.carddata.managed.image;
     }
@@ -772,6 +790,7 @@ function createItem(c, classStr){
     picturebox.setAttribute("flex", "0");
     picturebox.setAttribute("align", "center");
     var picture = document.createElement("image");
+    icDebug("setcard imgurl: " + imgurl);
     if ( (imgurl == "") || (imgurl == undefined)) {
 
         if (c.type == "selfAsserted") {
