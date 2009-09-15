@@ -28,32 +28,42 @@
 
 package org.xmldap.infocard.roaming;
 
-import org.xmldap.util.Base64;
-import org.xmldap.util.XmlFileUtil;
-import org.xmldap.crypto.CryptoUtils;
-import org.xmldap.crypto.EncryptedStoreKeys;
-import org.xmldap.ws.WSConstants;
-import org.xmldap.xml.Canonicalizable;
-import org.xmldap.xml.XmlUtils;
-import org.xmldap.exceptions.*;
-import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.crypto.params.ParametersWithIV;
-import org.bouncycastle.crypto.engines.AESLightEngine;
-import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Random;
+
+import net.sourceforge.lightcrypto.SafeObject;
+import nu.xom.Builder;
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Nodes;
+import nu.xom.ParsingException;
+import nu.xom.XPathContext;
+
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.AESLightEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
-
-import java.io.*;
-import java.util.Random;
-import java.util.Arrays;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import net.sourceforge.lightcrypto.SafeObject;
-import nu.xom.*;
-import nu.xom.ParsingException;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.xmldap.crypto.CryptoUtils;
+import org.xmldap.crypto.EncryptedStoreKeys;
+import org.xmldap.exceptions.CryptoException;
+import org.xmldap.exceptions.SerializationException;
+import org.xmldap.util.Base64;
+import org.xmldap.util.XmlFileUtil;
+import org.xmldap.ws.WSConstants;
+import org.xmldap.xml.Canonicalizable;
+import org.xmldap.xml.XmlUtils;
 
 
 public class EncryptedStore {
