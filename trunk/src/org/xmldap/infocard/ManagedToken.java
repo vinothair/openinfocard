@@ -149,17 +149,12 @@ public class ManagedToken implements Serializable {
 						name = uri.substring(lastSlash + 1);
 						if (name.length() == 0) {
 							name = uri;
+							uri = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri";
 						}
-						//        			if (lastSlash > 0) {
-						//        				uri = uri.substring(0, lastSlash-1);
-						//        			}
 					} else {
 						name = uri;
+						uri = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri";
 					}
-
-// This does not make any sense and breaks any STS that has other claim than the self-issued ones. Axel 20071014
-//                    //TODO - this is a very dodgy fix for the attribute namespace bug.   Figure out how to do this upstream.   Fixing for interop.
-//                    if (uri.indexOf(Constants.IC_NAMESPACE) == 0) uri = Constants.IC_NAMESPACE;
                     Attribute attr = new Attribute(name, uri, value);
 					attributes.add(attr);
 				}
