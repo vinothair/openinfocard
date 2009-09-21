@@ -372,8 +372,11 @@ function readALocalFile(fileName) {
 
 function readLocalFile(fileName) {
 
+	cardstoreDebug("readLocalFile: reading: " + fileName);
+	
 	var output = readALocalFile(fileName);
 	if (output == null) {
+		cardstoreDebug("readALocalFile returned null: " + fileName);
 		return newDB();
 	}
 
@@ -392,10 +395,10 @@ function readLocalFile(fileName) {
 	    		decrypted = sdr.decryptString(output);
             } catch (e) {
             	try {
-            		cardstoreDebug("error decypting the cardstore: " + fileName);
+            		cardstoreDebug(e + "\nerror decypting the cardstore: " + fileName);
 	            	return new XML(output);
             	} catch (e) {
-            		cardstoreDebug("unencrypted cardstore is no valid xml: " + fileName);
+            		cardstoreDebug(e + "\ndeencrypted cardstore is no valid xml: " + fileName);
             		return newDB();
             	}
             }
@@ -404,17 +407,50 @@ function readLocalFile(fileName) {
         	return new XML(decrypted);
 		} else {
 			try {
-				return new XML(output);
+//				var cardstoreXML = new XML(output);
+				
+				var parser = new DOMParser();
+				var dom = parser.parseFromString(output, "text/xml");
+				if (dom.documentElement.nodeName == "parsererror") {
+					throw "parseerror";
+				} else {
+					var cardstoreXML = new XML(Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance(Components.interfaces.nsIDOMSerializer).serializeToString(dom.documentElement));
+					return cardstoreXML;
+				}
+
+				cardstoreDebug("unencrypted cardstore: " + cardstoreXML);
+				return cardstoreXML;
 			}
 			catch (e) {
+				cardstoreDebug(e + "\nunencrypted cardstore is no valid xml:\n" + output);
 				// try to decrypt
 	            var sdr = Components.classes["@mozilla.org/security/sdr;1"]
 	                            .getService(Components.interfaces.nsISecretDecoderRing);
 	            var decrypted = "";
 	            try {
 		    		decrypted = sdr.decryptString(output);
+		    		cardstoreDebug("decrypted cardstore:\n" + decrypted);
+		    		try {
+						var cardstoreXML = new XML(Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance(Components.interfaces.nsIDOMSerializer).serializeToString(decrypted));
+	
+						cardstoreDebug("Unencrypted cardstore: " + cardstoreXML);
+						saveLocalFile(fileName, cardstoreXML); // save decrypted card store
+						return cardstoreXML;
+		    		} catch (e) {
+		    			cardstoreDebug(e + "Error reading XML:\n" + decrypted);
+		    			try {
+		    				// new XML is less picky than xmlserializer
+		    				cardstoreXML = new XML(decrypted);
+		    				saveLocalFile(fileName, cardstoreXML); // save decrypted card store
+		    				return cardstoreXML;
+		    			} catch (e) {
+		    				cardstoreDebug(e + "Error Reading XML:\n" + decrypted);
+		    				return newDB();
+		    			}
+		    			return newDB();
+		    		}
 	            } catch (e) {
-	            	cardstoreDebug("error decypting the cardstore: " + fileName);
+	            	cardstoreDebug("Error decrypting the cardstore:\n" + output);
 		            return newDB();
 	            }
 			}
