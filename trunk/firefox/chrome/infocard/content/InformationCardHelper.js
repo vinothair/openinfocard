@@ -159,13 +159,6 @@ var InformationCardHelper = {
             selectorClass = "NoIdentitySelector";
         }
 
-        var getSecurityToken = eval(selectorClass).getSecurityToken;
-
-        if (typeof getSecurityToken != "function") {
-            selectorClass = "NoIdentitySelector";
-            getSecurityToken = eval(selectorClass).getSecurityToken;
-        }
-
         var data;
         
         var openidReturnToUri = doc.__identityselector__.openidReturnToUri;
@@ -196,6 +189,13 @@ var InformationCardHelper = {
         
         if (doc.__identityselector__.sslMode != undefined) {
             data.sslMode = "" + doc.__identityselector__.sslMode;
+        }
+
+        var getSecurityToken = eval(selectorClass).getSecurityToken;
+
+        if (typeof getSecurityToken != "function") {
+            selectorClass = "NoIdentitySelector";
+            getSecurityToken = eval(selectorClass).getSecurityToken;
         }
 
         // call identity selector

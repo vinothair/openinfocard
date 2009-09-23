@@ -368,7 +368,7 @@ function cancel(){
 
 function getPolicy(){
 	var policy = null;
-	if ((window.hasOwnProperty(arguments)) && (window.arguments !== undefined) && (window.arguments.length > 0)) {
+	if ((window.hasOwnProperty("arguments")) && (window.arguments !== undefined) && (window.arguments.length > 0)) {
 	    policy = window.arguments[0];
 	}
 	return policy;
@@ -398,6 +398,8 @@ function cardManagerUnload(){
 }
 
 function cardManagerLoad(policyParam){
+	// infocard: cardManagerLoad start. href=chrome://infocard/content/cardSidebar.xul
+	// infocard: cardManagerLoad start. href=chrome://infocard/content/cardManager.xul
 	icDebug("cardManagerLoad start. href=" + window.document.location.href );
 	
 	var controlarea = document.getElementById('selectcontrol');
@@ -427,7 +429,11 @@ function cardManagerLoad(policyParam){
     } else {
     	policy = policyParam;
     }
-    	
+    
+    if (policy === null) {
+    	icDebug("cardManagerLoad policy is null!" );
+    }
+    
     var rpIdentifier = null;
 
     if (policy != null && policy.hasOwnProperty("cert")) {
@@ -479,7 +485,7 @@ function cardManagerLoad(policyParam){
          }
         }
     }
-
+    
     if ( count != 0) {
     	if (policy != null) {
 	        var label = document.getElementById("notify");
@@ -591,12 +597,11 @@ function cardManagerLoad(policyParam){
 }
 
 function setCard(card){
+    var policy = getPolicy();
 
-	if ((window.hasOwnProperty(arguments) && window.arguments !== undefined)) {
-		if (window.arguments.length > 0) {
-			var select = document.getElementById('selectcontrol');
-			select.setAttribute('hidden', 'false');
-		}
+	if (policy !== null) {
+		var select = document.getElementById('selectcontrol');
+		select.setAttribute('hidden', 'false');
 	}
 	
     var showPrivacyStatementElm = document.getElementById('privacy_label');
@@ -615,7 +620,6 @@ function setCard(card){
 	}
 	
     selectedCard = card;
-    var policy = getPolicy();
 
     icDebug("TYPE: " + selectedCard.type);
     icDebug("selectedCard: " + selectedCard);
@@ -769,16 +773,16 @@ function createItem(c, classStr){
 		var value;
 		if ((claimValues !== undefined) && (claimValues !== null)) {
 			var uri = "imgurl";
-			icDebug("createItem: number of claimValues: " + claimValues.length());
+//			icDebug("createItem: number of claimValues: " + claimValues.length());
 			for (var ci=0; ci<claimValues.length(); ci++) {
 				var claimValue = claimValues[ci];
-				icDebug("createItem: claimValue=" + claimValue.toXMLString());
+//				icDebug("createItem: claimValue=" + claimValue.toXMLString());
 				var claimUri = claimValue.@Uri.toXMLString();
 				if (claimUri === uri) {
 					imgurl = claimValue.ic::Value.text();
-					icDebug("createItem: CLAIMVALUE=" + claimValue.toXMLString());
+//					icDebug("createItem: CLAIMVALUE=" + claimValue.toXMLString());
 				} else {
-					icDebug("createItem: claimUri=" + claimUri + " uri=" + uri);
+//					icDebug("createItem: claimUri=" + claimUri + " uri=" + uri);
 				}
 			}
 		}
@@ -790,7 +794,7 @@ function createItem(c, classStr){
     picturebox.setAttribute("flex", "0");
     picturebox.setAttribute("align", "center");
     var picture = document.createElement("image");
-    icDebug("setcard imgurl: " + imgurl);
+    //icDebug("setcard imgurl: " + imgurl);
     if ( (imgurl == "") || (imgurl == undefined)) {
 
         if (c.type == "selfAsserted") {
@@ -811,7 +815,7 @@ function createItem(c, classStr){
     hbox.appendChild(vbox);
     hbox.addEventListener("click", handleCardChoice, false);
     hbox.addEventListener("dblclick", dblclick, false);
-    icDebug ("Setting cardid " + hbox.getAttribute("cardid"));
+//    icDebug ("Setting cardid " + hbox.getAttribute("cardid"));
     return hbox;
 
 }

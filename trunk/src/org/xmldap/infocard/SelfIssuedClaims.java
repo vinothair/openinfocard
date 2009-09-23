@@ -1,265 +1,286 @@
 package org.xmldap.infocard;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Hashtable;
+
+import org.xmldap.ws.WSConstants;
+
 public class SelfIssuedClaims implements Comparable<SelfIssuedClaims> {
-	private String givenName;
+//  <ic:InformationCardPrivateData> ?
+//  <ic:MasterKey> xs:base64Binary </ic:MasterKey>
+//  <ic:ClaimValueList> ?
+//    <ic:ClaimValue Uri="xs:anyURI" ...> +
+//      <ic:Value> xs:string </ic:Value>
+//    </ic:ClaimValue>
+//  </ic:ClaimValueList>
+//</ic:InformationCardPrivateData>
 
-	private String surname;
-
-	private String emailAddress;
-
-	private String streetAddress;
-
-	private String locality;
+	Hashtable<String, String>claimValueList = new Hashtable<String, String>();
 	
-	private String webpage;
-
-	private String stateOrProvince;
-
-	private String postalCode;
-
-	private String country;
-
-	private String primaryPhone;
-
-	private String otherPhone;
-
-	private String mobilePhone;
-
-	private String dateOfBirth;
-
-	private String privatePersonalIdentifier;
-
-	private String gender;
+	public Collection<String> getKeySet() {
+		return Collections.unmodifiableCollection(claimValueList.keySet());
+	}
 
 	public void setGivenName(String givenName) {
-		this.givenName = givenName;
+		claimValueList.put(Constants.IC_NS_GIVENNAME, givenName);
 	}
 
 	public String getGivenName() {
-		return givenName;
+		return claimValueList.get(Constants.IC_NS_GIVENNAME);
 	}
 
 	public void setSurname(String surname) {
-		this.surname = surname;
+		claimValueList.put(Constants.IC_NS_SURNAME, surname);
 	}
 
 	public String getSurname() {
-		return surname;
+		return claimValueList.get(Constants.IC_NS_SURNAME);
 	}
 
 	public void setEmailAddress(String emailAddress) {
-		this.emailAddress = emailAddress;
+		claimValueList.put(Constants.IC_NS_EMAILADDRESS, emailAddress);
 	}
 
 	public String getEmailAddress() {
-		return emailAddress;
+		return claimValueList.get(Constants.IC_NS_EMAILADDRESS);
 	}
 
 	public void setStreetAddress(String streetAddress) {
-		this.streetAddress = streetAddress;
+		claimValueList.put(Constants.IC_NS_STREETADDRESS, streetAddress);
 	}
 
 	public String getStreetAddress() {
-		return streetAddress;
+		return claimValueList.get(Constants.IC_NS_STREETADDRESS);
 	}
 
 	public void setLocality(String locality) {
-		this.locality = locality;
+		claimValueList.put(Constants.IC_NS_LOCALITY, locality);
+	}
+
+	public String getLocality() {
+		return claimValueList.get(Constants.IC_NS_LOCALITY);
 	}
 
 	public void setWebPage(String webpage) {
-		this.webpage = webpage;
+		claimValueList.put(Constants.IC_NS_WEBPAGE, webpage);
 	}
 	
 	public String getWebPage() {
-		return webpage;
+		return claimValueList.get(Constants.IC_NS_WEBPAGE);
 	}
 	
-	public String getLocality() {
-		return locality;
-	}
-
 	public void setStateOrProvince(String stateOrProvince) {
-		this.stateOrProvince = stateOrProvince;
+		claimValueList.put(Constants.IC_NS_STATEORPROVINCE, stateOrProvince);
 	}
 
 	public String getStateOrProvince() {
-		return stateOrProvince;
+		return claimValueList.get(Constants.IC_NS_STATEORPROVINCE);
 	}
 
 	public void setPostalCode(String postalCode) {
-		this.postalCode = postalCode;
+		claimValueList.put(Constants.IC_NS_POSTALCODE, postalCode);
 	}
 
 	public String getPostalCode() {
-		return postalCode;
+		return claimValueList.get(Constants.IC_NS_POSTALCODE);
 	}
 
 	public void setCountry(String country) {
-		this.country = country;
+		claimValueList.put(Constants.IC_NS_COUNTRY, country);
 	}
 
 	public String getCountry() {
-		return country;
+		return claimValueList.get(Constants.IC_NS_COUNTRY);
 	}
 
 	public void setPrimaryPhone(String primaryPhone) {
-		this.primaryPhone = primaryPhone;
+		claimValueList.put(Constants.IC_NS_HOMEPHONE, primaryPhone);
 	}
 
 	public String getPrimaryPhone() {
-		return primaryPhone;
+		return claimValueList.get(Constants.IC_NS_HOMEPHONE);
 	}
 
 	public void setOtherPhone(String otherPhone) {
-		this.otherPhone = otherPhone;
+		claimValueList.put(Constants.IC_NS_OTHERPHONE, otherPhone);
 	}
 
 	public String getOtherPhone() {
-		return otherPhone;
+		return claimValueList.get(Constants.IC_NS_OTHERPHONE);
 	}
 
 	public void setMobilePhone(String mobilePhone) {
-		this.mobilePhone = mobilePhone;
+		claimValueList.put(Constants.IC_NS_MOBILEPHONE, mobilePhone);
 	}
 
 	public String getMobilePhone() {
-		return mobilePhone;
+		return claimValueList.get(Constants.IC_NS_MOBILEPHONE);
 	}
 
 	public void setDateOfBirth(String dateOfBirth) {
-		this.dateOfBirth = dateOfBirth;
+		claimValueList.put(Constants.IC_NS_DATEOFBIRTH, dateOfBirth);
 	}
 
 	public String getDateOfBirth() {
-		return dateOfBirth;
+		return claimValueList.get(Constants.IC_NS_DATEOFBIRTH);
 	}
 
 	public void setPrivatePersonalIdentifier(String privatePersonalIdentifier) {
-		this.privatePersonalIdentifier = privatePersonalIdentifier;
+		claimValueList.put(Constants.IC_NS_PRIVATEPERSONALIDENTIFIER, privatePersonalIdentifier);
 	}
 
 	public String getPrivatePersonalIdentifier() {
-		return privatePersonalIdentifier;
+		return claimValueList.get(Constants.IC_NS_PRIVATEPERSONALIDENTIFIER);
 	}
 
 	public void setGender(String gender) {
-		this.gender = gender;
+		claimValueList.put(Constants.IC_NS_GENDER, gender);
 	}
 
 	public String getGender() {
-		return gender;
+		return claimValueList.get(Constants.IC_NS_GENDER);
 	}
 
+	public void setClaim(String uri, String value) {
+		claimValueList.put(uri, value);
+	}
+
+	public String getClaim(String uri) {
+		return claimValueList.get(uri);
+	}
+
+//  <ic:ClaimValueList> ?
+//  <ic:ClaimValue Uri="xs:anyURI" ...> +
+//    <ic:Value> xs:string </ic:Value>
+//  </ic:ClaimValue>
+//</ic:ClaimValueList>
+
+	public String toXML() {
+		StringBuffer sb = new StringBuffer();;
+		for (String key : claimValueList.keySet()) {
+			String value = claimValueList.get(key);
+			if (value != null && !"".equals(value)) {
+				sb.append("<ic:ClaimValue Uri=" + key + ">");
+				sb.append(" <ic:Value>" + value + "</ic:Value>");
+				sb.append("<ic:ClaimValue>");
+			}
+		}
+		if (sb.length() > 0) {
+			return "<ic:ClaimValueList xmlns:ic=\"" + WSConstants.INFOCARD_NAMESPACE + "\">"+ sb.toString() + "</ic:ClaimValueList>";
+		}
+		return "";
+	}
+	
 	@Override
 	public int compareTo(SelfIssuedClaims o) {
 		int comparison;
 		
-		if (surname != null) {
-			comparison = surname.compareTo(o.surname);
+		if (getSurname() != null) {
+			comparison = getSurname().compareTo(o.getSurname());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.surname != null) return -1;
+			if (o.getSurname() != null) return -1;
 		}
 		
-		if (givenName != null) {
-			comparison = givenName.compareTo(o.givenName);
+		if (getGivenName() != null) {
+			comparison = getGivenName().compareTo(o.getGivenName());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.givenName != null) return -1;
+			if (o.getGivenName() != null) return -1;
 		}
 
-		if (country != null) {
-			comparison = country.compareTo(o.country);
+		if (getCountry() != null) {
+			comparison = getCountry().compareTo(o.getCountry());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.country != null) return -1;
+			if (o.getCountry() != null) return -1;
 		}
 
-		if (stateOrProvince != null) {
-			comparison = stateOrProvince.compareTo(o.stateOrProvince);
+		if (getStateOrProvince() != null) {
+			comparison = getStateOrProvince().compareTo(o.getStateOrProvince());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.stateOrProvince != null) return -1;
+			if (o.getStateOrProvince() != null) return -1;
 		}
 
-		if (locality != null) {
-			comparison = locality.compareTo(o.locality);
+		if (getLocality() != null) {
+			comparison = getLocality().compareTo(o.getLocality());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.locality != null) return -1;
+			if (o.getLocality() != null) return -1;
 		}
 
-		if (postalCode != null) {
-			comparison = postalCode.compareTo(o.postalCode);
+		if (getPostalCode() != null) {
+			comparison = getPostalCode().compareTo(o.getPostalCode());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.postalCode != null) return -1;
+			if (o.getPostalCode() != null) return -1;
 		}
 
-		if (streetAddress != null) {
-			comparison = streetAddress.compareTo(o.streetAddress);
+		if (getStreetAddress() != null) {
+			comparison = getStreetAddress().compareTo(o.getStreetAddress());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.streetAddress != null) return -1;
+			if (o.getStreetAddress() != null) return -1;
 		}
 
-		if (emailAddress != null) {
-			comparison = emailAddress.compareTo(o.emailAddress);
+		if (getEmailAddress() != null) {
+			comparison = getEmailAddress().compareTo(o.getEmailAddress());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.emailAddress != null) return -1;
+			if (o.getEmailAddress() != null) return -1;
 		}
 
-		if (primaryPhone != null) {
-			comparison = primaryPhone.compareTo(o.primaryPhone);
+		if (getPrimaryPhone() != null) {
+			comparison = getPrimaryPhone().compareTo(o.getPrimaryPhone());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.primaryPhone != null) return -1;
+			if (o.getPrimaryPhone() != null) return -1;
 		}
 
-		if (otherPhone != null) {
-			comparison = otherPhone.compareTo(o.otherPhone);
+		if (getOtherPhone() != null) {
+			comparison = getOtherPhone().compareTo(o.getOtherPhone());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.otherPhone != null) return -1;
+			if (o.getOtherPhone() != null) return -1;
 		}
 		
-		if (mobilePhone != null) {
-			comparison = mobilePhone.compareTo(o.mobilePhone);
+		if (getMobilePhone() != null) {
+			comparison = getMobilePhone().compareTo(o.getMobilePhone());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.mobilePhone != null) return -1;
+			if (o.getMobilePhone() != null) return -1;
 		}
 		
-		if (dateOfBirth != null) {
-			comparison = dateOfBirth.compareTo(o.dateOfBirth);
+		if (getDateOfBirth() != null) {
+			comparison = getDateOfBirth().compareTo(o.getDateOfBirth());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.dateOfBirth != null) return -1;
+			if (o.getDateOfBirth() != null) return -1;
 		}
 		
-		if (gender != null) {
-			comparison = gender.compareTo(o.gender);
+		if (getGender() != null) {
+			comparison = getGender().compareTo(o.getGender());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.gender != null) return -1;
+			if (o.getGender() != null) return -1;
 		}
 		
-		if (webpage != null) {
-			comparison = webpage.compareTo(o.webpage);
+		if (getWebPage() != null) {
+			comparison = getWebPage().compareTo(o.getWebPage());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.webpage != null) return -1;
+			if (o.getWebPage() != null) return -1;
 		}
 
-		if (privatePersonalIdentifier != null) {
-			comparison = privatePersonalIdentifier.compareTo(o.privatePersonalIdentifier);
+		if (getPrivatePersonalIdentifier() != null) {
+			comparison = getPrivatePersonalIdentifier().compareTo(o.getPrivatePersonalIdentifier());
 			if (comparison != 0) return comparison;
 		} else {
-			if (o.privatePersonalIdentifier != null) return -1;
+			if (o.getPrivatePersonalIdentifier() != null) return -1;
 		}
-		
+		// TODO ??? Axel: extra claims beyond the standard ones ???
 		return 0;
 	}
 

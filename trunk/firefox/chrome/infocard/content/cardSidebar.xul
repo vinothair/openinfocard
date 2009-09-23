@@ -30,7 +30,7 @@
 <!DOCTYPE page SYSTEM "chrome://infocard/locale/cardmanager.dtd">
 <page title="&cardmanager.title;"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	xmlns:html="http://www.w3.org/1999/xhtml" onload="cardManagerLoad()">
+	xmlns:html="http://www.w3.org/1999/xhtml" onload="sidebarLoad()">
 	<stringbundleset id="stringbundleset">
 		<stringbundle id="string-bundle"
 			src="chrome://infocard/locale/infocards.properties" />
@@ -44,34 +44,9 @@
 	<script src="chrome://infocard/content/openid.js" />
 	<script src="chrome://infocard/content/cmDebug.js" />
 	<script src="chrome://infocard/content/infocards.js" />
+	<script src="chrome://infocard/content/sidebar.js" />
 	<script src="chrome://infocard/content/cardstore.js" />
 	<script src="chrome://infocard/content/tokenissuerXUL.js" />
-	<!--
-	<script> 
-		if (TokenIssuer.initialize() == true) { 
-			icDebug("load TokenIssuer.initialize == true"); 
-		} else { 
-			icDebug("load TokenIssuer.initialize == false"); 
-		} 
-	</script>
-	-->
-	<keyset>
-		<key id="cancel-key" keycode="VK_ESCAPE" oncommand="cancel();" />
-		<key id="disable-key" keycode="VK_ESCAPE" modifiers="shift"
-			oncommand="disable();" />
-		<key id="disable-key-Q" keycode="D" modifiers="accel" oncommand="disable();" />
-		<key id="insert-key" keycode="VK_INSERT" oncommand="newCard();" />
-	</keyset>
-	<hbox id="mainbar">
-		<vbox>
-			<label id="mainlabel" value="&cardmanager.daylabel;" />
-		</vbox>
-		<vbox flex="1">
-			<spacer></spacer>
-		</vbox>
-	</hbox>
-	<hbox id="listarea">
-		<hbox id="openID"></hbox>
-		<arrowscrollbox flex="1" orient="vertical" id="cardselection"></arrowscrollbox>
-	</hbox>
+
+	<scrollbox style='overflow: auto;' flex="1" orient="vertical" id="cardselection"></scrollbox>
 </page>
