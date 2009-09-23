@@ -1,5 +1,6 @@
 package org.xmldap.infocard.roaming;
 
+import java.util.Collection;
 import java.util.Random;
 
 import nu.xom.Attribute;
@@ -24,6 +25,10 @@ public class SelfIssuedInformationCardPrivateData implements InformationCardPriv
 	String masterKey = null;
 	SelfIssuedClaims selfIssuedClaims = null;
 	
+	public SelfIssuedClaims getSelfIssuedClaims() {
+		return selfIssuedClaims;
+	}
+
 	public SelfIssuedInformationCardPrivateData() {
     	Random random = new Random();
     	byte[] bytes = new byte[256];
@@ -62,176 +67,18 @@ public class SelfIssuedInformationCardPrivateData implements InformationCardPriv
 		   			for (int i=0; i<elts.size(); i++) {
 		   				Element claimValueElement = elts.get(i);
 		   				String uri = claimValueElement.getAttributeValue("Uri");
-		   				if (org.xmldap.infocard.Constants.IC_NS_GIVENNAME.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
+		   				{
 		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
 			   				if (valueElements.size() != 1) {
 			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
 			   				} else {
+			   					if (selfIssuedClaims == null) {
+			   						selfIssuedClaims = new SelfIssuedClaims();
+			   					}
 			   					Element valueElement = valueElements.get(0);
 			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setGivenName(value);
+			   					selfIssuedClaims.setClaim(uri, value);
 			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_SURNAME.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setSurname(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_EMAILADDRESS.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setEmailAddress(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_STREETADDRESS.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setStreetAddress(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_STATEORPROVINCE.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setStateOrProvince(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_POSTALCODE.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setPostalCode(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_COUNTRY.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setCountry(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_HOMEPHONE.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setPrimaryPhone(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_OTHERPHONE.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setOtherPhone(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_MOBILEPHONE.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setMobilePhone(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_DATEOFBIRTH.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setDateOfBirth(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_GENDER.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setGender(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_LOCALITY.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setLocality(value);
-			   				}
-		   				} else if (org.xmldap.infocard.Constants.IC_NS_WEBPAGE.equals(uri)) {
-		   					if (selfIssuedClaims == null) {
-		   						selfIssuedClaims = new SelfIssuedClaims();
-		   					}
-		   					Elements valueElements = claimValueElement.getChildElements("Value", WSConstants.INFOCARD_NAMESPACE);
-			   				if (valueElements.size() != 1) {
-			   					throw new ParsingException("Found " + valueElements.size() + " Value elements for Uri " + uri + " in  ic:InformationCardPrivateData");
-			   				} else {
-			   					Element valueElement = valueElements.get(0);
-			   					String value = valueElement.getValue();
-			   					selfIssuedClaims.setWebPage(value);
-			   				}
-		   				} else {
-		   					throw new ParsingException("Found unknown Uri in self-issued ic:InformationCardPrivateData: " + uri);
 		   				}
 		   			}
 		   		}
@@ -241,9 +88,9 @@ public class SelfIssuedInformationCardPrivateData implements InformationCardPriv
 	   	}
 	}
 	
-	private void addClaimValue(Element claimValueList, String claimName, String nameSpace, String value) {
+	private void addClaimValue(Element claimValueList, String uri, String value) {
         Element claimValueElt = new Element("ClaimValue", WSConstants.INFOCARD_NAMESPACE);
-        Attribute uriElt = new Attribute("Uri", nameSpace+claimName);
+        Attribute uriElt = new Attribute("Uri", uri);
         claimValueElt.addAttribute(uriElt);
         Element valueElt = new Element("Value", WSConstants.INFOCARD_NAMESPACE);
         claimValueElt.appendChild(valueElt);
@@ -258,30 +105,26 @@ public class SelfIssuedInformationCardPrivateData implements InformationCardPriv
         masterKeyElt.appendChild(masterKey);
         informationCardPrivateData.appendChild(masterKeyElt);
 
-        if (selfIssuedClaims != null) {
-	        Element claimValueList = new Element("ClaimValueList", WSConstants.INFOCARD_NAMESPACE);
-	        informationCardPrivateData.appendChild(claimValueList);
 
-	        String claimsNamespace = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX;
-			addClaimValue(claimValueList, "givenname", claimsNamespace, selfIssuedClaims.getGivenName());
-			addClaimValue(claimValueList, "surname", claimsNamespace, selfIssuedClaims.getSurname());
-			addClaimValue(claimValueList, "emailaddress", claimsNamespace, selfIssuedClaims.getEmailAddress());
-			addClaimValue(claimValueList, "streetaddress", claimsNamespace, selfIssuedClaims.getStreetAddress());
-			addClaimValue(claimValueList, "locality", claimsNamespace, selfIssuedClaims.getLocality());
-			addClaimValue(claimValueList, "stateorprovince", claimsNamespace, selfIssuedClaims.getStateOrProvince());
-			addClaimValue(claimValueList, "postalcode", claimsNamespace,	selfIssuedClaims.getPostalCode());
-			addClaimValue(claimValueList, "country", claimsNamespace, selfIssuedClaims.getCountry());
-			addClaimValue(claimValueList, "primaryphone", claimsNamespace, selfIssuedClaims.getPrimaryPhone());
-			addClaimValue(claimValueList, "otherphone", claimsNamespace,selfIssuedClaims.getOtherPhone());
-			addClaimValue(claimValueList, "mobilephone",	claimsNamespace, selfIssuedClaims.getMobilePhone());
-			addClaimValue(claimValueList, "dateofbirth",	claimsNamespace, selfIssuedClaims.getDateOfBirth());
-			addClaimValue(claimValueList, "privatepersonalidentifier", claimsNamespace,selfIssuedClaims.getPrivatePersonalIdentifier());
-			addClaimValue(claimValueList, "gender", claimsNamespace, selfIssuedClaims.getGender());
-			addClaimValue(claimValueList, "webpage", claimsNamespace, selfIssuedClaims.getWebPage());
+        if (selfIssuedClaims != null) {
+            Collection<String>keySet = selfIssuedClaims.getKeySet();
+            if (keySet.size() > 0) {
+		        Element claimValueList = new Element("ClaimValueList", WSConstants.INFOCARD_NAMESPACE);
+		        informationCardPrivateData.appendChild(claimValueList);
+	
+		        for (String key : keySet) {
+        			addClaimValue(claimValueList, key, selfIssuedClaims.getClaim(key));
+		        }
+            }
         }
         return informationCardPrivateData;
 	}
 
+	public String toXML() {
+		Element elt = serialize();
+		return elt.toXML();
+	}
+	
 	@Override
 	public int compareTo(SelfIssuedInformationCardPrivateData obj) {
 	    	if (this == obj) return 0;

@@ -577,8 +577,8 @@ function setCardManaged(requiredClaims, optionalClaims, list, row1Id, row2Id, cl
 	try {
 		var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
 
-		icDebug("setCardManaged requiredClaims: " + requiredClaims);
-		icDebug("setCardManaged optionalClaims: " + optionalClaims);
+//		icDebug("setCardManaged requiredClaims: " + requiredClaims);
+//		icDebug("setCardManaged optionalClaims: " + optionalClaims);
 		
 			var managedRows = document.getElementById(row1Id);
 			
@@ -587,12 +587,12 @@ function setCardManaged(requiredClaims, optionalClaims, list, row1Id, row2Id, cl
 	  		 managedRows.removeChild(managedRows.childNodes[0]);
 			}
 			
-			icDebug("setCardManaged: number of supported claims: " + list.length());
+//			icDebug("setCardManaged: number of supported claims: " + list.length());
 			
 			for (var index=0; index<list.length(); index++) {
 			 var supportedClaim = list[index];
 			 var uri = supportedClaim.@Uri.toXMLString();
-			 icDebug("setCardManaged: uri=" + uri);
+//			 icDebug("setCardManaged: uri=" + uri);
 			 
 			 if (uri == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") {
 				 continue;
@@ -607,7 +607,7 @@ function setCardManaged(requiredClaims, optionalClaims, list, row1Id, row2Id, cl
 	  		 if (optionalClaims != null) {
 	  		  var ui = optionalClaims.indexOf(uri);
 	  		  if (ui != -1) {
-	  			  icDebug("optional claim:" + uri);
+//	  			  icDebug("optional claim:" + uri);
 	  			  var thisClaim = optionalClaims.substr(ui);
 	  			  value = getVariableClaimValue(thisClaim);
 	  		  }
@@ -615,22 +615,22 @@ function setCardManaged(requiredClaims, optionalClaims, list, row1Id, row2Id, cl
 	  		 if (requiredClaims != null) {
 	  		  var ui = requiredClaims.indexOf(uri);
 	  		  if (ui != -1) {
-	  			  icDebug("requiredClaim claim:" + uri);
+//	  			  icDebug("requiredClaim claim:" + uri);
 	  	 		  var thisClaim = requiredClaims.substr(ui);
 	  	 		  value = getVariableClaimValue(thisClaim);
 	  		  }
 	  		 }
 	  		 
 	  		 if ((claimValues !== undefined) && (claimValues !== null)) {
-				icDebug("setCardManaged: number of claimValues: " + claimValues.length());
+//				icDebug("setCardManaged: number of claimValues: " + claimValues.length());
 				for (var ci=0; ci<claimValues.length(); ci++) {
 					var claimValue = claimValues[ci];
-					icDebug("setCardManaged: claimValue=" + claimValue.toXMLString());
+//					icDebug("setCardManaged: claimValue=" + claimValue.toXMLString());
 					var claimUri = claimValue.@Uri.toXMLString();
 					if (claimUri === uri) {
 						value = claimValue.ic::Value.text();
 					} else {
-						icDebug("setCardManaged: claimUri=" + claimUri + " uri=" + uri);
+//						icDebug("setCardManaged: claimUri=" + claimUri + " uri=" + uri);
 					}
 				}
 			 }

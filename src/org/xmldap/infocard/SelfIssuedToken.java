@@ -32,6 +32,7 @@ import nu.xom.Element;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
+import org.xmldap.infocard.roaming.SelfIssuedInformationCardPrivateData;
 import org.xmldap.saml.*;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.BaseEnvelopedSignature;
@@ -382,92 +383,84 @@ public class SelfIssuedToken implements Serializable {
 		return getSelfIssuedToken();
 	}
 
-	public static String getDataValue(Element data, String claim)
-	{
-		Element nameElm = data.getFirstChildElement(claim);
-		if (nameElm != null)
-			return nameElm.getValue();
-		return "";
-	}
-
-	public static SelfIssuedToken setTokenClaims(Element data,
+	public static SelfIssuedToken setTokenClaims(SelfIssuedClaims selfIssuedClaims,
 			SelfIssuedToken token, String claims) {
 		// the argument to indexOf is a kind of shorthand...
 		// should we use the complete string?
 		if (claims.indexOf("givenname") != -1) {
-			String value = getDataValue(data, "givenname");
+			String value = selfIssuedClaims.getGivenName();
 			if ((value != null) && !value.equals("")) {
 				token.setGivenName(value);
 			}
 		}
 		if (claims.indexOf("surname") != -1) {
-			String value = getDataValue(data, "surname");
+			String value = selfIssuedClaims.getSurname();
 			if ((value != null) && !value.equals("")) {
 				token.setSurname(value);
 			}
 		}
 		if (claims.indexOf("emailaddress") != -1) {
-			String value = getDataValue(data, "emailaddress");
+			String value = selfIssuedClaims.getEmailAddress();
 			if ((value != null) && !value.equals("")) {
 				token.setEmailAddress(value);
 			}
 		}
 		if (claims.indexOf("streetaddress") != -1) {
-			String value = getDataValue(data, "streetaddress");
+			String value = selfIssuedClaims.getStreetAddress();
 			if ((value != null) && !value.equals("")) {
 				token.setStreetAddress(value);
 			}
 		}
 		if (claims.indexOf("locality") != -1) {
-			String value = getDataValue(data, "locality");
+			String value = selfIssuedClaims.getLocality();
 			if ((value != null) && !value.equals("")) {
 				token.setLocality(value);
 			}
 		}
 		if (claims.indexOf("stateorprovince") != -1) {
-			String value = getDataValue(data, "stateorprovince");
+			String value = selfIssuedClaims.getStateOrProvince();
 			if ((value != null) && !value.equals("")) {
 				token.setStateOrProvince(value);
 			}
 		}
 		if (claims.indexOf("postalcode") != -1) {
-			String value = getDataValue(data, "postalcode");
+			String value = selfIssuedClaims.getPostalCode();
 			if ((value != null) && !value.equals("")) {
 				token.setPostalCode(value);
 			}
 		}
 		if (claims.indexOf("country") != -1) {
-			String value = getDataValue(data, "country");
+			String value = selfIssuedClaims.getCountry();
 			if ((value != null) && !value.equals("")) {
 				token.setCountry(value);
 			}
 		}
 		if (claims.indexOf("primaryphone") != -1) {
-			String value = getDataValue(data, "primaryphone");
+			String value = selfIssuedClaims.getPrimaryPhone();
 			if ((value != null) && !value.equals("")) {
 				token.setPrimaryPhone(value);
 			}
 		}
 		if (claims.indexOf("otherphone") != -1) {
-			String value = getDataValue(data, "otherphone");
+			String value = selfIssuedClaims.getOtherPhone();
 			if ((value != null) && !value.equals("")) {
 				token.setOtherPhone(value);
 			}
 		}
 		if (claims.indexOf("mobilephone") != -1) {
-			String value = getDataValue(data, "mobilephone");
+			String value = selfIssuedClaims.getMobilePhone();
 			if ((value != null) && !value.equals("")) {
 				token.setMobilePhone(value);
 			}
 		}
 		if (claims.indexOf("dateofbirth") != -1) {
-			String value = getDataValue(data, "dateofbirth");
+			String value = selfIssuedClaims.getDateOfBirth();
 			if ((value != null) && !value.equals("")) {
 				token.setDateOfBirth(value);
 			}
 		}
 		if (claims.indexOf("gender") != -1) {
-			String value = getDataValue(data, "gender");
+			String value = selfIssuedClaims.getGender();
 			if ((value != null) && !value.equals("")) {
 				token.setGender(value);
 			}

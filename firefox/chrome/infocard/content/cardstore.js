@@ -55,7 +55,7 @@ function getCard(cardid){
 
 function readCardStore() {
  var cardFile = read(db);
- cardstoreDebug("readCardStore:" + cardFile);
+// cardstoreDebug("readCardStore:" + cardFile);
  return cardFile;
 }
 
@@ -571,9 +571,12 @@ function newSelfIssuedCard(callback) {
     if (count > 0) {
     	var claimValueList = "<ic:ClaimValueList>" + claims + "</ic:ClaimValueList>";
     	privateCardData = "<ic:InformationCardPrivateData xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">"
+    		+ masterKey
     		+ claimValueList + "</ic:InformationCardPrivateData>";
     } else {
-    	privateCardData = "<ic:InformationCardPrivateData xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"/>";
+    	privateCardData = "<ic:InformationCardPrivateData xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">"
+    		+ masterKey
+    		+ "</ic:InformationCardPrivateData>";
     }
     
     supportedClaims += "<ic:SupportedClaimType " +

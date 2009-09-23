@@ -137,6 +137,47 @@ var InformationCardStatusbar = {
 		}
     },
     
+    _findInformationCardObjectAndClick : function(doc) {
+        var iLoop;
+        var itemCount = 0;
+       
+        var objElems = doc.getElementsByTagName( "OBJECT");
+       
+        IdentitySelectorDiag.logMessage( "statusbar", "Found " +
+                objElems.length + " object(s) on " + doc.location);
+               
+        for( iLoop = 0; iLoop < objElems.length; iLoop++)
+        {
+                var objElem = objElems[ iLoop];
+                var objTypeStr = objElem.getAttribute( "TYPE");
+               
+                if( (objTypeStr !== null &&
+                                objTypeStr.toLowerCase() == nsICardObjTypeStr) ||
+                        objElem._type == nsICardObjTypeStr)
+                {
+                    IdentitySelectorDiag.logMessage( "statusbar", "Found infocard object on " + doc.location);
+                    
+//                    var event = document.createEvent("MouseEvents");
+//                    event.initMouseEvent("click", true, true, window,
+//                    0, 0, 0, 0, 0, false, false, false, false, 0, null);
+//                    objElem.dispatchEvent(evt);
+                    
+                    var form = objElem.parentNode;
+    				while (form != null) {
+    					if (form.tagName != undefined && form.tagName == "FORM") {
+    						// the objElem is inside a form -> submit it
+    						var evnt = doc.createEvent("Event");
+    						evnt.initEvent("submit", true, true);
+    						form.dispatchEvent(evnt);
+    						return true;
+    					}
+    					form = form.parentNode;
+    				}
+                }
+        }
+        return false;
+    },
+    
     statusbarClick : function() {
         var doc = gBrowser.selectedBrowser.contentDocument;
         if( doc.wrappedJSObject !== undefined) {
@@ -150,6 +191,8 @@ var InformationCardStatusbar = {
          	  InformationCardHelper.callIdentitySelector(doc);
               }
            else {
+        	    if (InformationCardStatusbar._findInformationCardObjectAndClick(doc) === true) return;
+        	    
 				if (doc.__identityselector__.openidReturnToUri !== undefined) {
 					InformationCardHelper.callIdentitySelector(doc);
 				} else {

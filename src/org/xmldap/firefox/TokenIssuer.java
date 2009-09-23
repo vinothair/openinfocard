@@ -67,6 +67,7 @@ import javax.security.auth.x500.X500Principal;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Nodes;
+import nu.xom.XPathContext;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Sequence;
@@ -90,11 +91,13 @@ import org.xmldap.infocard.roaming.InformationCardPrivateData;
 import org.xmldap.infocard.roaming.ManagedInformationCardPrivateData;
 import org.xmldap.infocard.roaming.RoamingInformationCard;
 import org.xmldap.infocard.roaming.RoamingStore;
+import org.xmldap.infocard.roaming.SelfIssuedInformationCardPrivateData;
 import org.xmldap.saml.Subject;
 import org.xmldap.util.Base64;
 import org.xmldap.util.CertsAndKeys;
 import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.XSDDateTime;
+import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.XmlUtils;
 import org.xmldap.xmldsig.Jsr105Signatur;
 import org.xmldap.xmlenc.EncryptedData;
@@ -450,11 +453,13 @@ public class TokenIssuer {
 			X509Certificate[] chain)
 	throws TokenIssuanceException {
 		String orgIdString = orgIdString(relyingpartyCert);
-		
+		System.out.println("orgIdString="+orgIdString);
 		String qualifiedOrgIdString = qualifiedOrgIdString(chain, orgIdString);
+		System.out.println("qualifiedOrgIdString="+qualifiedOrgIdString);
 		try {
 			byte[] qualifiedOrgIdBytes = qualifiedOrgIdString.getBytes("UTF-8");
 			byte[] rpIdentifier = sha256(qualifiedOrgIdBytes);
+			System.out.println("rpIdentifier="+rpIdentifier);
 			return rpIdentifier;
 		} catch (UnsupportedEncodingException e) {
 			throw new TokenIssuanceException(e);
@@ -903,23 +908,68 @@ public class TokenIssuer {
 		} catch (IOException e) {
 			throw new TokenIssuanceException(e);
 		} catch (nu.xom.ParsingException e) {
-			throw new TokenIssuanceException(e);		}
-
-		Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
-		Element data = (Element) dataNodes.get(0);
-
-		String ppi = "";
-
-
-		Nodes ppiNodes = infocard.query("/infocard/privatepersonalidentifier");
-		Element ppiElm = (Element) ppiNodes.get(0);
-		if (ppiElm != null) {
-		    ppi = ppiElm.getValue();
-		} else {
-		    throw new TokenIssuanceException(
-		            "Error: This infocard has no privatepersonalidentifier!");
+			throw new TokenIssuanceException(e);		
 		}
 
+//		System.out.println("INFO: TokenIssuer Infocard:" + infocard.toXML());
+		
+		SelfIssuedInformationCardPrivateData siicpd = null;
+		{
+			XPathContext context = new XPathContext();
+			context.addNamespace("ic", WSConstants.INFOCARD_NAMESPACE);
+			Nodes nodes = infocard.query("/infocard/ic:InformationCardPrivateData", context);
+			if (nodes.size() > 0) {
+				Element siicpdElt = (Element)nodes.get(0);
+				try {
+					System.out.println("INFO: TokenIssuer hier: " + siicpdElt.toXML());
+					siicpd = new SelfIssuedInformationCardPrivateData(siicpdElt);
+					System.out.println("INFO: TokenIssuer da");
+				} catch (ParsingException e) {
+					throw new TokenIssuanceException(e);
+				}
+			} else {
+				System.out.println("Exception infocard:" + infocard.toXML());
+				throw new TokenIssuanceException(
+			            "Error: This infocard does not have '/infocard/ic:InformationCardPrivateData'!");
+			}
+		}
+
+		if (siicpd != null) {
+			System.out.println("INFO: TokenIssuer SelfIssuedInformationCardPrivateData:" + siicpd.toXML());
+		} else {
+			System.out.println("INFO: TokenIssuer SelfIssuedInformationCardPrivateData is null");
+			throw new TokenIssuanceException("TokenIssuer SelfIssuedInformationCardPrivateData is null");
+		}
+
+//		Element data = null;
+//		{
+//			Nodes dataNodes = infocard.query("/infocard/carddata/selfasserted");
+//			if (dataNodes.size() > 0) {
+//				data = (Element) dataNodes.get(0);
+//			} else {
+//				throw new TokenIssuanceException(
+//	            "Error: This infocard does not have '/infocard/carddata/selfasserted'!");
+//			}
+//		}
+		
+		String ppi = "";
+		// remove /infocard/privatepersonalidentifier from javascript code TODO
+//		{
+//			Nodes ppiNodes = infocard.query("/infocard/privatepersonalidentifier/infocard/privatepersonalidentifier");
+//			if (ppiNodes.size() > 0) {
+//				Element ppiElm = (Element) ppiNodes.get(0);
+//				if (ppiElm != null) {
+//				    ppi = ppiElm.getValue();
+//				} else {
+//				    throw new TokenIssuanceException(
+//				            "Error: This infocard has no privatepersonalidentifier!");
+//				}
+//			} else {
+//				throw new TokenIssuanceException(
+//	            "Error: This infocard does not have '/infocard/privatepersonalidentifier'!");
+//			}
+//		}
+		
 		String cardId = "";
 		Nodes cardIdNodes = infocard.query("/infocard/id");
 		Element cardIdElm = (Element) cardIdNodes.get(0);
@@ -940,7 +990,7 @@ public class TokenIssuer {
    //				+ relyingPartyCert.getSubjectDN().toString());
 
 		issuedToken = getSelfAssertedToken(
-				relyingPartyCert, requiredClaims, optionalClaims, issuedToken, data, ppi, 
+				relyingPartyCert, requiredClaims, optionalClaims, issuedToken, siicpd, ppi, 
 				signingCert, signingKey, audience, confirmationMethod);
 		return issuedToken;
 	}
@@ -962,7 +1012,8 @@ public class TokenIssuer {
 	public static String getSelfAssertedToken(
 			X509Certificate relyingPartyCert, 
 			String requiredClaims, String optionalClaims, 
-			String issuedToken, Element data, String ppi,
+			String issuedToken, 
+			SelfIssuedInformationCardPrivateData siicpd, String ppi,
 			X509Certificate signingCert,
 			PrivateKey signingKey,
 			String audience,
@@ -1017,14 +1068,14 @@ public class TokenIssuer {
 
 		if (requiredClaims == null) {
 		    if (optionalClaims != null) {
-		        token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, optionalClaims);
+		        token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(siicpd.getSelfIssuedClaims(), token, optionalClaims);
 		    } else { // hm, lets throw everything we have at the RP
-		        token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, ALL_CLAIMS);
+		        token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(siicpd.getSelfIssuedClaims(), token, ALL_CLAIMS);
 		    }
 		} else { // requiredClaim are present
-		    token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, requiredClaims);
+		    token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(siicpd.getSelfIssuedClaims(), token, requiredClaims);
 		    if (optionalClaims != null) {
-		        token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(data, token, optionalClaims);
+		        token = org.xmldap.infocard.SelfIssuedToken.setTokenClaims(siicpd.getSelfIssuedClaims(), token, optionalClaims);
 		    }
 		}
 
