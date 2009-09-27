@@ -124,7 +124,7 @@
 			out.println("<tr><td>" + "RequireStrongRecipientIdentity" + ":</td><td><input type=\"checkbox\" name=\"" + "RequireStrongRecipientIdentity" + "\" class=\"forminput\"/></td></tr>");
 		}
 %>
-    <tr><td colspan=2><br/><input type="submit" value="Create a new card"/></td></tr>
+    <tr><td colspan="2"><br/><input type="submit" value="Create a new card"/></td></tr>
     </table>
 </form>
 
