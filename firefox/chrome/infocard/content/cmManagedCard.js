@@ -161,6 +161,7 @@ function sendRST(sendRstParameter) {
 
         rst = rst + "</o:Password></o:UsernameToken>";
     }  else if (!(usercredential.ic::KerberosV5Credential == undefined)) {
+    	Components.utils.reportError("unimplemented user credential type: KerberosV5Credential");
 		alert("unimplemented user credential type: KerberosV5Credential");
 		return null;
     } else if (!(usercredential.ic::X509V3Credential == undefined)) {
@@ -168,6 +169,7 @@ function sendRST(sendRstParameter) {
         var wsa = new Namespace("wsa", "http://www.w3.org/2005/08/addressing");
         var mex = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
         var wss = new Namespace("wss", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
+    	Components.utils.reportError("unimplemented user credential type: X509V3Credential");
 		alert("unimplemented user credential type: X509V3Credential");
 		return null;
     } else if (!(usercredential.ic::SelfIssuedCredential == undefined)) {
@@ -176,6 +178,7 @@ function sendRST(sendRstParameter) {
         var usercredential = usercredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier;
         icDebug("usercredential:" + usercredential);
         icDebug("stsCert:" + managedCard.carddata.managed.stsCert);
+    	Components.utils.reportError("unimplemented user credential type: SelfIssuedCredential");
 		alert("unimplemented user credential type: SelfIssuedCredential");
 		return null;
 	} else {
@@ -364,143 +367,143 @@ function processManagedCard(
 		icDebug("processManagedCard::isUserCredentialChild>>>" + icUserCredentialChild);
 		var localName = icUserCredentialChild.name().localName;
 		icDebug("processManagedCard::isUserCredentialChild.name().localname>>>" + localName);
-		if (localName === "UsernamePasswordCredential") { // currently only UsernamePasswordCredential is supported
-			var tsEndpointAddress = ts.wsa::EndpointReference.wsa::Address; 
-			icDebug("processManagedCard::tsEndpointAddress>>>" + tsEndpointAddress);
-			
-			var tsWsaMetadata = ts.wsa::EndpointReference.wsa::Metadata;
-			icDebug("processManagedCard::tsMetadata>>>" + tsWsaMetadata);
-			var wsx = new Namespace("wsx", "http://schemas.xmlsoap.org/ws/2004/09/mex");
-			var tsWsxMetadata = tsWsaMetadata.wsx::Metadata;
-			icDebug("processManagedCard::tsWsxMetadata>>>" + tsWsxMetadata);
-			var tsMetadataSection = tsWsxMetadata.wsx::MetadataSection; 
-			icDebug("processManagedCard::tsMetadataSection>>>" + tsMetadataSection);
-			var tsMetadataReference = tsMetadataSection.wsx::MetadataReference;
-			icDebug("processManagedCard::tsMetadataReference>>>" + tsMetadataReference);
-			var tsMexAddress = tsMetadataReference.wsa::Address;
-			if ((tsMexAddress === null) || (tsMexAddress.length() == 0)) {
-				icDebug("processManagedCard::wsa:tsMexAddress not found in >>>" + tsMetadataReference.toXMLString());
-				return null;
-			}
-			icDebug("processManagedCard::tsMexAddress>>>" + tsMexAddress);
-			var tsMexAddressStr = tsMexAddress.toString();
-			if (mexes[tsMexAddressStr] !== undefined) {
-				mexResponse = mexes[tsMexAddressStr];
-			} else {
-				mexResponse = getMex1(xmlreplace(tsMexAddress), tsMexAddress);
-			}
-			if (mexResponse !== null) {
-				icDebug("processManagedCard::mexResponse>>>" + mexResponse);
-				mexes[tsMexAddressStr] = mexResponse;
-				
-				var mexXml = new XML(mexResponse);
-				var wsdl = new Namespace("http://schemas.xmlsoap.org/wsdl/");
-				var wsa10 = new Namespace("http://www.w3.org/2005/08/addressing");
-				var wsp = new Namespace("http://schemas.xmlsoap.org/ws/2004/09/policy");
-				var wsu = new Namespace("http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
-				
-				var addresses = mexXml..wsdl::port.wsa10::EndpointReference.wsa10::Address;
-				var tsEndpointAddressStr = tsEndpointAddress.toString();
 
-				for each (var anAddress in addresses) {
-					var theAddress = anAddress.child(0);
-//					icDebug("processManagedCard::typeof("+theAddress+")>>>" + typeof(theAddress));
-//					icDebug("processManagedCard::typeof("+tsEndpointAddress+")>>>" + typeof(tsEndpointAddress));
-					if (theAddress.toString() === tsEndpointAddressStr) {
-						icDebug("processManagedCard::address>>>" + theAddress);
-						var addressParent = anAddress.parent(); // EndpointReference
-						icDebug("processManagedCard::parent >>>" + addressParent);
-						var endpointReferenceParent = addressParent.parent(); // wsdl::port
-						icDebug("processManagedCard::port   >>>" + endpointReferenceParent);
-						var binding = endpointReferenceParent.@binding;
-						icDebug("processManagedCard::port.@binding>>>" + binding);
-						var colonIndex = binding.indexOf(":");
-						binding = binding.substring(colonIndex+1); // works even if colonIndex == -1
-						var bindingStr = binding.toString();
-						
-						var bindings = mexXml..wsdl::binding;
-						for each (var aBinding in bindings) {
-							var bindingNameAttrValueStr = aBinding.@name.toString();
-							if (bindingNameAttrValueStr === bindingStr) {
-								icDebug("processManagedCard::bindingNameAttrValueStr>>>" + bindingNameAttrValueStr);
-								var wspPolicyReference = aBinding.wsp::PolicyReference;
-								if (wspPolicyReference !== null) {
-									icDebug("processManagedCard::wspPolicyReference>>>" + wspPolicyReference.toXMLString());
-									var wspPolicyReferenceURIStr = wspPolicyReference.@URI.toString();
-									icDebug("processManagedCard::wspPolicyReferenceURI>>>" + wspPolicyReferenceURIStr);
-									var hashmarkIndex = wspPolicyReferenceURIStr.indexOf("#");
-									if (hashmarkIndex == 0) {
-										var wspPolicyReferenceURIStr = wspPolicyReferenceURIStr.substring(1);
-										icDebug("processManagedCard::wspPolicyReferenceURIStr>>>" + wspPolicyReferenceURIStr);
-										var wsdlPolicies = mexXml..wsdl::definitions.wsp::Policy;
-										icDebug("processManagedCard::wsdlPolicies.length()>>>" + wsdlPolicies.length());
-										for each (var aPolicy in wsdlPolicies) {
-											//icDebug("processManagedCard::aPolicy>>>" + aPolicy.toXMLString());
-											var wsuId = aPolicy.@wsu::Id;
-											var wsuIdStr = wsuId.toString();
-											if (wsuIdStr === wspPolicyReferenceURIStr) {
-												icDebug("processManagedCard::wsuIdStr>>>" + wsuIdStr);
-												// try both security policies
-												var sp2005 = new Namespace("http://schemas.xmlsoap.org/ws/2005/07/securitypolicy");
-												var sp2007 = new Namespace("http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702");
-												var spTransportBinding = aPolicy..sp2005::TransportBinding;
-												if (spTransportBinding === null || spTransportBinding.length() == 0) {
-													icDebug("processManagedCard::spTransportBinding (2005) null in sPolicy>>>" + aPolicy.toString());
-//													var spTransportBinding = aPolicy..sp2007::TransportBinding;
-//													if (spTransportBinding === null || spTransportBinding.length() == 0) {
-//														icDebug("processManagedCard::spTransportBinding (2007) null too>>>");
-//														continue;
-//													}
-													continue;
-												}
-												icDebug("processManagedCard::before sendRST: tsEndpointAddressStr=" + tsEndpointAddressStr);
-											    icDebug("processManagedCard::typeof(tsEndpointAddressStr):" + typeof(tsEndpointAddressStr));
-												icDebug("processManagedCard::before sendRST: icUserCredential=" + icUserCredential);
-											    icDebug("processManagedCard::typeof(icUserCredential):" + typeof(icUserCredential));
-												try {
-													var sendRstParameter = {};
-													sendRstParameter.tsEndpointAddressStr = tsEndpointAddressStr;
-													sendRstParameter.icUserCredential = icUserCredential;
-													sendRstParameter.managedCard = managedCard;
-													sendRstParameter.requiredClaims = requiredClaims;
-													sendRstParameter.optionalClaims = optionalClaims;
-													sendRstParameter.tokenType = tokenType;
-													sendRstParameter.clientPseudonym = clientPseudonym;
-													sendRstParameter.relyingPartyURL = relyingPartyURL;
-													sendRstParameter.relyingPartyCertB64 = relyingPartyCertB64;
-													sendRstParameter.issuerPolicy = issuerPolicy;
-													var aToken = sendRST(sendRstParameter);
-													if ((aToken !== undefined) && (aToken !== null)) {
-														return aToken;
-													} else {
-														icDebug("processManagedCard: sendRST returned null or undefined for: " + tsEndpointAddressStr);
-													}
-												} catch (sendRstException) {
-													icDebug("processManagedCard: sendRST threw: " + sendRstException);
-												}
-											} else {
-												//icDebug("processManagedCard::WSUID   >>>" + wsuIdStr);
+		 // currently only UsernamePasswordCredential is supported
+		var tsEndpointAddress = ts.wsa::EndpointReference.wsa::Address; 
+		icDebug("processManagedCard::tsEndpointAddress>>>" + tsEndpointAddress);
+		
+		var tsWsaMetadata = ts.wsa::EndpointReference.wsa::Metadata;
+		icDebug("processManagedCard::tsMetadata>>>" + tsWsaMetadata);
+		var wsx = new Namespace("wsx", "http://schemas.xmlsoap.org/ws/2004/09/mex");
+		var tsWsxMetadata = tsWsaMetadata.wsx::Metadata;
+		icDebug("processManagedCard::tsWsxMetadata>>>" + tsWsxMetadata);
+		var tsMetadataSection = tsWsxMetadata.wsx::MetadataSection; 
+		icDebug("processManagedCard::tsMetadataSection>>>" + tsMetadataSection);
+		var tsMetadataReference = tsMetadataSection.wsx::MetadataReference;
+		icDebug("processManagedCard::tsMetadataReference>>>" + tsMetadataReference);
+		var tsMexAddress = tsMetadataReference.wsa::Address;
+		if ((tsMexAddress === null) || (tsMexAddress.length() == 0)) {
+			icDebug("processManagedCard::wsa:tsMexAddress not found in >>>" + tsMetadataReference.toXMLString());
+			return null;
+		}
+		icDebug("processManagedCard::tsMexAddress>>>" + tsMexAddress);
+		var tsMexAddressStr = tsMexAddress.toString();
+		if (mexes[tsMexAddressStr] !== undefined) {
+			mexResponse = mexes[tsMexAddressStr];
+		} else {
+			mexResponse = getMex1(xmlreplace(tsMexAddress), tsMexAddress);
+		}
+		if (mexResponse !== null) {
+			icDebug("processManagedCard::mexResponse>>>" + mexResponse);
+			mexes[tsMexAddressStr] = mexResponse;
+			
+			var mexXml = new XML(mexResponse);
+			var wsdl = new Namespace("http://schemas.xmlsoap.org/wsdl/");
+			var wsa10 = new Namespace("http://www.w3.org/2005/08/addressing");
+			var wsp = new Namespace("http://schemas.xmlsoap.org/ws/2004/09/policy");
+			var wsu = new Namespace("http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
+			
+			var addresses = mexXml..wsdl::port.wsa10::EndpointReference.wsa10::Address;
+			var tsEndpointAddressStr = tsEndpointAddress.toString();
+
+			for each (var anAddress in addresses) {
+				var theAddress = anAddress.child(0);
+//				icDebug("processManagedCard::typeof("+theAddress+")>>>" + typeof(theAddress));
+//				icDebug("processManagedCard::typeof("+tsEndpointAddress+")>>>" + typeof(tsEndpointAddress));
+				if (theAddress.toString() === tsEndpointAddressStr) {
+					icDebug("processManagedCard::address>>>" + theAddress);
+					var addressParent = anAddress.parent(); // EndpointReference
+					icDebug("processManagedCard::parent >>>" + addressParent);
+					var endpointReferenceParent = addressParent.parent(); // wsdl::port
+					icDebug("processManagedCard::port   >>>" + endpointReferenceParent);
+					var binding = endpointReferenceParent.@binding;
+					icDebug("processManagedCard::port.@binding>>>" + binding);
+					var colonIndex = binding.indexOf(":");
+					binding = binding.substring(colonIndex+1); // works even if colonIndex == -1
+					var bindingStr = binding.toString();
+					
+					var bindings = mexXml..wsdl::binding;
+					for each (var aBinding in bindings) {
+						var bindingNameAttrValueStr = aBinding.@name.toString();
+						if (bindingNameAttrValueStr === bindingStr) {
+							icDebug("processManagedCard::bindingNameAttrValueStr>>>" + bindingNameAttrValueStr);
+							var wspPolicyReference = aBinding.wsp::PolicyReference;
+							if (wspPolicyReference !== null) {
+								icDebug("processManagedCard::wspPolicyReference>>>" + wspPolicyReference.toXMLString());
+								var wspPolicyReferenceURIStr = wspPolicyReference.@URI.toString();
+								icDebug("processManagedCard::wspPolicyReferenceURI>>>" + wspPolicyReferenceURIStr);
+								var hashmarkIndex = wspPolicyReferenceURIStr.indexOf("#");
+								if (hashmarkIndex == 0) {
+									var wspPolicyReferenceURIStr = wspPolicyReferenceURIStr.substring(1);
+									icDebug("processManagedCard::wspPolicyReferenceURIStr>>>" + wspPolicyReferenceURIStr);
+									var wsdlPolicies = mexXml..wsdl::definitions.wsp::Policy;
+									icDebug("processManagedCard::wsdlPolicies.length()>>>" + wsdlPolicies.length());
+									for each (var aPolicy in wsdlPolicies) {
+										//icDebug("processManagedCard::aPolicy>>>" + aPolicy.toXMLString());
+										var wsuId = aPolicy.@wsu::Id;
+										var wsuIdStr = wsuId.toString();
+										if (wsuIdStr === wspPolicyReferenceURIStr) {
+											icDebug("processManagedCard::wsuIdStr>>>" + wsuIdStr);
+											// try both security policies
+											var sp2005 = new Namespace("http://schemas.xmlsoap.org/ws/2005/07/securitypolicy");
+											var sp2007 = new Namespace("http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702");
+											var spTransportBinding = aPolicy..sp2005::TransportBinding;
+											if (spTransportBinding === null || spTransportBinding.length() == 0) {
+												icDebug("processManagedCard::spTransportBinding (2005) null in sPolicy>>>" + aPolicy.toString());
+//												var spTransportBinding = aPolicy..sp2007::TransportBinding;
+//												if (spTransportBinding === null || spTransportBinding.length() == 0) {
+//													icDebug("processManagedCard::spTransportBinding (2007) null too>>>");
+//													continue;
+//												}
+												continue;
 											}
+											icDebug("processManagedCard::before sendRST: tsEndpointAddressStr=" + tsEndpointAddressStr);
+										    icDebug("processManagedCard::typeof(tsEndpointAddressStr):" + typeof(tsEndpointAddressStr));
+											icDebug("processManagedCard::before sendRST: icUserCredential=" + icUserCredential);
+										    icDebug("processManagedCard::typeof(icUserCredential):" + typeof(icUserCredential));
+											try {
+												var sendRstParameter = {};
+												sendRstParameter.tsEndpointAddressStr = tsEndpointAddressStr;
+												sendRstParameter.icUserCredential = icUserCredential;
+												sendRstParameter.managedCard = managedCard;
+												sendRstParameter.requiredClaims = requiredClaims;
+												sendRstParameter.optionalClaims = optionalClaims;
+												sendRstParameter.tokenType = tokenType;
+												sendRstParameter.clientPseudonym = clientPseudonym;
+												sendRstParameter.relyingPartyURL = relyingPartyURL;
+												sendRstParameter.relyingPartyCertB64 = relyingPartyCertB64;
+												sendRstParameter.issuerPolicy = issuerPolicy;
+												var aToken = sendRST(sendRstParameter);
+												if ((aToken !== undefined) && (aToken !== null)) {
+													return aToken;
+												} else {
+													icDebug("processManagedCard: sendRST returned null or undefined for: " + tsEndpointAddressStr);
+												}
+											} catch (sendRstException) {
+												icDebug("processManagedCard: sendRST threw: " + sendRstException);
+											}
+										} else {
+											//icDebug("processManagedCard::WSUID   >>>" + wsuIdStr);
 										}
-									} else {
-										icDebug("processManagedCard::hasmarkIndex>>>" + hashmarkIndex);
 									}
 								} else {
-									Components.utils.reportError("processManagedCard::wspPolicyReference===null! aBinding=" + aBinding);
-									return null;
+									icDebug("processManagedCard::hasmarkIndex>>>" + hashmarkIndex);
 								}
+							} else {
+								Components.utils.reportError("processManagedCard::wspPolicyReference===null! aBinding=" + aBinding);
+								return null;
 							}
 						}
-					} else {
-						// icDebug("processManagedCard::ADDRESS>>>" + theAddress);		
 					}
+				} else {
+					// icDebug("processManagedCard::ADDRESS>>>" + theAddress);		
 				}
-			} else {
-				icDebug("processManagedCard::mexResponse is null for " + tsMexAddress);
 			}
 		} else {
-			icDebug("processManagedCard::authenticationmethod not supported>>>" + localname);
+			icDebug("processManagedCard::mexResponse is null for " + tsMexAddress);
 		}
+	
+
 	}
     return null;
 }
