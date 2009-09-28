@@ -124,7 +124,7 @@ public class CardServlet extends HttpServlet {
 			}
 			issuerName = properties.getProperty("issuerName");
 			if (issuerName == null) {
-				issuerName = "https://" + domainname + servletPath;
+				issuerName = "https://" + domainname + "/" + servletPath;
 			}
 
 			{
