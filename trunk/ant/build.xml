@@ -122,6 +122,25 @@
 
     </target>
 
+        <target name="dist_XMLDAP_OC" depends="init">
+
+           <property file="${websrc.dir}/xmldap_oc/WEB-INF/rp.properties"/>
+        	
+           <mkdir dir="${build.dir}/xmldap.org/"/>
+            <copy todir="${build.dir}/xmldap.org/xmldap_oc/">
+              <fileset dir="${websrc.dir}/xmldap_oc/"/>
+            </copy>
+            <replace  dir="${build.dir}/xmldap.org/xmldap_oc/WEB-INF/" 
+            	includes="xmldap_rp.xrds" propertyFile="${websrc.dir}/xmldap_oc/WEB-INF/rp.properties">
+                <replacefilter token="@domain@" property="domain"/>
+            </replace>
+            <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/xmldap_oc/WEB-INF/lib/"/>
+            <jar destfile="${build.dir}/xmldap.org/xmldap_oc.war">
+                <fileset dir="${build.dir}/xmldap.org/xmldap_oc/"/>
+            </jar>
+
+        </target>
+
     <target name="dist_PAYMENTCARD_RP" depends="init">
 
         <mkdir dir="${build.dir}/paymentCard_rp/"/>
@@ -144,21 +163,6 @@
         <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_rp/geopriv_rp/WEB-INF/lib/"/>
         <jar destfile="${build.dir}/geopriv_rp/geopriv_rp.war">
             <fileset dir="${build.dir}/geopriv_rp/geopriv_rp/"/>
-        </jar>
-
-    </target>
-
-    <target name="dist_IPLocation_RP" depends="init">
-
-       <property file="${websrc.dir}/iplocation_rp/WEB-INF/rp.properties"/>
-    	
-       <mkdir dir="${build.dir}/iplocation_rp/"/>
-        <copy todir="${build.dir}/iplocation_rp/iplocation_rp/">
-          <fileset dir="${websrc.dir}/iplocation_rp/"/>
-        </copy>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/iplocation_rp/iplocation_rp/WEB-INF/lib/"/>
-        <jar destfile="${build.dir}/iplocation_rp/iplocation_rp.war">
-            <fileset dir="${build.dir}/iplocation_rp/iplocation_rp/"/>
         </jar>
 
     </target>
@@ -247,45 +251,6 @@
         <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
         <jar destfile="${build.dir}/geopriv_sts/geopriv_sts.war">
             <fileset dir="${build.dir}/geopriv_sts/${geopriv_stspath}/"/>
-        </jar>
-
-    </target>
-
-    <target name="dist_IPLocation_STS" depends="init">
-
-
-        <mkdir dir="${build.dir}/iplocation_sts/"/>
-        <copy todir="${build.dir}/iplocation_sts/${iplocation_stspath}/">
-          <fileset dir="${websrc.dir}/iplocation_sts/"/>
-        </copy>
-        <property file="${websrc.dir}/iplocation_sts/WEB-INF/sts.properties"/>
-
-        <replace  file="${build.dir}/iplocation_sts/${iplocation_stspath}/WEB-INF/web.xml" propertyFile="${websrc.dir}/iplocation_sts/WEB-INF/sts.properties">
-         <replacefilter token="@keystore@" value="keystore"/>
-            <replacefilter token="@key@" property="key.name"/>
-            <replacefilter token="@keystore-password@" property="keystore.password"/>
-            <replacefilter token="@key-password@" property="key.password"/>
-            <replacefilter token="@domain@" property="domain"/>
-            <replacefilter token="@image-file@" property="image.file"/>
-            <replacefilter token="@supportedClaimsClass@" property="supportedClaimsClass"/>
-        </replace>
-
-        <replace  dir="${build.dir}/iplocation_sts/${iplocation_stspath}/WEB-INF/" 
-        	includes="mex*.xml" propertyFile="${websrc.dir}/iplocation_sts/WEB-INF/sts.properties">
-            <replacefilter token="@domain@" property="domain"/>
-            <replacefilter token="@sts@" property="servletPath"/>
-        </replace>
-
-        <copy toDir="${build.dir}/iplocation_sts/${iplocation_stspath}/WEB-INF/lib/">
-          <fileset dir="${libLocation.dir}"/>
-        </copy>
-
-    	<copy file="${lib.dir}/derby.jar" toDir="${build.dir}/iplocation_sts/${iplocation_stspath}/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/iplocation_sts/${iplocation_stspath}/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/iplocation_sts/${iplocation_stspath}/WEB-INF/lib/"/>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/iplocation_sts/${iplocation_stspath}/WEB-INF/lib/"/>
-        <jar destfile="${build.dir}/iplocation_sts/iplocation_sts.war">
-            <fileset dir="${build.dir}/iplocation_sts/${iplocation_stspath}/"/>
         </jar>
 
     </target>
@@ -435,6 +400,6 @@
     <target name="build_xmldap.org" depends="build_core, dist_XMLDAP_RP, dist_XMLDAP_STS"/>
     <target name="build_firefox" depends="build_core, distFireFox"/>
 
-    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_IPLocation_RP, dist_IPLocation_STS, dist_PAYMENTCARD_RP, dist_PAYMENTCARD_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS, dist_UPDATE"/>
+    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_XMLDAP_OC, dist_PAYMENTCARD_RP, dist_PAYMENTCARD_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS, dist_UPDATE"/>
 
 </project>
