@@ -90,7 +90,10 @@ public class RelyingPartyServlet extends HttpServlet {
 
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    	response.setContentType("application/xhtml+xml");
+		String AcceptHeaderValue = request.getHeader("Accept");
+		if ((AcceptHeaderValue != null) && (AcceptHeaderValue.indexOf("application/xhtml+xml") >= 0)) {
+			response.setContentType("application/xhtml+xml");
+		}
         PrintWriter out = response.getWriter();
     	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 
@@ -128,7 +131,10 @@ public class RelyingPartyServlet extends HttpServlet {
 	}
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    	response.setContentType("application/xhtml+xml");
+		String AcceptHeaderValue = request.getHeader("Accept");
+		if ((AcceptHeaderValue != null) && (AcceptHeaderValue.indexOf("application/xhtml+xml") >= 0)) {
+			response.setContentType("application/xhtml+xml");
+		}
         PrintWriter out = response.getWriter();
         	out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 
