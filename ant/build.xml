@@ -17,9 +17,6 @@
             <fileset dir="${libext.dir}">
 	           <include name="**/*.jar"/>
             </fileset>
-            <fileset dir="${libLocation.dir}">
-	           <include name="**/*.jar"/>
-            </fileset>
         </path>
     	<property name="xpiVersion" value="${openinfocard.version}.${DSTAMP}${TSTAMP}" />
     </target>
@@ -52,17 +49,17 @@
             depends="init, prepjars">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${build.classes.dir}"/>
-        <javac srcdir="${src.dir}"
-                destdir="${build.classes.dir}"
-                debug="true"
-                deprecation="true"
-                fork="true"
-                includeAntRuntime="false">
+        <javac destdir="${build.classes.dir}"
+               debug="true"
+               deprecation="true"
+               fork="true"
+               includeAntRuntime="false">
+        	<src path="${src.dir}"/>
+        	<src path="${wallet.dir}"/>
             <classpath>
                 <path refid="ext.classpath.path"/>
             </classpath>
         </javac>
-
         <mkdir dir="${build.dist.dir}"/>
 
         <jar destfile="${build.dist.dir}/${component.name}-${component.version}.jar">
