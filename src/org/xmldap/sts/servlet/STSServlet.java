@@ -101,7 +101,7 @@ public class STSServlet  extends HttpServlet {
             }
             issuerName = properties.getProperty("issuerName");
             if (issuerName == null) {
-            	issuerName = "https://" + domain + "/" + servletPath;
+            	issuerName = "https://" + domain + servletPath;
             }
 
             String supportedClaimsClass = properties.getProperty("supportedClaimsClass");

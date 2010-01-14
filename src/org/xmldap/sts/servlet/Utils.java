@@ -153,10 +153,15 @@ public class Utils {
         Attribute context = new Attribute("Context","ProcessRequestSecurityToken");
         rstr.addAttribute(context);
 
-        Element tokenType = new Element(WSConstants.TRUST_PREFIX + ":TokenType", WSConstants.TRUST_NAMESPACE_05_02);
-        tokenType.appendChild("urn:oasis:names:tc:SAML:1.0:assertion");
-        rstr.appendChild(tokenType);
-
+        String tokentype = (String)requestElements.get("tokenType");
+        if (tokentype == null) {
+        	tokentype = WSConstants.SAML11_NAMESPACE;
+        }
+        Element tokenTypeElt = new Element(WSConstants.TRUST_PREFIX + ":TokenType", WSConstants.TRUST_NAMESPACE_05_02);
+        tokenTypeElt.appendChild(tokentype);
+        rstr.appendChild(tokenTypeElt);
+        log.log(java.util.logging.Level.INFO, "tokentype " + tokentype);
+        
         Element requestType = new Element(WSConstants.TRUST_PREFIX + ":RequestType", WSConstants.TRUST_NAMESPACE_05_02);
         requestType.appendChild("http://schemas.xmlsoap.org/ws/2005/02/trust/Issue");
         rstr.appendChild(requestType);
@@ -164,9 +169,10 @@ public class Utils {
         Element rst = new Element(WSConstants.TRUST_PREFIX + ":RequestedSecurityToken", WSConstants.TRUST_NAMESPACE_05_02);
 
         AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(cert);
-        ManagedToken token = new ManagedToken(keyInfo,key);
+        ManagedToken token = new ManagedToken(keyInfo,key,tokentype);
 
-        if ((restrictedTo != null) && (relyingPartyCertB64 != null)) {
+//        if ((restrictedTo != null) && (relyingPartyCertB64 != null)) {
+        if (restrictedTo != null) {
         	token.setRestrictedTo(restrictedTo, relyingPartyCertB64);
         }
         

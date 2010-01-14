@@ -65,14 +65,21 @@ public class ManagedToken implements Serializable {
 	private String restrictedTo = null;
 	private String relyingPartyCertB64 = null;
 	
+	private String tokentype = null; // FIXME support SAML2 too. This var is currently unused.
+	
+	public String getTokentype() {
+		return tokentype;
+	}
+
 	//    public ManagedToken( X509Certificate signingCert, PrivateKey signingKey ) {
 	//        this.signingCert = signingCert;
 	//        this.signingKey = signingKey;
 	////        namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
 	//    }
-	public ManagedToken(KeyInfo keyInfo, PrivateKey signingKey) {
+	public ManagedToken(KeyInfo keyInfo, PrivateKey signingKey, String tokentype) {
 		this.keyInfo = keyInfo;
 		this.signingKey = signingKey;
+		this.tokentype = tokentype;
 	}
 
 	public void setIssuer(String issuer) {
