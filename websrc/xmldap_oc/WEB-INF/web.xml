@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">
+<web-app>
+    <servlet>
+        <servlet-name>OpenIdConsumerServlet</servlet-name>
+        <display-name>OpenID Consumer Servlet</display-name>
+        <description>Processes OpenID Provider Responses</description>
+        <servlet-class>org.xmldap.rp.servlet.OpenIdConsumerServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>OpenIdConsumerServlet</servlet-name>
+        <url-pattern>/return_to</url-pattern>
+    </servlet-mapping>
+</web-app>

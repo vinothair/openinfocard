@@ -54,7 +54,10 @@
 	 		basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort();
 	 	}
 	 }
-	response.setContentType("application/xhtml+xml");
+	String AcceptHeaderValue = request.getHeader("Accept");
+	if ((AcceptHeaderValue != null) && (AcceptHeaderValue.indexOf("application/xhtml+xml") >= 0)) {
+		response.setContentType("application/xhtml+xml");
+	}
 
 %>
 <!DOCTYPE html 

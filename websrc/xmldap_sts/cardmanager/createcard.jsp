@@ -14,7 +14,10 @@
 	SupportedClaims supportedClaimsImpl = SupportedClaims.getInstance(supportedClaimsClass);
 	CardStorage storage = new CardStorageEmbeddedDBImpl(supportedClaimsImpl);
     String servletPath = properties.getProperty("servletPath");
-	response.setContentType("application/xhtml+xml");
+	String AcceptHeaderValue = request.getHeader("Accept");
+	if ((AcceptHeaderValue != null) && (AcceptHeaderValue.indexOf("application/xhtml+xml") >= 0)) {
+		response.setContentType("application/xhtml+xml");
+	}
 
 %>
 <!DOCTYPE html 
