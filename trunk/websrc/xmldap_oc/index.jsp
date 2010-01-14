@@ -1,3 +1,4 @@
+<%@ page session="true" %>
 <%!
 
 	String escapeHtmlEntities(String html) {
@@ -26,6 +27,10 @@
  String requiredClaims = properties.getProperty("requiredClaims"); 
  String optionalClaims = properties.getProperty("optionalClaims"); 
  String tokentype = properties.getProperty("tokentype"); 
+ String returnTo = properties.getProperty("returnTo"); 
+ String protocol = properties.getProperty("protocol"); 
+ String OpenIDAuthParameters = properties.getProperty("OpenIDAuthParameters"); 
+ String issuer = properties.getProperty("issuer"); 
 
  String queryString = request.getQueryString();
  if (queryString != null) {
@@ -102,17 +107,22 @@
 
 		 response.setContentType("application/xml");
 		 out.println("<object type=\"application/x-informationcard\" name=\"xmlToken\">");
-		 
+		 out.println("<param name=\"protocol\" value=\"" + protocol + "\"/>");
+		 out.println("<param name=\"OpenIDAuthParameters\" value=\"" + OpenIDAuthParameters + "\"/>");
    		 out.print("<param name=\"privacyUrl\" value=\""); out.print(request.getRequestURL()); out.println("?privacy.txt\"/>");
-		 out.println("<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>");
-		 out.println("<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>");
 		 out.println("<param name=\"privacyVersion\" value=\"1\"/>");
-		 if ((tokentype != null) && (tokentype.length() > 0)) {
-         	out.println("<param name=\"tokenType\" value=\"" + tokentype + "\"/>");
-		 }
+    	 out.println("\t<param name=\"tokenType\" value=\"" + tokentype + "\"/>");
 		 out.println("</object>");
 
 	  
+  } else {
+		if (request.getParameter("logout")!=null)
+		{
+		    session.removeAttribute("openid");
+		    session.removeAttribute("openid-claimed");
+		} else {
+			System.out.println("unhandled querystring: " + queryString);
+		}
   }
  } else {
 		String userAgent = request.getHeader("user-agent");
@@ -130,7 +140,7 @@
 
 <%@page import="java.net.URLEncoder"%><html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Java Based Relying Party</title>
+	<title>XMLDAP OpenID Consumer</title>
 	<%= metaElement %>
     
     <style type="text/css">
@@ -186,45 +196,49 @@
     
 </head>
 <body>
-	<div id="title">java based relying party</div>
+	<div id="title">selector based openid consumer</div>
 	<div id="links">
 	<a href="../">resources</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<a href="http://xmldap.blogspot.com">xmldap.blogspot.com</a>
+	<a href="http://ignisvulpis.blogspot.com">ignisvulpis.blogspot.com</a>
 	</div>
 
 
 	<div>   <br/>
 	<div class="container" id="relying_party">
 
-<h2>Login with an InfoCard</h2>
+<%
+	if (session.getAttribute("openid") != null) {
+%>
+		<div>Logged in as <%= session.getAttribute("openid") %></div>
+		<a href="?logout=true">Log out</a>
+<%	
+	}
+%>
+
+<h2>Login with an openid InfoCard</h2>
     <table border="0">
         <tr>
             <td>
 <% if (request.getHeader("User-Agent").contains("iPhone") || 
 		request.getHeader("User-Agent").contains("iPod")) { 
-	String tokentypeParam = "";
-	if ((tokentype != null) && (tokentype.length() > 0)) {
-		tokentypeParam = "<param name=\"tokenType\" value=\"" + tokentype + "\"/>";
-	}
-
-    String policy = "<object type=\"application/x-informationcard\" name=\"xmlToken\">" +
+      String policy = "<object type=\"application/x-informationcard\" name=\"xmlToken\">" +
       	"<param name=\"privacyUrl\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>" +
       	"<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>" +
       	"<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>" +
-      	tokentypeParam +
+      	"<param name=\"tokenType\" value=\"" + tokentype + "\"/>" +
       	"<param name=\"privacyVersion\" value=\"1\"/>" +
       	"</object>";
       	String encodedPolicy = URLEncoder.encode(policy, "UTF-8");
-    String iPhoneLink = "<a href=\"icard-https://xmldap.org/relyingparty/infocard?_policy=" + 
+      String iPhoneLink = "<a href=\"icard-https://xmldap.org/relyingparty/infocard?_policy=" + 
       	encodedPolicy +
       	"\">Click here to send i-card</a>";
-    out.println(iPhoneLink);
-%>
+      out.println(iPhoneLink);
+      %>
 <% } else { %>
 
-<form method='post' action='./infocard' id='infocard' enctype='application/x-www-form-urlencoded'>
-<p>
 <%
+	out.println("<form method='post' action='" + returnTo + "' id='infocard' enctype='application/x-www-form-urlencoded'>");
+	out.println("<p>");
 	if (isOpenInfocardSelector) {
 %>		
 <!--  ondragover="return false" dragenter="return false"  -->
@@ -246,49 +260,26 @@
     <object type="application/x-informationcard" name="xmlToken">
 <%
 		out.println("\t<param name=\"privacyUrl\" value=\"" + request.getRequestURL() + "?privacy.txt\"/>");
-    	out.println("\t<param name=\"requiredClaims\" value=\"" + requiredClaims + "\"/>");
-    	out.println("\t<param name=\"optionalClaims\" value=\"" + optionalClaims + "\"/>");
-    	if ((tokentype != null) && (tokentype.length() > 0)) {
-	    	out.println("\t<param name=\"tokenType\" value=\"" + tokentype + "\"/>");
-    	}
+		out.println("<param name=\"protocol\" value=\"" + protocol + "\"/>");
+    	out.println("\t<param name=\"tokenType\" value=\"" + tokentype + "\"/>");
+    	out.println("\t<param name=\"issuer\" value=\"" + issuer + "\"/>");
+		out.println("<param name=\"OpenIDAuthParameters\" value=\"" + OpenIDAuthParameters + "\"/>");
+
 %>
     			  <param name="privacyVersion" value="1"/>
     			  <param name="icDropTargetId" value="icDropTarget"/>
     </object>
-</p>
-</form>
-                    <br/>Click on the image above to login with and Infocard.<br/>
+<%
+	out.println("</p>");
+	out.println("</form>");
+%>
+                    <br/>Click on the image above to login with your openID selector.<br/>
 <% } %>
                     <br/><a href="/sts/cardmanager/">Click here to create a managed card.</a>
 
             </td>
         </tr>
     </table>
-
-	
-
-    <h2>Or, if you don't yet have CardSpace installed, I can make a security token for you...</h2>
-
-    <form action="./post.jsp" method="post">
-        <table border="0">
-            <tr><td>First Name:</td><td><input type="text" name="GivenName" class="forminput"/><br/></td></tr>
-            <tr><td>Last Name:</td><td><input type="text" name="Surname" class="forminput"/><br/></td></tr>
-            <tr><td>Email:</td><td><input type="text" name="EmailAddress" class="forminput"/><br/></td></tr>
-            <tr><td colspan="2"><input type="submit" value="Create it for me"/></td></tr>
-        </table>
-
-    </form>
-
-    <br/><br/>
-    <h2>Curious about how it works...?</h2>
-
-        The Java Based Relying Party is a simple CardSpace RP implementation, written in 100% in Java and running on Linux. The RP provides the ability to request and accept information cards from Microsoft CardSpace (InfoCard), or other Identity Selectors, and displays information about the card that was submitted. It currently is only tested with self-asserted cards, and SAML 1.0 assertions<p/>
-
-        This RP developed from the ground up using protocol documentation, and was the first non-Microsoft affiliated relying party on a non-Windows platform.
-
-    <br/>
-    <br/>
-    <a href="http://xmldap.blogspot.com/2006/03/how-to-consume-tokens-from-infocard.html">Here's a brief overview of what it's doing.</a>
 
 <%
 if (userAgent != null) {
