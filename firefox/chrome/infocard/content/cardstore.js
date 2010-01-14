@@ -1,7 +1,7 @@
 var db = "cardDb.xml";
 
 function isCardInStore(cardId) {
-    var cardFile = readCardStore();
+    var cardFile = CardstoreToolkit.readCardStore();
     for each (c in cardFile.infocard) {
     	if ("" + c.id === cardId) {
     		return true;
@@ -53,11 +53,11 @@ function getCard(cardid){
 //    return card;
 }
 
-function readCardStore() {
- var cardFile = read(db);
-// cardstoreDebug("readCardStore:" + cardFile);
- return cardFile;
-}
+//function readCardStore() {
+// var cardFile = read(db);
+//// cardstoreDebug("readCardStore:" + cardFile);
+// return cardFile;
+//}
 
 function storeCard(card){
 cardstoreDebug("storeCard");

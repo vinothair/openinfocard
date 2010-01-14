@@ -1,0 +1,17 @@
+#include "nsISupports.idl"
+
+[function, scriptable, uuid(13e630b8-cafe-456b-ae26-c30b201c8f99)]
+interface ICallback : nsISupports
+{
+	readonly attribute AString id;
+
+	void registerOpenId(in ACString url);
+	void registerSetupUrl(in ACString url);
+};
+
+[scriptable, uuid(DC7D00A8-CAFE-11DD-8B0A-5D0156D89593)]
+interface nsIOpenIDListener : nsISupports
+{
+  void addOpenidListener(in ICallback listener);
+  void removeOpenidListener(in ICallback listener);
+};  

@@ -142,25 +142,46 @@ var TokenIssuer = {
 				this._fail(e);
 		    }
 		    return null;
-		},
-		
-		isPhoneAvailable : function() {
+    },
+    
+    getWalletException : function() {
+      this._trace("getWalletException");
+      try {
+        var result = this.tokenIssuer.getWalletException();
+        return result;
+      } catch(e) {
+        this._fail(e);
+        throw e;
+      }
+    },
+    
+    resetWalletException : function() {
+      this._trace("resetWalletException");
+      try {
+        this.tokenIssuer.resetWalletException();
+      } catch(e) {
+        this._fail(e);
+        throw e;
+      }
+    },
+    
+    isPhoneAvailable : function() {
 			this._trace("isPhoneAvailable");
 			try {
 				var result = this.tokenIssuer.isPhoneAvailable();
 				return result;
 			} catch(e) {
-				this._fail(e);
+				this._fail("isPhoneAvailable" + e);
+				throw e;
 			}
 		},
 		
 		endCardSelection : function() {
 			this._trace("endCardSelection");
 			try {
-				var result = this.tokenIssuer.endCardSelection();
-				return result;
+				this.tokenIssuer.endCardSelection();
 			} catch(e) {
-				this._fail(e);
+				this._fail("endCardSelection" + e);
 			}
 		},
 		
@@ -171,6 +192,7 @@ var TokenIssuer = {
 				return result;
 			} catch(e) {
 				this._fail(e);
+				throw e;
 			}
 		},
 		
@@ -181,24 +203,14 @@ var TokenIssuer = {
 				return result;
 			} catch(e) {
 				this._fail(e);
+				throw e;
 			}
 		},
 		
 		phoneFini : function() {
 			this._trace("phoneFini");
 			try {
-				var result = this.tokenIssuer.phoneFini();
-				return result;
-			} catch(e) {
-				this._fail(e);
-			}
-		},
-		
-		phoneSelectCard : function(policyParams) {
-			this._trace("phoneSelectCard: policyParams=" + policyParams);
-			try {
-				var result = this.tokenIssuer.phoneSelectCard(policyParams);
-				return result;
+			  this.tokenIssuer.phoneFini();
 			} catch(e) {
 				this._fail(e);
 			}

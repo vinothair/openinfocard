@@ -85,6 +85,7 @@ try
                         {
                                 alert( e);
                         }
+                        return null;
                 };
                
                 // Special case for Microsoft sites (such as live.com) that

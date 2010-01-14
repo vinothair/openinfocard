@@ -14,7 +14,7 @@ function sidebarLoad(){
 	    rpIdentifier = computeRpIdentifier(relyingPartyCertB64);
     }
 
-    var cardFile = readCardStore();
+    var cardFile = CardstoreToolkit.readCardStore();
     var cardArea = document.getElementById("cardselection");
     var latestCard;
     var selectMe;
