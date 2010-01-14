@@ -30,19 +30,7 @@ var selectedCard;
 var selectorDebugging = true;
 var tokenIssuerInitialized = false;
 
-function xmlreplace(text) {
- var str;
- if (typeof(text) == 'string') {
-  str = text;
- } else {
-  str = "" + text + "";
- }
- var result = str.replace(/&/g, "&amp;");
- result = result.replace(/</g, "&lt;");
- result = result.replace(/>/g, "&gt;");
- result = result.replace(/\?/g, "%3F");
- return(result);
-}
+var gOpenIdManager = null;
 
 // update the list of RPs to where a card has been sent
 // this function is called from "ok" -> selectedCard is set
@@ -168,6 +156,32 @@ function computeClientPseudonymPost20080829(policy){
 	return window.btoa(clientPseudonymPpidBytes);
 }
 
+function newFinalizeOpenId(logService, url, error) {
+	if (logService) {
+		logService.logStringMessage('new newFinalizeOpenId: url=' + url + "\nerror=" + error);
+	} else {
+		dump('new newFinalizeOpenId: url=' + url + "\nerror=" + error);
+	}
+    if (url !== null) {
+    	// first remove the listener so we will not be called again while we are destroyed
+    	// finish will close this window
+    	try {
+    		if (gOpenIdManager) {
+    			removeOpenIdListener(gOpenIdManager);
+    			gOpenIdManager = null;
+    		}
+    	} catch (e) {
+    	  logService.logStringMessage("newFinalizeOpenId. Exception: " + e );
+    	}
+    	updateRPs();
+    	finish(url);
+    }
+    if (error !== null) {
+    	alert(error);
+    	window.close();
+    }
+}
+
 function finalizeOpenId(openid_nickname, openid_fullname, openid_email, verified_id, openidServer) {
     icDebug('finalizeOpenId: start');
 
@@ -204,20 +218,20 @@ function finalizeOpenId(openid_nickname, openid_fullname, openid_email, verified
     finish(tokenToReturn);
 }
 
-function getOpenIdReturnTo(extraParams){
+function getOpenIDAuthParameters(extraParams){
 	try {
 		for (var i=0; i<extraParams.length; i++) {
 			var val = JSON.parse(extraParams[i]);
-			if ((val !== null) && (val !== false) && val.hasOwnProperty("openidReturnToUri")) {
-				var openidReturnToUri = "" + val.openidReturnToUri;
-				icDebug("getOpenIdReturnTo: openidReturnToUri = " + openidReturnToUri);
-				return openidReturnToUri;
+			if ((val !== null) && (val !== false) && val.hasOwnProperty("OpenIDAuthParameters")) {
+				var valStr = "" + val.OpenIDAuthParameters;
+				icDebug("getOpenIDAuthParameters: OpenIDAuthParameters = " + valStr);
+				return valStr;
 			} else {
-				icDebug("getOpenIdReturnTo: extraParams[" + i + "] = " + extraParams[i]);
+				icDebug("getOpenIDAuthParameters: extraParams[" + i + "] = " + extraParams[i]);
 			}
 		}
 	} catch (e) {
-		icDebug("getOpenIdReturnTo threw exception: " + e);
+		icDebug("getOpenIDAuthParameters threw exception: " + e);
 	}
 //	return undefined;
 }
@@ -238,11 +252,12 @@ function ok(){
         	setOptionalClaimsSelf(policy);
         } catch (e) {
         	icDebug("setOptionalClaimsSelf failed:" + e);
+        	finish(null);
         }
         //TRUE or FALSE on the second param enabled debug
         tokenToReturn = processCard(policy,selectorDebugging);
         finish(tokenToReturn);
-		updateRPs();
+		  updateRPs();
     } else if (selectedCard.type == "managedCard"){
 		var requiredClaims = policy["requiredClaims"];
 		var optionalClaims = policy["optionalClaims"];
@@ -289,14 +304,22 @@ function ok(){
     	try {
     	    var extraParamsOpenIdReturnTo = null;
     	    if ((policy !== null) && policy.hasOwnProperty("extraParams")) {
-    	    	extraParams = policy.extraParams;
-    	    	extraParamsOpenIdReturnTo = getOpenIdReturnTo(extraParams);
-    	    	icDebug("ok: extraParamsOpenIdReturnTo=" + extraParamsOpenIdReturnTo);
+    	    	var extraParams = policy.extraParams;
+    	    	var extraParamsOpenIDAuthParameters = getOpenIDAuthParameters(extraParams);
+    	    	icDebug("ok: extraParamsOpenIDAuthParameters=" + extraParamsOpenIDAuthParameters);
     	    }
     		
-    		var openidServer = new openid2(selectedCard.id, finalizeOpenId, document, extraParamsOpenIdReturnTo);
+    	    try {
+    	    	gOpenIdManager.setParams(selectedCard.id, newFinalizeOpenId, document, extraParamsOpenIDAuthParameters);
+    	    } catch (ee) {
+    	    	icDebug("cardManagerLoad start. Exception: " + ee );
+    	    }
+    		
+    	    icDebug("ok: typeof(gOpenIdManager.registerSetupUrl)=" + typeof(gOpenIdManager.registerSetupUrl));
+    	    icDebug("ok: typeof(gOpenIdManager.registerSetupUrl)=" + typeof(gOpenIdManager.registerOpenId));
+    	    
         	icDebug("ok: openid 1");
-    		openidServer.doit();
+        	gOpenIdManager.doit();
         	icDebug("ok: openid started");
     	} catch (e) {
     		icDebug("ok: openid setup failed: " + e);
@@ -392,6 +415,67 @@ function getCardId(extraParams){
 //	return undefined;
 }
 
+function getXmldapHttpListener() {
+	try {
+		const CONTRACT_ID = "@xmldap/httplistener-service;1";
+		icDebug("registerOpenIdListener start. href=" + CONTRACT_ID );
+	    var claszInstance = null;
+	    try {
+		    var clasz = Components.classes[CONTRACT_ID];
+			if (clasz !== undefined) {
+				icDebug("registerOpenIdListener start. href=" + clasz );
+				claszInstance = clasz.createInstance();
+				claszInstance = claszInstance.QueryInterface(Components.interfaces.nsIOpenIDListener);
+			} else {
+				icDebug("registerOpenIdListener the class " + CONTRACT_ID + " is not installed");
+			}
+	    } catch(e1) {
+			icDebug("registerOpenIdListener exception:"+e1 );
+	    }
+	    return claszInstance;
+	} catch(e) {
+		icDebug("registerOpenIdListener exception:"+e );
+	    Components.utils.reportError(e);
+	    throw e;
+	}
+}
+
+function registerOpenIdListener(gOpenIdManager) {
+	try {
+		icDebug("registerOpenIdListener start." );
+	    var claszInstance = getXmldapHttpListener();
+	    
+	    if (claszInstance !== null) {
+	    	icDebug("registerOpenIdListener addOpenidListener");
+	    	icDebug("registerOpenIdListener typeof(gOpenIdManager.registerSetupUrl)="+typeof(gOpenIdManager.registerSetupUrl));
+	    	icDebug("registerOpenIdListener typeof(gOpenIdManager.registerOpenId)="+typeof(gOpenIdManager.registerOpenId));
+	    	claszInstance.addOpenidListener(gOpenIdManager)
+	    } else {
+	    	icDebug("registerOpenIdListener Could not register openid listener" );
+	    }
+	} catch(e) {
+		icDebug("registerOpenIdListener exception:"+e );
+	    Components.utils.reportError(e);
+	}
+}
+
+function removeOpenIdListener(gOpenIdManager) {
+	try {
+		icDebug("removeOpenIdListener start." );
+	    var claszInstance = getXmldapHttpListener();
+	    
+	    if (claszInstance !== null) {
+	    	icDebug("removeOpenIdListener removeOpenidListener");
+	    	claszInstance.removeOpenidListener(gOpenIdManager)
+	    } else {
+	    	icDebug("removeOpenIdListener Could not register openid listener" );
+	    }
+	} catch(e) {
+		icDebug("removeOpenIdListener exception:"+e );
+	    Components.utils.reportError(e);
+	}
+}
+
 function cardManagerUnload(){
 	icDebug("cardManagerUnload start. href=" + window.document.location.href );
 	TokenIssuer.finalize();
@@ -402,7 +486,16 @@ function cardManagerLoad(policyParam){
 	// infocard: cardManagerLoad start. href=chrome://infocard/content/cardManager.xul
 	icDebug("cardManagerLoad start. href=" + window.document.location.href );
 	
-	var controlarea = document.getElementById('selectcontrol');
+	try {
+		gOpenIdManager = new openidRP();
+	} catch (ee) {
+		icDebug("cardManagerLoad start. Exception: " + ee );
+		throw ee;
+	}
+
+	registerOpenIdListener(gOpenIdManager);
+	
+    var controlarea = document.getElementById('selectcontrol');
 	if (controlarea) {
 	    var select = document.getElementById('selectcontrol');
 	    select.addEventListener("click", ok, false);
@@ -444,13 +537,20 @@ function cardManagerLoad(policyParam){
     var extraParams = null;
     var extraParamsCardId = null;
     if ((policy !== null) && policy.hasOwnProperty("extraParams")) {
-    	extraParams = policy.extraParams;
+    	var extraParams = policy.extraParams;
     	extraParamsCardId = getCardId(extraParams);
     	icDebug("extraParams length = " + extraParams.length);
     	icDebug("extraParams cardId = " + extraParamsCardId);
     }
 
-    var cardFile = readCardStore();
+    try {
+      var cardstoreManagerSvc = Components.classes["@openinfocard.org/CardstoreManager/service;1"].
+	                             			getService( Components.interfaces.nsIHelloWorld);
+
+      var cardFile = CardstoreToolkit.readCardStore();
+    } catch (eee) {
+    	icDebug("cardManagerLoad exception = " + eee);
+    }
     var cardArea = document.getElementById("cardselection");
     var latestCard;
     var selectMe;
@@ -462,28 +562,32 @@ function cardManagerLoad(policyParam){
     	if (policy != null) {
 			cardClass = computeCardClass(c, policy);
 		}
-        latestCard = createItem(c, cardClass);
-        selectMe = c;
-        cardArea.appendChild(latestCard);
-        count++;
-
-        if (!beenThere) {
-         if (rpIdentifier != null) {
-	      for each (rpId in c.rpIds) {
-           //debug("RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
-	       if (rpId == rpIdentifier) {
-	        //debug("been there at: " + policy["cn"]);
-            beenThere = true;
-            if (scrolledIntoView == false) {
-            	var xpcomInterface = cardArea.scrollBoxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
-   				xpcomInterface.ensureElementIsVisible(latestCard);
-   	        	scrolledIntoView = true;
-            }
-            break;
-           }
-          }
-         }
-        }
+    	if ((cardClass === "contactGreen") || (cardClass === "contactYellow") || (cardClass === "contact")) {
+	        latestCard = createItem(c, cardClass);
+	        selectMe = c;
+	        cardArea.appendChild(latestCard);
+	        count++;
+	
+	        if (!beenThere) {
+	         if (rpIdentifier != null) {
+		      for each (rpId in c.rpIds) {
+	           //debug("RpId:" + rpId + " RpIdentifier:" + rpIdentifier);
+		       if (rpId == rpIdentifier) {
+		        //debug("been there at: " + policy["cn"]);
+	            beenThere = true;
+	            if (scrolledIntoView == false) {
+	            	var xpcomInterface = cardArea.scrollBoxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+	   				xpcomInterface.ensureElementIsVisible(latestCard);
+	   	        	scrolledIntoView = true;
+	            }
+	            break;
+	           }
+	          }
+	         }
+	        }
+    	} else {
+    		icDebug("card does not match cardClass: " + cardClass + "card.id: " + c.id);
+    	}
     }
     
     if ( count != 0) {
@@ -597,6 +701,7 @@ function cardManagerLoad(policyParam){
 }
 
 function setCard(card){
+  try {
     var policy = getPolicy();
 
 	if (policy !== null) {
@@ -702,6 +807,9 @@ function setCard(card){
     	alert("unsupported card type\n" + selectedCard.type);
     	return;
     }
+  } catch (setCardException) {
+    icDebug("setCard: exception: " + setCardException);
+  }
 }
 
 function dblclick(event) {
@@ -875,9 +983,34 @@ var listObserver = {
   		}
 }
 
-// returns true of card tokentype and RP's policy tokentype match
-// if something unexcpected happens then return false
-function computeMatching(card, policy) {
+//returns true of card tokentype and RP's policy tokentype match
+//if something unexcpected happens then return false
+function computeMatchingProtocol(card, policy) {
+	 var protocol = null;
+	 if (policy.hasOwnProperty("protocol")) {
+		 protocol = policy["protocol"];
+	 }
+	 if (protocol === null) return true;
+	 icDebug("protocol: " + protocol + " card:" + card.name);
+	 if (card.type == "managedCard") {
+		 return true;
+	 } else if (card.type == "selfAsserted") {
+		 return true;
+	 } else if (card.type == "openid") {
+		 if (protocol === "urn:oasis:names:tc:OPENID:2.0:assertion") {
+			 return true;
+		 } else {
+			 return false;
+		 }
+	 } else {
+		 icDebug("computeMatchingProtocol: unsupported protocol card:" + card.name);
+	 }
+	 return false;
+}
+
+//returns true of card tokentype and RP's policy tokentype match
+//if something unexcpected happens then return false
+function computeMatchingTokenType(card, policy) {
  var matchingTokenType = false;
  var tokenType = null;
  tokenType = null;
@@ -921,6 +1054,13 @@ function computeMatching(card, policy) {
    } else {
     icDebug("tokenType does not match tokenTypes for self-issued cards:" + tokenType);
    }
+  } else if (card.type == "openid") {
+	  if ((tokenType == "urn:oasis:names:tc:OPENID:2.0:assertion") || (tokenType == "http://specs.openid.net/auth/2.0"))
+	  {
+		  matchingTokenType = true;
+	  } else {
+		  matchingTokenType = false
+	  }
   } else {
    icDebug("unsupported card type");
    matchingTokenType = false;
@@ -953,14 +1093,36 @@ function computeHasBeenSend(card, policy) {
     return beenThere;
 }
 
-// this function is intended to compute the visualization class
-// for this card. It returns one of contactGreen, contactYellow 
-// or contactRed
-// or contact of we are managing cards that is: there is no RP
-// green - 	card is matching the requirements of the RP
-// yellow - card is matching the requirements of the RP but was never sent to RP
-// red -	card is not matching
-// 
+function computeMatchingIssuer(card, policy) {
+	var cardtype;
+	if (card.type == "managedCard") {
+		cardtype = card.ma
+	} else if (card.type == "selfAsserted") {
+		
+	} else if (card.type == "openid") {
+		
+	} else {
+		Components.utils.reportError("computeMatchingIssuer: unsupported card.type=" + card.type);
+		return false;
+	}
+}
+
+function computeMatching(card, policy) {
+	var matching = computeMatchingTokenType(card, policy);
+	if (matching === false) return false;
+	var matching = computeMatchingIssuer(card, policy);
+	if (matching === false) return false;
+	return true;
+}
+
+//this function is intended to compute the visualization class
+//for this card. It returns one of contactGreen, contactYellow 
+//or contactRed
+//or contact of we are managing cards that is: there is no RP
+//green - 	card is matching the requirements of the RP
+//yellow - card is matching the requirements of the RP but was never sent to RP
+//red -	card is not matching
+//
 function computeCardClass(card, policy) {
  var cardClass;
  if ((window.java == undefined) && (card.type == "selfAsserted")) {
@@ -1013,7 +1175,7 @@ function newCard(){
 }
 
 function validateSignature(callback) {
-	var cardFile = readCardStore();
+	var cardFile = CardstoreToolkit.readCardStore();
 	
 	var importedCardJSONStr = null;
 	try {
@@ -1213,3 +1375,4 @@ function processCard(policy, enableDebug){
     	icDebug("processCard: }");
     }
 }
+

@@ -100,7 +100,7 @@ function openinfocard_pageinfoLoad() {
 	}
 	
 	var count = 0;
-    var cardFile = readCardStore();
+    var cardFile = CardstoreToolkit.readCardStore();
     
     for each (c in cardFile.infocard) {
     	var latestCard = createItem(c);

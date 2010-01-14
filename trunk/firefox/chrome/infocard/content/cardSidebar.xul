@@ -41,11 +41,11 @@
 
 	<script src="chrome://infocard/content/crypto/hash.js" />
 	<script src="chrome://infocard/content/json.js" />
-	<script src="chrome://infocard/content/openid.js" />
+	<script src="chrome://infocard/content/openidRP.js" />
 	<script src="chrome://infocard/content/cmDebug.js" />
 	<script src="chrome://infocard/content/infocards.js" />
 	<script src="chrome://infocard/content/sidebar.js" />
-	<script src="chrome://infocard/content/cardstore.js" />
+	<script src="chrome://infocard/content/cardstoreToolkit.js" />
 	<script src="chrome://infocard/content/tokenissuerXUL.js" />
 
 	<scrollbox style='overflow: auto;' flex="1" orient="vertical" id="cardselection"></scrollbox>

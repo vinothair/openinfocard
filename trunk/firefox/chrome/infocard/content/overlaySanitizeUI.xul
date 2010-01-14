@@ -36,6 +36,7 @@
 	<stringbundle id="string-bundle" src="chrome://infocard/locale/infocards.properties"/>
   </stringbundleset>
   <script type="application/x-javascript" src="chrome://infocard/content/overlaySanitizeUI.js"/>
+  <script type="application/x-javascript" src="chrome://infocard/content/cardstoreToolkit.js"/>
   <script type="application/x-javascript" src="chrome://infocard/content/cardstore.js"/>
   <preferences id="sanitizePreferences">
   	<preference id="privacy.item.infocard"              name="privacy.item.infocard"              type="bool" readonly="true"/>

@@ -89,7 +89,7 @@ var IdentitySelector =
                                 availEvent.initEvent( "IdentitySelectorAvailable", true, true);
                                 top.dispatchEvent( availEvent);
                                
-                                if( top.IdentitySelectorAvailable === true)
+                                if( top.hasOwnProperty("IdentitySelectorAvailable") && top.IdentitySelectorAvailable === true)
                                 {
                                         handlerAlreadyInstalled = true;
                                 }
@@ -741,6 +741,11 @@ var IdentitySelector =
                                 IdentitySelectorDiag.logMessage( "extractParameter",
                                         "unknown parameter: " + sourceNode.name +
                                         " = " + sourceNode.value);
+                        		try {
+                        			dataObj[sourceNode.name] = sourceNode.value;
+                        		} catch (ex) {
+                        			IdentitySelectorDiag.logMessage( "extractParameter", "Exception: " + ex);
+                        		}
                                 break;
                 }
         },
@@ -797,99 +802,102 @@ var IdentitySelector =
        
         onICardObjectLoaded : function( event)
         {
-                var target = event ? event.target : this;
-                var doc;
-               
-                if( target.wrappedJSObject)
-                {
-                        target = target.wrappedJSObject;
-                }
-               
-                doc = target.ownerDocument;
-               
-                try
-                {
-                        var objElem = target;
-                        var form = objElem;
-                        var browser = getBrowser();
-                       
-                        if( objElem.__processed === true)
-                        {
-                                IdentitySelectorDiag.logMessage( "onICardObjectLoaded",
-                                        "ICard object has already been processed.");
-                        }
-                        else
-                        {
-                                // Make sure the intercept script has been run on this document.
-                                // In the case of an iframe, it may not have been run.
-                               
-                                if( doc.__identityselector__ === undefined)
-                                {
-                                        IdentitySelector.runInterceptScript( doc);
-                                }
-                               
-                                // Override the value getter
-                               
-                                delete objElem.value;
-                               
-                                objElem.__defineGetter__( "value",
-                                        doc.__identityselector__.valueGetter);
-                                       
-                                // Clear the type attribute if this version of the browser
-                                // doesn't support hiding the notification box
-                               
-                                if( typeof( browser.getNotificationBox) != "function")
-                                {
-                                        if( (objElem._type = objElem.getAttribute(
-                                                "type")) !== undefined)
-                                        {
-                                                objElem._type = objElem._type.toLowerCase();
-                                                objElem.removeAttribute( "type");
-                                        }
-                                }
-                                       
-                                // Intercept all submit actions if the object is embedded within
-                                // a parent form
-                               
-                                while( form !== null)
-                                {
-                                        if( form.tagName !== undefined && form.tagName == "FORM")
-                                        {
-                                                // The form submit method has been hooked.  We still need
-                                                // to register for the submit event, however.
-                                               
-                                                form.addEventListener( "submit",
-                                                        IdentitySelector.onFormSubmit, false);
-                                                break;
-                                        }
-                                       
-                                        form = form.parentNode;
-                                }
-                               
-                                // Set this as the default information card target element
-                               
-                                doc.__identityselector__.targetElem = objElem;
-                               
-                                // Log the event
-                               
-                                IdentitySelectorDiag.logMessage( "onICardObjectLoaded",
-                                        "Processed ICard object.");
-                                       
-                                // Mark the object as 'processed'
-                                       
-                                objElem.__processed = true;
-                        }
-                }
-                catch( e)
-                {
-                        IdentitySelectorDiag.debugReportError( "onICardObjectLoaded", e);
-                }
-               
-                if( !("notificationBoxHidden" in doc.__identityselector__))
-                {
-                        IdentitySelector.onHideNotificationBox();
-                        doc.__identityselector__.notificationBoxHidden = true;
-                }
+          IdentitySelectorDiag.logMessage( "onICardObjectLoaded",
+          "start. caller=" + IdentitySelector.onICardObjectLoaded.caller );
+
+          var target = event ? event.target : this;
+            var doc;
+           
+            if( target.wrappedJSObject)
+            {
+                    target = target.wrappedJSObject;
+            }
+           
+            doc = target.ownerDocument;
+           
+            try
+            {
+                    var objElem = target;
+                    var form = objElem;
+                    var browser = getBrowser();
+                   
+                    if( objElem.__processed === true)
+                    {
+                            IdentitySelectorDiag.logMessage( "onICardObjectLoaded",
+                                    "ICard object has already been processed.");
+                    }
+                    else
+                    {
+                            // Make sure the intercept script has been run on this document.
+                            // In the case of an iframe, it may not have been run.
+                           
+                            if( doc.__identityselector__ === undefined)
+                            {
+                                    IdentitySelector.runInterceptScript( doc);
+                            }
+                           
+                            // Override the value getter
+                           
+                            delete objElem.value;
+                           
+                            objElem.__defineGetter__( "value",
+                                    doc.__identityselector__.valueGetter);
+                                   
+                            // Clear the type attribute if this version of the browser
+                            // doesn't support hiding the notification box
+                           
+                            if( typeof( browser.getNotificationBox) != "function")
+                            {
+                                    if( (objElem._type = objElem.getAttribute(
+                                            "type")) !== undefined)
+                                    {
+                                            objElem._type = objElem._type.toLowerCase();
+                                            objElem.removeAttribute( "type");
+                                    }
+                            }
+                                   
+                            // Intercept all submit actions if the object is embedded within
+                            // a parent form
+                           
+                            while( form !== null)
+                            {
+                                    if( form.tagName !== undefined && form.tagName == "FORM")
+                                    {
+                                            // The form submit method has been hooked.  We still need
+                                            // to register for the submit event, however.
+                                           
+                                            form.addEventListener( "submit",
+                                                    IdentitySelector.onFormSubmit, false);
+                                            break;
+                                    }
+                                   
+                                    form = form.parentNode;
+                            }
+                           
+                            // Set this as the default information card target element
+                           
+                            doc.__identityselector__.targetElem = objElem;
+                           
+                            // Log the event
+                           
+                            IdentitySelectorDiag.logMessage( "onICardObjectLoaded",
+                                    "Processed ICard object.");
+                                   
+                            // Mark the object as 'processed'
+                                   
+                            objElem.__processed = true;
+                    }
+            }
+            catch( e)
+            {
+                    IdentitySelectorDiag.debugReportError( "onICardObjectLoaded", e);
+            }
+           
+            if( !("notificationBoxHidden" in doc.__identityselector__))
+            {
+                    IdentitySelector.onHideNotificationBox();
+                    doc.__identityselector__.notificationBoxHidden = true;
+            }
         },
        
         // ***********************************************************************
@@ -977,7 +985,7 @@ var IdentitySelector =
                         "identityselector", "selector_guid");
                     if( (selectorGuid !== null) && (selectorGuid !== undefined))
                     {
-                            for( iLoop = 0; iLoop < gSelectorRegistry.length; iLoop++)
+                            for(let iLoop = 0; iLoop < gSelectorRegistry.length; iLoop++)
                             {
                             	var aSelectorClasz = gSelectorRegistry[ iLoop];
                                     if( aSelectorClasz.guid() === selectorGuid)
@@ -1248,6 +1256,43 @@ var IdentitySelector =
                                         getSecurityToken( dataObj, doc)) === null)
                                 {
                                         gLastFailedGetTokenDate = new Date();
+                                } else {
+                                	var tokenType = null;
+                                	if (dataObj.hasOwnProperty("tokenType")) {
+                                		tokenType = dataObj.tokenType;
+                                	}
+                        	        // XMLDAP: tokenType: http://specs.openid.net/auth/2.0
+                        	        if ("http://specs.openid.net/auth/2.0" === tokenType) {
+                        	        	// restrict this to http:// and https:// 
+                    	        		var myURI = Components.classes["@mozilla.org/network/io-service;1"]
+                    	        		                               .getService(Components.interfaces.nsIIOService)
+                    	        		                               .newURI(identObject.targetElem.token, null, null);
+                    	        		try {
+            	        		           var myURL = myURI.QueryInterface(Components.interfaces.nsIURL);
+            	        		        }
+            	        		        catch(uriException) {
+            	        		           // the URI is not an URL
+            	        		           IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+            	        		        		   'the URI is not an URL: ' + identObject.targetElem.token +
+            	        		        		   "\n" + uriException);
+            	        		        }
+            	        		        if (myURI.schemeIs("http") || myURI.schemeIs("https")) {
+            	        		        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+            	        		        			'doc.location: ' + doc.location);
+            	        		        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+            	        		        			'Setting location of main window to: ' + identObject.targetElem.token);
+	                        	        	doc.defaultView.location = identObject.targetElem.token;
+            	        		        } else {
+            	        		        	// Throw???
+            	        		        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+            	        		        			'Scheme of URI is not http or https! REJECTED: ' + 
+            	        		        			 identObject.targetElem.token);
+            	        		        }
+                        	        } else {
+                        	        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                        	        			"tokenType=" + tokenType);
+                        	        }
+
                                 }
                         }
                 }

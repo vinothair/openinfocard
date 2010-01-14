@@ -1,158 +1,37 @@
 
 function setOptionalClaimsSelf(policy) {
-	var optionalClaims = null;
-    if (policy.optionalClaims === undefined) {
-    	icDebug("setOptionalClaimsSelf: policy.optionalClaims === undefined");
-    	return;
-    } 
-    optionalClaims = policy.optionalClaims;
+  var optionalClaims = null;
+  if (policy.optionalClaims === undefined) {
+    icDebug("setOptionalClaimsSelf: policy.optionalClaims === undefined");
+    return;
+  } 
+  optionalClaims = policy.optionalClaims;
 
-    if (optionalClaims === null) {
-    	icDebug("setOptionalClaimsSelf: optionalClaims === null");
-    	return;
-    }
+  if (optionalClaims === null) {
+    icDebug("setOptionalClaimsSelf: optionalClaims === null");
+    return;
+  }
+
+  icDebug("setOptionalClaimsSelf optionalClaims: " + optionalClaims);
+  var checkedClaims = null;
+
+  var claims = optionalClaims.split(/\s+/);
+  icDebug("setOptionalClaimsSelf claims: " + claims);
+  var i;
+  for (i in claims) {
+     var uri;
+     var claim = claims[i];
+     icDebug("setOptionalClaimsSelf claim: " + claim);
      
-    icDebug("setOptionalClaimsSelf optionalClaims: " + optionalClaims);
-    var checkedClaims = null;
-    var claims = optionalClaims.split(/\s+/);
-    icDebug("setOptionalClaimsSelf claims: " + claims);
-    var i;
-    for (i in claims) {
-       var uri;
-       var claim = claims[i];
-       icDebug("setOptionalClaimsSelf claim: " + claim);
-       if (claim.indexOf("givenname") != -1) {
-        if (isClaimChecked("_givenname") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("emailaddress") != -1) {
-        if (isClaimChecked("_email") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("surname") != -1) {
-        if (isClaimChecked("_surname") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("streetaddress") != -1) {
-        if (isClaimChecked("_streetAddress") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("stateorprovince") != -1) {
-        if (isClaimChecked("_stateOrProvince") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("postalcode") != -1) {
-        if (isClaimChecked("_postalCode") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("country") != -1) {
-        if (isClaimChecked("_country") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("homephone") != -1) {
-        if (isClaimChecked("_primaryPhone") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("otherphone") != -1) {
-        if (isClaimChecked("_otherPhone") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("mobilephone") != -1) {
-        if (isClaimChecked("_mobilePhone") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("dateofbirth") != -1) {
-        if (isClaimChecked("_dateOfBirth") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("gender") != -1) {
-        if (isClaimChecked("_gender") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("locality") != -1) {
-        if (isClaimChecked("_locality") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else if(claim.indexOf("privatepersonalidentifier") != -1) {
-        if (isClaimChecked("privatepersonalidentifier") !== null) {
-         uri = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier";
-         if (checkedClaims === null) {
-          checkedClaims = uri;
-         } else {
-          checkedClaims = checkedClaims + " " + uri;
-         }
-        }
-       } else {
-        icDebug("processCard: claim not in list:" + claim);
-       }
-      }
-      icDebug("setOptionalClaimsSelf checkedClaims: " + checkedClaims);
-	  policy.optionalClaims = checkedClaims;
+     var checkedClaim = isClaimChecked("label_"+claim, claim);
+     if (checkedClaim !== null) {
+       checkedClaims = checkedClaims + " " + checkedClaim;
+     }
+  }
+  
+  icDebug("setOptionalClaimsSelf checkedClaims: " + checkedClaims);
+  policy.optionalClaims = checkedClaims;
+
 }
 
 function indicateRequiredClaim(requiredClaims, optionalClaims, claim){

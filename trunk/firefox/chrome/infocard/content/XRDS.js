@@ -206,8 +206,11 @@ var IcXrdsComponent = {
 					"openid return_to uri: " + doc.__identityselector__.openidReturnToUri +
 					"\ndoc.location.href="+doc.location.href);
 			if (InformationCardStatusbar !== undefined) {
-           	 InformationCardStatusbar.showStatusbarIcon(document, true);
-            }
+	           	 InformationCardStatusbar.showStatusbarIcon(document, true);
+	            }
+			if (InformationCardUrlbar !== undefined) {
+				InformationCardUrlbar.showUrlbarIcon(document, true);
+	            }
 		} else {
 			Components.utils.reportError( "IcXrdsComponent.handleOpenId2ReturnTo doc.__identityselector__ === undefined for " + 
 					"doc.location.href="+doc.location.href);
@@ -238,6 +241,10 @@ var IcXrdsComponent = {
 	             } else {
 	            	 IdentitySelectorDiag.logMessage("IcXrdsComponent::icLoginServiceListener:onReady", "InformationCardStatusbar===undefined");
 	             }
+	 			if (InformationCardUrlbar !== undefined) {
+					InformationCardUrlbar.showUrlbarIcon(document, true);
+	            }
+
 	            }
 	         }
 	      catch(e) {
@@ -320,11 +327,11 @@ var InformationCardXrds = {
 
 		  var dispatchEvents = true;
 		  
-		  IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements", " start: " + doc.location.href);
+		  //IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements", " start: " + doc.location.href);
 	      if( doc.wrappedJSObject !== undefined) {
 	         doc = doc.wrappedJSObject;
 	         }
-	      if (IdentitySelector.disabled === true) {
+	      if ((IdentitySelector.hasOwnProperty("disabled")) && (IdentitySelector.disabled === true)) {
 	         IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements", " ID selector is disabled. Exiting");
 	         return;
 	         }
@@ -340,20 +347,20 @@ var InformationCardXrds = {
 
 	      // <meta http-equiv="X-XRDS-Location" content="http://pamelaproject.com/wptest091/?xrds" />
 	      var linkElems = doc.getElementsByTagName( "META");
-          IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: number of META elements=", linkElems.length);
+          //IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: number of META elements=", linkElems.length);
 	      for( var i = 0; i < linkElems.length; i++) {
 	         var linkElem = linkElems[ i];
 	         IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: meta element=", linkElem);
 	         var relStr = linkElem.getAttribute( "HTTP-EQUIV");
 	         if (relStr === null) { continue; }
 	         if ((relStr === "x-xrds-location") || (relStr === "X-XRDS-Location")) {
-	            IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: X-XRDS-Location i=", i);
+	            //IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: X-XRDS-Location i=", i);
 	            var hrefStr = linkElem.getAttribute( "CONTENT");
 	            if (hrefStr === null) {
 	               continue;
 	               }
 	            else {
-	               IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: href=", hrefStr);
+	               //IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlMetaElements: href=", hrefStr);
 	               if (doc.__identityselector__.xrds_metadata_href === undefined) {
 	            	   doc.__identityselector__.xrds_metadata_href = hrefStr;
 	            	   InformationCardXrds.retrieveXrds(doc, hrefStr);
@@ -388,11 +395,11 @@ var InformationCardXrds = {
 
 		  var dispatchEvents = true;
 		  
-		  IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlLinkElements", " start: " + doc.location.href);
+		  //IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlLinkElements", " start: " + doc.location.href);
 	      if( doc.wrappedJSObject !== undefined) {
 	         doc = doc.wrappedJSObject;
 	         }
-	      if (IdentitySelector.disabled === true) {
+	      if ((IdentitySelector.hasOwnProperty("disabled")) && (IdentitySelector.disabled === true)) {
 	         IdentitySelectorDiag.logMessage("InformationCardXrds::processHtmlLinkElements", " ID selector is disabled. Exiting");
 	         return;
 	         }

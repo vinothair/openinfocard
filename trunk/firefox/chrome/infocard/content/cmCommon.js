@@ -1,6 +1,7 @@
 function isClaimChecked(elementId, uri) {
 	 var checkbox = document.getElementById(elementId);
-	 if (!(checkbox === undefined)) {
+//	 icDebug("isClaimChecked: typeof(checkbox)=" + typeof(checkbox));
+	 if (checkbox) {
 icDebug("isClaimChecked: found " + elementId);
 		 if (!(checkbox.checked === undefined)) {
 icDebug("isClaimChecked: is a checkbox ");
@@ -22,4 +23,18 @@ icDebug("isClaimChecked: is not checked ");
 	 }
 	 return null;
 }
+
+function xmlreplace(text) {
+	 var str;
+	 if (typeof(text) == 'string') {
+	  str = text;
+	 } else {
+	  str = "" + text + "";
+	 }
+	 var result = str.replace(/&/g, "&amp;");
+	 result = result.replace(/</g, "&lt;");
+	 result = result.replace(/>/g, "&gt;");
+	 result = result.replace(/\?/g, "%3F");
+	 return(result);
+	}
 

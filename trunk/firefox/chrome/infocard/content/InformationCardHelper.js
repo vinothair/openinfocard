@@ -160,25 +160,31 @@ var InformationCardHelper = {
         }
 
         var data;
-        
-        var openidReturnToUri = doc.__identityselector__.openidReturnToUri;
-        if (openidReturnToUri === undefined) {
-	        var icLoginService = doc.__identityselector__.icLoginService;
-	        if (icLoginService === undefined) {
-	        	throw "internal error in callIdentitySelector: icLoginService === undefined\ndoc=" + doc.location.href;
-	        }
-	        var icLoginPolicy = doc.__identityselector__.icLoginPolicy;
-	        if (icLoginPolicy === undefined) {
-	        	throw "internal error in callIdentitySelector: icLoginPolicy === undefined\ndoc=" + doc.location.href;
-	        }
-	        var sameSchemeAndDomain = InformationCardHelper.sameSchemeAndDomain(doc, icLoginService);
-	        if (sameSchemeAndDomain === false) {
-	        	Components.utils.reportError("IdentitySelector.callIdentitySelector: Ignoring: sameSchemeAndDomain === false");
-	        }
-	        data = InformationCardHelper.parseRpPolicy(icLoginPolicy);
+        var icLoginPolicy = doc.__identityselector__.icLoginPolicy;
+        if (icLoginPolicy !== undefined) {
+          IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "icLoginPolicy=" + icLoginPolicy);
+          var sameSchemeAndDomain = InformationCardHelper.sameSchemeAndDomain(doc, doc.location.href);
+          if (sameSchemeAndDomain === false) {
+            Components.utils.reportError("IdentitySelector.callIdentitySelector: Ignoring: sameSchemeAndDomain === false");
+          }
+          data = InformationCardHelper.parseRpPolicy(icLoginPolicy);
         } else {
-        	data = {};
-        	data.openidReturnToUri = openidReturnToUri;
+          IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "icLoginPolicy=undefined");
+        }
+        
+        if (data) {
+          if  (!data.hasOwnProperty(openidReturnToUri)) {
+            var openidReturnToUri = doc.__identityselector__.openidReturnToUri;
+            if (openidReturnToUri !== undefined) {
+              data.openidReturnToUri = openidReturnToUri;
+            }
+          }
+        } else {
+          data = {};
+          var openidReturnToUri = doc.__identityselector__.openidReturnToUri;
+          if (openidReturnToUri !== undefined) {
+            data.openidReturnToUri = openidReturnToUri;
+          }
         }
         
         if (doc.__identityselector__.cardId != undefined) {
