@@ -108,7 +108,7 @@ public class KeyInfo implements Serializable {
         String fingerPrint = "";
         try {
 //            fingerPrint = CryptoUtils.digest(key.getEncoded());
-        	fingerPrint = CryptoUtils.digest(cert.getEncoded());
+        	fingerPrint = CryptoUtils.digest(cert.getEncoded(), "SHA");
         } catch (org.xmldap.exceptions.CryptoException e) {
             throw new SerializationException(e);
         } catch (CertificateEncodingException e) {

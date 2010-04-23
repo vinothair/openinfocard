@@ -38,17 +38,16 @@ var InformationCardHelper = {
 	   if (browser !== null) {
 		   if (browser.securityUI !== undefined) {
 			   var secureUi = browser.securityUI;
-			   var sslStatusProvider = null;
-			   sslStatusProvider = secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
-			   if( sslStatusProvider !== null) {
+			   var sslStatusProvider = secureUi.QueryInterface(Components.interfaces.nsISSLStatusProvider);
+			   if((sslStatusProvider) && (sslStatusProvider.SSLStatus)) {
 			      try {
 			         var sslStatus = sslStatusProvider.SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
-			         if( sslStatus !== null && sslStatus.serverCert !== undefined) {
+			         if( (sslStatus) && (sslStatus.serverCert)) {
 			            sslCert = sslStatus.serverCert;
 			         }
 			      }
 			      catch( e) {
-			         IdentitySelectorDiag.logMessage("getSSLCertFromDocument: " + e);
+			         IdentitySelectorDiag.logMessage("InformationCardHelper.getSSLCertFromDocument", "getSSLCertFromDocument: " + e);
 			      }
 			   }
 		   } else {
@@ -150,6 +149,51 @@ var InformationCardHelper = {
         return obj;
     },
 
+    prepareDataForCallIdentitySelector: function(doc) {
+      var data;
+      var icLoginPolicy = doc.__identityselector__.icLoginPolicy;
+      if (icLoginPolicy !== undefined) {
+        IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "icLoginPolicy=" + icLoginPolicy);
+        var sameSchemeAndDomain = InformationCardHelper.sameSchemeAndDomain(doc, doc.location.href);
+        if (sameSchemeAndDomain === false) {
+          Components.utils.reportError("IdentitySelector.callIdentitySelector: Ignoring: sameSchemeAndDomain === false");
+        }
+        data = InformationCardHelper.parseRpPolicy(icLoginPolicy);
+      } else {
+        IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "icLoginPolicy=undefined");
+      }
+      
+      if (data) {
+        if  (!data.hasOwnProperty(openidReturnToUri)) {
+          var openidReturnToUri = doc.__identityselector__.openidReturnToUri;
+          if (openidReturnToUri !== undefined) {
+            data.openidReturnToUri = openidReturnToUri;
+          }
+        }
+      } else {
+        data = {};
+        var openidReturnToUri = doc.__identityselector__.openidReturnToUri;
+        if (openidReturnToUri !== undefined) {
+          data.openidReturnToUri = openidReturnToUri;
+        }
+      }
+      
+      if (!icLoginPolicy && data.openidReturnToUri && !data.tokenType) {
+        data.tokenType = "http://specs.openid.net/auth/2.0";
+      }
+      
+      if (doc.__identityselector__.cardId != undefined) {
+          data.cardid = "" + doc.__identityselector__.cardId;
+          IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "cardid=" + data.cardid);
+      }
+      data.recipient = doc.location.href;
+      
+      if (doc.__identityselector__.sslMode != undefined) {
+          data.sslMode = "" + doc.__identityselector__.sslMode;
+      }
+      return data;
+    },
+
     callIdentitySelector: function(doc) {
         IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "doc.location.href=" + doc.location.href);
 
@@ -159,43 +203,7 @@ var InformationCardHelper = {
             selectorClass = "NoIdentitySelector";
         }
 
-        var data;
-        var icLoginPolicy = doc.__identityselector__.icLoginPolicy;
-        if (icLoginPolicy !== undefined) {
-          IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "icLoginPolicy=" + icLoginPolicy);
-          var sameSchemeAndDomain = InformationCardHelper.sameSchemeAndDomain(doc, doc.location.href);
-          if (sameSchemeAndDomain === false) {
-            Components.utils.reportError("IdentitySelector.callIdentitySelector: Ignoring: sameSchemeAndDomain === false");
-          }
-          data = InformationCardHelper.parseRpPolicy(icLoginPolicy);
-        } else {
-          IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "icLoginPolicy=undefined");
-        }
-        
-        if (data) {
-          if  (!data.hasOwnProperty(openidReturnToUri)) {
-            var openidReturnToUri = doc.__identityselector__.openidReturnToUri;
-            if (openidReturnToUri !== undefined) {
-              data.openidReturnToUri = openidReturnToUri;
-            }
-          }
-        } else {
-          data = {};
-          var openidReturnToUri = doc.__identityselector__.openidReturnToUri;
-          if (openidReturnToUri !== undefined) {
-            data.openidReturnToUri = openidReturnToUri;
-          }
-        }
-        
-        if (doc.__identityselector__.cardId != undefined) {
-            data.cardid = "" + doc.__identityselector__.cardId;
-            IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "cardid=" + data.cardid);
-        }
-        data.recipient = doc.location.href;
-        
-        if (doc.__identityselector__.sslMode != undefined) {
-            data.sslMode = "" + doc.__identityselector__.sslMode;
-        }
+        var data = InformationCardHelper.prepareDataForCallIdentitySelector(doc);
 
         var getSecurityToken = eval(selectorClass).getSecurityToken;
 
@@ -229,7 +237,8 @@ var InformationCardHelper = {
                 return;
             }
         } else {
-            IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", "token == null for doc.location.href=" + doc.location.href + "!=" + "icLoginService=" + icLoginService);
+            IdentitySelectorDiag.logMessage("IdentitySelector.callIdentitySelector", 
+                "token == null for doc.location.href=" + doc.location.href);
         }
 
     }
@@ -275,8 +284,8 @@ var InformationCardHelper = {
     ,
     sameSchemeAndDomain: function(ownerDocument, htmlDoc) {
         IdentitySelectorDiag.logMessage("sameSchemeAndDomain", "ownerDocument.location.href=" + ownerDocument.location.href);
-        topScheme = ownerDocument.location.protocol;
-        topDomain = ownerDocument.location.host;
+        var topScheme = ownerDocument.location.protocol;
+        var topDomain = ownerDocument.location.host;
         // TODO this should go up to the top. Currently this code supports only
         // only
         // level deep nesting.

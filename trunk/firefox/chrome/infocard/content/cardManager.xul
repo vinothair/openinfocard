@@ -45,6 +45,8 @@
 
     <script src="chrome://infocard/content/crypto/hash.js"/>
     <script src="chrome://infocard/content/json.js"/>
+    <script type="application/x-javascript" src="chrome://infocard/content/InformationCardHelper.js"/>
+    <script type="application/x-javascript" src="chrome://infocard/content/IdentitySelectorDiag.js"/>
     <script src="chrome://infocard/content/cmDebug.js"/>
     <script src="chrome://infocard/content/openidRP.js"/>
     <script src="chrome://infocard/content/cmCommon.js"/>
@@ -104,7 +106,7 @@
             <scrollbox style="overflow:auto;" id="editarea" class="editarea" flex="1">
 
                 <!--<iframe src="" id="openid_iframe" class="openid_iframe" hidden="true"/>-->
-				<browser id="openid_iframe" type="content" src="" flex="1" hidden="true"/>
+				<!-- <browser id="openid_iframe" type="content" src="" flex="1" hidden="true"/>  -->
 				
                <vbox align="left">
 

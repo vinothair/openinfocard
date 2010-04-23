@@ -28,8 +28,32 @@
 
 package org.xmldap.crypto;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPublicKeySpec;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+
 import net.sourceforge.lightcrypto.Crypt;
 import net.sourceforge.lightcrypto.SafeObject;
+
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -42,24 +66,8 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.xmldap.exceptions.CryptoException;
-import org.xmldap.exceptions.InfoCardProcessingException;
+import org.xmldap.exceptions.SerializationException;
 import org.xmldap.util.Base64;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.*;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPublicKeySpec;
 
 
 /**
@@ -69,12 +77,42 @@ import java.security.spec.RSAPublicKeySpec;
  */
 public class CryptoUtils {
 
-    public static byte[] byteDigest(byte[] data) throws CryptoException {
+    public static String convertSigningAlgorithm(String signatureAlgorithm) throws SerializationException {
+    	if (signatureAlgorithm.equalsIgnoreCase("SHA1withRSA")) {
+    		return "http://www.w3.org/2000/09/xmldsig#rsa-sha1";
+    	}
+    	if (signatureAlgorithm.equalsIgnoreCase("SHA256withRSA")) {
+    		return "http://www.w3.org/2000/09/xmldsig#rsa-sha256";
+    	}
+    	throw new SerializationException("unsupported signature algorithm");
+   }
+    
+    public static String convertMessageDigestAlgorithm(String signatureAlgorithm) throws SerializationException {
+    	if (signatureAlgorithm.equalsIgnoreCase("SHA")) {
+    		return "http://www.w3.org/2000/09/xmldsig#sha1";
+    	}
+    	if (signatureAlgorithm.equalsIgnoreCase("SHA1")) {
+    		return "http://www.w3.org/2000/09/xmldsig#sha1";
+    	}
+    	if (signatureAlgorithm.equalsIgnoreCase("SHA-1")) {
+    		return "http://www.w3.org/2000/09/xmldsig#sha1";
+    	}
+    	if (signatureAlgorithm.equalsIgnoreCase("SHA256")) {
+    		return "http://www.w3.org/2000/09/xmldsig#sha256";
+    	}
+    	if (signatureAlgorithm.equalsIgnoreCase("SHA-256")) {
+    		return "http://www.w3.org/2000/09/xmldsig#sha256";
+    	}
+    	throw new SerializationException("unsupported signature algorithm");
+   }
+    
+
+    public static byte[] byteDigest(byte[] data, String messageDigestAlgorithm) throws CryptoException {
 
 
         MessageDigest md;
         try {
-            md = MessageDigest.getInstance("SHA");
+            md = MessageDigest.getInstance(messageDigestAlgorithm);
         } catch (NoSuchAlgorithmException e) {
             throw new CryptoException(e);
         }
@@ -91,8 +129,8 @@ public class CryptoUtils {
      * @return Base64 encoded digest of the data
      * @throws CryptoException
      */
-    public static String digest(byte[] data) throws CryptoException {
-        return Base64.encodeBytesNoBreaks(byteDigest(data));
+    public static String digest(byte[] data, String messageDigestAlgorithm) throws CryptoException {
+        return Base64.encodeBytesNoBreaks(byteDigest(data, messageDigestAlgorithm));
     }
 
 	/**
@@ -337,14 +375,14 @@ public class CryptoUtils {
      * @return sgined data
      * @throws CryptoException
      */
-    public static String sign(byte[] data, PrivateKey key) throws CryptoException {
+    public static String sign(byte[] data, PrivateKey key, String algorithm) throws CryptoException {
 
 
         String signedData;
 
         try {
 
-            Signature signature = Signature.getInstance("SHA1withRSA");
+            Signature signature = Signature.getInstance(algorithm);
             signature.initSign(key);
             signature.update(data);
             signedData = Base64.encodeBytesNoBreaks(signature.sign());

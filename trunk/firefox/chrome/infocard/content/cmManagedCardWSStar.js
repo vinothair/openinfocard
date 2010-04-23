@@ -89,6 +89,7 @@ function getMexForCard(managedCard) {
 function sendRST(sendRstParameter) {
 
   var tsEndpointAddressStr = sendRstParameter.tsEndpointAddressStr;
+  var tsEndpointCertStr = sendRstParameter.tsEndpointCertStr;
   var usercredential = sendRstParameter.icUserCredential;
   var managedCard = sendRstParameter.managedCard;
   var requiredClaims = sendRstParameter.requiredClaims;
@@ -97,6 +98,7 @@ function sendRST(sendRstParameter) {
   var clientPseudonym = sendRstParameter.clientPseudonym;
   var relyingPartyURL = sendRstParameter.relyingPartyURL;
   var relyingPartyCertB64 = sendRstParameter.relyingPartyCertB64;
+  var backingCard = sendRstParameter.backingCard;
 
   //    var issuerPolicy = sendRstParameter.issuerPolicy;
   //    if (issuerPolicy != null) {
@@ -136,8 +138,9 @@ function sendRST(sendRstParameter) {
          "<a:To s:mustUnderstand=\"1\">" + xmlreplace(tsEndpointAddressStr) + "</a:To>" +
      "<o:Security s:mustUnderstand=\"1\" xmlns:o=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">"; 
 
-    var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
-  if (usercredential.ic::UsernamePasswordCredential !== undefined) {
+  var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+  icDebug("usercredential.ic::UsernamePasswordCredential.toString()=" + usercredential.ic::UsernamePasswordCredential.toString() + ";");
+  if (usercredential.ic::UsernamePasswordCredential.toString() !== "") {
         var hint = usercredential.ic::DisplayCredentialHint;
         icDebug("hint:" + hint);
 //                var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
@@ -167,11 +170,11 @@ function sendRST(sendRstParameter) {
         rst = rst + xmlreplace(pw);
 
         rst = rst + "</o:Password></o:UsernameToken>";
-    }  else if (usercredential.ic::KerberosV5Credential !== undefined) {
+    }  else if (usercredential.ic::KerberosV5Credential.toString() !== "") {
       Components.utils.reportError("unimplemented user credential type: KerberosV5Credential");
     alert("unimplemented user credential type: KerberosV5Credential");
     return null;
-    } else if (usercredential.ic::X509V3Credential !== undefined) {
+    } else if (usercredential.ic::X509V3Credential.toString() !== "") {
 //        var dsigNS = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
 //        var wsaNS = new Namespace("wsa", "http://www.w3.org/2005/08/addressing");
 //        var mexNS = new Namespace("mex", "http://schemas.xmlsoap.org/ws/2004/09/mex");
@@ -179,15 +182,44 @@ function sendRST(sendRstParameter) {
       Components.utils.reportError("unimplemented user credential type: X509V3Credential");
       alert("unimplemented user credential type: X509V3Credential");
       return null;
-    } else if (usercredential.ic::SelfIssuedCredential !== undefined) {
+    } else if (usercredential.ic::SelfIssuedCredential.toString() !== "") {
       var hintSelfIssuedCredential = usercredential.ic::DisplayCredentialHint;
       icDebug("hint:" + hintSelfIssuedCredential);
       var usercredentialSelfIssuedCredential = usercredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier;
       icDebug("usercredential:" + usercredentialSelfIssuedCredential);
       icDebug("stsCert:" + managedCard.carddata.managed.stsCert);
-      Components.utils.reportError("unimplemented user credential type: SelfIssuedCredential");
-      alert("unimplemented user credential type: SelfIssuedCredential");
-     return null;
+      icDebug("tsEndpointCertStr:" + tsEndpointCertStr);
+      icDebug("backingCard:" + backingCard);
+      
+      var serializedPolicy;
+      try {
+        var sicPolicy = {};
+        sicPolicy.type = "selfAsserted";
+        sicPolicy.card = backingCard.toString();
+        sicPolicy.requiredClaims = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier";
+        serializedPolicy = JSON.stringify(sicPolicy);
+      } catch (jsonEx) {
+        Components.utils.reportError("jsonEx: " + jsonEx);
+        throw jsonEx;
+      }
+      var samlAssertion;
+      try {
+        samlAssertion = TokenIssuer.getToken(serializedPolicy);
+      } catch (samlEx) {
+        Components.utils.reportError("samlEx: " + samlEx);
+        throw samlEx;
+      }
+      var securityTokenReference = "<o:SecurityTokenReference>";
+      securityTokenReference = securityTokenReference + "<o:Embedded wsu:Id=\"token\">"
+      securityTokenReference = securityTokenReference + samlAssertion;
+      securityTokenReference = securityTokenReference + "</o:Embedded wsu:Id=\"token\">"
+      securityTokenReference = securityTokenReference + "</o:SecurityTokenReference>";
+      icDebug("securityTokenReference:" + securityTokenReference);
+      
+      rst = rst + securityTokenReference;
+//      Components.utils.reportError("unimplemented user credential type: SelfIssuedCredential");
+//      alert("unimplemented user credential type: SelfIssuedCredential");
+//      return null;
     } else {
       Components.utils.reportError("undefined user credential type: " + usercredential.ic::SelfIssuedCredential);
       alert("undefined user credential type");

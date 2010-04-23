@@ -255,24 +255,23 @@ var IdentitySelector =
        
         runInterceptScript : function( doc)
         {
-                if( doc.wrappedJSObject)
-                {
-                        doc = doc.wrappedJSObject;
-                }
-               
-                if( doc.__identityselector__ === undefined)
-                {
-                        // Load and execute the script
-                       
-                        Components.classes[
-                                "@mozilla.org/moz/jssubscript-loader;1"].getService(
-                                Components.interfaces.mozIJSSubScriptLoader).loadSubScript(
-                                "chrome://infocard/content/IdentitySelectorIntercept.js",
-                                doc);
-                       
-                        IdentitySelectorDiag.logMessage( "runInterceptScript",
-                                "Executed script on " + doc.location);
-                }
+          if( doc.wrappedJSObject)
+          {
+                  doc = doc.wrappedJSObject;
+          }
+
+          if( doc.__identityselector__ == undefined)
+          {
+                  // Load and execute the script
+
+                  Components.classes[
+                          "@mozilla.org/moz/jssubscript-loader;1"].getService(
+                          Components.interfaces.mozIJSSubScriptLoader).loadSubScript(
+                          "chrome://infocard/content/IdentitySelectorIntercept.js", doc)
+
+                  IdentitySelectorDiag.logMessage( "runInterceptScript",
+                          "Executed script on " + doc.location);
+          }
         },
        
         // ***********************************************************************
@@ -454,7 +453,8 @@ var IdentitySelector =
                         if( objElem.optionalClaims !== undefined &&
                                 objElem.optionalClaims !== null)
                         {
-                                data.optionalClaims = objElem.optionalClaims;
+                          data.optionalClaims = objElem.optionalClaims.replace(/\s+/g, ' ');
+                          IdentitySelectorDiag.logMessage("setParamsFromElem", "optionalClaims=" +data.optionalClaims);
                         }
                         else
                         {
@@ -466,7 +466,8 @@ var IdentitySelector =
                         if( objElem.requiredClaims !== undefined &&
                                 objElem.requiredClaims !== null)
                         {
-                                data.requiredClaims = objElem.requiredClaims;
+                          data.requiredClaims = objElem.requiredClaims.replace(/\s+/g, ' ');
+                          IdentitySelectorDiag.logMessage("setParamsFromElem", "requiredClaims=" +data.requiredClaims);
                         }
                         else
                         {
@@ -548,7 +549,11 @@ var IdentitySelector =
                        
                         form = target;
                         doc = target.ownerDocument;
-                       
+                        if (!doc) {
+                          IdentitySelectorDiag.reportError("onFormsubmit: !doc");
+                          return;
+                        }
+                        
                         // Determine if the form has an embedded information card object.
                        
                         if( (objElem = IdentitySelector.getEmbeddedICardObject( form)) !== null)
@@ -581,7 +586,7 @@ var IdentitySelector =
                                         // If a token was retrieved, add it as a hidden field of
                                         // the form
                                        
-                                        if( objElem.token !== undefined)
+                                        if(objElem.token && !objElem.preventDefault)
                                         {
                                                 input = doc.createElement( "INPUT");
                                                 input.setAttribute( "name",
@@ -589,6 +594,9 @@ var IdentitySelector =
                                                 input.setAttribute( "type", "hidden");
                                                 input.value = objElem.token;
                                                 form.appendChild( input);
+                                        } else {
+                                          IdentitySelectorDiag.logMessage( "onFormSubmit", "objElem.token is null or undefined: preventDefault");
+                                          event.preventDefault(); // do not submit the form
                                         }
                                 }
                         }
@@ -623,7 +631,7 @@ var IdentitySelector =
                                         // If a token was retrieved, add it as a hidden field of
                                         // the form
                                        
-                                        if( icardElem.token !== undefined)
+                                        if(icardElem.token && !icardElem.preventDefault)
                                         {
                                                 input = doc.createElement( "INPUT");   
                                                 input.setAttribute( "name",
@@ -631,7 +639,10 @@ var IdentitySelector =
                                                 input.setAttribute( "type", "hidden");
                                                 input.value = icardElem.token;
                                                 form.appendChild( input);
-                                        }
+                                        } else {
+                                          IdentitySelectorDiag.logMessage( "onFormSubmit", "icardElem.token is null or undefined: preventDefault");
+                                          event.preventDefault(); // do not submit the form
+                                        } 
                                 }
                         }
                         else
@@ -886,6 +897,8 @@ var IdentitySelector =
                             // Mark the object as 'processed'
                                    
                             objElem.__processed = true;
+                            
+                            objElem.hasCapability = function(capability) { return (capability === "openIdExperimental"); };
                     }
             }
             catch( e)
@@ -965,6 +978,8 @@ var IdentitySelector =
                                 // Mark the element as 'processed'
                                
                                 icardElem.__processed = true;
+                                objElem.hasCapability = function(capability) { return (capability === "openIdExperimental"); };
+
                         }
                 }
                 catch( e)
@@ -1064,6 +1079,12 @@ var IdentitySelector =
                                         "Invalid target element.");
                         }
                        
+                        if (identObject.cardid) {
+                          dataObj.cardid = identObject.cardid;
+                          IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                              "dataObj.cardid=" + dataObj.cardid);
+                        }
+                        
                         // Process parameters
                        
                         if( identObject.targetElem.tagName == "OBJECT")
@@ -1277,11 +1298,17 @@ var IdentitySelector =
             	        		        		   "\n" + uriException);
             	        		        }
             	        		        if (myURI.schemeIs("http") || myURI.schemeIs("https")) {
-            	        		        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
-            	        		        			'doc.location: ' + doc.location);
+                                    IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                        'doc.location: ' + doc.location);
+                                    IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                        'stopping doc.location: ' + doc.location);
+            	        		        	doc.defaultView.stop();
             	        		        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
             	        		        			'Setting location of main window to: ' + identObject.targetElem.token);
-	                        	        	doc.defaultView.location = identObject.targetElem.token;
+	                        	        doc.defaultView.location = identObject.targetElem.token;
+                                    IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                        'Setting preventDefault');
+	                        	        identObject.targetElem.preventDefault = true;
             	        		        } else {
             	        		        	// Throw???
             	        		        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
@@ -1584,7 +1611,9 @@ var ICProgressListener =
 try
 {
 		window.addEventListener("dragdrop", InformationCardDragAndDrop.onWindowDragDrop, false);
-		
+
+		window.addEventListener("ICObjectLoaded",InformationCardDragAndDrop.onICardObjectLoaded, false); 
+
         window.addEventListener( "load",
                 IdentitySelector.onInstall, false);
                

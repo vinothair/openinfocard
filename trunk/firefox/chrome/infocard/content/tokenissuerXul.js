@@ -119,10 +119,14 @@ var TokenIssuer = {
 			this.tokenIssuer = tiConstructor.newInstance( [extensionPath] );
 			return (this.tokenIssuer !== null);
 		},
-		
-		getToken : function(serializedPolicy) {
-			return this.tokenIssuer.getToken(serializedPolicy);
-		},
+    
+    getToken : function(serializedPolicy) {
+      return this.tokenIssuer.getToken(serializedPolicy);
+    },
+    
+    generateRPPPID : function(serializedPolicy) {
+      return this.tokenIssuer.generateRPPPID(serializedPolicy);
+    },
 		
 		importManagedCard : function(importedCardJSONStr, cardFileJSONStr) {
 			try {
@@ -171,7 +175,7 @@ var TokenIssuer = {
 				var result = this.tokenIssuer.isPhoneAvailable();
 				return result;
 			} catch(e) {
-				this._fail("isPhoneAvailable" + e);
+				this._fail("isPhoneAvailable " + e);
 				throw e;
 			}
 		},
@@ -181,7 +185,7 @@ var TokenIssuer = {
 			try {
 				this.tokenIssuer.endCardSelection();
 			} catch(e) {
-				this._fail("endCardSelection" + e);
+				//this._fail("endCardSelection " + e);
 			}
 		},
 		

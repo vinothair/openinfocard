@@ -39,7 +39,7 @@ public class RequestSecurityToken implements Serializable{
 	        	wsa.addAttribute(wsuId);
 	        	wsa.appendChild("http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue");
 	        	soapHeader.appendChild(wsa);
-	        	references.add(new Reference(wsa, wsuId.getValue()));
+	        	references.add(new Reference(wsa, wsuId.getValue(), null, "SHA"));
         	}
         	{
 //        		<wsa:MessageID wsu:Id="_2">
@@ -51,7 +51,7 @@ public class RequestSecurityToken implements Serializable{
 	        	RandomGUID guid = new RandomGUID();
 	        	wsa.appendChild("urn:" + guid);
 	        	soapHeader.appendChild(wsa);
-	        	references.add(new Reference(wsa, wsuId.getValue()));
+	        	references.add(new Reference(wsa, wsuId.getValue(), null, "SHA"));
         	}
         	{
 //        		<wsa:To wsu:Id="_3">http://contoso.com/sts</wsa:To>
@@ -60,7 +60,7 @@ public class RequestSecurityToken implements Serializable{
 	        	wsa.addAttribute(wsuId);
 	        	wsa.appendChild(sts);
 	        	soapHeader.appendChild(wsa);
-	        	references.add(new Reference(wsa, wsuId.getValue()));
+	        	references.add(new Reference(wsa, wsuId.getValue(), null, "SHA"));
         	}
         	{
 //        		<wsa:ReplyTo wsu:Id="_4">
@@ -75,7 +75,7 @@ public class RequestSecurityToken implements Serializable{
 	        	wsaAddress.appendChild("http://www.w3.org/2005/08/addressing/anonymous");
 	        	wsa.appendChild(wsaAddress);
 	        	soapHeader.appendChild(wsa);
-	        	references.add(new Reference(wsa, wsuId.getValue()));
+	        	references.add(new Reference(wsa, wsuId.getValue(), null, "SHA"));
         	}
         	{
 //        		<wsse:Security S:mustUnderstand="1">
@@ -101,7 +101,7 @@ public class RequestSecurityToken implements Serializable{
         			wsuTimestamp.appendChild(wsuCreated);
         			wsuTimestamp.appendChild(wsuExpires);
         			wsse.appendChild(wsuTimestamp);
-        			references.add(new Reference(wsuTimestamp, wsuId.getValue()));
+        			references.add(new Reference(wsuTimestamp, wsuId.getValue(), null, "SHA"));
         		}
         		wsse.appendChild(encryptedSamlAssertion);
         		soapHeader.appendChild(wsse);
@@ -110,7 +110,7 @@ public class RequestSecurityToken implements Serializable{
         BaseEnvelopedSignature headerSigner = new BaseEnvelopedSignature(keyInfo, privateKey, "_40");
         Signature primarySignature = headerSigner.signNodes(soapHeader, references);
         Element primarySignatureElement = primarySignature.serialize();
-        Reference primarySignaturReference = new Reference(primarySignatureElement, "_40");
+        Reference primarySignaturReference = new Reference(primarySignatureElement, "_40", null, "SHA");
         List<Reference> ref = new ArrayList<Reference>();
         ref.add(primarySignaturReference);
         

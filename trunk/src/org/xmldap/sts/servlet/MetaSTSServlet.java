@@ -330,7 +330,10 @@ public class MetaSTSServlet  extends HttpServlet {
         String stsResponse = "";
 		try {
 			stsResponse = Utils.issue(
-					card, requestElements, clientLocale, cert, key, cardIssuer, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
+					card, requestElements, clientLocale, cert, key, cardIssuer, 
+					supportedClaimsImpl, 
+					relyingPartyURL, relyingPartyCertB64,
+					"SHA1withRSA");
 		} catch (CryptoException e) {
 			//TODO - SOAP Fault
 			throw new ServletException(e);

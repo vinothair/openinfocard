@@ -32,120 +32,124 @@ var gDebugMode = true;
 
 var IdentitySelectorDiag =
 {
-        // ***********************************************************************
-        // Method: reportError
-        // ***********************************************************************
-       
-        reportError : function( location, description)
-        {
-                alert( "IdentitySelector Error:" + location + ": " + description);
-                IdentitySelectorDiag.logMessage( location, "Error:" + description);
-        },
+  // ***********************************************************************
+  // Method: reportError
+  // ***********************************************************************
+ 
+  reportError : function( location, description)
+  {
+    var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                   .getService(Components.interfaces.nsIPromptService);
+    prompts.alert( null, "IdentitySelector Error: " + location, description);
+    IdentitySelectorDiag.logMessage( location, "Error:" + description);
+  },
 
-        // ***********************************************************************
-        // Method: throwError
-        // ***********************************************************************
-       
-        throwError : function( location, description)
-        {
-                IdentitySelectorDiag.reportError( location, description);
-                throw( "IdentitySelector Exception:" + location + ": " + description);
-        },
-       
-        // ***********************************************************************
-        // Method: logMessage
-        // ***********************************************************************
-       
-        logMessage : function( location, message)
-        {
-                if( gbLoggingEnabled)
-                {
-                        gConsoleService.logStringMessage( "IdentitySelector:" +
-                                location + ": " + message);
-                }
-        },
-       
-        // ***********************************************************************
-        // Method: debugReportError
-        // ***********************************************************************
-        debugReportError : function( location, description)
-        {
-                if( gDebugMode)
-                {
-                        alert( "IdentitySelector Error:" + location + ": " + description);
-                }
-                else
-                {
-                        IdentitySelectorDiag.logMessage( location, "Error:" + description);
-                }
-        },     
-       
-        // ***********************************************************************
-        // Method: dumpConsoleToLogFile
-        // ***********************************************************************
-       
-        dumpConsoleLogToFile : function( filePath)
-        {
-                var messageArray = {};
-                var messageCount = {};
-                var logBuffer = "";
-               
-                try
-                {
-                        gConsoleService.getMessageArray( messageArray, messageCount);
-                       
-                        for( var i = 0; i < messageCount.value; i++)
-                        {
-                                var messageStr = messageArray.value[ i].message;
-                               
-                                if( messageStr.indexOf( "IdentitySelector:") > -1)
-                                {
-                                        logBuffer += messageStr + "\n";
-                                }
-                        }
-                       
-                        if( gbIsMac || gbIsLinux)
-                        {
-                                IdentitySelectorUtil.writeFile( "/tmp/icardxpi.log", logBuffer);
-                        }
-                }
-                catch( e)
-                {
-                        reportError( "dumpConsoleLogToFile", e);
-                }
-        },
+  // ***********************************************************************
+  // Method: throwError
+  // ***********************************************************************
+ 
+  throwError : function( location, description)
+  {
+          IdentitySelectorDiag.reportError( location, description);
+          throw( "IdentitySelector Exception:" + location + ": " + description);
+  },
 
-        // ***********************************************************************
-        // Method: logPlatformInfo
-        // ***********************************************************************
+  // ***********************************************************************
+  // Method: logMessage
+  // ***********************************************************************
+ 
+  logMessage : function( location, message)
+  {
+    if( gbLoggingEnabled)
+    {
+            gConsoleService.logStringMessage( "IdentitySelector:" +
+                    location + ": " + message);
+    }
+  },
+     
+  // ***********************************************************************
+  // Method: debugReportError
+  // ***********************************************************************
+  debugReportError : function( location, description)
+  {
+          if( gDebugMode)
+          {
+            var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                             .getService(Components.interfaces.nsIPromptService);
+            prompts.alert( null, "IdentitySelector Error: " + location, description);
+          }
+          else
+          {
+            IdentitySelectorDiag.logMessage( location, "Error:" + description);
+          }
+  },     
        
-        logPlatformInfo : function()
-        {
-                try
-                {
-                        IdentitySelectorDiag.logMessage( "logPlatformInfo",
-                                "platform = " + navigator.platform);
-                               
-                        IdentitySelectorDiag.logMessage( "logPlatformInfo",
-                                "appName = " + navigator.appName);
-                               
-                        IdentitySelectorDiag.logMessage( "logPlatformInfo",
-                                "appVersion = " + navigator.appVersion);
-                               
-                        IdentitySelectorDiag.logMessage( "logPlatformInfo",
-                                "product = " + navigator.product);
-                               
-                        IdentitySelectorDiag.logMessage( "logPlatformInfo",
-                                "productSub = " + navigator.productSub);
-                               
-                        IdentitySelectorDiag.logMessage( "logPlatformInfo",
-                                "userAgent = " + navigator.userAgent);
-                               
-                        IdentitySelectorDiag.logMessage( "logPlatformInfo",
-                                "oscpu = " + navigator.oscpu);
-                }
-                catch( e)
-                {
-                }
-        }
+// ***********************************************************************
+// Method: dumpConsoleToLogFile
+// ***********************************************************************
+ 
+  dumpConsoleLogToFile : function( filePath)
+  {
+    var messageArray = {};
+    var messageCount = {};
+    var logBuffer = "";
+       
+    try
+    {
+            gConsoleService.getMessageArray( messageArray, messageCount);
+           
+            for( var i = 0; i < messageCount.value; i++)
+            {
+                    var messageStr = messageArray.value[ i].message;
+                   
+                    if( messageStr.indexOf( "IdentitySelector:") > -1)
+                    {
+                            logBuffer += messageStr + "\n";
+                    }
+            }
+           
+            if( gbIsMac || gbIsLinux)
+            {
+                    IdentitySelectorUtil.writeFile( "/tmp/icardxpi.log", logBuffer);
+            }
+    }
+    catch( e)
+    {
+      IdentitySelectorDiag.reportError( "dumpConsoleLogToFile", e);
+    }
+},
+
+// ***********************************************************************
+// Method: logPlatformInfo
+// ***********************************************************************
+ 
+  logPlatformInfo : function()
+  {
+    try
+    {
+            IdentitySelectorDiag.logMessage( "logPlatformInfo",
+                  "platform = " + navigator.platform);
+                 
+          IdentitySelectorDiag.logMessage( "logPlatformInfo",
+                  "appName = " + navigator.appName);
+                 
+          IdentitySelectorDiag.logMessage( "logPlatformInfo",
+                  "appVersion = " + navigator.appVersion);
+                 
+          IdentitySelectorDiag.logMessage( "logPlatformInfo",
+                  "product = " + navigator.product);
+                 
+          IdentitySelectorDiag.logMessage( "logPlatformInfo",
+                  "productSub = " + navigator.productSub);
+                 
+          IdentitySelectorDiag.logMessage( "logPlatformInfo",
+                  "userAgent = " + navigator.userAgent);
+                 
+          IdentitySelectorDiag.logMessage( "logPlatformInfo",
+                  "oscpu = " + navigator.oscpu);
+    }
+    catch( e)
+    {
+    }
+  }
 };

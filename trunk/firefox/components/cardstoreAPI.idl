@@ -12,8 +12,8 @@ interface IInformationCardStore : nsISupports
   void   clearCardStore();
 
   // the informationCardXml is defined in ISIP 1.5
-  void	 addCard(in string informationCardXml);
-  void   removeCard(in string cardId);
+  void addCard(in string informationCardXml);
+  void removeCard(in string cardId);
 
   // the roamingStoreXml is defined in ISIP 1.5
   void   addCardsFromRoamingStore(in string roamingStoreXml);
@@ -41,6 +41,8 @@ interface IInformationCardStore : nsISupports
 
   string getCardStoreName();
   string getCardStoreVersion();
+
+  string getToken(in string serializedPolicy);
 
   readonly attribute wstring errorstring;
   readonly attribute long errornumber;

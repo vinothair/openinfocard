@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
+import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.rp.Token;
 import org.xmldap.saml.Subject;
 import org.xmldap.xml.Canonicalizable;
@@ -35,18 +36,16 @@ public class RequestSecurityTokenTest extends TestCase {
 			 "   <version>1</version>" +
 			 "   <id>45925</id>" +
 			 "   <privatepersonalidentifier>5601ad61a8d29f0c464f45c9fc1ebb014acd060e</privatepersonalidentifier>" +
+			 "   <ic:InformationCardPrivateData xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" +
+			 "     <ic:MasterKey>" + "5601ad61a8d29f0c464f45c9fc1ebb014acd060e" + "</ic:MasterKey>" +
+			 "     <ic:ClaimValueList>" + 
+			 "       <ic:ClaimValue Uri=\"" + "uri1" + "\"><ic:Value>" + "value1" + "</ic:Value></ic:ClaimValue>" +
+			 "     </ic:ClaimValueList>" +
+			 "   </ic:InformationCardPrivateData>" +
 			 "   <supportedclaim>givenname</supportedclaim>" +
 			 "   <supportedclaim>surname</supportedclaim>" +
 			 "   <supportedclaim>emailaddress</supportedclaim>" +
 			 "   <supportedclaim>imgurl</supportedclaim>" +
-			 "   <carddata>" +
-			 "     <selfasserted>" +
-			 "       <givenname>Axel</givenname>" +
-			 "       <surname>Nennker</surname>" +
-			 "       <emailaddress>axel@nennker.de</emailaddress>" +
-			 "       <imgurl>file:///D:/Dokumente/nessus.png</imgurl>" +
-			 "     </selfasserted>" +
-			 "   </carddata>" +
 			 " </infocard>";
 			        X509Certificate cert = null;
 			        cert = org.xmldap.util.XmldapCertsAndKeys.getXmldapCert1();
@@ -60,16 +59,28 @@ public class RequestSecurityTokenTest extends TestCase {
 					String optionalClaims = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender";
 					X509Certificate signingCert = cert;
 					PrivateKey signingKey = privateKey;
+					
+			    Document infocard;
+			    try {
+			      infocard = XmlUtils.parse(card);
+			    } catch (IOException e) {
+			      throw new TokenIssuanceException(e);
+			    } catch (nu.xom.ParsingException e) {
+			      throw new TokenIssuanceException(e);    
+			    }
+			    String audience = "https://relyingparty.example.com/AudienceRestriction";
+			    String ppi = TokenIssuer.generateRPPPID(relyingPartyCert, chain, audience, infocard);
 					String encryptedXML = 	TokenIssuer.getSelfAssertedToken(
-							card, 
+					    infocard, 
 							relyingPartyCert,
 							chain,
 							requiredClaims,
 							optionalClaims,
 							signingCert,
 							signingKey,
-							"https://relyingparty.example.com/AudienceRestriction",
-							Subject.HOLDER_OF_KEY);
+							audience,
+							Subject.HOLDER_OF_KEY,
+							ppi);
 					Token token = new Token(encryptedXML, privateKey);
         
         String sts = "http://contoso.com/tokenservice";

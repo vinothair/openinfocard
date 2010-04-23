@@ -487,7 +487,8 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
         if (certChain != null && certChain.length > 0) {
             System.out.println("SigningCArd");
             //Get the signing util
-            InfoCardSignature signer = new InfoCardSignature(certChain,privateKey);
+            String signingAlgorithm = "SHA1withRSA";
+            InfoCardSignature signer = new InfoCardSignature(certChain,privateKey, signingAlgorithm);
 
             Element signedCard = null;
 

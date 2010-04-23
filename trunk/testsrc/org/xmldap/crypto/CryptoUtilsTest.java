@@ -30,7 +30,7 @@ public class CryptoUtilsTest extends TestCase {
 	public void testByteDigest() {
 		byte[] data = "test".getBytes();
 		try {
-			byte[] digest = CryptoUtils.byteDigest(data);
+			byte[] digest = CryptoUtils.byteDigest(data, "SHA");
 			String digestB64 = Base64.encodeBytesNoBreaks(digest);
 			assertEquals("qUqP5cyxm6YcTAhz05Hph5gvu9M=", digestB64);
 		} catch (CryptoException e) {
@@ -42,7 +42,7 @@ public class CryptoUtilsTest extends TestCase {
 			data[i] = (byte)(i & 0xFF);
 		}
 		try {
-			byte[] digest = CryptoUtils.byteDigest(data);
+			byte[] digest = CryptoUtils.byteDigest(data, "SHA");
 			String digestB64 = Base64.encodeBytesNoBreaks(digest);
 			assertEquals("WwBmnEgNXP+9+ovbqZVhFg8tG3c=", digestB64);
 		} catch (CryptoException e) {
@@ -53,7 +53,7 @@ public class CryptoUtilsTest extends TestCase {
 	public void testDigest() {
 		byte[] data = "test".getBytes();
 		try {
-			String b64 = CryptoUtils.digest(data);
+			String b64 = CryptoUtils.digest(data, "SHA");
 			assertEquals("qUqP5cyxm6YcTAhz05Hph5gvu9M=", b64);
 		} catch (CryptoException e) {
 			assertEquals("", e.getMessage());
@@ -63,7 +63,7 @@ public class CryptoUtilsTest extends TestCase {
 			data[i] = (byte)(i & 0xFF);
 		}
 		try {
-			String b64 = CryptoUtils.digest(data);
+			String b64 = CryptoUtils.digest(data, "SHA");
 			assertEquals("WwBmnEgNXP+9+ovbqZVhFg8tG3c=", b64);
 		} catch (CryptoException e) {
 			assertEquals("", e.getMessage());
@@ -124,7 +124,7 @@ public class CryptoUtilsTest extends TestCase {
 		String text = "test";
 		 
 		try {
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", new BouncyCastleProvider());
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(1024, new SecureRandom());
 			KeyPair kp = keyGen.generateKeyPair();
 			RSAPublicKey rsaPublicKey = (RSAPublicKey)kp.getPublic();
@@ -142,10 +142,11 @@ public class CryptoUtilsTest extends TestCase {
 	public void testSignVerify() {
 		String text = "test";
 		try {
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", new BouncyCastleProvider());
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(1024, new SecureRandom());
 			KeyPair kp = keyGen.generateKeyPair();
-			String b64signature = CryptoUtils.sign(text.getBytes(), kp.getPrivate());
+	        String signingAlgorithm = "SHA1withRSA";
+			String b64signature = CryptoUtils.sign(text.getBytes(), kp.getPrivate(), signingAlgorithm);
 			RSAPublicKey publicKey = (RSAPublicKey) kp.getPublic();
 			byte[] signature = Base64.decode(b64signature);
 			
@@ -162,12 +163,13 @@ public class CryptoUtilsTest extends TestCase {
 	public void testSignVerifyLength() {
 		String text = "test";
 		try {
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", new BouncyCastleProvider());
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(1024, new SecureRandom());
 			KeyPair kp = keyGen.generateKeyPair();
 			RSAPrivateKey privateKey = (RSAPrivateKey)kp.getPrivate();
 			assertEquals(1024, privateKey.getModulus().bitLength());
-			String b64signature = CryptoUtils.sign(text.getBytes(), privateKey);
+	        String signingAlgorithm = "SHA1withRSA";
+			String b64signature = CryptoUtils.sign(text.getBytes(), privateKey, signingAlgorithm);
 			assertEquals(172, b64signature.length());
 			byte[] signature = Base64.decode(b64signature);
 			assertEquals(1024 / 8, signature.length);
@@ -190,7 +192,8 @@ public class CryptoUtilsTest extends TestCase {
 		String text = "test";
 		try {
 			PrivateKey privateKey = XmldapCertsAndKeys.getXmldapPrivateKey();
-			String b64signature = CryptoUtils.sign(text.getBytes(), privateKey);
+			String signingAlgorithm = "SHA1withRSA";
+			String b64signature = CryptoUtils.sign(text.getBytes(), privateKey, signingAlgorithm);
 			assertEquals("rxEfBXFsfPsb+cxYZZcn359NLeSPkN6BA+JKXe+VwRJVA96pV1gvshSe6e" +
 					"/2uox14lO5UR6EugDGiDIH9Kx7MeINKOw6+bzMirPh3FGUnWVXDv/sxafd4/gYP" +
 					"hcB+UlN184nUqQHUtc8ZV3l+p5yaMuLeVDYTsqgrHvdYroZH8nKAIWcmFC6QT21" +

@@ -54,7 +54,7 @@ public class SignatureValue implements Serializable {
 
         byte[] bytes = signedInfo.canonicalize();
         try {
-            signatureValue.appendChild(CryptoUtils.sign(bytes, privateKey));
+            signatureValue.appendChild(CryptoUtils.sign(bytes, privateKey, "SHA1withRSA"));
         } catch (CryptoException e) {
             throw new SerializationException(e);
         }

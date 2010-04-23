@@ -61,7 +61,7 @@ public class Signature implements Serializable {
         this.Id = Id;
     }
 
-    private Element getSignature() {
+    private Element getSignature() throws SerializationException {
 
 
         Element signature = new Element("dsig:Signature", "http://www.w3.org/2000/09/xmldsig#");
@@ -73,16 +73,19 @@ public class Signature implements Serializable {
             signature.appendChild(signedInfo.serialize());
         } catch (SerializationException e) {
             e.printStackTrace();
+            throw e;
         }
         try {
             signature.appendChild(signatureValue.serialize());
         } catch (SerializationException e) {
             e.printStackTrace();
+            throw e;
         }
         try {
             signature.appendChild(keyInfo.serialize());
         } catch (SerializationException e) {
             e.printStackTrace();
+            throw e;
         }
         return signature;
 

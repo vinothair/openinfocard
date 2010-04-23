@@ -42,16 +42,17 @@ import java.util.Vector;
 
 public class InfoCardSignature {
 
-
+	String mAlgorithm;
     private X509Certificate[] certChain;
     private PrivateKey privateKey;
 
-    public InfoCardSignature(X509Certificate cert, PrivateKey privateKey) {
+    public InfoCardSignature(X509Certificate cert, PrivateKey privateKey, String signingAlgorithm) {
         this.certChain = new X509Certificate[]{cert};
         this.privateKey = privateKey;
+        this.mAlgorithm = signingAlgorithm;
     }
 
-    public InfoCardSignature(X509Certificate[] certChain, PrivateKey privateKey) {
+    public InfoCardSignature(X509Certificate[] certChain, PrivateKey privateKey, String signingAlgorithm) {
     	if (certChain == null) {
     		throw new IllegalArgumentException("InfoCardSignature: certCain == null");
     	}
@@ -60,6 +61,7 @@ public class InfoCardSignature {
     	}
         this.certChain = certChain;
         this.privateKey = privateKey;
+        this.mAlgorithm = signingAlgorithm;
     }
 
     public Element sign(Element xml) throws SigningException {
@@ -72,14 +74,14 @@ public class InfoCardSignature {
         object.addAttribute(id);
         object.appendChild(xml);
 
-        Reference referenceElm = new Reference(object, id.getValue());
+        Reference referenceElm = new Reference(object, id.getValue(), null, "SHA");
         referenceElm.setEnveloped(false);
 
         Vector references = new Vector();
         references.add(referenceElm);
 
         //Get SignedInfo for reference
-        SignedInfo signedInfo = new SignedInfo(references);
+        SignedInfo signedInfo = new SignedInfo(references, mAlgorithm);
 
         //Get sigvalue for the signedInfo
         SignatureValue signatureValue = new SignatureValue(signedInfo, privateKey);
