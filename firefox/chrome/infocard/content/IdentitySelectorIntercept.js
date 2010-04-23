@@ -23,7 +23,6 @@
 function interceptOnDOMChanged( event)
 {
         var target = event ? event.target : this;
-        var doc;
 
         if( target.wrappedJSObject)
         {
@@ -32,17 +31,20 @@ function interceptOnDOMChanged( event)
 
         try
         {
-                if( (doc = target.ownerDocument) === undefined)
-                {
-                        return;
-                }
+          var doc = target.ownerDocument;
+          if(!doc)
+          {
+                  return;
+          }
 
-                var domEvent = doc.createEvent( "Event");
-                domEvent.initEvent( "ICDOMChanged", true, true);
-                target.dispatchEvent( domEvent);
+          var domEvent = doc.createEvent( "Event");
+          domEvent.initEvent( "ICDOMChanged", true, true);
+          target.dispatchEvent( domEvent);
         }
         catch( e)
         {
+          var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+          debug.logStringMessage("interceptOnDOMChanged: exception=" + e);
         }
 }
        
@@ -51,91 +53,103 @@ function interceptOnDOMChanged( event)
 // **************************************************************************
 try
 {
-        if( document.__identityselector__ === undefined)
+  var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+
+  if( this.__identityselector__ === undefined)
+  {
+    this.__identityselector__ = {};
+    this.__identityselector__.data = {};
+    this.__identityselector__.submitIntercepted = false;
+ 
+    // Insert ourselves into the submit handler chain
+   
+    this.__identityselector__.chainSubmit =
+            HTMLFormElement.prototype.submit;
+
+    HTMLFormElement.prototype.submit = function()
+    {
+      try {
+        var event = document.createEvent( "Event");
+        event.initEvent( "ICFormSubmit", true, true);
+        this.dispatchEvent( event);
+//        if (document.__identityselector__.submitIntercepted === false) {
+//          document.__identityselector__.submitIntercepted = true;
+          document.__identityselector__.chainSubmit.apply( this);
+//        }
+      } catch (submitException) {
+        alert("submit: exception=" + submitException);
+      }
+    };
+   
+    // Define a value getter
+   
+    this.__identityselector__.valueGetter = function()
+    {
+      try
+      {
+        var event = document.createEvent( "Event");
+        event.initEvent( "ICGetTokenValue", true, true);
+        this.dispatchEvent( event);
+        return( this.__value);
+      }
+      catch( e)
+      {
+        alert( e);
+      }
+      return null;
+    };
+   
+    // Special case for Microsoft sites (such as live.com) that
+    // expect a cardspace object to be available
+   
+    cardspace = {};
+    cardspace.__defineGetter__( "value", function()
+    {
+      try
+      {
+        if( document.__identityselector__.targetElem === undefined)
         {
-                document.__identityselector__ = {};
-                document.__identityselector__.data = {};
-                document.__identityselector__.submitIntercepted = false;
-       
-                // Insert ourselves into the submit handler chain
-               
-                document.__identityselector__.chainSubmit =
-                        HTMLFormElement.prototype.submit;
-       
-                HTMLFormElement.prototype.submit = function()
-                {
-                        var event = document.createEvent( "Event");
-                        event.initEvent( "ICFormSubmit", true, true);
-                        this.dispatchEvent( event);
-                        document.__identityselector__.chainSubmit.apply( this);
-                };
-               
-                // Define a value getter
-               
-                document.__identityselector__.valueGetter = function()
-                {
-                        try
-                        {
-                                var event = document.createEvent( "Event");
-                                event.initEvent( "ICGetTokenValue", true, true);
-                                this.dispatchEvent( event);
-                                return( this.__value);
-                        }
-                        catch( e)
-                        {
-                                alert( e);
-                        }
-                        return null;
-                };
-               
-                // Special case for Microsoft sites (such as live.com) that
-                // expect a cardspace object to be available
-               
-                cardspace = {};
-                cardspace.__defineGetter__( "value", function()
-                {
-                        try
-                        {
-                                if( document.__identityselector__.targetElem === undefined)
-                                {
-                                        var event = document.createEvent( "Event");
-                                        event.initEvent( "ICProcessItems", true, true);
-                                        document.dispatchEvent( event);
-                                }
-       
-                                return( document.__identityselector__.targetElem.value);
-                        }
-                        catch( e)
-                        {
-                                alert( e);
-                        }
-                });
-               
-                // Add DOM listeners to watch for changes to the document
-                // that could result in new information card objects being
-                // added
-               
-                document.addEventListener(
-                        "DOMNodeInserted",
-                        interceptOnDOMChanged,
-                        false, false);
-               
-                document.addEventListener(
-                        "DOMAttrModified",
-                        interceptOnDOMChanged,
-                        false, false);
-               
-                document.addEventListener(
-                        "DOMSubtreeModified",
-                        interceptOnDOMChanged,
-                        false, false);
-               
-                document.addEventListener(
-                        "DOMNodeInsertedIntoDocument",
-                        interceptOnDOMChanged,
-                        false, false);
+          var event = document.createEvent( "Event");
+          event.initEvent( "ICProcessItems", true, true);
+          document.dispatchEvent( event);
         }
+   
+        return( document.__identityselector__.targetElem.value);
+      }
+      catch( e)
+      {
+        alert( e);
+      }
+      return null;
+    });
+
+    // Add DOM listeners to watch for changes to the document
+    // that could result in new information card objects being
+    // added
+   
+    this.addEventListener(
+            "DOMNodeInserted",
+            interceptOnDOMChanged,
+            false, false);
+   
+    this.addEventListener(
+            "DOMAttrModified",
+            interceptOnDOMChanged,
+            false, false);
+   
+    this.addEventListener(
+            "DOMSubtreeModified",
+            interceptOnDOMChanged,
+            false, false);
+   
+    this.addEventListener(
+            "DOMNodeInsertedIntoDocument",
+            interceptOnDOMChanged,
+            false, false);
+  }
 }
 catch( e)
 {
+  var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+  debug.logStringMessage("intercept: exception=" + e);
 }

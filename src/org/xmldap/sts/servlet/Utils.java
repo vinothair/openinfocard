@@ -2,7 +2,6 @@ package org.xmldap.sts.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Iterator;
@@ -129,7 +128,8 @@ public class Utils {
     		X509Certificate cert, RSAPrivateKey key,
     		String issuer,
     		SupportedClaims supportedClaimsImpl,
-    		String restrictedTo, String relyingPartyCertB64) throws IOException, CryptoException, TokenIssuanceException {
+    		String restrictedTo, String relyingPartyCertB64,
+    		String messageDigestAlgorithm) throws IOException, CryptoException, TokenIssuanceException {
 
 
         Element envelope = new Element(WSConstants.SOAP_PREFIX + ":Envelope", WSConstants.SOAP12_NAMESPACE);
@@ -169,7 +169,10 @@ public class Utils {
         Element rst = new Element(WSConstants.TRUST_PREFIX + ":RequestedSecurityToken", WSConstants.TRUST_NAMESPACE_05_02);
 
         AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(cert);
-        ManagedToken token = new ManagedToken(keyInfo,key,tokentype);
+        
+        String signatureAlgorithm = messageDigestAlgorithm + "with" + key.getAlgorithm();
+    	log.log(java.util.logging.Level.INFO, "signatureAlgorithm=" + signatureAlgorithm);
+        ManagedToken token = new ManagedToken(keyInfo,key,tokentype, signatureAlgorithm);
 
 //        if ((restrictedTo != null) && (relyingPartyCertB64 != null)) {
         if (restrictedTo != null) {
@@ -244,7 +247,7 @@ public class Utils {
         	String cardPPID = card.getPrivatePersonalIdentifier(); // unique for this STS
         	baos.write(cardPPID.getBytes());
         	baos.write(ppid.getBytes());
-        	String digest = CryptoUtils.digest(baos.toByteArray());
+        	String digest = CryptoUtils.digest(baos.toByteArray(), "SHA");
         	token.setPrivatePersonalIdentifier(digest);
         } else {
         	String cardPPID = card.getPrivatePersonalIdentifier();
@@ -257,13 +260,13 @@ public class Utils {
         		// TODO: maybe change this to use only the cert issuer and subject
         		// instead of the whole certB64
         		baos.write(relyingPartyCertB64.getBytes());
-        		String digest = CryptoUtils.digest(baos.toByteArray());
+        		String digest = CryptoUtils.digest(baos.toByteArray(), "SHA");
         		token.setPrivatePersonalIdentifier(digest);
         	} else if (restrictedTo != null) {
         		ByteArrayOutputStream baos = new ByteArrayOutputStream();
         		baos.write(restrictedTo.getBytes());
         		baos.write(cardPPID.getBytes());
-        		String digest = CryptoUtils.digest(baos.toByteArray());
+        		String digest = CryptoUtils.digest(baos.toByteArray(), "SHA");
         		token.setPrivatePersonalIdentifier(digest);
         	} else {
         		// TODO Axel what now?

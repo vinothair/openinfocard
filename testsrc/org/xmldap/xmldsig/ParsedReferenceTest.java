@@ -48,7 +48,7 @@ public class ParsedReferenceTest extends TestCase {
         	Document doc = org.xmldap.xml.XmlUtils.parse(referenceStr);
         	referenceElement = doc.getRootElement();
 
-    		Reference ref = new Reference(assertionElement, "uuid-7B20C5C0-9B85-35D1-590A-D1B3093451CF");
+    		Reference ref = new Reference(assertionElement, "uuid-7B20C5C0-9B85-35D1-590A-D1B3093451CF", null, "SHA");
     		try {
 				assertEquals(referenceStr, ref.toXML());
 			} catch (SerializationException e) {

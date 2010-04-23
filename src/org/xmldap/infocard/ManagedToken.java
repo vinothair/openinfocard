@@ -45,7 +45,8 @@ import java.util.Set;
 import java.util.Vector;
 
 public class ManagedToken implements Serializable {
-
+	String mAlgorithm;
+	
 	//private String namespacePrefix = null;
 	private String privatePersonalIdentifier;
 
@@ -76,10 +77,11 @@ public class ManagedToken implements Serializable {
 	//        this.signingKey = signingKey;
 	////        namespacePrefix = org.xmldap.infocard.Constants.IC_NAMESPACE_PREFIX; // default is the new (Autumn 2006) namespace
 	//    }
-	public ManagedToken(KeyInfo keyInfo, PrivateKey signingKey, String tokentype) {
+	public ManagedToken(KeyInfo keyInfo, PrivateKey signingKey, String tokentype, String signingAlgorithm) {
 		this.keyInfo = keyInfo;
 		this.signingKey = signingKey;
 		this.tokentype = tokentype;
+		this.mAlgorithm = signingAlgorithm;
 	}
 
 	public void setIssuer(String issuer) {
@@ -185,7 +187,7 @@ public class ManagedToken implements Serializable {
 		assertion.setAttributeStatement(statement);
 
 		//make this support multiple signing modes
-		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo, signingKey);
+		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo, signingKey, mAlgorithm);
 
 		Element signedXML = null;
 		try {

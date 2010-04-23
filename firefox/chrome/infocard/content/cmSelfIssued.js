@@ -17,9 +17,7 @@ function setOptionalClaimsSelf(policy) {
 
   var claims = optionalClaims.split(/\s+/);
   icDebug("setOptionalClaimsSelf claims: " + claims);
-  var i;
-  for (i in claims) {
-     var uri;
+  for (var i=0; i<claims.length; i++) {
      var claim = claims[i];
      icDebug("setOptionalClaimsSelf claim: " + claim);
      
@@ -63,38 +61,38 @@ function indicateRequiredClaim(requiredClaims, optionalClaims, claim){
 }
 
 function indicateRequiredClaims(policy){
-	 var requiredClaims = policy.requiredClaims;
-	 if (requiredClaims === undefined) { return; }
-	 if (requiredClaims === null) { return; }
-	
-	 var optionalClaims = policy.optionalClaims;
-	 
-	 //requiredClaims = requiredClaims.toLowerCase();
-	 //if (optionalClaims !== null) {
-	 	 //optionalClaims = optionalClaims.toLowerCase();
-	 //}
-	
-	icDebug("requiredClaims: " + requiredClaims);
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "givenname");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "surname");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "email");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "streetAddress");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "locality");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "stateOrProvince");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "postalCode");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "country");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "primaryPhone");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "otherPhone");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "mobilePhone");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "dateOfBirth");
-	 indicateRequiredClaim(requiredClaims, optionalClaims, "gender");
+   var requiredClaims = policy.requiredClaims;
+   if (requiredClaims === undefined) { return; }
+   if (requiredClaims === null) { return; }
+  
+   var optionalClaims = policy.optionalClaims;
+   
+   //requiredClaims = requiredClaims.toLowerCase();
+   //if (optionalClaims !== null) {
+      //optionalClaims = optionalClaims.toLowerCase();
+   //}
+  
+  icDebug("requiredClaims: " + requiredClaims);
+   indicateRequiredClaim(requiredClaims, optionalClaims, "givenname");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "surname");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "email");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "streetAddress");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "locality");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "stateOrProvince");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "postalCode");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "country");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "primaryPhone");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "otherPhone");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "mobilePhone");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "dateOfBirth");
+   indicateRequiredClaim(requiredClaims, optionalClaims, "gender");
 }
 
 function setCardSelf(selectedCard, policy) {
-	//icDebug("setCardSelf card= " + selectedCard);
-	icDebug("setCardSelf givenname: " + selectedCard.carddata.selfasserted.givenname);
+  //icDebug("setCardSelf card= " + selectedCard);
+  icDebug("setCardSelf givenname: " + selectedCard.carddata.selfasserted.givenname);
         document.getElementById("givenname").value = selectedCard.carddata.selfasserted.givenname;
-	icDebug("setCardSelf: " + document.getElementById("givenname").value);
+  icDebug("setCardSelf: " + document.getElementById("givenname").value);
         document.getElementById("surname").value = selectedCard.carddata.selfasserted.surname;
         document.getElementById("email").value = selectedCard.carddata.selfasserted.emailaddress;
         document.getElementById("streetAddress").value = selectedCard.carddata.selfasserted.streetaddress;
@@ -127,10 +125,10 @@ function setCardSelf(selectedCard, policy) {
         document.getElementById("gender").visibility = 'visible';
         document.getElementById("imgurl").visibility = 'visible';
 
-   	 	if (policy !== null) {
-   	 		indicateRequiredClaims(policy);
-   	 	}
-   	 	
+        if (policy !== null) {
+          indicateRequiredClaims(policy);
+        }
+        
         var grid = document.getElementById("editgrid");
         grid.setAttribute("hidden", "false");
 
@@ -138,10 +136,44 @@ function setCardSelf(selectedCard, policy) {
         var grid1 = document.getElementById("editgrid1");
         grid1.setAttribute("hidden", "false");
 
-		var stringsBundle = document.getElementById("string-bundle");
-		var selfassertedcard = stringsBundle.getString('selfassertedcard');
+    var stringsBundle = document.getElementById("string-bundle");
+    var selfassertedcard = stringsBundle.getString('selfassertedcard');
         var label = document.getElementById("notify");
         if (label !== null) {
-        	label.setAttribute("value", selfassertedcard);
+          label.setAttribute("value", selfassertedcard);
         }
 }
+
+function findSelfIssuedCardByPPID(ppid, serializedPolicy) {
+  var cardFile;
+  try {
+    var cardstoreManagerSvc = Components.classes["@openinfocard.org/CardstoreManager/service;1"].
+                                   getService( Components.interfaces.nsIHelloWorld);
+
+    cardFile = CardstoreToolkit.readCardStore();
+    icDebug("findSelfIssuedCardByPPID cardFile = " + cardFile);
+  } catch (eee) {
+    icDebug("findSelfIssuedCardByPPID = exception" + eee);
+    throw eee;
+  }
+  
+  var cardXmllist = cardFile.infocard;
+  for (var i=0; i<cardXmllist.length(); i++) {
+    var c = cardXmllist[i];
+    var type = c.type;
+    icDebug("findSelfIssuedCardByPPID c = " + c);
+    if (c.type.toString() !== "selfAsserted") {
+      continue;
+    }
+    var cardPpid = TokenIssuer.generateRPPPID(serializedPolicy);
+    icDebug("findSelfIssuedCardByPPID ppid=" + ppid + " c.id=" + c.id);
+    if (cardPpid === ppid) {
+      icDebug("findSelfIssuedCardByPPID = matching card found for ppid" + ppid);
+      return c;
+    }
+  }
+  icDebug("findSelfIssuedCardByPPID = no matching card found for ppid" + ppid);
+  return null;
+
+}
+

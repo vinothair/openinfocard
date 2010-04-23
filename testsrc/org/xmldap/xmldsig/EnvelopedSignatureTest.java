@@ -155,8 +155,9 @@ public class EnvelopedSignatureTest extends TestCase {
 				.getXmldapPrivateKey();
 
 		KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+		String signingAlgorithm = "SHA1withRSA";
 		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
-				signingKey);
+				signingKey, signingAlgorithm);
 		Element signedXML = signer.sign(body);
 //		System.out.println(signedXML.toXML());
 		assertTrue(EnvelopedSignature.validate(signedXML.toXML()));
@@ -182,8 +183,9 @@ public class EnvelopedSignatureTest extends TestCase {
 				.getXmldapPrivateKey();
 
 		KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+        String signingAlgorithm = "SHA1withRSA";
 		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
-				signingKey);
+				signingKey, signingAlgorithm);
 		Document signedXML = signer.sign(bodyDoc);
 //		String test = signedXML.toXML();
 //		System.out.println(test);
@@ -202,8 +204,9 @@ public class EnvelopedSignatureTest extends TestCase {
 				.getXmldapPrivateKey();
 
 		KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+        String signingAlgorithm = "SHA1withRSA";
 		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
-				signingKey);
+				signingKey, signingAlgorithm);
 
 		assertTrue(EnvelopedSignature.validate(signer.sign(XML)));
 
@@ -241,8 +244,9 @@ public class EnvelopedSignatureTest extends TestCase {
 				.getXmldapPrivateKey();
 
 		KeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
+        String signingAlgorithm = "SHA1withRSA";
 		EnvelopedSignature signer = new EnvelopedSignature(keyInfo,
-				signingKey);
+				signingKey, signingAlgorithm);
 
         Conditions conditions = new Conditions(-5, 10);
 
@@ -275,7 +279,8 @@ public class EnvelopedSignatureTest extends TestCase {
 //
 		X509Certificate relyingPartyCert = xmldapCert;
 		RSAPublicKey signingKey = (RSAPublicKey)xmldapCert.getPublicKey();
-		SelfIssuedToken token = new SelfIssuedToken(signingKey, xmldapKey);
+        String signingAlgorithm = "SHA1withRSA";
+		SelfIssuedToken token = new SelfIssuedToken(signingKey, xmldapKey, signingAlgorithm);
 	
 		token.setPrivatePersonalIdentifier(Base64.encodeBytesNoBreaks("ppid".getBytes()));
 		token.setValidityPeriod(-5, 10);
@@ -296,7 +301,8 @@ public class EnvelopedSignatureTest extends TestCase {
 //				xmldapKey);
 //
 		RSAPublicKey signingKey = (RSAPublicKey)xmldapCert.getPublicKey();
-		SelfIssuedToken token = new SelfIssuedToken(signingKey, xmldapKey);
+        String signingAlgorithm = "SHA1withRSA";
+		SelfIssuedToken token = new SelfIssuedToken(signingKey, xmldapKey, signingAlgorithm);
 	
 		token.setPrivatePersonalIdentifier(Base64.encodeBytesNoBreaks("ppid".getBytes()));
 		token.setValidityPeriod(-5, 10);
@@ -324,7 +330,7 @@ public class EnvelopedSignatureTest extends TestCase {
 		assertion.setAttributeStatement(statement);
 
 		RsaPublicKeyInfo keyInfo = new RsaPublicKeyInfo((RSAPublicKey)xmldapCert.getPublicKey());
-		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo,	xmldapKey);
+		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo, xmldapKey, signingAlgorithm);
 
 		Element signedXML = null;
 		try {
@@ -341,10 +347,10 @@ public class EnvelopedSignatureTest extends TestCase {
 			if (idVal == null) {
 				throw new IllegalArgumentException("BaseEnvelopedSignature: Element to sign does not have an id-ttribute");
 			}
-			Reference reference = new Reference(signThisOne, idVal);
+			Reference reference = new Reference(signThisOne, idVal, null, "SHA");
 			
 			//Get SignedInfo for reference
-			SignedInfo signedInfo = new SignedInfo(reference);
+			SignedInfo signedInfo = new SignedInfo(reference, signingAlgorithm);
 			
 			Signature signature = signer.getSignatureValue(signedInfo);
 			

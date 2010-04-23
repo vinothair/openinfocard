@@ -1,53 +1,38 @@
      function selfAssertedCallback() {
 
          var callbackdata = {};
-         callbackdata["type"] = "selfAsserted";
+         callbackdata.type = "selfAsserted";
          
          var selfAssertedRows = document.getElementById("selfAssertedRows");
-         if (selfAssertedRows === undefined || selfAssertedRows === null) {
-        	 // internal error
-        	 Components.utils.reportError("cardWizard:selfAssertedCallback: could not find element with id=" + 
-        			 "selfAssertedRows");
-        	 return;
+         if (!selfAssertedRows) {
+           // internal error
+           Components.utils.reportError("cardWizard:selfAssertedCallback: could not find element with id=" + 
+               "selfAssertedRows");
+           return;
          }
          if (!selfAssertedRows.hasChildNodes()) { 
-        	 Components.utils.reportError("cardWizard:selfAssertedCallback: no rows");
-        	 selfAssertedRows.removeChild(selfAssertedRows.childNodes[0]);
-    	 }
+           Components.utils.reportError("cardWizard:selfAssertedCallback: no rows");
+// selfAssertedRows.removeChild(selfAssertedRows.childNodes[0]); this does not
+// make sense Axel 20100127
+       }
          for (var i=0; i<selfAssertedRows.childNodes.length; i++) {
-        	 var aRow = selfAssertedRows.childNodes[i];
-        	 var aLabel = aRow.childNodes[0];
-        	 var aText = aRow.childNodes[1];
-        	 if ((aText.value !== undefined) && (aText.value !== "")) {
-	        	 var id = aText.getAttribute("id");
-	        	 if (id === "cardName") {
-        			 callbackdata[id] = aText.value;
-        		 } else {
-        			 var object = {};
-        			 object.displayTag = aLabel.value;
-    	        	 object.claimValue = aText.value;
-    	        	 callbackdata[id] = object;
-    	        	 cardWizardDebug("selfAssertedCallback: callbackdata[" + id + "] = " + callbackdata[id]);
-    	         }
-        	 }
+           var aRow = selfAssertedRows.childNodes[i];
+           var aLabel = aRow.childNodes[0];
+           var aText = aRow.childNodes[1];
+           if ((aText.value !== undefined) && (aText.value !== "")) {
+             var id = aText.getAttribute("id");
+             if (id === "cardName") {
+               callbackdata[id] = aText.value;
+             } else {
+               var object = {};
+               object.displayTag = aLabel.value;
+               object.claimValue = aText.value;
+               callbackdata[id] = object;
+               cardWizardDebug("selfAssertedCallback: callbackdata[" + id + "] = " + callbackdata[id]);
+               }
+           }
          }
          
-//         callbackdata["cardName"] = document.getElementById("cardName").value;
-//         callbackdata["givenname"] = document.getElementById("givenname").value;
-//         callbackdata["surname"] = document.getElementById("surname").value;
-//         callbackdata["email"] = document.getElementById("email").value;
-//         callbackdata["streetAddress"] = document.getElementById("streetAddress").value;
-//         callbackdata["locality"] = document.getElementById("locality").value;
-//         callbackdata["stateOrProvince"] = document.getElementById("stateOrProvince").value;
-//         callbackdata["postalCode"] = document.getElementById("postalCode").value;
-//         callbackdata["country"] = document.getElementById("country").value;
-//         callbackdata["primaryPhone"] = document.getElementById("primaryPhone").value;
-//         callbackdata["otherPhone"] = document.getElementById("otherPhone").value;
-//         callbackdata["mobilePhone"] = document.getElementById("mobilePhone").value;
-//         callbackdata["dateOfBirth"] = document.getElementById("dateOfBirth").value;
-//         callbackdata["gender"] = document.getElementById("gender").value;
-//         callbackdata["imgurl"] = document.getElementById("imgurl").value;
-
          window.arguments[1](callbackdata);
 
          document.getElementById('card-window').cancel();
@@ -75,59 +60,59 @@
       var theCard = "";
      var theFile;
      var theData;          
-	
-	function onProgress(e) {
-		var loadingStatus = document.getElementById("loadingStatus");
-		var percentComplete = 0;
-		if (e.totalSize > 0) {
-		  percentComplete = (e.position / e.totalSize)*100;
-		  loadingStatus.value = "loaded: " + percentComplete +"%";
-		} else {
-			// blinking
-			if (loadingStatus.value.indexOf("loading") > 0) {
-				loadingStatus.value = "";
-			} else {
-				loadingStatus.value = "loading";
-			}
-		}
-	}
+  
+  function onProgress(e) {
+    var loadingStatus = document.getElementById("loadingStatus");
+    var percentComplete = 0;
+    if (e.totalSize > 0) {
+      percentComplete = (e.position / e.totalSize)*100;
+      loadingStatus.value = "loaded: " + percentComplete +"%";
+    } else {
+      // blinking
+      if (loadingStatus.value.indexOf("loading") > 0) {
+        loadingStatus.value = "";
+      } else {
+        loadingStatus.value = "loading";
+      }
+    }
+  }
 
-	function loadCardFromURL(url) {
-		var req = new XMLHttpRequest();
-		req.open('GET', url, true);
-		req.onprogress = onProgress;
-		req.onreadystatechange = function (aEvt) {
-		  if (req.readyState == 4) {
-			  var loadingStatus = document.getElementById("loadingStatus");
-			  if(req.status == 200) {
-			   loadingStatus.value = "loaded: 100%";
-			   theData = req.responseText;
-			  } else {
-			   loadingStatus.value = "Error loading page: " + req.status;
-			   cardWizardDebug(req.responseText);
-			  }
-		  }
-		};
-		req.send(null); 
-	}
-	
-	function onPageShowManagedCard() {
-		if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-		    var policy = window.arguments[0];
-		    if ((policy != null) && (policy.hasOwnProperty("tokenType"))) {
-				var tokenType = policy["tokenType"];
-				if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
-					if (policy.hasOwnProperty("issuer")) {
-						var textbox = document.getElementById("cardfile");
-						textbox.value = policy["issuer"];
-						textbox.setAttribute("readOnly", true);
-						loadCardFromURL(textbox.value);
-					}
-				}
-		    }
-		}
-	}
-	
+  function loadCardFromURL(url) {
+    var req = new XMLHttpRequest();
+    req.open('GET', url, true);
+    req.onprogress = onProgress;
+    req.onreadystatechange = function (aEvt) {
+      if (req.readyState == 4) {
+        var loadingStatus = document.getElementById("loadingStatus");
+        if(req.status == 200) {
+         loadingStatus.value = "loaded: 100%";
+         theData = req.responseText;
+        } else {
+         loadingStatus.value = "Error loading page: " + req.status;
+         cardWizardDebug(req.responseText);
+        }
+      }
+    };
+    req.send(null); 
+  }
+  
+  function onPageShowManagedCard() {
+    if (((window.arguments !== undefined)) && (window.arguments.length > null)) {
+        var policy = window.arguments[0];
+        if ((policy !== null) && (policy.hasOwnProperty("tokenType"))) {
+        var tokenType = policy["tokenType"];
+        if (tokenType === "urn:oasis:names:tc:IC:1.0:managedcard") {
+          if (policy.hasOwnProperty("issuer")) {
+            var textbox = document.getElementById("cardfile");
+            textbox.value = policy["issuer"];
+            textbox.setAttribute("readOnly", true);
+            loadCardFromURL(textbox.value);
+          }
+        }
+        }
+    }
+  }
+  
      function pickFile() {
 
       var textbox = document.getElementById("cardfile");
@@ -140,7 +125,7 @@
        fp.init(window, "Select a File", nsIFilePicker.modeOpen);
        fp.appendFilters( nsIFilePicker.filterAll );
        var res = fp.show();
-       if (res == nsIFilePicker.returnOK) {
+       if (res === nsIFilePicker.returnOK) {
          textbox.thefile = fp.file;
          theData = getFile(fp.file);
          theFile = fp.file;
@@ -177,21 +162,21 @@
              }
 
              var stop;
-			 while ((stop = data.indexOf("?>")) > 0) {
-			  cardWizardDebug("import managed card: removing processing instructions" + stop);
-			  var newData = data.substring(stop+2);
-			  data = newData;
-			  cardWizardDebug("import managed card: " + data);
-			 }
-			 
-			 // remove garbaged / BOM
-			 if ((stop = data.indexOf('<')) > 0) {
-				 var newData = data.substring(stop);
-				 cardWizardDebug("removed garbage in front of first <");
-				 data = newData;
-			 }
-			 
-		     cardWizardDebug("Import managed card: " + data);
+       while ((stop = data.indexOf("?>")) > 0) {
+        cardWizardDebug("import managed card: removing processing instructions" + stop);
+        var newData = data.substring(stop+2);
+        data = newData;
+        cardWizardDebug("import managed card: " + data);
+       }
+       
+       // remove garbaged / BOM
+       if ((stop = data.indexOf('<')) > 0) {
+         var newData = data.substring(stop);
+         cardWizardDebug("removed garbage in front of first <");
+         data = newData;
+       }
+       
+         cardWizardDebug("Import managed card: " + data);
              return data;
          } else {
             return "";
@@ -201,18 +186,18 @@
 
 
       function parseCard(cardData) {
-		     cardWizardDebug("parseCard: " + cardData);
+         cardWizardDebug("parseCard: " + cardData);
 
          var cardxml;
          
          try {
-        	 cardxml = new XML(cardData);
+           cardxml = new XML(cardData);
          } catch (e) {
-        	 alert(e);
+           alert(e);
              window.arguments[1](null);
 
              document.getElementById('card-window').cancel();
-        	 return;
+           return;
          }
          var dsig = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
          var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
@@ -233,11 +218,12 @@
          
          var stsCert = cardxml.dsig::KeyInfo;
 
-		 var supportedTokenTypeList = cardxml.dsig::Object.ic::InformationCard.ic::SupportedTokenTypeList;
+     var supportedTokenTypeList = cardxml.dsig::Object.ic::InformationCard.ic::SupportedTokenTypeList;
 
-		 var tokenServiceList = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList;
-//		 var cardUserCredential = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential;
-		 
+     var tokenServiceList = cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList;
+// var cardUserCredential =
+// cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential;
+     
 // var cardHint =
 // cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::DisplayCredentialHint;
 // var cardUid =
@@ -246,9 +232,9 @@
 // cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::X509V3Credential.dsig::X509Data.wss::KeyIdentifier;
 // var cardPrivatePersonalIdentifier =
 // cardxml.dsig::Object.ic::InformationCard.ic::TokenServiceList.ic::TokenService.ic::UserCredential.ic::SelfIssuedCredential.dsig::PrivatePersonalIdentifier;
-		 var requireAppliesTo = cardxml.dsig::Object.ic::InformationCard.ic::RequireAppliesTo;
-		 var requireStrongRecipientIdentity = cardxml.dsig::Object.ic::InformationCard.ic07::RequireStrongRecipientIdentity;
-		 
+     var requireAppliesTo = cardxml.dsig::Object.ic::InformationCard.ic::RequireAppliesTo;
+     var requireStrongRecipientIdentity = cardxml.dsig::Object.ic::InformationCard.ic07::RequireStrongRecipientIdentity;
+     
           cardWizardDebug(cardId);
           cardWizardDebug(cardName);
           cardWizardDebug(issuer);
@@ -256,11 +242,11 @@
 // cardWizardDebug(cardUid);
 // cardWizardDebug(cardKeyIdentifier);
 // cardWizardDebug(cardPrivatePersonalIdentifier);
-		  cardWizardDebug(tokenServiceList);
-		  cardWizardDebug("stsCert: " + stsCert);
-		  cardWizardDebug("requireAppliesTo:" + requireAppliesTo);
-		  cardWizardDebug("SupportedTokenTypeList:"+ supportedTokenTypeList);
-		  
+      cardWizardDebug(tokenServiceList);
+      cardWizardDebug("stsCert: " + stsCert);
+      cardWizardDebug("requireAppliesTo:" + requireAppliesTo);
+      cardWizardDebug("SupportedTokenTypeList:"+ supportedTokenTypeList);
+      
           var callbackdata = {};
           
           callbackdata["crdFileContent"] = cardData;
@@ -275,7 +261,7 @@
 // callbackdata["uid"] = cardUid;
 // callbackdata["KeyIdentifier"] = cardKeyIdentifier;
 // callbackdata["PrivatePersonalIdentifier"] = cardPrivatePersonalIdentifier;
-		  callbackdata["tokenServiceList"] = tokenServiceList;
+      callbackdata["tokenServiceList"] = tokenServiceList;
           callbackdata["stsCert"] = stsCert;
           callbackdata["supportedClaims"] = cardxml.dsig::Object.ic::InformationCard.ic::SupportedClaimTypeList;
           callbackdata["supportedTokenTypeList"] = supportedTokenTypeList;
@@ -286,23 +272,23 @@
               callbackdata["requireStrongRecipientIdentity"] = true;
           }
           
-			if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-			    var policy = window.arguments[0];
-			    if (policy != null && policy.hasOwnProperty("tokenType")) {
-					var tokenType = policy["tokenType"];
-					if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
-						digestNewCard(callbackdata);
-					}
-			    }
-			}
-		
-			{ 
-				var func = window.arguments[1];
-				if (typeof(func) == 'function') {
-					window.arguments[1](callbackdata);
-				}
-			}
-			
+      if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
+          var policy = window.arguments[0];
+          if (policy != null && policy.hasOwnProperty("tokenType")) {
+          var tokenType = policy["tokenType"];
+          if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
+            digestNewCard(callbackdata);
+          }
+          }
+      }
+    
+      { 
+        var func = window.arguments[1];
+        if (typeof(func) == 'function') {
+          window.arguments[1](callbackdata);
+        }
+      }
+      
           document.getElementById('card-window').cancel();
 
 
@@ -321,23 +307,98 @@
 
       }
 
-      function loadCardWizard(){
-		if ((!(window.arguments == undefined)) && (window.arguments.length > null)) {
-		    var policy = window.arguments[0];
-		    if ((policy != null) && (policy.hasOwnProperty("tokenType"))) {
-				var tokenType = policy["tokenType"];
-				if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
-					document.getElementById('card-window').goTo('managedCard');
-				}
-		    }
-		}
-    		
-    	}
+function loadCardWizard(){
+  cardWizardDebug("loadCardWizard");
+  if ((window.arguments !== undefined) && (window.arguments.length > 0)) {
+    var policy = window.arguments[0];
+    if ((policy !== null) && (policy.hasOwnProperty("tokenType"))) {
+      var tokenType = policy["tokenType"];
+      if (tokenType == "urn:oasis:names:tc:IC:1.0:managedcard") {
+        document.getElementById('card-window').goTo('managedCard');
+      }
+      
+      var selfAssertedRows = document.getElementById("selfAssertedRows");
+      if (selfAssertedRows) {
+        var requiredClaims = policy.requiredClaims;
+        if (requiredClaims !== null) {
+          requiredClaims = requiredClaims.replace(/\s+/g,' ');
+          cardWizardDebug("requiredClaims=" + requiredClaims);
+        }
+        var claims = requiredClaims.split(' ');
+        if (claims.length > 0) {
+          for (var i=0; i<claims.length; i++) {
+            var uri = claims[i];
+            cardWizardDebug("uri=" + uri);
+            if (uri == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") {
+              continue;
+            }
+            if (uri.indexOf(':') > 0) { // URNs and URIs must contain a colon
+              var elt = document.getElementById(uri);
+              if (!elt) { // not already in document
+                cardWizardDebug("xxx");
+                var aRow = document.createElement("row");
+                var aLabel = document.createElement("textbox");
+                aLabel.setAttribute("class", "lblTextBold");
+                aLabel.setAttribute("value", uri);
+                aLabel.setAttribute("tooltiptext", "required"); // this is not cropped
+                var aTextBox = document.createElement("textbox");
+                aTextBox.setAttribute("id", uri);
+                aTextBox.setAttribute("value", "");
+                aRow.appendChild(aLabel);
+                aRow.appendChild(aTextBox);
+                selfAssertedRows.appendChild(aRow);
+              } else {
+                cardWizardDebug("boink");
+                var sibling = elt.previousSibling;
+                if (sibling) {
+                  cardWizardDebug("sibling.value=" + sibling.value); // label
+                  sibling.setAttribute("class", "lblTextBold");
+                  sibling.setAttribute("tooltiptext", "required"); // this is not cropped
+                }
+              }
+            }
+          }
+        }
+        cardWizardDebug("xyz");
+        var optionalClaims = policy.optionalClaims;
+        if (optionalClaims !== null) {
+          optionalClaims = optionalClaims.replace(/\s+/g,' ');
+          cardWizardDebug("optionalClaims=" + optionalClaims);
+        }
+        claims = optionalClaims.split(' ');
+        if (claims.length > 0) {
+          for (var i=0; i<claims.length; i++) {
+            var uri = claims[i];
+            cardWizardDebug("URI=" + uri);
+            if (uri == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") {
+              continue;
+            }
+            if (uri.indexOf(':') > 0) { // URNs and URIs must contain a colon
+              if (!document.getElementById(uri)) { // not already in document
+                var aRow = document.createElement("row");
+                var aLabel = document.createElement("textbox");
+                aLabel.setAttribute("class", "lblText");
+                aLabel.setAttribute("value", uri);
+                var aTextBox = document.createElement("textbox");
+                aTextBox.setAttribute("id", ""+ uri);
+                aTextBox.setAttribute("value", "");
+                aRow.appendChild(aLabel);
+                aRow.appendChild(aTextBox);
+                selfAssertedRows.appendChild(aRow);
+              }
+            }
+          }
+        }
+
+      }
+    }
+  }
+}
       
       function cardWizardDebug(msg) {
-    	  var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
-    	  debug.logStringMessage("cardWizard: " + msg);
-    	}
+        var debug = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+        debug.logStringMessage("cardWizard: " + msg);
+      }
       
 
 

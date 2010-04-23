@@ -91,7 +91,7 @@ public class TestTokenServiceReference extends TestCase {
         String tsURL = "https://xmldap.org/sts/tokenservice"; 
         String mexURL = "https://xmldap.org/sts/mex";
         X509Certificate userCert = org.xmldap.util.XmldapCertsAndKeys.getXmldapCert1();
-        String userCertHash = CryptoUtils.digest(userCert.getEncoded());
+        String userCertHash = CryptoUtils.digest(userCert.getEncoded(), "SHA");
         UserCredential usercredential = new UserCredential(UserCredential.X509, userCertHash);
         TokenServiceReference tsr = new TokenServiceReference(tsURL, mexURL, cert, usercredential);
         

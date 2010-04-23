@@ -99,20 +99,20 @@ public class URLSetPolicy extends Policy {
     public PermissionCollection getPermissions(CodeSource codesource) {
         URL location = (codesource == null) ? null : codesource.getLocation();
     	if (location != null) {
-    		System.out.println("getPermissions codesource: " + location.toExternalForm());
+//    		System.out.println("getPermissions codesource: " + loscation.toExternalForm());
     	}
         PermissionCollection pc = m_outerPolicy != null ?
                 m_outerPolicy.getPermissions(codesource) :
                 new Permissions();
 
         for (String url : m_urls) {
-        	System.out.println("getPermissions url: " + url);
+//        	System.out.println("getPermissions url: " + url);
         }
         {
 	        Enumeration<Permission> e = m_permissions.elements();
 	        while (e.hasMoreElements()) {
 	        	Permission p = e.nextElement();
-	        	System.out.println("getPermissions m_permission: " + p.getName() + " " + p.getActions());
+//	        	System.out.println("getPermissions m_permission: " + p.getName() + " " + p.getActions());
 	        }
         }
 
@@ -132,7 +132,7 @@ public class URLSetPolicy extends Policy {
             Enumeration<Permission> e = pc.elements();
             while (e.hasMoreElements()) {
             	Permission p = e.nextElement();
-            	System.out.println("getPermissions pc permission: " + p.getName() + " " + p.getActions());
+            	//System.out.println("getPermissions pc permission: " + p.getName() + " " + p.getActions());
             }
         }
         return pc;

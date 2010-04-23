@@ -3,12 +3,6 @@ package org.xmldap.xmldsig;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPublicKey;
-import java.util.ArrayList;
 import java.util.List;
 
 import nu.xom.Builder;
@@ -27,8 +21,8 @@ import org.xmldap.ws.WSConstants;
 
 public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 
-    protected ValidatingBaseEnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey) {
-    	super(keyInfo, privateKey);
+    protected ValidatingBaseEnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey, String signingAlgorithm) {
+    	super(keyInfo, privateKey, signingAlgorithm);
     }
 
 	public static String getModulusOrNull(Document xmlDoc) throws InfoCardProcessingException {
@@ -116,6 +110,10 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 //	}
 
 	public static BigInteger validate(Document xmlDoc) throws CryptoException {
+		return validate(xmlDoc.getRootElement());
+	}
+	
+	public static BigInteger validate(Element root) throws CryptoException {
 
 		XPathContext thisContext = new XPathContext();
 		thisContext.addNamespace("dsig", WSConstants.DSIG_NAMESPACE);
@@ -126,11 +124,10 @@ public class ValidatingBaseEnvelopedSignature extends BaseEnvelopedSignature {
 		ParsedSignature parsedSignature = null;
 		BigInteger modulus = null;
 		BigInteger exponent = null;
-		Element root = xmlDoc.getRootElement();
 		try {
 			Element signature = root.getFirstChildElement("Signature", WSConstants.DSIG_NAMESPACE);
 			if (signature == null) {
-				throw new CryptoException("Document contains no Signature element\n" + xmlDoc.toXML());
+				throw new CryptoException("Document contains no Signature element");
 			}
 			parsedSignature = new ParsedSignature(signature);
 		} catch (IOException e) {

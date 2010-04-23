@@ -91,6 +91,15 @@ public class Token {
                if (decryptedToken == null) {
                    throw new InfoCardProcessingException("Result of token decryption was null");
                }
+               Token tmpToken = new Token(decryptedToken, privateKey);
+               if (tmpToken.isEncrypted()) {
+            	   String decryptedTmpToken = tmpToken.getDecryptedToken();
+            	   if (decryptedTmpToken == null) {
+                       throw new InfoCardProcessingException("Result of DOUBLE token decryption was null");
+            	   }
+            	   decryptedToken = decryptedTmpToken;
+               }
+        	   System.out.println("Token.java decryptedToken=" + decryptedToken);
            }
         } catch (CryptoException e) {
            throw new InfoCardProcessingException("Error decrypting encrypted token", e);
@@ -282,7 +291,7 @@ public class Token {
 
     public String getClientDigest() throws InfoCardProcessingException, CryptoException {
     	BigInteger modulus = ValidatingBaseEnvelopedSignature.validate(getDoc());
- 		String sha1 = CryptoUtils.digest(modulus.toByteArray());
+ 		String sha1 = CryptoUtils.digest(modulus.toByteArray(), "SHA");
 		return sha1;
     }
 

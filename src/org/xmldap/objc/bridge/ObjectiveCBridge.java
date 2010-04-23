@@ -76,7 +76,8 @@ public class ObjectiveCBridge {
 //        clientCertificate = generator.generateX509Certificate(pair.getPrivate());
 
         RSAPublicKey signingKey = (RSAPublicKey)pair.getPublic();
-        selfIssuedToken = new SelfIssuedToken(signingKey, pair.getPrivate());
+        String signingAlgorithm = "SHA1withRSA";
+        selfIssuedToken = new SelfIssuedToken(signingKey, pair.getPrivate(), signingAlgorithm);
         selfIssuedToken.setConfirmationMethodHOLDER_OF_KEY(serverCertificate);
 
     }

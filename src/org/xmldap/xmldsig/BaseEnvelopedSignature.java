@@ -44,6 +44,7 @@ import java.util.Vector;
 
 
 public class BaseEnvelopedSignature {
+	String mAlgorithm;
 
 //    private X509Certificate signingCert;
     protected PrivateKey privateKey;
@@ -54,15 +55,17 @@ public class BaseEnvelopedSignature {
 //        this.privateKey = privateKey;
 //        this.signingCert = signingCert;
 //    }
-    public BaseEnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey) {
+    public BaseEnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey, String signingAlgorithm) {
         this.keyInfo = keyInfo;
         this.privateKey = privateKey;
+        this.mAlgorithm = signingAlgorithm;
     }
 
-    public BaseEnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey, String Id) {
+    public BaseEnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey, String Id, String signingAlgorithm) {
         this.keyInfo = keyInfo;
         this.privateKey = privateKey;
         this.Id = Id;
+        this.mAlgorithm = signingAlgorithm;
     }
 
     protected BaseEnvelopedSignature() {}
@@ -108,10 +111,10 @@ public class BaseEnvelopedSignature {
         if (idVal == null) {
         	throw new IllegalArgumentException("BaseEnvelopedSignature: Element to sign does not have an id-ttribute");
         }
-		Reference reference = new Reference(signThisOne, idVal, prefixes);
+		Reference reference = new Reference(signThisOne, idVal, prefixes, "SHA1");
 		
         //Get SignedInfo for reference
-        SignedInfo signedInfo = new SignedInfo(reference);
+        SignedInfo signedInfo = new SignedInfo(reference, mAlgorithm);
 
         Signature signature = getSignatureValue(signedInfo);
 
@@ -133,7 +136,7 @@ public class BaseEnvelopedSignature {
 	public Signature signNodes(Element xml, List references) throws SigningException {
 
         //Get SignedInfo for reference
-        SignedInfo signedInfo = new SignedInfo(references);
+        SignedInfo signedInfo = new SignedInfo(references, mAlgorithm);
 
         Signature signature = getSignatureValue(signedInfo);
 
@@ -204,8 +207,7 @@ public class BaseEnvelopedSignature {
 
                 }
 
-                Reference referenceElm = new Reference(referenceThis, idVal);
-
+                Reference referenceElm = new Reference(referenceThis, idVal, null, "SHA");
 
                 references.add(referenceElm);
 
@@ -279,7 +281,7 @@ public class BaseEnvelopedSignature {
 		// WE've got the canonical without the signature.
 		// Let's calculate the Digest to validate the references
 		try {
-			b64EncodedDigest = CryptoUtils.digest(assertionCanonicalBytes);
+			b64EncodedDigest = CryptoUtils.digest(assertionCanonicalBytes, "SHA");
 		} catch (CryptoException e) {
 			throw new CryptoException(e);
 		}

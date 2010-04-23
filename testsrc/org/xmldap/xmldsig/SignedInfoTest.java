@@ -19,16 +19,18 @@ public class SignedInfoTest extends TestCase {
 
 	public void testSignedInfo() throws SerializationException {
 		Element data = new Element("element");
-		Reference reference = new Reference(data, "test1");
-		SignedInfo si = new SignedInfo(reference);
+		Reference reference = new Reference(data, "test1", null, "SHA");
+		String signingAlgorithm = "SHA1withRSA";
+		SignedInfo si = new SignedInfo(reference, signingAlgorithm);
 		String signedInfoXml = si.toXML();
 		assertEquals("<dsig:SignedInfo xmlns:dsig=\"http://www.w3.org/2000/09/xmldsig#\"><dsig:CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><dsig:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\" /><dsig:Reference URI=\"#test1\"><dsig:Transforms><dsig:Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\" /><dsig:Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /></dsig:Transforms><dsig:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\" /><dsig:DigestValue>iNgcKrAWdbb1H6FuoDemS5DGqsE=</dsig:DigestValue></dsig:Reference></dsig:SignedInfo>", signedInfoXml);
 	}
 	
 	public void testSignedInfoPrefix() throws SerializationException {
 		Element data = new Element("element");
-		Reference reference = new Reference(data, "test1");
-		SignedInfo si = new SignedInfo(reference);
+		Reference reference = new Reference(data, "test1", null, "SHA");
+        String signingAlgorithm = "SHA1withRSA";
+		SignedInfo si = new SignedInfo(reference, signingAlgorithm);
 		String inclusiveNamespacePrefixes = "dsig";
 		si.setInclusiveNamespacePrefixList(inclusiveNamespacePrefixes);
 		String signedInfoXml = si.toXML();
@@ -41,7 +43,7 @@ public class SignedInfoTest extends TestCase {
 		Element signedInfo = signedInfoDoc.getRootElement();
 		byte[] bytes = XmlUtils.canonicalize(signedInfo, Canonicalizable.EXCLUSIVE_CANONICAL_XML);
 		try {
-			String b64EncodedDigest = CryptoUtils.digest(bytes);
+			String b64EncodedDigest = CryptoUtils.digest(bytes, "SHA");
 			String expected = "kP5B9dvJTnb+sSLDdMkgj+UYjJM=";
 			assertEquals(expected, b64EncodedDigest);
 		} catch (CryptoException e) {

@@ -45,12 +45,9 @@ public class Reference implements Serializable {
     private String id = null;
     private boolean enveloped = true;
     String inclusiveNamespacePrefixes = null;
+    String digestAlgorithmName;
 
-    public Reference(Element data, String id) {
-    	this(data, id, null);
-    }
-    
-    public Reference(Element data, String id, String inclusiveNamespacePrefixes) {
+    public Reference(Element data, String id, String inclusiveNamespacePrefixes, String digestAlgorithmName) {
     	if (data == null) {
     		throw new IllegalArgumentException("Parameter data must not be null");
     	}
@@ -60,6 +57,7 @@ public class Reference implements Serializable {
     	}
         this.id = id;
         this.inclusiveNamespacePrefixes = inclusiveNamespacePrefixes;
+        this.digestAlgorithmName = digestAlgorithmName;
     }
 
     //TODO - shouldn't be boolean if we want to support all types
@@ -120,7 +118,9 @@ public class Reference implements Serializable {
         reference.appendChild(transforms);
 
         Element digestMethod = new Element("dsig:DigestMethod", "http://www.w3.org/2000/09/xmldsig#");
-        Attribute digestAlgorithm = new Attribute("Algorithm", "http://www.w3.org/2000/09/xmldsig#sha1");
+        
+        String algorithmName = CryptoUtils.convertMessageDigestAlgorithm(digestAlgorithmName);
+        Attribute digestAlgorithm = new Attribute("Algorithm", algorithmName);
         digestMethod.addAttribute(digestAlgorithm);
         reference.appendChild(digestMethod);
 
@@ -135,7 +135,7 @@ public class Reference implements Serializable {
 
 
         try {
-            String digest = CryptoUtils.digest(dataBytes);
+            String digest = CryptoUtils.digest(dataBytes, digestAlgorithmName);
             digestValue.appendChild(digest);
         } catch (org.xmldap.exceptions.CryptoException e) {
         	throw new SerializationException("Error digesting canonicalized data", e);

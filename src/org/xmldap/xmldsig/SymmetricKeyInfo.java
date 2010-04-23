@@ -81,7 +81,7 @@ public class SymmetricKeyInfo implements KeyInfo {
 
         String fingerPrint = "";
         try {
-            fingerPrint = CryptoUtils.digest(publicKey.getEncoded());
+            fingerPrint = CryptoUtils.digest(publicKey.getEncoded(), "SHA");
 
         } catch (org.xmldap.exceptions.CryptoException e) {
             e.printStackTrace();

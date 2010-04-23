@@ -44,6 +44,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -51,6 +52,7 @@ import java.util.Vector;
  * SelfIssuedToken allows you to create Self issued tokens for passing to an RP
  */
 public class SelfIssuedToken implements Serializable {
+	String mAlgorithm;
 
 	private String claimsNamespace = null;
 
@@ -72,10 +74,11 @@ public class SelfIssuedToken implements Serializable {
 	
 	private String confirmationMethod = Subject.BEARER;
 	
-	public SelfIssuedToken(RSAPublicKey cardPublicKey, PrivateKey cardPrivateKey) {
+	public SelfIssuedToken(RSAPublicKey cardPublicKey, PrivateKey cardPrivateKey, String signingAlgorithm) {
 		this.cardPublicKey = cardPublicKey;
 		this.cardPrivateKey = cardPrivateKey;
 		claimsNamespace = org.xmldap.infocard.Constants.IC_NAMESPACE; // default is the new (Autumn 2006) namespace
+		this.mAlgorithm = signingAlgorithm;
 	}
 
 	public void setAudience(String restrictedTo) {
@@ -101,6 +104,10 @@ public class SelfIssuedToken implements Serializable {
 		this.nowPlus = nowPlus;
 	}
 
+	public void setClaim(String uri, String value) {
+		selfIssuedClaims.setClaim(uri, value);
+	}
+	
 	public String getGivenName() {
 		return selfIssuedClaims.getGivenName();
 	}
@@ -227,13 +234,6 @@ public class SelfIssuedToken implements Serializable {
 //
 //	}
 
-	private void addAttribute(Vector attributes, String name, String uri, String value) {
-		if (value != null) {
-			Attribute attr = new Attribute(name, uri, value);
-			attributes.add(attr);
-		}
-	}
-	
 	// <saml:Assertion MajorVersion="1" MinorVersion="1" 
 	//  AssertionID="uuid:3c11daf5-0dfe-430c-a840-3e6b60ff6b11" 
 	//  Issuer="http://schemas.xmlsoap.org/ws/2005/05/identity/issuer/self" 
@@ -283,7 +283,7 @@ public class SelfIssuedToken implements Serializable {
 	//  </Signature>
 	//  </saml:Assertion>
 	public Element getSelfIssuedToken() throws SerializationException {
-
+System.out.println("getSelfIssuedToken start");
 		Conditions conditions = new Conditions(nowMinus, nowPlus);
 		if (restrictedTo != null) {
 			AudienceRestrictionCondition audienceRestrictionCondition = new AudienceRestrictionCondition(restrictedTo);
@@ -324,33 +324,31 @@ public class SelfIssuedToken implements Serializable {
 			subject = new Subject(Subject.BEARER);
 		}
 
-		Vector attributes = new Vector();
-
-		addAttribute(attributes, "givenname", claimsNamespace, selfIssuedClaims.getGivenName());
-		addAttribute(attributes, "surname", claimsNamespace, selfIssuedClaims.getSurname());
-		addAttribute(attributes, "emailaddress", claimsNamespace, selfIssuedClaims.getEmailAddress());
-		addAttribute(attributes, "streetaddress", claimsNamespace, selfIssuedClaims.getStreetAddress());
-		addAttribute(attributes, "locality", claimsNamespace, selfIssuedClaims.getLocality());
-		addAttribute(attributes, "stateorprovince", claimsNamespace, selfIssuedClaims.getStateOrProvince());
-		addAttribute(attributes, "postalcode", claimsNamespace,	selfIssuedClaims.getPostalCode());
-		addAttribute(attributes, "country", claimsNamespace, selfIssuedClaims.getCountry());
-		addAttribute(attributes, "primaryphone", claimsNamespace, selfIssuedClaims.getPrimaryPhone());
-		addAttribute(attributes, "otherphone", claimsNamespace,selfIssuedClaims.getOtherPhone());
-		addAttribute(attributes, "mobilephone",	claimsNamespace, selfIssuedClaims.getMobilePhone());
-		addAttribute(attributes, "dateofbirth",	claimsNamespace, selfIssuedClaims.getDateOfBirth());
-		addAttribute(attributes, "privatepersonalidentifier", claimsNamespace,selfIssuedClaims.getPrivatePersonalIdentifier());
-		addAttribute(attributes, "gender", claimsNamespace, selfIssuedClaims.getGender());
-		addAttribute(attributes, "webpage", claimsNamespace, selfIssuedClaims.getWebPage());
-
 		AttributeStatement statement = new AttributeStatement();
 		statement.setSubject(subject);
 
-		Iterator iter = attributes.iterator();
-		while (iter.hasNext()) {
-
-			statement.addAttribute((Attribute) iter.next());
-
+		System.out.println("getSelfIssuedToken: hier");
+		Collection<String> uris = selfIssuedClaims.getKeySet();
+		Iterator<String> iterator = uris.iterator();
+		while (iterator.hasNext()) {
+			String anUri = iterator.next();
+			String value = selfIssuedClaims.getClaim(anUri);
+			System.out.println("getSelfIssuedToken: anUri=" + anUri + " value=" + value);
+			if (value != null && !"".equals(value)) {
+				Attribute attr;
+				String name;
+				if (anUri.startsWith(org.xmldap.infocard.Constants.IC_NAMESPACE)) {
+					name = anUri.substring(org.xmldap.infocard.Constants.IC_NAMESPACE.length()+1);
+					attr = new Attribute(name, org.xmldap.infocard.Constants.IC_NAMESPACE, value);
+				} else {
+					name = anUri;
+					String namespace = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri";
+					attr = new Attribute(anUri, namespace, value);
+				}
+				statement.addAttribute(attr);
+			}
 		}
+		System.out.println("getSelfIssuedToken: da");
 
 		SAMLAssertion assertion = new SAMLAssertion();
 		assertion.setConditions(conditions);
@@ -359,7 +357,7 @@ public class SelfIssuedToken implements Serializable {
 		//make this support multiple signing modes
 		RsaPublicKeyInfo keyInfo = new RsaPublicKeyInfo(cardPublicKey);
 //		AsymmetricKeyInfo keyInfo = new AsymmetricKeyInfo(signingCert);
-		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo,	cardPrivateKey);
+		BaseEnvelopedSignature signer = new BaseEnvelopedSignature(keyInfo,	cardPrivateKey, mAlgorithm);
 
 		Element signedXML = null;
 		try {
@@ -385,84 +383,18 @@ public class SelfIssuedToken implements Serializable {
 
 	public static SelfIssuedToken setTokenClaims(SelfIssuedClaims selfIssuedClaims,
 			SelfIssuedToken token, String claims) {
-		// the argument to indexOf is a kind of shorthand...
-		// should we use the complete string?
-		if (claims.indexOf("givenname") != -1) {
-			String value = selfIssuedClaims.getGivenName();
+		
+		System.out.println("setTokenClaims: claims=" + claims);
+    if (claims == null) return token;
+    if (selfIssuedClaims == null) return token;
+		
+		String[] claimsArray = claims.split(" ");
+		for (int i=0; i<claimsArray.length; i++) {
+			String uri = claimsArray[i];
+			String value = selfIssuedClaims.getClaim(uri);
 			if ((value != null) && !value.equals("")) {
-				token.setGivenName(value);
-			}
-		}
-		if (claims.indexOf("surname") != -1) {
-			String value = selfIssuedClaims.getSurname();
-			if ((value != null) && !value.equals("")) {
-				token.setSurname(value);
-			}
-		}
-		if (claims.indexOf("emailaddress") != -1) {
-			String value = selfIssuedClaims.getEmailAddress();
-			if ((value != null) && !value.equals("")) {
-				token.setEmailAddress(value);
-			}
-		}
-		if (claims.indexOf("streetaddress") != -1) {
-			String value = selfIssuedClaims.getStreetAddress();
-			if ((value != null) && !value.equals("")) {
-				token.setStreetAddress(value);
-			}
-		}
-		if (claims.indexOf("locality") != -1) {
-			String value = selfIssuedClaims.getLocality();
-			if ((value != null) && !value.equals("")) {
-				token.setLocality(value);
-			}
-		}
-		if (claims.indexOf("stateorprovince") != -1) {
-			String value = selfIssuedClaims.getStateOrProvince();
-			if ((value != null) && !value.equals("")) {
-				token.setStateOrProvince(value);
-			}
-		}
-		if (claims.indexOf("postalcode") != -1) {
-			String value = selfIssuedClaims.getPostalCode();
-			if ((value != null) && !value.equals("")) {
-				token.setPostalCode(value);
-			}
-		}
-		if (claims.indexOf("country") != -1) {
-			String value = selfIssuedClaims.getCountry();
-			if ((value != null) && !value.equals("")) {
-				token.setCountry(value);
-			}
-		}
-		if (claims.indexOf("primaryphone") != -1) {
-			String value = selfIssuedClaims.getPrimaryPhone();
-			if ((value != null) && !value.equals("")) {
-				token.setPrimaryPhone(value);
-			}
-		}
-		if (claims.indexOf("otherphone") != -1) {
-			String value = selfIssuedClaims.getOtherPhone();
-			if ((value != null) && !value.equals("")) {
-				token.setOtherPhone(value);
-			}
-		}
-		if (claims.indexOf("mobilephone") != -1) {
-			String value = selfIssuedClaims.getMobilePhone();
-			if ((value != null) && !value.equals("")) {
-				token.setMobilePhone(value);
-			}
-		}
-		if (claims.indexOf("dateofbirth") != -1) {
-			String value = selfIssuedClaims.getDateOfBirth();
-			if ((value != null) && !value.equals("")) {
-				token.setDateOfBirth(value);
-			}
-		}
-		if (claims.indexOf("gender") != -1) {
-			String value = selfIssuedClaims.getGender();
-			if ((value != null) && !value.equals("")) {
-				token.setGender(value);
+				token.setClaim(uri, value);
+				System.out.println("setTokenClaims: setClaim(" + uri + "," + value + ")");
 			}
 		}
 		return token;

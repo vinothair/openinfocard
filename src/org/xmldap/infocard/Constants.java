@@ -73,4 +73,9 @@ public class Constants {
     public static final String ISSUER_MICROSOFT = "http://schemas.microsoft.com/ws/2005/05/identity/issuer/self";
     public static final String ISSUER_XMLSOAP = "http://schemas.xmlsoap.org/ws/2005/05/identity/issuer/self";
     public static final String ISSUER_DEFAULT = ISSUER_XMLSOAP;
+    
+    public static final String LOA1_URL = "http://idmanagement.gov/icam/2009/09/imi_1.0_profile#assurancelevel1";
+    public static final String LOA2_URL = "http://idmanagement.gov/icam/2009/09/imi_1.0_profile#assurancelevel2";
+    public static final String LOA3_URL = "http://idmanagement.gov/icam/2009/09/imi_1.0_profile#assurancelevel3";
+    public static final String LOA4_URL = "http://idmanagement.gov/icam/2009/09/imi_1.0_profile#assurancelevel4";
 }

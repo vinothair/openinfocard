@@ -2,25 +2,20 @@ package org.xmldap.xmldsig;
 
 import java.io.IOException;
 import java.security.PrivateKey;
-import java.util.List;
-import java.util.Vector;
 
-import nu.xom.Attribute;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Nodes;
-import nu.xom.ParentNode;
 import nu.xom.ParsingException;
 import nu.xom.XPathContext;
 import nu.xom.XPathException;
 
-import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
 
 public class EnvelopedSignature extends ValidatingBaseEnvelopedSignature {
 
-    protected EnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey) {
-    	super(keyInfo, privateKey);
+    protected EnvelopedSignature(KeyInfo keyInfo, PrivateKey privateKey, String signingAlgorithm) {
+    	super(keyInfo, privateKey, signingAlgorithm);
     }
 
     public Element sign(Element xml, String xpath, XPathContext context) throws SigningException {

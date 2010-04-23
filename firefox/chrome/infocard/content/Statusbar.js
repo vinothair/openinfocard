@@ -11,11 +11,15 @@ var InformationCardStatusbar = {
 	/*******************************************************************************
 	 * Desc:
 	 ******************************************************************************/
-	showStatusbarIcon : function(doc, show) {
+	showStatusbarIcon : function(doc, show, openidB) {
 		var statusBarImage = doc.getElementById("ic-status-bar-image");
 		if (statusBarImage !== null) {
 			if (show === true) {
-				statusBarImage.src = this.getUserIcon(doc);
+        if (openidB) {
+          statusBarImage.src = "chrome://infocard/content/img/openid-16x16.png";
+        } else {
+          statusBarImage.src = this.getUserIcon(doc);
+        }
 			} else {
 				statusBarImage.src = "chrome://infocard/content/img/infocard_23x16-crossed.png";
 			}

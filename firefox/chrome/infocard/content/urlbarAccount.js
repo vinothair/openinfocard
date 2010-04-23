@@ -3,20 +3,23 @@ var InformationCardUrlbar = {
 	/*******************************************************************************
 	 * Desc:
 	 ******************************************************************************/
-	showUrlbarIcon : function(doc, show) {
-		var image = doc.getElementById("ic-url-bar-image");
-		if (image !== null) {
-			if (show === true) {
-				image.src = "chrome://infocard/content/img/infocard_23x16.png";
-			} else {
-				image.src = "chrome://infocard/content/img/infocard_23x16-crossed.png";
-			}
-		} else {
-			// the object is created before the status-bar is created
-			IdentitySelectorDiag.logMessage("showUrlbarIcon",
-					"Internal Warning: ic-url-bar-image not found");
-		}
-	},
+	showUrlbarIcon : function(doc, show, openidB) {
+    var image = doc.getElementById("ic-url-bar-image");
+    if (image !== null) {
+      if (show === true) {
+        if (openidB) {
+          image.src = "chrome://infocard/content/img/openid-16x16.png";
+        } else {
+          image.src = "chrome://infocard/content/img/infocard_23x16.png";
+        }
+      } else {
+        image.src = "chrome://infocard/content/img/infocard_23x16-crossed.png";
+      }
+    } else {
+      // the object is created before the status-bar is created
+      IdentitySelectorDiag.logMessage("showUrlbarIcon", "Internal Warning: ic-url-bar-image not found");
+    }
+  },
 
 	// ***********************************************************************
 	// Method: tabSelected
@@ -110,21 +113,22 @@ var InformationCardUrlbar = {
     },
     
     onDomContentLoaded : function(event) {
-    	var doc = event.originalTarget;
-        if (doc instanceof HTMLDocument) {
-            if( doc.wrappedJSObject !== undefined) {
-               doc = doc.wrappedJSObject;
-            }
-    		if (doc.__identityselector__ === undefined) {
-    			InformationCardUrlbar.showUrlbarIcon(document, false);
-    		} else {
-    			if (((doc.__identityselector__.icLoginService !== undefined) && (doc.__identityselector__.icLoginPolicy !== undefined)) || (doc.__identityselector__.notificationBoxHidden !== undefined)) {
-    				InformationCardUrlbar.showUrlbarIcon(document, true);
-    			} else {
-    				InformationCardUrlbar.showUrlbarIcon(document, false);
-    			}
-    		}
+      var doc = event.originalTarget;
+      if (doc instanceof HTMLDocument) {
+        if (doc.wrappedJSObject !== undefined) {
+          doc = doc.wrappedJSObject;
         }
+        if (doc.__identityselector__ === undefined) {
+          InformationCardUrlbar.showUrlbarIcon(document, false);
+        } else {
+          if (((doc.__identityselector__.icLoginService !== undefined) && (doc.__identityselector__.icLoginPolicy !== undefined))
+              || (doc.__identityselector__.notificationBoxHidden !== undefined)) {
+            InformationCardUrlbar.showUrlbarIcon(document, true);
+          } else {
+            InformationCardUrlbar.showUrlbarIcon(document, false);
+          }
+        }
+      }
     },
     
     cancelTimer : function(doc) {

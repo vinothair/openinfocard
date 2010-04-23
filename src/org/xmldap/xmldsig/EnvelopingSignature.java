@@ -42,13 +42,14 @@ import java.util.Vector;
 
 public class EnvelopingSignature {
 
-
+	String mAlgorithm;
     private X509Certificate cert;
     private PrivateKey privateKey;
 
-    public EnvelopingSignature(X509Certificate cert, PrivateKey privateKey) {
+    public EnvelopingSignature(X509Certificate cert, PrivateKey privateKey, String signingAlgorithm) {
         this.cert = cert;
         this.privateKey = privateKey;
+        this.mAlgorithm = signingAlgorithm;
     }
 
     public Element sign(Element xml) throws SigningException {
@@ -59,14 +60,14 @@ public class EnvelopingSignature {
         object.addAttribute(id);
         object.appendChild(xml);
 
-        Reference referenceElm = new Reference(object, id.getValue());
+        Reference referenceElm = new Reference(object, id.getValue(), null, "SHA");
         referenceElm.setEnveloped(false);
 
         Vector references = new Vector();
         references.add(referenceElm);
 
         //Get SignedInfo for reference
-        SignedInfo signedInfo = new SignedInfo(references);
+        SignedInfo signedInfo = new SignedInfo(references, mAlgorithm);
 
         //Get sigvalue for the signedInfo
         SignatureValue signatureValue = new SignatureValue(signedInfo, privateKey);

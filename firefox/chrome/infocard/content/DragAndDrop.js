@@ -44,6 +44,31 @@ var InformationCardDragAndDrop = {
 		return cardId;
 	},
 
+  onICardObjectLoaded : function _onICardObjectLoaded(event) {
+    IdentitySelectorDiag.logMessage("InformationCardDragAndDrop.onICardObjectLoaded", "start");
+    var target = event.target;
+    if (target.wrappedJSObject) {
+      target = target.wrappedJSObject;
+    }
+    var form = target;
+    while (form !== null) {
+      if (form.tagName !== undefined && form.tagName == "FORM") {
+        form.addEventListener("dragdrop", InformationCardDragAndDrop.onWindowDragDrop, false);
+        if (form.hasChildNodes()) {
+          var children = form.childNodes;
+          for (var i = 0; i < children.length; i++) 
+          {
+            var child = children[i];
+            child.addEventListener("dragdrop", InformationCardDragAndDrop.onWindowDragDrop, false);
+          }
+        }
+        break;
+      }
+      form = form.parentNode;
+    }
+    
+	},
+	
 	// ***********************************************************************
 	// Method: onWindowDragDrop
 	// ***********************************************************************
@@ -154,3 +179,9 @@ var InformationCardDragAndDrop = {
 	}
 
 };
+
+try {
+  IdentitySelectorDiag.logMessage( "InformationCardDragAndDrop", "start");
+} catch( e) {
+  IdentitySelectorDiag.reportError( "InformationCardDragAndDrop Exception ", e);
+}

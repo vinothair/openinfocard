@@ -1,402 +1,468 @@
 <project name="infocard" default="build_all" basedir=".">
 
-    <target name="init">
-        <tstamp/>
-        <!-- read standard properties from properties files -->
-        <property file="project.properties"/>
-        <property environment="env"/>
-        <fileset id="classpath.fileset" dir="${lib.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <path id="classpath.path">
-            <fileset refid="classpath.fileset"/>
-        </path>
-        <property name="classpath.prop" refid="classpath.path"/>
-        <path id="ext.classpath.path">
-            <path refid="classpath.path"/>
-            <fileset dir="${libext.dir}">
-	           <include name="**/*.jar"/>
-            </fileset>
-        </path>
-    	<property name="xpiVersion" value="${openinfocard.version}.${DSTAMP}${TSTAMP}" />
-    </target>
-
-
-    <target name="prepjars" depends="init">
-
-        <unzip src="${lib.dir}/json.jar"
-               dest="${build.jars.dir}"/>
-
-        <unzip src="${lib.dir}/blindtrust.jar"
-               dest="${build.jars.dir}"/>
-
-        <unzip src="${lib.dir}/lightcrypto.jar"
-               dest="${build.jars.dir}"/>
-
-
-        <unzip src="${lib.dir}/xom-1.1.jar"
-               dest="${build.jars.dir}"/>
-
-
-        <unzip src="${lib.dir}/bcprov-jdk16-143.jar"
-               dest="${build.jars.dir}"/>
-
-        <delete dir="${build.jars.dir}/META-INF"/>
-
-    </target>
-
-    <target name="build"
-            depends="init, prepjars">
-        <mkdir dir="${build.dir}"/>
-        <mkdir dir="${build.classes.dir}"/>
-        <javac destdir="${build.classes.dir}"
-               debug="true"
-               deprecation="true"
-               fork="true"
-               includeAntRuntime="false">
-        	<src path="${src.dir}"/>
-        	<src path="${wallet.dir}"/>
-            <classpath>
-                <path refid="ext.classpath.path"/>
-            </classpath>
-        </javac>
-        <mkdir dir="${build.dist.dir}"/>
-
-        <jar destfile="${build.dist.dir}/${component.name}-${component.version}.jar">
-            <fileset dir="${build.classes.dir}"/>
-            <fileset dir="${build.jars.dir}"/>
-        </jar>
-
-    </target>
-
-
-
-    <target name="doc" depends="build">
-
-        <mkdir dir="${build.doc.dir}"/>
-        <mkdir dir="${build.doc.api.dir}"/>
-
-        <javadoc
-                 destdir="${build.doc.api.dir}"
-                 author="true"
-                 version="true"
-                 use="true"
-                 windowtitle="${component.name}-${component.version}">
-            <classpath>
-                <path refid="ext.classpath.path"/>
-            </classpath>
+  <target name="init">
+    <tstamp/>
+    <!-- read standard properties from properties files -->
+    <property file="project.properties"/>
+    <property environment="env"/>
+    <fileset id="classpath.fileset" dir="${lib.dir}">
+      <include name="**/*.jar"/>
+    </fileset>
+    <path id="classpath.path">
+      <fileset refid="classpath.fileset"/>
+    </path>
+    <property name="classpath.prop" refid="classpath.path"/>
+    <path id="ext.classpath.path">
+      <path refid="classpath.path"/>
+      <fileset dir="${libext.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
+    </path>
+    <property name="xpiVersion" value="${openinfocard.version}.${DSTAMP}${TSTAMP}" />
+  </target>
+
+  <target name="initFirefox">
+    <mkdir dir="${firefox.lib.dir}"/>
+
+    <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" toFile="${firefox.lib.dir}/xmldap.jar"/>
+    <copy todir="${build.dir}/firefox">
+      <fileset dir="${firefox.dir}"/>
+    </copy>
+  </target>
+
+  <!-- create xpt in src dir because not everybody has the SDK and xpidl.exe -->
+  <target name="createCardstoreXPT" depends="init">
+    <exec executable="${xpidl_exe}" dir="${firefox.components.dir}">
+      <env key="Path" path="${env.Path};${libIDL_path}" />
+      <arg line="-m typelib -w -v -I ${IDLs_path} -I ${firefox.components.dir} cardstoreAPI.idl" />
+    </exec>
+  </target>
+
+  <target name="prepjars" depends="init">
+
+    <unzip src="${lib.dir}/json.jar"
+   dest="${build.jars.dir}"/>
+
+    <unzip src="${lib.dir}/blindtrust.jar"
+   dest="${build.jars.dir}"/>
+
+    <unzip src="${lib.dir}/lightcrypto.jar"
+   dest="${build.jars.dir}"/>
+
+
+    <unzip src="${lib.dir}/xom-1.1.jar"
+   dest="${build.jars.dir}"/>
+
+
+    <unzip src="${lib.dir}/bcprov-jdk16-143.jar"
+   dest="${build.jars.dir}"/>
+
+    <delete dir="${build.jars.dir}/META-INF"/>
+
+  </target>
+
+  <target name="build"
+  depends="init, prepjars">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${build.classes.dir}"/>
+    <javac destdir="${build.classes.dir}"
+   debug="true"
+   deprecation="true"
+   fork="true"
+   includeAntRuntime="false">
+      <src path="${src.dir}"/>
+      <src path="${wallet.dir}"/>
+      <classpath>
+        <path refid="ext.classpath.path"/>
+      </classpath>
+    </javac>
+    <mkdir dir="${build.dist.dir}"/>
+
+    <jar destfile="${build.dist.dir}/${component.name}-${component.version}.jar">
+      <fileset dir="${build.classes.dir}"/>
+      <fileset dir="${build.jars.dir}"/>
+    </jar>
+
+  </target>
+
+
+
+  <target name="doc" depends="build">
+
+    <mkdir dir="${build.doc.dir}"/>
+    <mkdir dir="${build.doc.api.dir}"/>
+
+    <javadoc
+   destdir="${build.doc.api.dir}"
+   author="true"
+   version="true"
+   use="true"
+   windowtitle="${component.name}-${component.version}">
+      <classpath>
+        <path refid="ext.classpath.path"/>
+      </classpath>
+
+      <packageset dir="${src.dir}" defaultexcludes="yes">
+        <include name="org/xmldap/rp/**"/>
+        <exclude name="org/xmldap/rp/servlet/**"/>
+      </packageset>
 
-            <packageset dir="${src.dir}" defaultexcludes="yes">
-                <include name="org/xmldap/rp/**"/>
-                <exclude name="org/xmldap/rp/servlet/**"/>
-            </packageset>
+      <doctitle>
+        <![CDATA[<h1>xmldap</h1>]]></doctitle>
+    <bottom>
+      <![CDATA[<i>Copyright &#169; 2006 Chuck Mortimore. All Rights Reserved.</i>]]></bottom>
+
+</javadoc>
+
+
 
-            <doctitle><![CDATA[<h1>xmldap</h1>]]></doctitle>
-            <bottom><![CDATA[<i>Copyright &#169; 2006 Chuck Mortimore. All Rights Reserved.</i>]]></bottom>
-
-        </javadoc>
-
-
-
-    </target>
-
-    <target name="dist_XMLDAP_RP" depends="init">
-
-       <property file="${websrc.dir}/xmldap_rp/WEB-INF/rp.properties"/>
-    	
-       <mkdir dir="${build.dir}/xmldap.org/"/>
-        <copy todir="${build.dir}/xmldap.org/relyingparty/">
-          <fileset dir="${websrc.dir}/xmldap_rp/"/>
-        </copy>
-        <replace  dir="${build.dir}/xmldap.org/relyingparty/WEB-INF/" 
-        	includes="xmldap_rp.xrds" propertyFile="${websrc.dir}/xmldap_rp/WEB-INF/rp.properties">
-            <replacefilter token="@domain@" property="domain"/>
-        </replace>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/relyingparty/WEB-INF/lib/"/>
-        <jar destfile="${build.dir}/xmldap.org/relyingparty.war">
-            <fileset dir="${build.dir}/xmldap.org/relyingparty/"/>
-        </jar>
-
-    </target>
-
-        <target name="dist_XMLDAP_OC" depends="init">
-
-           <property file="${websrc.dir}/xmldap_oc/WEB-INF/rp.properties"/>
-        	
-           <mkdir dir="${build.dir}/xmldap.org/"/>
-            <copy todir="${build.dir}/xmldap.org/xmldap_oc/">
-              <fileset dir="${websrc.dir}/xmldap_oc/"/>
-            </copy>
-            <replace  dir="${build.dir}/xmldap.org/xmldap_oc/WEB-INF/" 
-            	includes="xmldap_rp.xrds" propertyFile="${websrc.dir}/xmldap_oc/WEB-INF/rp.properties">
-                <replacefilter token="@domain@" property="domain"/>
-            </replace>
-            <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/xmldap_oc/WEB-INF/lib/"/>
-            <jar destfile="${build.dir}/xmldap.org/xmldap_oc.war">
-                <fileset dir="${build.dir}/xmldap.org/xmldap_oc/"/>
-            </jar>
-
-        </target>
-
-    <target name="dist_PAYMENTCARD_RP" depends="init">
-
-        <mkdir dir="${build.dir}/paymentCard_rp/"/>
-        <copy todir="${build.dir}/paymentCard_rp/paymentCard_rp/">
-          <fileset dir="${websrc.dir}/paymentCard_rp/"/>
-        </copy>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/paymentCard_rp/paymentCard_rp/WEB-INF/lib/"/>
-        <jar destfile="${build.dir}/paymentCard_rp/paymentCard_rp.war">
-            <fileset dir="${build.dir}/paymentCard_rp/paymentCard_rp/"/>
-        </jar>
-
-    </target>
-
-    <target name="dist_GEOPRIV_RP" depends="init">
-
-        <mkdir dir="${build.dir}/geopriv_rp/"/>
-        <copy todir="${build.dir}/geopriv_rp/geopriv_rp/">
-          <fileset dir="${websrc.dir}/geopriv_rp/"/>
-        </copy>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_rp/geopriv_rp/WEB-INF/lib/"/>
-        <jar destfile="${build.dir}/geopriv_rp/geopriv_rp.war">
-            <fileset dir="${build.dir}/geopriv_rp/geopriv_rp/"/>
-        </jar>
-
-    </target>
-
-
-        <target name="dist_UPDATE" depends="init">
-
-            <mkdir dir="${build.dir}/openinfocard/"/>
-            <copy todir="${build.dir}/openinfocard/openinfocard/">
-              <fileset dir="${websrc.dir}/update/"/>
-            </copy>
-            <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/openinfocard/openinfocard/WEB-INF/lib/"/>
-            <jar destfile="${build.dir}/openinfocard/update.war">
-                <fileset dir="${build.dir}/openinfocard/openinfocard/"/>
-            </jar>
-
-        </target>
-
-
-
-
-    <target name="dist_XMLDAP_STS" depends="init">
-
-
-        <mkdir dir="${build.dir}/xmldap.org/"/>
-        <copy todir="${build.dir}/xmldap.org/${xmldap_stspath}/">
-          <fileset dir="${websrc.dir}/xmldap_sts/"/>
-        </copy>
-        <property file="${websrc.dir}/xmldap_sts/WEB-INF/sts.properties"/>
-
-        <replace  file="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/web.xml">
-         <replacefilter token="@keystore@" value="${keystore}"/>
-            <replacefilter token="@key@" value="${key.name}"/>
-            <replacefilter token="@keystore-password@" value="${keystore-password}"/>
-            <replacefilter token="@key-password@" value="${key-password}"/>
-            <replacefilter token="@domain@" value="${domain}"/>
-            <replacefilter token="@mex-file@" value="${mex-file}"/>
-            <replacefilter token="@image-file@" value="${image-file}"/>
-            <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
-        </replace>
-
-        <replace  dir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/" includes="mex*xml">
-            <replacefilter token="@domain@" value="${domain}"/>
-            <replacefilter token="@sts@" value="${xmldap_stspath}"/>
-        </replace>
-
-        <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
-        <jar destfile="${build.dir}/xmldap.org/sts.war">
-            <fileset dir="${build.dir}/xmldap.org/${xmldap_stspath}/"/>
-        </jar>
-
-    </target>
-
-
-    <target name="dist_GEOPRIV_STS" depends="init">
-
-
-        <mkdir dir="${build.dir}/geopriv_sts/"/>
-        <copy todir="${build.dir}/geopriv_sts/${geopriv_stspath}/">
-          <fileset dir="${websrc.dir}/geopriv_sts/"/>
-        </copy>
-        <property file="${websrc.dir}/geopriv_sts/WEB-INF/sts.properties"/>
-
-        <replace  file="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/web.xml">
-         <replacefilter token="@keystore@" value="${keystore}"/>
-            <replacefilter token="@key@" value="${key.name}"/>
-            <replacefilter token="@keystore-password@" value="${keystore-password}"/>
-            <replacefilter token="@key-password@" value="${key-password}"/>
-            <replacefilter token="@domain@" value="${domain}"/>
-            <replacefilter token="@mex-file@" value="${mex-file}"/>
-            <replacefilter token="@image-file@" value="${image-file}"/>
-            <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
-        </replace>
-
-        <replace  dir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/" includes="mex*.xml">
-            <replacefilter token="@domain@" value="${domain}"/>
-            <replacefilter token="@sts@" value="${geopriv_stspath}"/>
-        </replace>
-
-        <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
-        <jar destfile="${build.dir}/geopriv_sts/geopriv_sts.war">
-            <fileset dir="${build.dir}/geopriv_sts/${geopriv_stspath}/"/>
-        </jar>
-
-    </target>
-
-    <target name="dist_PAYMENTCARD_STS" depends="init">
-
-
-        <mkdir dir="${build.dir}/paymentCard_sts/"/>
-        <copy todir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/">
-          <fileset dir="${websrc.dir}/paymentCard_sts"/>
-        </copy>
-        <property file="${websrc.dir}/paymentCard_sts/WEB-INF/sts.properties"/>
-
-        <replace  file="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/web.xml">
-         <replacefilter token="@keystore@" value="${keystore}"/>
-            <replacefilter token="@key@" value="${key.name}"/>
-            <replacefilter token="@keystore-password@" value="${keystore-password}"/>
-            <replacefilter token="@key-password@" value="${key-password}"/>
-            <replacefilter token="@domain@" value="${domain}"/>
-            <replacefilter token="@mex-file@" value="${mex-file}"/>
-            <replacefilter token="@image-file@" value="${image-file}"/>
-            <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
-        </replace>
-
-        <replace  dir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/" includes="mex*.xml">
-            <replacefilter token="@domain@" value="${domain}"/>
-            <replacefilter token="@sts@" value="${paymentCard_stspath}"/>
-        </replace>
-
-        <copy file="${lib.dir}/derby.jar" toDir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
-        <copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
-        <jar destfile="${build.dir}/paymentCard_sts/paymentCard_sts.war">
-            <fileset dir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/"/>
-        </jar>
-
-    </target>
-
-
-    <target name="distFireFox"
-            depends="init,clean,build">
-        <mkdir dir="${firefox.lib.dir}"/>
-
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" toFile="${firefox.lib.dir}/xmldap.jar"/>
-        <copy todir="${build.dir}/firefox">
-          <fileset dir="${firefox.dir}"/>
-        </copy>
-	
-    	<filter token="xpiVersion" value="${xpiVersion}"/>
-    	<move file="${build.dir}/firefox/install.rdf.in" toFile="${build.dir}/firefox/install.rdf" filtering="true"/>
-    		
-        <zip destfile="${build.dir}/xmldap-${xpiVersion}.xpi"  basedir="${build.dir}/firefox"/>
-    	
-    	<!-- for simpler loading into Firefox create this xpi with a static name -->
-    	<copy tofile="${build.dir}/xmldap.xpi" file="${build.dir}/xmldap-${xpiVersion}.xpi"/>
-
-    </target>
-
-
-    <target name="dist_samples" depends="init">
-
-        <mkdir dir="${build.dir}/samples/"/>
-        <mkdir dir="${build.dir}/samples/relyingparty"/>
-        <copy todir="${build.dir}/samples/relyingparty">
-          <fileset dir="${websrc.dir}/sample_rp/"/>
-        </copy>
-        <copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/samples/relyingparty/WEB-INF/lib/"/>
-        <jar destfile="${build.dir}/samples/relyingparty.war">
-            <fileset dir="${build.dir}/samples/"/>
-        </jar>
-
-    </target>
-
-
-    <target name="distObjcLibrary"
-            description="Creates an archive of the libraries need to run XMLDAP client code in an Objective-C wrapper for the WebKit Plug-In."
-            depends="init,clean,build">
-        <mkdir dir="${objc.lib.dir}"/>
-        <jar destfile="${objc.lib.dir}/xmldap-objc.jar"
-             basedir="${build.classes.dir}">
-                <exclude name="org/xmldap/firefox/**"/>
-                <exclude name="org/json/*"/>
-                <exclude name="org/xmldap/ws/**"/>
-        </jar>
-        <copy file="${lib.dir}/xom-1.1.jar" todir="${objc.lib.dir}/"/>
-        <copy file="${lib.dir}/lightcrypto.jar" todir="${objc.lib.dir}/"/>
-        <copy file="${lib.dir}/bcprov-jdk16-143.jar" todir="${objc.lib.dir}/"/>
-        <zip destfile="${build.dir}/xmldap-objc-support-files.zip"  basedir="${objc.lib.dir}"/>
-
-    </target>
-
-    <target name="clean"
-            depends="init"
-            description="removes all temporary files related to the build steps">
-        <delete dir="${build.dir}"/>
-        <delete dir="${firefox.lib.dir}"/>
-        <delete dir="${objc.lib.dir}"/>
-
-    </target>
-
-
-    <target name="unitTestBuild"
-            depends="init,build"
-            description="compiles test src to test classes dir">
-        <mkdir dir="${build.testclasses.dir}"/>
-        <mkdir dir="${build.dir}/testresults"/>
-        <javac srcdir="${testsrc.dir}"
-                destdir="${build.testclasses.dir}"
-                debug="true"
-                deprecation="true"
-                fork="true"
-                includeAntRuntime="false">
-            <classpath>
-                <path refid="ext.classpath.path"/>
-                <pathelement location="${build.classes.dir}"/>
-            </classpath>
-        </javac>
-    </target>
-
-
-    <target name="unitTest"
-            depends="init,unitTestBuild">
-
-        <junit printsummary="yes" haltonfailure="yes">
-            <classpath>
-                <path refid="ext.classpath.path"/>
-                <pathelement location="${build.testclasses.dir}"/>
-                <pathelement location="${build.classes.dir}"/>
-                <pathelement path="${java.class.path}"/>
-              </classpath>
-
-              <formatter type="plain"/>
-            <batchtest fork="true" todir="${build.dir}/testresults" >
-                <fileset dir="${build.testclasses.dir}">
-                    <include name="**/*Test.class"/>
-                </fileset>
-           </batchtest>
-        </junit>
-
-    </target>
-
-
-    <target name="test" depends="clean, prepjars, build, unitTest" description="runs a clean build and runs unit tests"/>
-
-    <target name="build_core" depends="clean, prepjars, build, dist_samples"/>
-    <target name="build_xmldap.org" depends="build_core, dist_XMLDAP_RP, dist_XMLDAP_STS"/>
-    <target name="build_firefox" depends="build_core, distFireFox"/>
-
-    <target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_XMLDAP_OC, dist_PAYMENTCARD_RP, dist_PAYMENTCARD_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS, dist_UPDATE"/>
+</target>
+
+<target name="dist_XMLDAP_RP" depends="build">
+
+<property file="${websrc.dir}/xmldap_rp/WEB-INF/rp.properties"/>
+
+<mkdir dir="${build.dir}/xmldap.org/"/>
+<copy todir="${build.dir}/xmldap.org/relyingparty/">
+  <fileset dir="${websrc.dir}/xmldap_rp/"/>
+</copy>
+<replace  dir="${build.dir}/xmldap.org/relyingparty/WEB-INF/" 
+  includes="xmldap_rp.xrds" propertyFile="${websrc.dir}/xmldap_rp/WEB-INF/rp.properties">
+  <replacefilter token="@domain@" property="domain"/>
+</replace>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/relyingparty/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/xmldap.org/relyingparty.war">
+  <fileset dir="${build.dir}/xmldap.org/relyingparty/"/>
+</jar>
+
+</target>
+
+<target name="dist_LOA1_RP" depends="build">
+
+<property file="${websrc.dir}/loa1RP/WEB-INF/rp.properties"/>
+
+<mkdir dir="${build.dir}/xmldap.org/"/>
+<copy todir="${build.dir}/xmldap.org/loa1RP/">
+  <fileset dir="${websrc.dir}/loa1RP/"/>
+</copy>
+<replace  dir="${build.dir}/xmldap.org/loa1RP/WEB-INF/" 
+  includes="xmldap_rp.xrds" propertyFile="${websrc.dir}/loa1RP/WEB-INF/rp.properties">
+  <replacefilter token="@domain@" property="domain"/>
+</replace>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/loa1RP/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/xmldap.org/loa1RP.war">
+  <fileset dir="${build.dir}/xmldap.org/loa1RP/"/>
+</jar>
+
+</target>
+
+<target name="dist_XMLDAP_OC" depends="init">
+
+<property file="${websrc.dir}/xmldap_oc/WEB-INF/rp.properties"/>
+
+<mkdir dir="${build.dir}/xmldap.org/"/>
+<copy todir="${build.dir}/xmldap.org/xmldap_oc/">
+  <fileset dir="${websrc.dir}/xmldap_oc/"/>
+</copy>
+<replace  dir="${build.dir}/xmldap.org/xmldap_oc/WEB-INF/" 
+  includes="xmldap_rp.xrds" propertyFile="${websrc.dir}/xmldap_oc/WEB-INF/rp.properties">
+  <replacefilter token="@domain@" property="domain"/>
+</replace>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/xmldap_oc/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/xmldap.org/xmldap_oc.war">
+  <fileset dir="${build.dir}/xmldap.org/xmldap_oc/"/>
+</jar>
+
+</target>
+
+<target name="dist_PAYMENTCARD_RP" depends="init">
+
+<mkdir dir="${build.dir}/paymentCard_rp/"/>
+<copy todir="${build.dir}/paymentCard_rp/paymentCard_rp/">
+  <fileset dir="${websrc.dir}/paymentCard_rp/"/>
+</copy>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/paymentCard_rp/paymentCard_rp/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/paymentCard_rp/paymentCard_rp.war">
+  <fileset dir="${build.dir}/paymentCard_rp/paymentCard_rp/"/>
+</jar>
+
+</target>
+
+<target name="dist_GEOPRIV_RP" depends="init">
+
+<mkdir dir="${build.dir}/geopriv_rp/"/>
+<copy todir="${build.dir}/geopriv_rp/geopriv_rp/">
+  <fileset dir="${websrc.dir}/geopriv_rp/"/>
+</copy>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_rp/geopriv_rp/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/geopriv_rp/geopriv_rp.war">
+  <fileset dir="${build.dir}/geopriv_rp/geopriv_rp/"/>
+</jar>
+
+</target>
+
+
+<target name="dist_UPDATE" depends="init">
+
+<mkdir dir="${build.dir}/openinfocard/"/>
+<copy todir="${build.dir}/openinfocard/openinfocard/">
+  <fileset dir="${websrc.dir}/update/"/>
+</copy>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/openinfocard/openinfocard/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/openinfocard/update.war">
+  <fileset dir="${build.dir}/openinfocard/openinfocard/"/>
+</jar>
+
+</target>
+
+
+
+
+<target name="dist_XMLDAP_STS" depends="build">
+
+
+<mkdir dir="${build.dir}/xmldap.org/"/>
+<copy todir="${build.dir}/xmldap.org/${xmldap_stspath}/">
+  <fileset dir="${websrc.dir}/xmldap_sts/"/>
+</copy>
+<property file="${websrc.dir}/xmldap_sts/WEB-INF/sts.properties"/>
+
+<replace  file="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/web.xml">
+  <replacefilter token="@keystore@" value="${keystore}"/>
+  <replacefilter token="@key@" value="${key.name}"/>
+  <replacefilter token="@keystore-password@" value="${keystore-password}"/>
+  <replacefilter token="@key-password@" value="${key-password}"/>
+  <replacefilter token="@domain@" value="${domain}"/>
+  <replacefilter token="@mex-file@" value="${mex-file}"/>
+  <replacefilter token="@image-file@" value="${image-file}"/>
+  <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
+</replace>
+
+<replace  dir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/" includes="mex*xml">
+  <replacefilter token="@domain@" value="${domain}"/>
+  <replacefilter token="@sts@" value="${xmldap_stspath}"/>
+</replace>
+
+<copy file="${lib.dir}/derby.jar" toDir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
+<copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
+<copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/${xmldap_stspath}/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/xmldap.org/sts.war">
+  <fileset dir="${build.dir}/xmldap.org/${xmldap_stspath}/"/>
+</jar>
+
+</target>
+
+<target name="dist_XMLDAP_LOA1STS" depends="build">
+
+
+<mkdir dir="${build.dir}/xmldap.org/"/>
+<copy todir="${build.dir}/xmldap.org/${xmldap_loa1stspath}/">
+  <fileset dir="${websrc.dir}/loa1STS/"/>
+</copy>
+<property file="${websrc.dir}/loa1STS/WEB-INF/sts.properties"/>
+
+<replace  file="${build.dir}/xmldap.org/${xmldap_loa1stspath}/WEB-INF/web.xml">
+  <replacefilter token="@keystore@" value="${keystore}"/>
+  <replacefilter token="@key@" value="${key.name}"/>
+  <replacefilter token="@keystore-password@" value="${keystore-password}"/>
+  <replacefilter token="@key-password@" value="${key-password}"/>
+  <replacefilter token="@domain@" value="${domain}"/>
+  <replacefilter token="@mex-file@" value="${mex-file}"/>
+  <replacefilter token="@image-file@" value="${image-file}"/>
+  <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
+</replace>
+
+<replace  dir="${build.dir}/xmldap.org/${xmldap_loa1stspath}/WEB-INF/" includes="mex*xml">
+  <replacefilter token="@domain@" value="${domain}"/>
+  <replacefilter token="@sts@" value="${xmldap_loa1stspath}"/>
+</replace>
+
+<copy file="${lib.dir}/derby.jar" toDir="${build.dir}/xmldap.org/${xmldap_loa1stspath}/WEB-INF/lib/"/>
+<copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/xmldap.org/${xmldap_loa1stspath}/WEB-INF/lib/"/>
+<copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/xmldap.org/${xmldap_loa1stspath}/WEB-INF/lib/"/>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/xmldap.org/${xmldap_loa1stspath}/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/xmldap.org/loa1STS.war">
+  <fileset dir="${build.dir}/xmldap.org/${xmldap_loa1stspath}/"/>
+</jar>
+
+</target>
+
+
+<target name="dist_GEOPRIV_STS" depends="init">
+
+
+<mkdir dir="${build.dir}/geopriv_sts/"/>
+<copy todir="${build.dir}/geopriv_sts/${geopriv_stspath}/">
+  <fileset dir="${websrc.dir}/geopriv_sts/"/>
+</copy>
+<property file="${websrc.dir}/geopriv_sts/WEB-INF/sts.properties"/>
+
+<replace  file="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/web.xml">
+  <replacefilter token="@keystore@" value="${keystore}"/>
+  <replacefilter token="@key@" value="${key.name}"/>
+  <replacefilter token="@keystore-password@" value="${keystore-password}"/>
+  <replacefilter token="@key-password@" value="${key-password}"/>
+  <replacefilter token="@domain@" value="${domain}"/>
+  <replacefilter token="@mex-file@" value="${mex-file}"/>
+  <replacefilter token="@image-file@" value="${image-file}"/>
+  <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
+</replace>
+
+<replace  dir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/" includes="mex*.xml">
+  <replacefilter token="@domain@" value="${domain}"/>
+  <replacefilter token="@sts@" value="${geopriv_stspath}"/>
+</replace>
+
+<copy file="${lib.dir}/derby.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+<copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+<copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/geopriv_sts/${geopriv_stspath}/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/geopriv_sts/geopriv_sts.war">
+  <fileset dir="${build.dir}/geopriv_sts/${geopriv_stspath}/"/>
+</jar>
+
+</target>
+
+<target name="dist_PAYMENTCARD_STS" depends="init">
+
+
+<mkdir dir="${build.dir}/paymentCard_sts/"/>
+<copy todir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/">
+  <fileset dir="${websrc.dir}/paymentCard_sts"/>
+</copy>
+<property file="${websrc.dir}/paymentCard_sts/WEB-INF/sts.properties"/>
+
+<replace  file="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/web.xml">
+  <replacefilter token="@keystore@" value="${keystore}"/>
+  <replacefilter token="@key@" value="${key.name}"/>
+  <replacefilter token="@keystore-password@" value="${keystore-password}"/>
+  <replacefilter token="@key-password@" value="${key-password}"/>
+  <replacefilter token="@domain@" value="${domain}"/>
+  <replacefilter token="@mex-file@" value="${mex-file}"/>
+  <replacefilter token="@image-file@" value="${image-file}"/>
+  <replacefilter token="@supportedClaimsClass@" value="${supportedClaimsClass}"/>
+</replace>
+
+<replace  dir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/" includes="mex*.xml">
+  <replacefilter token="@domain@" value="${domain}"/>
+  <replacefilter token="@sts@" value="${paymentCard_stspath}"/>
+</replace>
+
+<copy file="${lib.dir}/derby.jar" toDir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
+<copy file="${lib.dir}/commons-fileupload-1.1.1.jar" toDir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
+<copy file="${lib.dir}/commons-io-1.2.jar" toDir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/paymentCard_sts/paymentCard_sts.war">
+  <fileset dir="${build.dir}/paymentCard_sts/${paymentCard_stspath}/"/>
+</jar>
+
+</target>
+
+
+<target name="distFireFox"
+  depends="clean,build,initFirefox">
+
+  <filter token="xpiVersion" value="${xpiVersion}"/>
+  <move file="${build.dir}/firefox/install.rdf.in" toFile="${build.dir}/firefox/install.rdf" filtering="true"/>
+  
+  <zip destfile="${build.dir}/xmldap-${xpiVersion}.xpi"  basedir="${build.dir}/firefox"/>
+  
+  <!-- for simpler loading into Firefox create this xpi with a static name -->
+  <copy tofile="${build.dir}/xmldap.xpi" file="${build.dir}/xmldap-${xpiVersion}.xpi"/>
+
+</target>
+
+
+<target name="dist_samples" depends="init">
+
+<mkdir dir="${build.dir}/samples/"/>
+<mkdir dir="${build.dir}/samples/relyingparty"/>
+<copy todir="${build.dir}/samples/relyingparty">
+  <fileset dir="${websrc.dir}/sample_rp/"/>
+</copy>
+<copy file="${build.dist.dir}/${component.name}-${component.version}.jar" todir="${build.dir}/samples/relyingparty/WEB-INF/lib/"/>
+<jar destfile="${build.dir}/samples/relyingparty.war">
+  <fileset dir="${build.dir}/samples/"/>
+</jar>
+
+</target>
+
+
+<target name="distObjcLibrary"
+  description="Creates an archive of the libraries need to run XMLDAP client code in an Objective-C wrapper for the WebKit Plug-In."
+  depends="init,clean,build">
+<mkdir dir="${objc.lib.dir}"/>
+<jar destfile="${objc.lib.dir}/xmldap-objc.jar"
+   basedir="${build.classes.dir}">
+  <exclude name="org/xmldap/firefox/**"/>
+  <exclude name="org/json/*"/>
+  <exclude name="org/xmldap/ws/**"/>
+</jar>
+<copy file="${lib.dir}/xom-1.1.jar" todir="${objc.lib.dir}/"/>
+<copy file="${lib.dir}/lightcrypto.jar" todir="${objc.lib.dir}/"/>
+<copy file="${lib.dir}/bcprov-jdk16-143.jar" todir="${objc.lib.dir}/"/>
+<zip destfile="${build.dir}/xmldap-objc-support-files.zip"  basedir="${objc.lib.dir}"/>
+
+</target>
+
+<target name="clean"
+  depends="init"
+  description="removes all temporary files related to the build steps">
+<delete dir="${build.dir}"/>
+<delete dir="${firefox.lib.dir}"/>
+<delete dir="${objc.lib.dir}"/>
+
+</target>
+
+
+<target name="unitTestBuild"
+  depends="init,build"
+  description="compiles test src to test classes dir">
+<mkdir dir="${build.testclasses.dir}"/>
+<mkdir dir="${build.dir}/testresults"/>
+<javac srcdir="${testsrc.dir}"
+  destdir="${build.testclasses.dir}"
+  debug="true"
+  deprecation="true"
+  fork="true"
+  includeAntRuntime="false">
+  <classpath>
+    <path refid="ext.classpath.path"/>
+    <pathelement location="${build.classes.dir}"/>
+  </classpath>
+</javac>
+</target>
+
+
+<target name="unitTest"
+  depends="init,unitTestBuild">
+
+<junit printsummary="yes" haltonfailure="yes">
+  <classpath>
+    <path refid="ext.classpath.path"/>
+    <pathelement location="${build.testclasses.dir}"/>
+    <pathelement location="${build.classes.dir}"/>
+    <pathelement path="${java.class.path}"/>
+  </classpath>
+
+  <formatter type="plain"/>
+  <batchtest fork="true" todir="${build.dir}/testresults" >
+    <fileset dir="${build.testclasses.dir}">
+      <include name="**/*Test.class"/>
+    </fileset>
+  </batchtest>
+</junit>
+
+</target>
+
+
+<target name="test" depends="clean, prepjars, build, unitTest" description="runs a clean build and runs unit tests"/>
+
+<target name="build_core" depends="clean, prepjars, build, dist_samples"/>
+<target name="build_xmldap.org" depends="build_core, dist_XMLDAP_RP, dist_XMLDAP_STS"/>
+<target name="build_firefox" depends="build_core, distFireFox"/>
+
+<target name="build_all" depends="build_core,distFireFox,dist_XMLDAP_LOA1STS,dist_LOA1_RP,dist_XMLDAP_RP, dist_XMLDAP_STS, dist_XMLDAP_OC, dist_PAYMENTCARD_RP, dist_PAYMENTCARD_STS, dist_GEOPRIV_RP, dist_GEOPRIV_STS, dist_UPDATE"/>
 
 </project>

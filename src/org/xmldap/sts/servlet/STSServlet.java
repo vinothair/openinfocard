@@ -68,6 +68,8 @@ public class STSServlet  extends HttpServlet {
     CardStorage storage = null;
     SupportedClaims supportedClaimsImpl = null;
 
+    String messageDigestAlgorithm = null;
+    
     public void init(ServletConfig config) throws ServletException {
 
         super.init(config);
@@ -103,7 +105,11 @@ public class STSServlet  extends HttpServlet {
             if (issuerName == null) {
             	issuerName = "https://" + domain + servletPath;
             }
-
+            messageDigestAlgorithm = properties.getProperty("messageDigestAlgorithm");
+            if (messageDigestAlgorithm == null) {
+            	messageDigestAlgorithm = "SHA1";
+            }
+            
             String supportedClaimsClass = properties.getProperty("supportedClaimsClass");
             if (supportedClaimsClass == null) {
             	throw new ServletException("supportedClaimsClass is null");
@@ -232,7 +238,9 @@ public class STSServlet  extends HttpServlet {
 		try {
 			stsResponse = Utils.issue(
 					card, requestElements, clientLocale, cert, key, 
-					issuerName, supportedClaimsImpl, relyingPartyURL, relyingPartyCertB64);
+					issuerName, supportedClaimsImpl, 
+					relyingPartyURL, relyingPartyCertB64,
+					messageDigestAlgorithm);
 		} catch (CryptoException e) {
 			response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             e.printStackTrace();

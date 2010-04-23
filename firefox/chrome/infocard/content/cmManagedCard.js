@@ -1,3 +1,65 @@
+function findBackingCard(managedCard, icUserCredential, tsEndpointAddressStr, tsIdentityX509CertificateStr) {
+  var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+  if (icUserCredential.ic::SelfIssuedCredential.toString() === "") {
+    icDebug("findBackingCard not selfIssuedCredential:" + icUserCredential);
+    return null;
+  }
+  var rpPPID = icUserCredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier.toString();
+  icDebug("findBackingCard expectedPpid:" + rpPPID);
+  rpPPID = window.atob(rpPPID);
+  icDebug("findBackingCard expectedPpid(decoded):" + rpPPID);
+  var cardFile = CardstoreToolkit.readCardStore();
+  var cardXmllist = cardFile.infocard;
+  icDebug("findBackingCard cardXmllist.length()=" + cardXmllist.length());
+  for (var i=0; i<cardXmllist.length(); i++) {
+    var c = cardXmllist[i];
+    if (c.type.toString() === "selfAsserted") {
+      var rpPPIdList = c.rpPPID;
+      var count = 0;
+      for (var j=0; j<rpPPIdList.length(); j++) {
+        var aRpPPID = rpPPIdList[j].toString();
+        count++;
+        icDebug("findBackingCard:" + c.name + " aRpPPID:" + aRpPPID + " rpPPID:" + rpPPID);
+        if (aRpPPID == rpPPID) {
+          // this rpPPID is already in list of rpPPID
+          return c;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+//function findBackingCard(managedCard, icUserCredential, tsEndpointAddressStr, tsIdentityX509CertificateStr) {
+//  var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
+//  if (icUserCredential.ic::SelfIssuedCredential.toString() === "") {
+//    icDebug("findBackingCard not selfIssuedCredential:" + icUserCredential);
+//    return null;
+//  }
+//  var expectedPpid = icUserCredential.ic::SelfIssuedCredential.ic::PrivatePersonalIdentifier;
+//  icDebug("findBackingCard expectedPpid:" + expectedPpid);
+//  if (TokenIssuer.initialize() === false) {
+//    icDebug("findBackingCard could not initialize TokenIssuer");
+//    return null;
+//  }
+//  
+//  var policy = {};
+//  policy.cert = tsIdentityX509CertificateStr;
+//  policy.chainLength = 0; // FIXME
+////  for (var i=0; i<rpPolicy.chainLength; i++) {
+////    policy["certChain"+i] = rpPolicy["certChain"+i];    
+////  }
+//  policy.cardId = managedCard.id;
+//  policy.url = tsEndpointAddressStr;
+//  
+//  var serializedPolicy = JSON.stringify(policy);
+//  icDebug("findBackingCard serializedPolicy=" + serializedPolicy);
+//  
+//  var cardPpid = TokenIssuer.generateRPPPID(serializedPolicy);
+//  icDebug("findBackingCard cardPpid=" + cardPpid);
+//  
+//  return null;
+//}
 
 function processManagedCard(
 		managedCard, requiredClaims, optionalClaims, tokenType, clientPseudonym, 
@@ -15,6 +77,11 @@ function processManagedCard(
     			"Please delete the card. Sorry for the inconvenience.");
     	return null;
     }
+    
+    var tslNamespace = tokenServiceList.namespace();
+    icDebug("processManagedCard::tslNamespace>>>" + tslNamespace);
+    icDebug("processManagedCard::tslNamespace.prefix>>>" + tslNamespace.prefix + "<<<");
+
     var usercredential = null;
     var mexResponse = null;
     
@@ -40,6 +107,13 @@ function processManagedCard(
 		var tsEndpointAddress = ts.wsa::EndpointReference.wsa::Address; 
 		icDebug("processManagedCard::tsEndpointAddress>>>" + tsEndpointAddress);
 		
+		var wsai = new Namespace("wsai", "http://schemas.xmlsoap.org/ws/2006/02/addressingidentity");
+		var tsWsaiIdentity = ts.wsa::EndpointReference.wsai::Identity;
+    icDebug("processManagedCard::tsWsaiIdentity>>>" + tsWsaiIdentity);
+    var dsig = new Namespace("dsig", "http://www.w3.org/2000/09/xmldsig#");
+		var tsIdentityX509Certificate = tsWsaiIdentity..dsig::X509Certificate;
+		icDebug("processManagedCard::tsIdentityX509Certificate>>>" + tsIdentityX509Certificate);
+		
 		var tsWsaMetadata = ts.wsa::EndpointReference.wsa::Metadata;
 		icDebug("processManagedCard::tsMetadata>>>" + tsWsaMetadata);
 		var wsx = new Namespace("wsx", "http://schemas.xmlsoap.org/ws/2004/09/mex");
@@ -52,7 +126,11 @@ function processManagedCard(
 		var tsMexAddress = tsMetadataReference.wsa::Address;
 		if ((tsMexAddress === null) || (tsMexAddress.length() == 0)) {
 			icDebug("processManagedCard::wsa:tsMexAddress not found in >>>" + tsMetadataReference.toXMLString());
-			return null;
+			tsMexAddress = tsMetadataReference.*[0];
+			if (tsMexAddress.name().localName !== "Address") {
+	      throw("processManagedCard::tsMexAddress.name().localName >>>" + tsMexAddress.name().localName);
+	      return null;
+			}
 		}
 		icDebug("processManagedCard::tsMexAddress>>>" + tsMexAddress);
 		var tsMexAddressStr = tsMexAddress.toString();
@@ -84,8 +162,10 @@ function processManagedCard(
 
 			for each (var anAddress in addresses) {
 				var theAddress = anAddress.child(0);
-//				icDebug("processManagedCard::typeof("+theAddress+")>>>" + typeof(theAddress));
-//				icDebug("processManagedCard::typeof("+tsEndpointAddress+")>>>" + typeof(tsEndpointAddress));
+// icDebug("processManagedCard::typeof("+theAddress+")>>>" +
+// typeof(theAddress));
+// icDebug("processManagedCard::typeof("+tsEndpointAddress+")>>>" +
+// typeof(tsEndpointAddress));
 				if (theAddress.toString() === tsEndpointAddressStr) {
 					icDebug("processManagedCard::address>>>" + theAddress);
 					var addressParent = anAddress.parent(); // EndpointReference
@@ -95,7 +175,8 @@ function processManagedCard(
 					var binding = endpointReferenceParent.@binding;
 					icDebug("processManagedCard::port.@binding>>>" + binding);
 					var colonIndex = binding.indexOf(":");
-					binding = binding.substring(colonIndex+1); // works even if colonIndex == -1
+					binding = binding.substring(colonIndex+1); // works even if
+                                                      // colonIndex == -1
 					var bindingStr = binding.toString();
 					
 					var bindings = mexXml..wsdl::binding;
@@ -126,20 +207,32 @@ function processManagedCard(
 											var spTransportBinding = aPolicy..sp2005::TransportBinding;
 											if (spTransportBinding === null || spTransportBinding.length() == 0) {
 												icDebug("processManagedCard::spTransportBinding (2005) null in sPolicy>>>" + aPolicy.toString());
-//												var spTransportBinding = aPolicy..sp2007::TransportBinding;
-//												if (spTransportBinding === null || spTransportBinding.length() == 0) {
-//													icDebug("processManagedCard::spTransportBinding (2007) null too>>>");
-//													continue;
-//												}
+// var spTransportBinding = aPolicy..sp2007::TransportBinding;
+// if (spTransportBinding === null || spTransportBinding.length() == 0) {
+// icDebug("processManagedCard::spTransportBinding (2007) null too>>>");
+// continue;
+// }
 												continue;
 											}
-											icDebug("processManagedCard::before sendRST: tsEndpointAddressStr=" + tsEndpointAddressStr);
+                      icDebug("processManagedCard::before sendRST: tsEndpointAddressStr=" + tsEndpointAddressStr);
+                      icDebug("processManagedCard::before sendRST: tsEndpointCertStr=" + tsIdentityX509Certificate.toString());
 										    icDebug("processManagedCard::typeof(tsEndpointAddressStr):" + typeof(tsEndpointAddressStr));
 											icDebug("processManagedCard::before sendRST: icUserCredential=" + icUserCredential);
 										    icDebug("processManagedCard::typeof(icUserCredential):" + typeof(icUserCredential));
 											try {
-												var sendRstParameter = {};
-												sendRstParameter.tsEndpointAddressStr = tsEndpointAddressStr;
+											  var backingCard;
+											  try { 
+											    backingCard = findBackingCard(managedCard, icUserCredential, tsEndpointAddressStr, 
+                              tsIdentityX509Certificate.toString());
+											  } catch (findBackingCardException) {
+											    icDebug("processManagedCard: findBackingCard threw: " + findBackingCardException);
+											    // ignore
+											  }
+
+											  var sendRstParameter = {};
+                        sendRstParameter.backingCard = backingCard;
+                        sendRstParameter.tsEndpointAddressStr = tsEndpointAddressStr;
+                        sendRstParameter.tsEndpointCertStr = tsIdentityX509Certificate.toString();
 												sendRstParameter.icUserCredential = icUserCredential;
 												sendRstParameter.managedCard = managedCard;
 												sendRstParameter.requiredClaims = requiredClaims;
@@ -185,51 +278,52 @@ function processManagedCard(
 }
 
 function createCheckbox(optionalClaims, requiredClaims, displayTag, uri) {
-	try {
-	 var checkbox = document.createElement("checkbox");
-	 var label;
-//  		 if (displayTag.length > 10) {
-//  		  label = displayTag.substring(0,9);
-//  		 } else {
-//  		  label = displayTag;
-//  		 }
-	 label = displayTag;
-	 icDebug("createCheckbox: typeof(uri)=" + typeof(uri));
-	 icDebug("createCheckbox: label=" + label);
-	 label = xmlreplace(label);
-	 icDebug("createCheckbox: xmlreplace(label)=" + label);
-	 checkbox.setAttribute("label", label);
-	 checkbox.setAttribute("id", "label_"+uri);
-	 checkbox.setAttribute("class", "claimLabel");
-	 checkbox.setAttribute("crop", "end");
-     checkbox.setAttribute("checked", "false");
-	 checkbox.setAttribute("disabled", "true");
-	 
-	 if (optionalClaims !== null) {
-  		  var ui = optionalClaims.indexOf(uri);
-  		  if (ui != -1) {
-  		   checkbox.setAttribute("checked", "false");
-  		   checkbox.setAttribute("disabled", "false");
-  		  }
-	 }
-	 if (requiredClaims !== null) {
-  		  ui = requiredClaims.indexOf(uri);
-  		  if (ui != -1) {
-  		   checkbox.setAttribute("checked", "true");
-  		   checkbox.setAttribute("disabled", "true");
-  		  }
-	 }
-	 try {
-	 	  // DisplayTag should be changed to Description when description is supported
-		 checkbox.setAttribute("tooltiptext", displayTag); // this is not cropped
-	 }
-	 catch (err) {
-	  // tooltiptext barfs on "invalid character" while value does not... Axel
-	  icDebug(err + "(" + displayTag + ")");
-	 }
-	 return checkbox;
+  try {
+    if (uri == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") {
+      icDebug("createCheckbox: typeof(displayTag)=" + typeof(displayTag));
+      if (!displayTag) {
+        displayTag = "PPID";
+      }
+    }
+    var checkbox = document.createElement("checkbox");
+    var label;
+    label = displayTag;
+    icDebug("createCheckbox: uri=" + uri);
+    icDebug("createCheckbox: label=" + label);
+    label = xmlreplace(label);
+    icDebug("createCheckbox: xmlreplace(label)=" + label);
+    checkbox.setAttribute("label", label);
+    checkbox.setAttribute("id", "label_"+uri);
+    checkbox.setAttribute("class", "claimLabel");
+    checkbox.setAttribute("crop", "end");
+
+    try {
+    // DisplayTag should be changed to Description when description is supported
+      checkbox.setAttribute("tooltiptext", displayTag); // this is not cropped
+    } catch (err) {
+      // tooltiptext barfs on "invalid character" while value does not... Axel
+      icDebug(err + "(" + displayTag + ")");
+    }
+
+   if ((requiredClaims) && (requiredClaims.indexOf(uri) >= 0)) {
+	   checkbox.setAttribute("checked", "true");
+	   checkbox.setAttribute("disabled", "true");
+     icDebug("uri: " + uri + " is required");
+	   return checkbox;
+	 } else {
+	   if ((optionalClaims) && (optionalClaims.indexOf(uri) >= 0)) {
+	     checkbox.setAttribute("checked", "false");
+	     checkbox.setAttribute("disabled", "false");
+	     icDebug("uri: " + uri + "is optional");
+	     return checkbox;
+     } else {
+       icDebug("uri: " + uri + " is neither optional nor required");
+       return null;
+     }
+	 } 
 	} catch (e) {
 		icDebug("Exception in " + createCheckbox + "(" + e + ")");
+		return null;
 	}
 }
 
@@ -262,11 +356,38 @@ function getVariableClaimValue(thisClaim) {
 	}
 }
 
-function setCardManaged(requiredClaims, optionalClaims, list, row1Id, row2Id, claimValues) {
+function cardManagerOnInput() {
+  if (selectedCard) {
+    icDebug("cardManagerOnInput start");
+    selectedCard.claimsValuesChanged = "true";
+    var policy = getPolicy();
+    if (policy === null) { // cardmanagement
+      var selectlabel = document.getElementById('select');
+      if (selectlabel) {
+        selectlabel.setAttribute('value', 'save');
+        var selectcontrol = document.getElementById('selectcontrol');
+        if (selectcontrol) {
+          selectcontrol.setAttribute('hidden', 'false');
+        }
+      }
+    }
+
+  }
+}
+
+function setCardManaged(requiredClaims, optionalClaims, list, row1Id, claimValues) {
 	try {
     var ic = new Namespace("ic", "http://schemas.xmlsoap.org/ws/2005/05/identity");
 
     icDebug("setCardManaged requiredClaims: " + requiredClaims);
+    icDebug("setCardManaged optionalClaims: " + optionalClaims);
+    if (requiredClaims) {
+      requiredClaims = requiredClaims.replace(/\s+/g,' ');
+    }
+    icDebug("setCardManaged requiredClaims: " + requiredClaims);
+    if (optionalClaims) {
+      optionalClaims = optionalClaims.replace(/\s+/g,' ');
+    }
     icDebug("setCardManaged optionalClaims: " + optionalClaims);
     
     var managedRows = document.getElementById(row1Id);
@@ -277,21 +398,36 @@ function setCardManaged(requiredClaims, optionalClaims, list, row1Id, row2Id, cl
     }
       
     icDebug("setCardManaged: number of supported claims: " + list.length());
-	  
+
     for (var index=0; index<list.length(); index++) {
       var supportedClaim = list[index];
       var uri = supportedClaim.@Uri.toXMLString();
       icDebug("setCardManaged: uri=" + uri);
       
-//      if (uri == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") {
-//        continue;
-//      }
+// if (uri ==
+// "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier")
+// {
+// continue;
+// }
 //      
       var row = document.createElement("row");
       row.setAttribute("class", "rowClass");
 
       var displayTag = "" + supportedClaim.ic::DisplayTag;
       var checkbox = createCheckbox(optionalClaims, requiredClaims, displayTag, uri);
+      if (!checkbox) {
+        if (uri == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier") {
+          if (!displayTag) {
+            displayTag = "PPID";
+          }
+        }
+        icDebug("setCardManaged: label displayTag="+displayTag + " uri=" + uri);
+        checkbox = document.createElement("label");
+        checkbox.setAttribute("value", displayTag);
+        checkbox.setAttribute("control", uri);
+        checkbox.setAttribute("class", "claimLabel");
+        checkbox.setAttribute("crop", "end");
+      }
       icDebug("setCardManaged: after createCheckbox");
       var value = "";
       if (optionalClaims != null) {
@@ -328,11 +464,15 @@ function setCardManaged(requiredClaims, optionalClaims, list, row1Id, row2Id, cl
       icDebug("setCardManaged: hier");
        
       var textbox = document.createElement("textbox");
-      textbox.setAttribute("id", uri);
+      var id = uri;
+      textbox.setAttribute("id", id);
       textbox.setAttribute("class", "claimText");
       textbox.setAttribute("value", value);
-      textbox.setAttribute("readonly", "true");
-      row.appendChild(checkbox);
+      textbox.setAttribute("oninput", "cardManagerOnInput();");
+      // textbox.setAttribute("readonly", "true");
+      if (checkbox) {
+        row.appendChild(checkbox);
+      }
       row.appendChild(textbox);
       managedRows.appendChild(row);
       

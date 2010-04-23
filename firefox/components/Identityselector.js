@@ -54,53 +54,84 @@ Xmldapidentityselector.prototype = {
      privacyPolicy, privacyPolicyVersion, serverCert, issuerPolicy, 
      extraParamsLenght, extraParams) {
 
-        debug('issuer: ' + issuer);
-        debug('recipientURL: ' + recipientURL);
-        debug('requiredClaims: ' + requiredClaims);
-        debug('optionalClaims: ' + optionalClaims);
-        debug('tokenType: ' + tokenType);
-        debug('privacyPolicy: ' + privacyPolicy);
-        debug('privacyPolicyVersion: ' + privacyPolicyVersion);
-        debug('serverCert: ' + serverCert);
-        debug('issuerPolicy: ' + issuerPolicy);
-        debug('extraParamsLenght: ' + extraParamsLenght);
+    debug('issuer: ' + issuer);
+    debug('recipientURL: ' + recipientURL);
+    if (requiredClaims !== null) {
+      requiredClaims = requiredClaims.replace(/\s+/g,' ');
+    }
+    debug('requiredClaims: ' + requiredClaims);
+    if (optionalClaims !== null) {
+      optionalClaims = optionalClaims.replace(/\s+/g,' ');
+    }
+    debug('optionalClaims: ' + optionalClaims);
+    debug('tokenType: ' + tokenType);
+    debug('privacyPolicy: ' + privacyPolicy);
+    debug('privacyPolicyVersion: ' + privacyPolicyVersion);
+    debug('serverCert: ' + serverCert);
+    debug('issuerPolicy: ' + issuerPolicy);
+    debug('extraParamsLenght: ' + extraParamsLenght);
 
 
-        var callback;
+    var callback;
 
-        var policy = {};
-        policy["tokenType"] = tokenType;
-        policy["issuer"] = issuer;
-        policy["requiredClaims"] = requiredClaims;
-        policy["optionalClaims"] = optionalClaims;
-        policy["privacyUrl"] = privacyPolicy;
-        policy["privacyVersion"] = privacyPolicyVersion;
-        policy["issuerPolicy"] = issuerPolicy;
-        policy["extraParamsLenght"] = extraParamsLenght;
-        policy["extraParams"] = extraParams;
+    var policy = {};
+    if (tokenType) {
+      policy.tokenType = tokenType;
+    }
+    if (issuer) {
+      policy.issuer = issuer;
+    }
+    if (requiredClaims) {
+      policy.requiredClaims = requiredClaims;
+    }
+    if (optionalClaims) {
+      policy.optionalClaims = optionalClaims;
+    }
+    if (privacyPolicy) {
+      policy.privacyUrl = privacyPolicy;
+    }
+    if (privacyPolicyVersion) {
+      policy.privacyVersion = privacyPolicyVersion;
+    }
+    if (issuerPolicy) {
+      policy.issuerPolicy = issuerPolicy;
+    }
+    if (extraParamsLenght) {
+      policy.extraParamsLenght = extraParamsLenght;
+    }
+    if (extraParams) {
+      policy.extraParams = extraParams;
+    }
 
-        //get a handle on a window
-        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
-        var win = wm.getMostRecentWindow("navigator:browser");
+    //get a handle on a window
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+    var win = wm.getMostRecentWindow("navigator:browser");
 
-		if (serverCert != null) {
-	        policy["cert"] = getDer(serverCert,win);
-	        policy["cn"] = serverCert.commonName;
+    var mwNode = win.document.getElementById("main-window");
+    if (mwNode) {
+      if (mwNode.style.backgroundImage) {
+        policy.backgroundImage = mwNode.style.backgroundImage;
+        debug('backgroundImage: ' + mwNode.style.backgroundImage);
+      }
+    }
+    
+    if (serverCert != null) {
+      policy["cert"] = getDer(serverCert,win);
+      policy["cn"] = serverCert.commonName;
 
-		    var chain = serverCert.getChain();
-			debug('chain: ' + chain);
-			debug('chainLength: ' + chain.length);
-			debug('chain[0]: ' + chain.queryElementAt(0, nsIX509Cert));
-			
-			policy["chainLength"] = ""+chain.length;
-			for (var i = 0; i < chain.length; ++i) {
-			  var currCert = chain.queryElementAt(i, nsIX509Cert);
-			  policy["certChain"+i] = getDer(currCert,win);
-			}
-			
+      var chain = serverCert.getChain();
+      debug('chain: ' + chain);
+      debug('chainLength: ' + chain.length);
+      debug('chain[0]: ' + chain.queryElementAt(0, nsIX509Cert));
+
+      policy["chainLength"] = ""+chain.length;
+      for (var i = 0; i < chain.length; ++i) {
+        var currCert = chain.queryElementAt(i, nsIX509Cert);
+        policy["certChain"+i] = getDer(currCert,win);
+      }
 //			debugObject("serverCert: ", serverCert, 0);
-		}
-		
+    }
+
         // win.document.URL is undefined
         // win.document.location.href is chrome://.../browser.xul
 		policy["url"] = recipientURL; 

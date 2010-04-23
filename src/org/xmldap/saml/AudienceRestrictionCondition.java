@@ -44,6 +44,8 @@ public class AudienceRestrictionCondition implements Serializable {
 	public Element serialize() throws SerializationException {
         Element audienceRestrictionCondition = new Element(WSConstants.SAML_PREFIX + ":AudienceRestrictionCondition", WSConstants.SAML11_NAMESPACE);
         Element audience = new Element(WSConstants.SAML_PREFIX + ":Audience", WSConstants.SAML11_NAMESPACE);
+        // FIXME: what happens if we wrap restrictedTo in <![CDATA[ ]]>
+        // FIXME: check that restrictedTo is a URL?
         audience.appendChild(restrictedTo);
         audienceRestrictionCondition.appendChild(audience);
 		return audienceRestrictionCondition;

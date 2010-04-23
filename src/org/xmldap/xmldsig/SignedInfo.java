@@ -28,17 +28,19 @@
 
 package org.xmldap.xmldsig;
 
-import nu.xom.Attribute;
-import nu.xom.Element;
-import nu.xom.canonical.Canonicalizer;
-import org.xmldap.exceptions.SerializationException;
-import org.xmldap.xml.Canonicalizable;
-import org.xmldap.xml.XmlUtils;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import nu.xom.Attribute;
+import nu.xom.Element;
+import nu.xom.canonical.Canonicalizer;
+
+import org.xmldap.crypto.CryptoUtils;
+import org.xmldap.exceptions.SerializationException;
+import org.xmldap.xml.Canonicalizable;
+import org.xmldap.xml.XmlUtils;
 
 /**
  * Created by IntelliJ IDEA.
@@ -49,6 +51,8 @@ import java.util.List;
  */
 public class SignedInfo implements Canonicalizable {
 
+	String mAlgorithm;
+	
 	protected String defaultCanonicalizationMethod = Canonicalizer.EXCLUSIVE_XML_CANONICALIZATION;
 	
     //TODO - support multiple C14n types
@@ -56,20 +60,27 @@ public class SignedInfo implements Canonicalizable {
 
     String inclusiveNamespacePrefixes = null;
     
-    public SignedInfo(List references) {
+    public String getAlgorithm() {
+    	return mAlgorithm;
+    }
+    
+    public SignedInfo(List references, String signingAlgorithm) {
         this.references = references;
+        this.mAlgorithm = signingAlgorithm;
     }
 
-    public SignedInfo(Reference reference, String inclusiveNamespacePrefixes) {
+    public SignedInfo(Reference reference, String inclusiveNamespacePrefixes, String signingAlgorithm) {
         this.references = new ArrayList();
         references.add(reference);
         this.inclusiveNamespacePrefixes = inclusiveNamespacePrefixes;
+        this.mAlgorithm = signingAlgorithm;
     }
 
-    public SignedInfo(Reference reference) {
+    public SignedInfo(Reference reference, String signingAlgorithm) {
         this.references = new ArrayList();
         references.add(reference);
         this.inclusiveNamespacePrefixes = null;
+        this.mAlgorithm = signingAlgorithm;
     }
 
     protected SignedInfo() {}
@@ -77,7 +88,7 @@ public class SignedInfo implements Canonicalizable {
     public void setInclusiveNamespacePrefixList(String inclusiveNamespacePrefixes) 
     {
     	this.inclusiveNamespacePrefixes = inclusiveNamespacePrefixes;
-    }
+   }
     
     public Element getSignedInfo() throws SerializationException {
 
@@ -104,7 +115,8 @@ public class SignedInfo implements Canonicalizable {
         signedInfo.appendChild(canonicalizationMethod);
 
         Element signatureMethod = new Element("dsig:SignatureMethod", "http://www.w3.org/2000/09/xmldsig#");
-        Attribute signAlgo = new Attribute("Algorithm", "http://www.w3.org/2000/09/xmldsig#rsa-sha1");
+        String algorithm = CryptoUtils.convertSigningAlgorithm(mAlgorithm);
+        Attribute signAlgo = new Attribute("Algorithm", algorithm);
         signatureMethod.addAttribute(signAlgo);
         signedInfo.appendChild(signatureMethod);
 

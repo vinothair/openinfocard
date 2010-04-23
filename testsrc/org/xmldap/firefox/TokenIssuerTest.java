@@ -1,12 +1,16 @@
 package org.xmldap.firefox;
 
+import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 
+import nu.xom.Document;
+
 import org.xmldap.exceptions.TokenIssuanceException;
 import org.xmldap.rp.Token;
 import org.xmldap.saml.Subject;
+import org.xmldap.xml.XmlUtils;
 
 import junit.framework.TestCase;
 
@@ -90,16 +94,28 @@ public class TokenIssuerTest extends TestCase {
 		String optionalClaims = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender";
 		X509Certificate signingCert = cert;
 		PrivateKey signingKey = privateKey;
+    Document infocard;
+    try {
+      infocard = XmlUtils.parse(selfAssertedCardStr);
+    } catch (IOException e) {
+      throw new TokenIssuanceException(e);
+    } catch (nu.xom.ParsingException e) {
+      throw new TokenIssuanceException(e);    
+    }
+    String audience = "https://relyingparty.example.com/AudienceRestriction";
+    String ppi = TokenIssuer.generateRPPPID(relyingPartyCert, chain, audience, infocard);
+
 		String encryptedXML = 	TokenIssuer.getSelfAssertedToken(
-				selfAssertedCardStr, 
+		    infocard, 
 				relyingPartyCert,
 				chain,
 				requiredClaims,
 				optionalClaims,
 				signingCert,
 				signingKey,
-				"https://relyingparty.example.com/AudienceRestriction", 
-				Subject.HOLDER_OF_KEY);
+				audience, 
+				Subject.HOLDER_OF_KEY,
+				ppi);
 		Token token = new Token(encryptedXML, privateKey);
 		assertTrue(token.isSignatureValid());
 		assertTrue(token.isConditionsValid());
