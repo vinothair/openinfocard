@@ -51,7 +51,7 @@ const nsICategoryManager = Components.interfaces.nsICategoryManager;
 
 function debug(msg) {
 	  var cs = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
-	  cs.logStringMessage("XMLDAP: " + msg);
+	  cs.logStringMessage("WALLET: " + msg);
 }
 
 function debugObject(prefix, object, indent) {
