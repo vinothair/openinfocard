@@ -21,21 +21,27 @@
 // Desc: Constants
 // **************************************************************************
 
-var nsIX509Cert = Components.interfaces.nsIX509Cert;
+//const Cc = Components.classes;
+//const Ci = Components.interfaces;
+//const Cu = Components.utils;
 
-var nsIX509CertDB = Components.interfaces.nsIX509CertDB;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+var nsIX509Cert = Ci.nsIX509Cert;
+
+var nsIX509CertDB = Ci.nsIX509CertDB;
 var nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 
-var nsINSSCertCache = Components.interfaces.nsINSSCertCache;
+var nsINSSCertCache = Ci.nsINSSCertCache;
 var nsNSSCertCache = "@mozilla.org/security/nsscertcache;1";
 
-var nsICertTree = Components.interfaces.nsICertTree;
+var nsICertTree = Ci.nsICertTree;
 var nsCertTree = "@mozilla.org/security/nsCertTree;1";
 
-var nsILocalFile = Components.interfaces.nsILocalFile;
+var nsILocalFile = Ci.nsILocalFile;
 var nsLocalFile = "@mozilla.org/file/local;1";
 
-var nsIFileOutputStream = Components.interfaces.nsIFileOutputStream;
+var nsIFileOutputStream = Ci.nsIFileOutputStream;
 var nsFileOutputStream = "@mozilla.org/network/file-output-stream;1";
 
 var nsICardObjTypeStr = "application/x-informationcard";
@@ -141,7 +147,12 @@ var IdentitySelector =
                                 // Add a progress listener
                                        
                                 window.getBrowser().addProgressListener( ICProgressListener,
-                                        Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+                                        Ci.nsIWebProgress.NOTIFY_ALL);
+                                
+                                var observerService = Cc["@mozilla.org/observer-service;1"].
+                                  getService(Ci.nsIObserverService);
+                                observerService.addObserver(IdentitySelector._formSubmitObserver, "earlyformsubmit", false);
+
                         }
                         else
                         {
@@ -227,7 +238,7 @@ var IdentitySelector =
                
                 if( !bFound)
                 {
-                	IdentitySelectorDiag.logMessage( "registerSelector",
+                  IdentitySelectorDiag.logMessage( "registerSelector",
                             "registering " + selector.guid());
                         gSelectorRegistry.push( selector);
                 }
@@ -260,14 +271,14 @@ var IdentitySelector =
                   doc = doc.wrappedJSObject;
           }
 
-          if( doc.__identityselector__ == undefined)
+          if( doc.__identityselector__ === undefined)
           {
                   // Load and execute the script
 
-                  Components.classes[
+                  Cc[
                           "@mozilla.org/moz/jssubscript-loader;1"].getService(
-                          Components.interfaces.mozIJSSubScriptLoader).loadSubScript(
-                          "chrome://infocard/content/IdentitySelectorIntercept.js", doc)
+                          Ci.mozIJSSubScriptLoader).loadSubScript(
+                          "chrome://infocard/content/IdentitySelectorIntercept.js", doc);
 
                   IdentitySelectorDiag.logMessage( "runInterceptScript",
                           "Executed script on " + doc.location);
@@ -525,9 +536,139 @@ var IdentitySelector =
                         IdentitySelectorDiag.debugReportError( "setParamsFromElem", e);
                 }
         },
-       
+        
+        _handleFormSubmitForEmbedded : function(doc, icardElem, form) {
+          IdentitySelectorDiag.logMessage( "onFormSubmit",
+                  "Intercepted submit of form with embedded ICard element");
+         
+          // Process the embedded element
+         
+          if( !doc.__identityselector__.contentLoaded)
+          {
+                  var elementEvent = doc.createEvent( "Event");
+                  elementEvent.initEvent( "ICElementLoaded", true, true);
+                  icardElem.dispatchEvent( elementEvent);
+          }
+         
+          // If the embedded ICard element doesn't have a token attached to
+          // it, invoke the selector
+         
+          if( icardElem.token === undefined) {
+            IdentitySelectorDiag.logMessage( "onFormSubmit",
+                    "Submit encountered in-line");
+           
+            var selectorEvent = doc.createEvent( "Event");
+            selectorEvent.initEvent( "CallIdentitySelector", true, true);
+            doc.__identityselector__.targetElem = icardElem;
+            doc.dispatchEvent( selectorEvent);
+           
+          }
+        },
+        
+        _handleFormSubmitForObject : function(doc, objElem, form) {
+
+          IdentitySelectorDiag.logMessage( "_handleFormSubmitForObject",
+                  "Intercepted submit of form with embedded ICard object");
+                 
+          // Process the embedded object
+         
+          if( !doc.__identityselector__.contentLoaded)
+          {
+                  var objectEvent = doc.createEvent( "Event");
+                  objectEvent.initEvent( "ICObjectLoaded", true, true);
+                  objElem.dispatchEvent( objectEvent);
+          }
+         
+          // If the embedded ICard object doesn't have a token attached to
+          // it, invoke the selector
+         
+          if( objElem.token === undefined)
+          {
+                  IdentitySelectorDiag.logMessage( "_handleFormSubmitForObject",
+                          "Submit encountered in-line");
+                 
+                  var selectorEvent = doc.createEvent( "Event");
+                  selectorEvent.initEvent( "CallIdentitySelector", true, true);
+                  doc.__identityselector__.targetElem = objElem;
+                  doc.dispatchEvent( selectorEvent);
+          }
+        },
+        
+        // ***********************************************************************
+        // Method: onEarlyFormSubmit
+        // ***********************************************************************
+
+        onEarlyFormSubmit : function(formElement, aWindow, actionURI)
+        {
+          IdentitySelectorDiag.logMessage( "onEarlyFormSubmit", "Intercepted submit " + actionURI.spec);
+          var objElem;
+          var icardElem;
+          var doc = formElement.ownerDocument;
+          if( doc.wrappedJSObject)
+          {
+            doc = doc.wrappedJSObject;
+          }
+
+          if (doc.__identityselector__.submitIntercepted === true) {
+            IdentitySelectorDiag.logMessage( "onEarlyFormSubmit", 
+                "already handled form submit in onFormSubmit");
+            return true; // just submit the form 
+          }
+          
+          IdentitySelectorDiag.logMessage( "onEarlyFormSubmit", 
+              "doc.__identityselector__.submitIntercepted=" + doc.__identityselector__.submitIntercepted);
+          
+          IdentitySelectorDiag.logMessage( "onEarlyFormSubmit", "doc.location.href=" + doc.location.href);
+          
+          // Determine if the form has an embedded information card object.
+          var input;
+          if( (objElem = IdentitySelector.getEmbeddedICardObject( formElement)) !== null)
+          {
+            doc.__identityselector__.submitIntercepted = true;
+            IdentitySelector._handleFormSubmitForObject(doc, objElem, formElement);
+            // If a token was retrieved, add it as a hidden field of the form
+            if(objElem.token && !objElem.preventDefault)
+            {
+              input = doc.createElement( "INPUT");   
+              input.setAttribute( "name",
+                  objElem.getAttribute( "name"));
+              input.setAttribute( "type", "hidden");
+              input.value = objElem.token;
+              formElement.appendChild( input);
+            } else {
+              IdentitySelectorDiag.logMessage( "onEarlyFormSubmit", "objElem.token is null or undefined: preventDefault");
+              return false; // do not submit the form
+            } 
+          } else {
+              if( (icardElem = IdentitySelector.getEmbeddedICardElement( formElement)) !== null) {
+                doc.__identityselector__.submitIntercepted = true;
+                IdentitySelector._handleFormSubmitForEmbedded(doc, icardElem, formElement);
+                // If a token was retrieved, add it as a hidden field of the form
+                if(icardElem.token && !icardElem.preventDefault)
+                {
+                  input = doc.createElement( "INPUT");   
+                  input.setAttribute( "name",
+                          icardElem.getAttribute( "name"));
+                  input.setAttribute( "type", "hidden");
+                  input.value = icardElem.token;
+                  formElement.appendChild( input);
+                } else {
+                  IdentitySelectorDiag.logMessage( "onEarlyFormSubmit", "icardElem.token is null or undefined: preventDefault");
+                  return false; // do not submit the form
+                } 
+
+              } else {
+                IdentitySelectorDiag.logMessage( "onEarlyFormSubmit", "Intercepted submit of standard form");
+              }
+          }
+          return true;
+        },
+        
         // ***********************************************************************
         // Method: onFormSubmit
+        // 
+        // This is called BEFORE earlyformsubmit IF it is called
+        //
         // ***********************************************************************
 
         onFormSubmit : function( event)
@@ -554,96 +695,49 @@ var IdentitySelector =
                           return;
                         }
                         
+                        IdentitySelectorDiag.logMessage( "onFormSubmit", 
+                            "doc.__identityselector__.submitIntercepted=" + doc.__identityselector__.submitIntercepted);
+                        if (doc.__identityselector__.submitIntercepted) {
+                          IdentitySelectorDiag.logMessage( "onFormSubmit", "form submit was already handled");
+                          return;
+                        }
+
                         // Determine if the form has an embedded information card object.
                        
                         if( (objElem = IdentitySelector.getEmbeddedICardObject( form)) !== null)
                         {
-                                IdentitySelectorDiag.logMessage( "onFormSubmit",
-                                        "Intercepted submit of form with embedded ICard object");
-                                       
-                                // Process the embedded object
-                               
-                                if( !doc.__identityselector__.contentLoaded)
-                                {
-                                        var objectEvent = doc.createEvent( "Event");
-                                        objectEvent.initEvent( "ICObjectLoaded", true, true);
-                                        objElem.dispatchEvent( objectEvent);
-                                }
-                               
-                                // If the embedded ICard object doesn't have a token attached to
-                                // it, invoke the selector
-                               
-                                if( objElem.token === undefined)
-                                {
-                                        IdentitySelectorDiag.logMessage( "onFormSubmit",
-                                                "Submit encountered in-line");
-                                       
-                                        selectorEvent = doc.createEvent( "Event");
-                                        selectorEvent.initEvent( "CallIdentitySelector", true, true);
-                                        doc.__identityselector__.targetElem = objElem;
-                                        doc.dispatchEvent( selectorEvent);
-                                       
-                                        // If a token was retrieved, add it as a hidden field of
-                                        // the form
-                                       
-                                        if(objElem.token && !objElem.preventDefault)
-                                        {
-                                                input = doc.createElement( "INPUT");
-                                                input.setAttribute( "name",
-                                                        objElem.getAttribute( "name"));
-                                                input.setAttribute( "type", "hidden");
-                                                input.value = objElem.token;
-                                                form.appendChild( input);
-                                        } else {
-                                          IdentitySelectorDiag.logMessage( "onFormSubmit", "objElem.token is null or undefined: preventDefault");
-                                          event.preventDefault(); // do not submit the form
-                                        }
-                                }
+                          IdentitySelector._handleFormSubmitForObject(doc, objElem, form);
+                          // If a token was retrieved, add it as a hidden field of the form
+                          if(objElem.token && !objElem.preventDefault)
+                          {
+                            input = doc.createElement( "INPUT");   
+                            input.setAttribute( "name",
+                                objElem.getAttribute( "name"));
+                            input.setAttribute( "type", "hidden");
+                            input.value = objElem.token;
+                            form.appendChild( input);
+                          } else {
+                            IdentitySelectorDiag.logMessage( "onFormSubmit", "objElem.token is null or undefined: preventDefault");
+                            event.preventDefault(); // do not submit the form
+                          } 
                         }
                         else if( (icardElem =
                                 IdentitySelector.getEmbeddedICardElement( form)) !== null)
                         {
-                                IdentitySelectorDiag.logMessage( "onFormSubmit",
-                                        "Intercepted submit of form with embedded ICard element");
-                               
-                                // Process the embedded element
-                               
-                                if( !doc.__identityselector__.contentLoaded)
-                                {
-                                        var elementEvent = doc.createEvent( "Event");
-                                        elementEvent.initEvent( "ICElementLoaded", true, true);
-                                        icardElem.dispatchEvent( elementEvent);
-                                }
-                               
-                                // If the embedded ICard element doesn't have a token attached to
-                                // it, invoke the selector
-                               
-                                if( icardElem.token === undefined)
-                                {
-                                        IdentitySelectorDiag.logMessage( "onFormSubmit",
-                                                "Submit encountered in-line");
-                                       
-                                        selectorEvent = doc.createEvent( "Event");
-                                        selectorEvent.initEvent( "CallIdentitySelector", true, true);
-                                        doc.__identityselector__.targetElem = icardElem;
-                                        doc.dispatchEvent( selectorEvent);
-                                       
-                                        // If a token was retrieved, add it as a hidden field of
-                                        // the form
-                                       
-                                        if(icardElem.token && !icardElem.preventDefault)
-                                        {
-                                                input = doc.createElement( "INPUT");   
-                                                input.setAttribute( "name",
-                                                        icardElem.getAttribute( "name"));
-                                                input.setAttribute( "type", "hidden");
-                                                input.value = icardElem.token;
-                                                form.appendChild( input);
-                                        } else {
-                                          IdentitySelectorDiag.logMessage( "onFormSubmit", "icardElem.token is null or undefined: preventDefault");
-                                          event.preventDefault(); // do not submit the form
-                                        } 
-                                }
+                          IdentitySelector._handleFormSubmitForEmbedded(doc, icardElem, form);
+                          // If a token was retrieved, add it as a hidden field of the form
+                          if(icardElem.token && !icardElem.preventDefault)
+                          {
+                            input = doc.createElement( "INPUT");   
+                            input.setAttribute( "name",
+                                    icardElem.getAttribute( "name"));
+                            input.setAttribute( "type", "hidden");
+                            input.value = icardElem.token;
+                            form.appendChild( input);
+                          } else {
+                            IdentitySelectorDiag.logMessage( "onFormSubmit", "icardElem.token is null or undefined: preventDefault");
+                            event.preventDefault(); // do not submit the form
+                          } 
                         }
                         else
                         {
@@ -752,11 +846,11 @@ var IdentitySelector =
                                 IdentitySelectorDiag.logMessage( "extractParameter",
                                         "unknown parameter: " + sourceNode.name +
                                         " = " + sourceNode.value);
-                        		try {
-                        			dataObj[sourceNode.name] = sourceNode.value;
-                        		} catch (ex) {
-                        			IdentitySelectorDiag.logMessage( "extractParameter", "Exception: " + ex);
-                        		}
+                            try {
+                              dataObj[sourceNode.name] = sourceNode.value;
+                            } catch (ex) {
+                              IdentitySelectorDiag.logMessage( "extractParameter", "Exception: " + ex);
+                            }
                                 break;
                 }
         },
@@ -989,43 +1083,98 @@ var IdentitySelector =
         },
         
         // ***********************************************************************
-        // Method: onCallIdentitySelector
+        // Method: _getSelectorClass
         // ***********************************************************************
        
         _getSelectorClass : function()
         {
-            if( gSelectorRegistry.length > 1)
-            {
-            	var selectorGuid = IdentitySelectorPrefs.getStringPref(
-                        "identityselector", "selector_guid");
-                    if( (selectorGuid !== null) && (selectorGuid !== undefined))
-                    {
-                            for(let iLoop = 0; iLoop < gSelectorRegistry.length; iLoop++)
-                            {
-                            	var aSelectorClasz = gSelectorRegistry[ iLoop];
-                                    if( aSelectorClasz.guid() === selectorGuid)
-                                    {
-                                    	IdentitySelectorDiag.logMessage( "onCallIdentitySelector", 
-                                    			"using class " + aSelectorClasz.guid() );
-                                            return aSelectorClasz;
-                                    }
-                            }
-                    } else {
-                    	IdentitySelectorDiag.reportError( "onCallIdentitySelector",
-                                "selector_guid === " + selector_guid);
-                    	return null;
-                    }
-            } else {
-            	if( gSelectorRegistry.length < 1) {
-            		IdentitySelectorDiag.reportError( "onCallIdentitySelector",
-                        "gSelectorRegistry.length = " + gSelectorRegistry.length);
-            		return null;
-            	}
+          var prefClasz = IdentitySelectorPrefs.getStringPref("identityselector", "selector_class");
+          IdentitySelectorDiag.logMessage( "_getSelectorClass", "prefClasz=" + prefClasz );
+          
+          var nsICategoryManager = Components.interfaces.nsICategoryManager;
+          var CATMAN_CONTRACTID = "@mozilla.org/categorymanager;1";
+          var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
+          var IIDENTITYSELECTOR_IID_STR = "ddd9bc02-c964-4bd5-b5bc-943e483c6c57";
+          var selectors = catman.enumerateCategory ( IIDENTITYSELECTOR_IID_STR );
+          
+          var clasz;
+          for (;selectors.hasMoreElements(); ) {
+            clasz = selectors.getNext().QueryInterface(Components.interfaces.nsISupportsCString).data;
+            IdentitySelectorDiag.logMessage( "_getSelectorClass", "clasz=" + clasz);
+
+            var categoryEntry = catman.getCategoryEntry(IIDENTITYSELECTOR_IID_STR, clasz);
+            var j = categoryEntry.indexOf(':');
+            var selectorClass = categoryEntry.substring(0,j);
+            var contractid = categoryEntry.substring(j+1);
+            IdentitySelectorDiag.logMessage( "_getSelectorClass", "contractid=" + contractid);
+            IdentitySelectorDiag.logMessage( "_getSelectorClass", "selectorClass=" + selectorClass);
+            if ((selectorClass !== null) && (selectorClass === prefClasz)) {
+              try {
+                var cidclass = Components.classes[contractid];
+                var obj = cidclass.createInstance();
+                obj = obj.QueryInterface(Components.interfaces.IIdentitySelector);
+                return obj;
+              } catch(e) {
+                IdentitySelectorDiag.debugReportError("_getSelectorClass", 
+                    "contractid=" + contractid + "is not defined. " + e);
+                return null;
+              }
             }
-            // guid did not match return the first on -- internal error???
-            return gSelectorRegistry[0];
+          }
+          return null;
         },
         
+//        // ***********************************************************************
+//        // Method: _getSelectorClass
+//        // ***********************************************************************
+//       
+//        _getSelectorClass : function()
+//        {
+//            if( gSelectorRegistry.length > 1)
+//            {
+//              var selectorGuid = IdentitySelectorPrefs.getStringPref("identityselector", "selector_guid");
+//              IdentitySelectorDiag.logMessage( "_getSelectorClass", 
+//                  "selectorGuid=" + selectorGuid );
+//              if( (selectorGuid !== null) && (selectorGuid !== undefined))
+//              {
+//                      for(var iLoop = 0; iLoop < gSelectorRegistry.length; iLoop++)
+//                      {
+//                        var aSelectorClasz = gSelectorRegistry[ iLoop];
+//                              if( aSelectorClasz.guid() === selectorGuid)
+//                              {
+//                                IdentitySelectorDiag.logMessage( "_getSelectorClass", 
+//                                    "using class " + aSelectorClasz.guid() );
+//                                      return aSelectorClasz;
+//                              }
+//                      }
+//              } else {
+//                IdentitySelectorDiag.reportError( "_getSelectorClass",
+//                          "selector_guid === " + selector_guid);
+//                return null;
+//              }
+//            } else {
+//              if( gSelectorRegistry.length < 1) {
+//                IdentitySelectorDiag.reportError( "_getSelectorClass",
+//                        "gSelectorRegistry.length = " + gSelectorRegistry.length);
+//                return null;
+//              }
+//            }
+//            // guid did not match return the first on -- internal error???
+//            return gSelectorRegistry[0];
+//        },
+        
+        getDer : function(cert,win){
+
+          var length = {};
+          var derArray = cert.getRawDER(length);
+          var certBytes = '';
+          for (var i = 0; i < derArray.length; i++) {
+              certBytes = certBytes + String.fromCharCode(derArray[i]);
+          }
+          return win.btoa(certBytes);
+
+        },
+
         // ***********************************************************************
         // Method: onCallIdentitySelector
         // ***********************************************************************
@@ -1070,8 +1219,21 @@ var IdentitySelector =
                 {
                         if( identObject.targetElem !== null)
                         {
-                                IdentitySelector.setParamsFromElem( doc, identObject.targetElem);
-                                delete identObject.targetElem.token;
+                          IdentitySelector.setParamsFromElem( doc, identObject.targetElem);
+                          if (identObject.targetElem.token) {
+                            if( identObject.targetElem.wrappedJSObject)
+                            {
+                              IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                              "identObject.targetElem is wrapped.");
+                              identObject.targetElem = identObject.targetElem.wrappedJSObject;
+                            }
+                            try {
+                              delete identObject.targetElem.token; // FIXME this fails since 20100430
+                            } catch (deleteException) {
+                              IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                "delete identObject.targetElem.token failed");
+                            }
+                          }
                         }
                         else
                         {
@@ -1101,7 +1263,7 @@ var IdentitySelector =
                                                
                                         // Process the parameter values
                                        
-                                        for( eachNode in objElem.childNodes)
+                                        for(var eachNode=0; eachNode<objElem.childNodes.length; eachNode++)
                                         {
                                                 var childNode = objElem.childNodes[ eachNode];
                                        
@@ -1196,13 +1358,11 @@ var IdentitySelector =
                         // Get the selector
                         var aSelectorClasz = IdentitySelector._getSelectorClass();
                         if (aSelectorClasz === null) {
-                        	IdentitySelectorDiag.reportError( "onCallIdentitySelector",
+                          IdentitySelectorDiag.reportError( "onCallIdentitySelector",
                                     "Unable to locate an identity selector.  " +
                                     "Please make sure one is installed.");
-                        	return null;
+                          return null;
                         }
-                        var getSecurityToken = aSelectorClasz.getSecurityToken;
-                        
                         // Set the token to null
                         identObject.targetElem.token = null;
                        
@@ -1271,56 +1431,110 @@ var IdentitySelector =
                         }
                         else
                         {
-                                gLastFailedGetTokenDate = null;
-                               
-                                if( (identObject.targetElem.token =
-                                        getSecurityToken( dataObj, doc)) === null)
+                          gLastFailedGetTokenDate = null;
+                          
+                          var extraParams = function(){
+                            var extraParams = [];
+                            var len = 0;
+                            for (var i in dataObj) {
+                              if (dataObj.hasOwnProperty(i)) {
+                                IdentitySelectorDiag.logMessage("onCallIdentitySelector ", 
+                                    "data[" + i + "]=" + dataObj[i]); 
+                                if (("issuer" !== ""+i) 
+                                  && ("recipient" !== ""+i)
+                                  && ("requiredClaims" !== ""+i)
+                                  && ("optionalClaims" !== ""+i)
+                                  && ("tokenType" !== ""+i)
+                                  && ("privacyUrl" !== ""+i)
+                                  && ("privacyVersion" !== ""+i)
+                                  && ("issuerPolicy" !== ""+i)) 
                                 {
-                                        gLastFailedGetTokenDate = new Date();
+                                  var obj = {};
+                                  obj[i] = dataObj[i];
+                                  len = extraParams.length;
+                                  extraParams[len] = JSON.stringify(obj);
+                                  IdentitySelectorDiag.logMessage("onCallIdentitySelector ",
+                                      "extraParams[" + len + "] = " + extraParams[len]);
                                 } else {
-                                	var tokenType = null;
-                                	if (dataObj.hasOwnProperty("tokenType")) {
-                                		tokenType = dataObj.tokenType;
-                                	}
-                        	        // XMLDAP: tokenType: http://specs.openid.net/auth/2.0
-                        	        if ("http://specs.openid.net/auth/2.0" === tokenType) {
-                        	        	// restrict this to http:// and https:// 
-                    	        		var myURI = Components.classes["@mozilla.org/network/io-service;1"]
-                    	        		                               .getService(Components.interfaces.nsIIOService)
-                    	        		                               .newURI(identObject.targetElem.token, null, null);
-                    	        		try {
-            	        		           var myURL = myURI.QueryInterface(Components.interfaces.nsIURL);
-            	        		        }
-            	        		        catch(uriException) {
-            	        		           // the URI is not an URL
-            	        		           IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
-            	        		        		   'the URI is not an URL: ' + identObject.targetElem.token +
-            	        		        		   "\n" + uriException);
-            	        		        }
-            	        		        if (myURI.schemeIs("http") || myURI.schemeIs("https")) {
-                                    IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
-                                        'doc.location: ' + doc.location);
-                                    IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
-                                        'stopping doc.location: ' + doc.location);
-            	        		        	doc.defaultView.stop();
-            	        		        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
-            	        		        			'Setting location of main window to: ' + identObject.targetElem.token);
-	                        	        doc.defaultView.location = identObject.targetElem.token;
-                                    IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
-                                        'Setting preventDefault');
-	                        	        identObject.targetElem.preventDefault = true;
-            	        		        } else {
-            	        		        	// Throw???
-            	        		        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
-            	        		        			'Scheme of URI is not http or https! REJECTED: ' + 
-            	        		        			 identObject.targetElem.token);
-            	        		        }
-                        	        } else {
-                        	        	IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
-                        	        			"tokenType=" + tokenType);
-                        	        }
-
+                                  IdentitySelectorDiag.logMessage("onCallIdentitySelector ",
+                                      "i=" + i + "; value=" + dataObj[i] + ";");
                                 }
+                              }
+                            }
+                            return extraParams;
+                          }();
+
+                          if (doc.__identityselector__.cardId !== undefined) {
+                            var aCardIdObject = {};
+                            aCardIdObject.cardid = "" + doc.__identityselector__.cardId;
+                            len = extraParams.length;
+                            extraParams[len] = JSON.stringify(aCardIdObject);
+                            IdentitySelectorDiag.logMessage("onCallIdentitySelector ",
+                                "len=" + len + "; value=" + extraParams[len] + ";");
+                          }
+
+                          var sslCert = InformationCardHelper.getSSLCertFromDocument(doc);
+                          if (!sslCert) {
+                            IdentitySelectorDiag.logMessage("onCallIdentitySelector ",
+                                "sslCert is null for doc.location.href=" + doc.location.href + 
+                                " dataObj.recipient=" + dataObj.recipient);
+                          }
+                          
+
+                          identObject.targetElem.token = aSelectorClasz.GetBrowserToken(window, dataObj.issuer,
+                              dataObj.recipient, dataObj.requiredClaims,
+                              dataObj.optionalClaims, dataObj.tokenType, dataObj.privacyUrl,
+                              dataObj.privacyVersion, sslCert, dataObj.issuerPolicy,
+                              extraParams.length, extraParams);
+                          IdentitySelectorDiag.logMessage("onCallIdentitySelector ",
+                              "identObject.targetElem.token=" + identObject.targetElem.token);
+                          if (identObject.targetElem.token === null)
+                          {
+                                  gLastFailedGetTokenDate = new Date();
+                          } else {
+                            var tokenType = null;
+                            if (dataObj.hasOwnProperty("tokenType")) {
+                              tokenType = dataObj.tokenType;
+                            }
+                            // XMLDAP: tokenType: http://specs.openid.net/auth/2.0
+                            if ("http://specs.openid.net/auth/2.0" === tokenType) {
+                              // restrict this to http:// and https:// 
+                            var myURI = Cc["@mozilla.org/network/io-service;1"]
+                                                           .getService(Ci.nsIIOService)
+                                                           .newURI(identObject.targetElem.token, null, null);
+                            try {
+                               var myURL = myURI.QueryInterface(Ci.nsIURL);
+                            }
+                            catch(uriException) {
+                               // the URI is not an URL
+                               IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                   'the URI is not an URL: ' + identObject.targetElem.token +
+                                   "\n" + uriException);
+                            }
+                            if (myURI.schemeIs("http") || myURI.schemeIs("https")) {
+                              IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                  'doc.location: ' + doc.location);
+                              IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                  'stopping doc.location: ' + doc.location);
+                              doc.defaultView.stop();
+                              IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                  'Setting location of main window to: ' + identObject.targetElem.token);
+                              doc.defaultView.location = identObject.targetElem.token;
+                              IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                  'Setting preventDefault');
+                              identObject.targetElem.preventDefault = true;
+                            } else {
+                              // Throw???
+                              IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                  'Scheme of URI is not http or https! REJECTED: ' + 
+                                   identObject.targetElem.token);
+                            }
+                            } else {
+                              IdentitySelectorDiag.logMessage( "onCallIdentitySelector",
+                                  "tokenType=" + tokenType);
+                            }
+
+                          }
                         }
                 }
                 catch( e)
@@ -1416,9 +1630,9 @@ var IdentitySelector =
                
                 try
                 {
-                        var certDb = Components.classes[ nsX509CertDB].
+                        var certDb = Cc[ nsX509CertDB].
                                                                 getService( nsIX509CertDB);
-                        var certCache = Components.classes[ nsNSSCertCache].
+                        var certCache = Cc[ nsNSSCertCache].
                                                                 createInstance( nsINSSCertCache);
                         var caTreeView;
                        
@@ -1428,7 +1642,7 @@ var IdentitySelector =
                        
                         // Create a tree view that includes all of the trusted CA roots
                        
-                        caTreeView = Components.classes[ nsCertTree].
+                        caTreeView = Cc[ nsCertTree].
                                                                 createInstance( nsICertTree);
                         caTreeView.loadCertsFromCache( certCache,
                                                                 nsIX509Cert.CA_CERT | nsIX509Cert.SERVER_CERT);
@@ -1470,7 +1684,29 @@ var IdentitySelector =
                 }
                
                 return( certListBuf);
-        }
+        },
+        
+        _formSubmitObserver : {
+          QueryInterface : XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver,
+                                                  Ci.nsISupportsWeakReference]),
+
+          // nsFormSubmitObserver
+          notify : function (formElement, aWindow, actionURI) {
+              IdentitySelectorDiag.logMessage("_formSubmitObserver", "observer notified for form submission.");
+
+              // We're invoked before the content's |onsubmit| handlers, so we
+              // can grab form data before it might be modified (see bug 257781).
+              var continueSubmit = true;
+              try {
+                continueSubmit = IdentitySelector.onEarlyFormSubmit(formElement, aWindow, actionURI);
+              } catch (e) {
+                  IdentitySelectorDiag.logMessage("_formSubmitObserver", "Caught error in onFormSubmit: " + e);
+              }
+
+              return continueSubmit; // return true, or form submit will be canceled.
+          }
+      }
+
 };
 
 // **************************************************************************
@@ -1481,9 +1717,9 @@ var ICProgressListener =
 {
         QueryInterface : function( aIID)
         {
-                if( aIID.equals( Components.interfaces.nsIWebProgressListener) ||
-                         aIID.equals( Components.interfaces.nsISupportsWeakReference) ||
-                         aIID.equals( Components.interfaces.nsISupports))
+                if( aIID.equals( Ci.nsIWebProgressListener) ||
+                         aIID.equals( Ci.nsISupportsWeakReference) ||
+                         aIID.equals( Ci.nsISupports))
                 {
                         return( this);
                 }
@@ -1493,7 +1729,7 @@ var ICProgressListener =
        
         onStateChange : function( aProgress, aRequest, aFlag, aStatus)
         {
-                var progListIFace = Components.interfaces.nsIWebProgressListener;
+                var progListIFace = Ci.nsIWebProgressListener;
                
                 // Log the flags
                
@@ -1545,18 +1781,18 @@ var ICProgressListener =
                                         {
                                                 alert( e);
                                         }
-                                        var aSelectorClasz = IdentitySelector._getSelectorClass();
-                                        if (aSelectorClasz !== null) {
-                                        	IdentitySelectorDiag.logMessage( "onStateChange", "aSelectorClasz.guid=" + aSelectorClasz.guid()); 
-                                        	if (aSelectorClasz.onStateStop) {
-                                        		aSelectorClasz.onStateStop(aProgress.DOMWindow.document);
-                                        	} else {
-                                            	IdentitySelectorDiag.logMessage( "onStateChange", 
-                                            			"aSelectorClasz has no onStateStop function"); 
-                                        	}
-                                        } else {
-                                        	IdentitySelectorDiag.logMessage( "onStateChange", "aSelectorClasz === null");
-                                        }
+//                                        var aSelectorClasz = IdentitySelector._getSelectorClass();
+//                                        if (aSelectorClasz !== null) {
+//                                          IdentitySelectorDiag.logMessage( "onStateChange", "aSelectorClasz.guid=" + aSelectorClasz.guid()); 
+//                                          if (aSelectorClasz.onStateStop) {
+//                                            aSelectorClasz.onStateStop(aProgress.DOMWindow.document);
+//                                          } else {
+//                                              IdentitySelectorDiag.logMessage( "onStateChange", 
+//                                                  "aSelectorClasz has no onStateStop function"); 
+//                                          }
+//                                        } else {
+//                                          IdentitySelectorDiag.logMessage( "onStateChange", "aSelectorClasz === null");
+//                                        }
                                 }
                         }
                 }
@@ -1610,9 +1846,9 @@ var ICProgressListener =
 
 try
 {
-		window.addEventListener("dragdrop", InformationCardDragAndDrop.onWindowDragDrop, false);
+    window.addEventListener("dragdrop", InformationCardDragAndDrop.onWindowDragDrop, false);
 
-		window.addEventListener("ICObjectLoaded",InformationCardDragAndDrop.onICardObjectLoaded, false); 
+    window.addEventListener("ICObjectLoaded",InformationCardDragAndDrop.onICardObjectLoaded, false); 
 
         window.addEventListener( "load",
                 IdentitySelector.onInstall, false);
