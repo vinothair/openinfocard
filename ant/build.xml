@@ -38,6 +38,14 @@
     </exec>
   </target>
 
+  <!-- create xpt in src dir because not everybody has the SDK and xpidl.exe -->
+  <target name="createIdentityselectorXPT" depends="init">
+    <exec executable="${xpidl_exe}" dir="${firefox.components.dir}">
+      <env key="Path" path="${env.Path};${libIDL_path}" />
+      <arg line="-m typelib -w -v -I ${IDLs_path} -I ${firefox.components.dir} IdentitySelector.idl" />
+    </exec>
+  </target>
+
   <target name="prepjars" depends="init">
 
     <unzip src="${lib.dir}/json.jar"
