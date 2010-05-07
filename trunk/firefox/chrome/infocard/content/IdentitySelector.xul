@@ -45,8 +45,6 @@
   <script type="application/x-javascript" src="chrome://infocard/content/IdentitySelectorIntercept.js"/>
   <script type="application/x-javascript" src="chrome://infocard/content/DragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://infocard/content/IdentitySelector.js"/>
-  <script type="application/x-javascript" src="chrome://infocard/content/OpeninfocardSelector.js"/>
-  <script type="application/x-javascript" src="chrome://infocard/content/mWalletSelector.js"/>
   <script type="application/x-javascript" src="chrome://infocard/content/Statusbar.js"/>
   <script type="application/x-javascript" src="chrome://infocard/content/urlbarAccount.js"/>
   <script type="application/x-javascript" src="chrome://infocard/content/XRDS.js"/>
