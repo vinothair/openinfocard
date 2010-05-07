@@ -42,6 +42,9 @@ interface IInformationCardStore : nsISupports
   string getCardStoreName();
   string getCardStoreVersion();
 
+  // returns the whole cardstore in its internal representation
+  string readCardStore();
+  
   string getToken(in string serializedPolicy);
 
   readonly attribute wstring errorstring;

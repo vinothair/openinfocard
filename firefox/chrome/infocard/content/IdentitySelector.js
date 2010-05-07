@@ -1481,7 +1481,7 @@ var IdentitySelector =
                           }
                           
 
-                          identObject.targetElem.token = aSelectorClasz.GetBrowserToken(window, dataObj.issuer,
+                          identObject.targetElem.token = aSelectorClasz.GetBrowserToken(dataObj.issuer,
                               dataObj.recipient, dataObj.requiredClaims,
                               dataObj.optionalClaims, dataObj.tokenType, dataObj.privacyUrl,
                               dataObj.privacyVersion, sslCert, dataObj.issuerPolicy,
