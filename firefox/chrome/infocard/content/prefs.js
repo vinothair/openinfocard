@@ -74,12 +74,12 @@ function populateMenu() {
 	}
 
 
-	var aMenuitem = document.createElement("menuitem");
-	aMenuitem.setAttribute("label", "digitalme");
-	aMenuitem.setAttribute("value", "digitalme");
-	menuPopup.appendChild(aMenuitem);
-	if (aMenuitem.selectedItem === null) {
-		menuList.selectedItem = aMenuitem;
-	}
+//	var aMenuitem = document.createElement("menuitem");
+//	aMenuitem.setAttribute("label", "digitalme");
+//	aMenuitem.setAttribute("value", "digitalme");
+//	menuPopup.appendChild(aMenuitem);
+//	if (aMenuitem.selectedItem === null) {
+//		menuList.selectedItem = aMenuitem;
+//	}
 
 }
