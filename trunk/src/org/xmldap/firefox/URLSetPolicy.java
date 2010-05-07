@@ -123,7 +123,7 @@ public class URLSetPolicy extends Policy {
                 while (e.hasMoreElements()) {
                 	Permission p = e.nextElement();
                     pc.add(p);
-                	System.out.println("getPermissions a permission: " + p.getName() + " " + p.getActions());
+//                	System.out.println("getPermissions a permission: " + p.getName() + " " + p.getActions());
                 }
             }
         }

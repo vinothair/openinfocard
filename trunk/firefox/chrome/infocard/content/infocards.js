@@ -668,6 +668,9 @@ function fillCardArea(cardFile, policy, rpIdentifier){
     var beenThere = false;
     var count = 0;
     var scrolledIntoView = false;
+    if (typeof(cardFile) === "string") {
+      cardFile = new XML(cardFile);
+    }
     var cardXmllist = cardFile.infocard;
     for (var i=0; i<cardXmllist.length(); i++) {
       var c = cardXmllist[i];
@@ -955,7 +958,7 @@ function cardManagerLoad(policyParam){
                                    getService( Components.interfaces.nsIHelloWorld);
 
     cardFile = CardstoreToolkit.readCardStore();
-    icDebug("cardManagerLoad cardFile = " + cardFile)
+    //icDebug("cardManagerLoad cardFile = " + cardFile)
   } catch (eee) {
     icDebug("cardManagerLoad = exception" + eee);
     throw eee;
