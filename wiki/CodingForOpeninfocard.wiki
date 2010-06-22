@@ -48,7 +48,7 @@ This project contains several parts:
 ==== The Selector Selector ====
 
   This is the central part of the openinfocard addon.
-  It sets all the handlers and parsed the loaded webpage to determine whether an object tag of type "application/x-informationcard" is part of the page.
+  It sets all the handlers and parses the loaded webpage to determine whether an object tag of type "application/x-informationcard" is part of the page.
   The actual selector is started from this code.
 
   Currently implemented selectors are:
