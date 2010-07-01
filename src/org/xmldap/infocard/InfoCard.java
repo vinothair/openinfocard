@@ -896,8 +896,6 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
       
       if (lang != null) {
         json.put("lang", lang);
-      } else {
-        json.put("lang", "en-us");
       }
       appendChildren(json);
         
