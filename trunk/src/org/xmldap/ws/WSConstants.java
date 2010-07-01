@@ -92,6 +92,8 @@ public interface WSConstants {
     public final static String INFOCARD_PREFIX = "ic";
     public final static String INFOCARD07_NAMESPACE = "http://schemas.xmlsoap.org/ws/2007/01/identity";
     public final static String INFOCARD07_PREFIX = "ic07";
+    public final static String INFOCARD09_NAMESPACE = "http://docs.oasis-open.org/imi/ns/identity-200903";
+    public final static String INFOCARD09_PREFIX = "ic09";
     	
     public final static String WSA_ID_NAMESPACE = "http://schemas.microsoft.com/windows/wcf/2005/09/addressingidentityextension";
     public final static String WSA_ID_06_02 = "http://schemas.xmlsoap.org/ws/2006/02/addressingidentity";

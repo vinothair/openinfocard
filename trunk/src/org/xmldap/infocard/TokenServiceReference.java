@@ -31,6 +31,8 @@ package org.xmldap.infocard;
 import nu.xom.Element;
 import nu.xom.Elements;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
@@ -141,6 +143,18 @@ public class TokenServiceReference implements Serializable {
         tokenService.appendChild(userCredentialElt);
         return tokenService;
 
+    }
+
+
+    public JSONObject toJSON() throws SerializationException {
+      try {
+        JSONObject json = new JSONObject();
+        json.put("Address", epList.get(0).getMexAddress());
+        json.put("UserCredential", userCredential.toJSON());
+        return json;
+      } catch (JSONException e) {
+        throw new SerializationException(e);
+      }
     }
 
 
