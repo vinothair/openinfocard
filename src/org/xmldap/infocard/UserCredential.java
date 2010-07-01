@@ -1,5 +1,7 @@
 package org.xmldap.infocard;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
@@ -168,6 +170,32 @@ public class UserCredential {
     		throw new IllegalArgumentException("undefined authentication type (" + authType + ")");
     	}
 		this.authType = authType;
+    }
+
+    public JSONObject toJSON() throws SerializationException {
+      try {
+        JSONObject json = new JSONObject();
+        json.put("Type", authType);
+        if (USERNAME.equals(authType)) {
+          json.put("Username", userName);
+        } else if (KERB.equals(authType)) {
+          // TODO
+          throw new SerializationException("Unsupported Authentication Type: " + authType);
+        } else if (SELF_ISSUED.equals(authType)) {
+          json.put("PPID", ppi);
+        } else if (X509.equals(authType)) {
+          json.put("X509Hash", x509Hash);
+        } else {
+          throw new SerializationException("Unsupported Authentication Type: " + authType);
+        }
+        if (hint != null) {
+          json.put("Hint", hint);
+        }
+        return json;
+      } catch (JSONException e) {
+        throw new SerializationException(e);
+      }
+
     }
 
     public Element serialize() throws SerializationException {

@@ -52,6 +52,10 @@ public class SupportedToken implements Serializable {
         return tokenTypeElm;
     }
 
+    public String getTokenType() {
+      return tokenType;
+    }
+    
     public String toXML() throws SerializationException {
         Element token = serialize();
         return token.toXML();

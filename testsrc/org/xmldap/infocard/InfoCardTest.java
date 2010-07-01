@@ -12,7 +12,6 @@ import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimTypeList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
-import org.xmldap.sts.db.SupportedClaims;
 import org.xmldap.util.XmldapCertsAndKeys;
 import org.xmldap.ws.WSConstants;
 
