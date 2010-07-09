@@ -1,0 +1,19 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>fc2-jss-parent</artifactId>
+    <groupId>awl.lib.jss</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+<!--  <groupId>awl.lib.jss</groupId>-->
+  <artifactId>fc2-jss-plugins</artifactId>
+  <packaging>pom</packaging>
+<!--  <version>0.0.1-SNAPSHOT</version>-->
+<modules>
+<module>fc2-jss-plugin-basics</module>
+		<module>fc2-jss-plugin-walletstore</module>
+		<module>fc2-jss-plugin-localstore</module>
+	
+		<module>fc2-jss-plugin-uiflex</module>
+</modules>
+</project>
