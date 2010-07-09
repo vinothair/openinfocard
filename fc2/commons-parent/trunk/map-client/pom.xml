@@ -1,0 +1,38 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>awl.lib</groupId>
+    <artifactId>commons-parent</artifactId>    
+    <version>1</version>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>  
+  <artifactId>map-client</artifactId>  
+  
+	<dependencies>
+	 <dependency>
+		<groupId>log4j</groupId>
+		<artifactId>log4j</artifactId>
+		<version>1.2.12</version>
+		<scope>compile</scope>
+	</dependency>
+	 	<dependency>
+		<groupId>${project.groupId}</groupId>
+  		<artifactId>awl-commons</artifactId>
+  		<version>${project.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>awl.lib</groupId>
+  		<artifactId>awl.smartcards</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+	</dependencies>
+	
+	  <distributionManagement>
+
+    <snapshotRepository>
+      <id>test</id>
+      <url>http://localhost:8081/nexus/content/repositories/test/</url>
+      
+    </snapshotRepository>
+  </distributionManagement>
+</project>
