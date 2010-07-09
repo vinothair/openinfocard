@@ -1,0 +1,32 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>awl.lib</groupId>
+  <artifactId>commons-parent</artifactId>
+  <packaging>pom</packaging>
+  <version>1</version>
+  
+  <scm> 
+        <connection>scm:svn:https://openinfocard.googlecode.com/svn/fc2/commons-parent/trunk/</connection>
+        <developerConnection>scm:svn:https://openinfocard.googlecode.com/svn/fc2/commons-parent/trunk/</developerConnection>
+  </scm>
+  <build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+
+			</plugin>
+		</plugins>
+	</build>
+	
+	
+  <modules>
+    <module>map-client</module>
+    <module>awl-commons</module>
+    <module>awl-smartcards</module>
+  </modules>
+</project>
