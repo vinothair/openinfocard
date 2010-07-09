@@ -1,0 +1,76 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	
+  <parent>
+    <groupId>org.openinfocard</groupId>
+	<artifactId>openinfocard-extentions</artifactId>
+    <version>1</version>
+  </parent>
+  
+  
+  <modelVersion>4.0.0</modelVersion>
+	
+	<artifactId>extentions-fc2-basics</artifactId>
+	
+	<packaging>jar</packaging>
+	<build>
+		<plugins>
+			
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>deploy-all-maven-plugin</artifactId>
+				<version>1.0-alpha-1</version>
+				<configuration>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+
+			<groupId>${project.groupId}</groupId>
+			<artifactId>openinfocard.lib</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>xstream</groupId>
+			<artifactId>xstream</artifactId>
+			<version>1.2.2</version>
+		</dependency>
+
+
+		<dependency>
+		<groupId>awl.lib</groupId>
+	    <artifactId>awl-commons</artifactId>    
+	    <version>1</version>
+	</dependency>
+
+
+
+		<!--	CXF DEP-->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>2.5.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-frontend-jaxws</artifactId>
+			<version>2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-transports-http</artifactId>
+			<version>2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-xjc</artifactId>
+			<version>2.1.10</version>
+			<type>jar</type>
+		</dependency>
+	</dependencies>
+
+
+</project>
