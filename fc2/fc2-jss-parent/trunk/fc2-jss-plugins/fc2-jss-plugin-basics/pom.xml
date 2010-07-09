@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>fc2-jss-plugins</artifactId>
+		<groupId>awl.lib.jss</groupId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+
+	<modelVersion>4.0.0</modelVersion>
+	<!--  <groupId>awl.lib</groupId>-->
+	<artifactId>fc2-jss-plugin-basics</artifactId>
+	<!--  <version>0.0.1-SNAPSHOT</version>-->
+	<packaging>jar</packaging>
+
+	<build>
+		<plugins>
+			<!--			<plugin>-->
+			<!--				<groupId>org.apache.maven.plugins</groupId>-->
+			<!--				<artifactId>maven-compiler-plugin</artifactId>-->
+			<!--				<configuration>-->
+			<!--					<source>1.6</source>-->
+			<!--					<target>1.6</target>-->
+			<!--				</configuration>-->
+			<!--			</plugin>-->
+		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>fc2-jss-skeleton</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+</project>
