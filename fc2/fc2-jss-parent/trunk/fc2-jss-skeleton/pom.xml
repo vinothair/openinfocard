@@ -1,0 +1,53 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+    <groupId>awl.lib.jss</groupId>
+	 <artifactId>fc2-jss-parent</artifactId>
+	 <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+	
+	<artifactId>fc2-jss-skeleton</artifactId>
+	
+	<packaging>jar</packaging>
+
+
+	<build>
+		
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
+	</build>
+
+	<dependencies>
+
+		<!--  INFOCARD LIBS -->
+		<dependency>
+			<groupId>org.openinfocard</groupId>
+			<artifactId>openinfocard.lib</artifactId>
+			<version>1</version>
+		</dependency>
+	
+		<dependency>
+			<groupId>org.openinfocard</groupId>
+			<artifactId>extentions.fc2.basics</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<!-- - -->
+		<dependency>
+			<groupId>awl.lib</groupId>
+		    <artifactId>awl-smartcards</artifactId>    
+		    <version>1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>awl.lib</groupId>
+		    <artifactId>map-client</artifactId>    
+		    <version>1</version>
+		</dependency>
+	</dependencies>
+</project>
