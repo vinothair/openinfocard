@@ -1,0 +1,73 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	 <parent>
+		<groupId>org.openinfocard</groupId>
+		<artifactId>openinfocard-endpoints</artifactId>
+		<version>1</version>
+
+	</parent>
+  
+  
+  <modelVersion>4.0.0</modelVersion>
+
+	<artifactId>endpoint-sts-ext</artifactId>
+	<packaging>war</packaging>
+
+
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
+	</build>
+
+
+
+
+	<profiles>
+		<profile>
+			<id>Stef_Local_Payment</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+
+			<build>
+				<filters>
+					<filter>src/main/config/Stef_Local_Payment/Claims_Payment.properties</filter>
+					<filter>src/main/config/Stef_Local_Payment/ServerConfig_Local.properties</filter>
+					<filter>src/main/config/Stef_Local_Payment/Path_WindowsStef.properties</filter>
+					<filter>src/main/config/Stef_Local_Payment/KeyStore_Windows.properties</filter>
+				</filters>
+			</build>
+		</profile>
+	</profiles>
+	<dependencies>
+		
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>extentions-fc2-basics</artifactId>
+			<version>${project.version}</version>
+
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+		</dependency>
+	</dependencies>
+</project>
