@@ -30,7 +30,7 @@
 		<dependency>
 
 			<groupId>${project.groupId}</groupId>
-			<artifactId>openinfocard.lib</artifactId>
+			<artifactId>openinfocard-lib</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
