@@ -28,14 +28,14 @@
 		<!--  INFOCARD LIBS -->
 		<dependency>
 			<groupId>org.openinfocard</groupId>
-			<artifactId>openinfocard.lib</artifactId>
+			<artifactId>openinfocard-lib</artifactId>
 			<version>1</version>
 		</dependency>
 	
 		<dependency>
 			<groupId>org.openinfocard</groupId>
-			<artifactId>extentions.fc2.basics</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<artifactId>extentions-fc2-basics</artifactId>
+			<version>1</version>
 		</dependency>
 		<!-- - -->
 		<dependency>
