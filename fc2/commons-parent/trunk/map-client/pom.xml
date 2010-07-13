@@ -22,8 +22,8 @@
 	</dependency>
 	<dependency>
 		<groupId>awl.lib</groupId>
-  		<artifactId>awl.smartcards</artifactId>
-  		<version>0.0.1-SNAPSHOT</version>
+  		<artifactId>awl-smartcards</artifactId>
+  		<version>1</version>
 	</dependency>
 	</dependencies>
 	
