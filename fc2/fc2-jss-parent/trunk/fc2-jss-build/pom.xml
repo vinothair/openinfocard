@@ -97,5 +97,12 @@
 			<artifactId>fc2-jss-plugin-basics</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
+		
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>fc2-jss-plugin-uiswing</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 </project>
