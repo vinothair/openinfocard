@@ -372,20 +372,28 @@ public class FC2TrayIcon implements ISessionElement {
 				});
 				add(item);
 			}
-			// LogOn meny
+			// LogOn menu
 			{
 				MenuItem item = new MenuItem(Lang.get(Lang.MENU_LOG_ON));
 				item.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						try {
-							theSession.open();
-						} catch (Config_Exeception_UnableToReadConfigFile e1) {
-							trace("Configuration not done");
-						} catch (Config_Exeception_MalFormedConfigFile e1) {
-							trace("Configuration not done");
-						} catch (Config_Exception_NotDone e1) {
-							trace("Configuration not done");
-						}
+						
+						new Thread(new Runnable() {
+						      public void run() {
+						    	  
+						    	  try {
+						    		  theSession.open();
+						    	  } catch (Config_Exeception_UnableToReadConfigFile e1) {
+						    		  trace("Configuration not done");
+						    	  } catch (Config_Exeception_MalFormedConfigFile e1) {
+						    		  trace("Configuration not done");
+						    	  } catch (Config_Exception_NotDone e1) {
+						    		  trace("Configuration not done");
+						    	  }
+						    	  
+						      }
+						}).start();
+						
 					}
 				});
 				add(item);
