@@ -67,6 +67,7 @@ public class PlugInLauncher {
 			//if(!plugin.getName().equalsIgnoreCase("PulgInUI_Console") || ui == null){
 			if(iui_priority < plugin.getPriority()){
 				iui_priority = plugin.getPriority();
+				trace("Installing : " + plugin.getName());
 				ui = ((IPluginUI) (plugin)).getInterface();
 			}else{
 				plugin.uninstall();
