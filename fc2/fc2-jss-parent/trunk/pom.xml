@@ -26,7 +26,6 @@
 		<module>../openinfocard.lib</module>-->
 		<module>fc2-jss-build</module>
 		<module>fc2-jss-plugins</module>
-
 		<module>fc2-jss-skeleton</module>
 
 
