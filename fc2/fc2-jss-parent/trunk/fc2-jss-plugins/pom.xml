@@ -13,7 +13,7 @@
 <module>fc2-jss-plugin-basics</module>
 		<module>fc2-jss-plugin-walletstore</module>
 		<module>fc2-jss-plugin-localstore</module>
-	
+		<module>fc2-jss-plugin-uiswing</module>
 		<module>fc2-jss-plugin-uiflex</module>
 </modules>
 </project>
