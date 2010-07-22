@@ -92,24 +92,24 @@ public class DownloadManager {
 			
 		}
 		
-		//Process jss = Runtime.getRuntime ().exec ("JSS.exe");
-		String path;
-		try {
-			path = pathXML.substring(0, pathXML.lastIndexOf("/"));
-		} catch (java.lang.StringIndexOutOfBoundsException e) {
-			path = pathXML.substring(0, pathXML.lastIndexOf("\\"));
-		}
-		
-		try
-		{
-		 Runtime rt = Runtime.getRuntime() ;
-		 Process p = rt.exec(path+"/jss.exe") ;
-//		 InputStream in = p.getInputStream() ;
-//		 OutputStream out = p.getOutputStream ();
-//		 InputStream err = p.getErrorStream() ;
-		 
-		 //p.destroy() ;
-		}catch(Exception exc){/*handle exception*/}
+//		//Process jss = Runtime.getRuntime ().exec ("JSS.exe");
+//		String path;
+//		try {
+//			path = pathXML.substring(0, pathXML.lastIndexOf("/"));
+//		} catch (java.lang.StringIndexOutOfBoundsException e) {
+//			path = pathXML.substring(0, pathXML.lastIndexOf("\\"));
+//		}
+//		
+//		try
+//		{
+//		 Runtime rt = Runtime.getRuntime() ;
+//		 Process p = rt.exec(path+"/jss.exe") ;
+////		 InputStream in = p.getInputStream() ;
+////		 OutputStream out = p.getOutputStream ();
+////		 InputStream err = p.getErrorStream() ;
+//		 
+//		 //p.destroy() ;
+//		}catch(Exception exc){/*handle exception*/}
 
 	
 	}
