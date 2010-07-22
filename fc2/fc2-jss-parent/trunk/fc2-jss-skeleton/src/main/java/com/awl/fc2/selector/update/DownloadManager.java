@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -46,6 +47,7 @@ import com.awl.fc2.selector.launcher.Config;
 
 public class DownloadManager {
 
+	
 	/**
 	 * @param args
 	 * @throws Config_Exeception_UnableToReadConfigFile 
@@ -54,11 +56,11 @@ public class DownloadManager {
 	public static void main(String[] args) throws Config_Exeception_UnableToReadConfigFile, IOException {
 		// TODO Auto-generated method stub
 		//log.trace("list of arguments : ");
-		
+		String pathXML = "c:/jss/program files";
 		for(int i=0;i<args.length;i++){
 			//log.trace(i + " : " + args[i]);
 			if(args[i].startsWith("cnf=")){
-				String pathXML = args[i].split("=")[1];
+				pathXML = args[i].split("=")[1];
 				Config.getInstance(pathXML,false);
 			}
 		}
@@ -90,6 +92,25 @@ public class DownloadManager {
 			
 		}
 		
+		//Process jss = Runtime.getRuntime ().exec ("JSS.exe");
+		String path;
+		try {
+			path = pathXML.substring(0, pathXML.lastIndexOf("/"));
+		} catch (java.lang.StringIndexOutOfBoundsException e) {
+			path = pathXML.substring(0, pathXML.lastIndexOf("\\"));
+		}
+		
+		try
+		{
+		 Runtime rt = Runtime.getRuntime() ;
+		 Process p = rt.exec(path+"/jss.exe") ;
+//		 InputStream in = p.getInputStream() ;
+//		 OutputStream out = p.getOutputStream ();
+//		 InputStream err = p.getErrorStream() ;
+		 
+		 //p.destroy() ;
+		}catch(Exception exc){/*handle exception*/}
+
 	
 	}
 	static public float localVersion(){

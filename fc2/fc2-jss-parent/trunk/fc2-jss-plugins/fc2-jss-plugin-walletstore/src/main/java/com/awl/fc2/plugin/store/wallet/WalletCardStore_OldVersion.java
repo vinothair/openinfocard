@@ -300,22 +300,24 @@ public class WalletCardStore_OldVersion  implements ICardStore {
 		// TODO Auto-generated method stub
 		trace("Reset the CardStore");
 		destroy();
-		try {
-			String username =Selector.getInstance().getUI().getBasicInterface().sendQuestion(Lang.get(Lang.NEW_SESSION), "-" + Lang.get(Lang.ASK_USERNAME),false);
-			trace("UserName : "+username);
-			theSesison.setUsername(username);
-			update();
+//		try {
+//			String username =Selector.getInstance().getUI().getBasicInterface().sendQuestion(Lang.get(Lang.NEW_SESSION), "-" + Lang.get(Lang.ASK_USERNAME),false);
+//			trace("UserName : "+username);
+//			theSesison.setUsername(username);
 			
-		} catch (Config_Exeception_UnableToReadConfigFile e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Config_Exeception_MalFormedConfigFile e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Config_Exception_NotDone e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			
+			update();
+//			
+//		} catch (Config_Exeception_UnableToReadConfigFile e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (Config_Exeception_MalFormedConfigFile e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (Config_Exception_NotDone e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 	}
 

@@ -29,6 +29,9 @@ package com.awl.fc2.selector.session;
 
 import javax.swing.JOptionPane;
 
+import org.xmldap.exceptions.CryptoException;
+
+import com.awl.fc2.plugin.openingsession.IPlugInOpeningSession;
 import com.awl.fc2.plugin.session.IPlugInSession;
 import com.awl.fc2.selector.Selector;
 import com.awl.fc2.selector.exceptions.CardStore_Execption_FailedRetrieving;
@@ -41,6 +44,7 @@ import com.awl.fc2.selector.storage.ICardStoreV2;
 import com.awl.fc2.selector.storage.ICredentialsStore;
 import com.awl.fc2.selector.userinterface.lang.Lang;
 import com.awl.logger.Logger;
+import com.utils.Utils;
 
 public class SessionSelector {
 
@@ -48,9 +52,9 @@ public class SessionSelector {
 	public String getUsername(){
 		return username;
 	}
-	public void setUsername(String username){
-		this.username = username;
-	}
+//	public void setUsername(String username){
+//		this.username = username;
+//	}
 	static Logger log = new Logger(SessionSelector.class);
 	static public void trace(Object obj){
 		log.trace(obj);
@@ -148,10 +152,34 @@ public class SessionSelector {
 	public boolean isOpen(){
 		return bOpen;
 	}
+	public void askUserCredentials() throws Config_Exeception_UnableToReadConfigFile, Config_Exeception_MalFormedConfigFile, Config_Exception_NotDone{
+		//String username =Selector.getInstance().getUI().getBasicInterface().sendQuestion(Lang.get(Lang.NEW_SESSION), "-" + Lang.get(Lang.ASK_USERNAME),false);
+		trace("UserName : "+username);
+		IPlugInOpeningSession plg = Config.getInstance().getPlugInDB().getOpeningSessionPlugin();
+		plg.retrieveUserCredentials();
+		username  = plg.getUsername();
+		String pwd = plg.getPassword();
+		
+
+		try {
+			String carId = com.awl.fc2.selector.storage.utils.Utils.getWalletPrefixCardId()+
+						   com.awl.fc2.selector.storage.utils.Utils.getCardIDFromUserId(username);
+			Config.getInstance().getCardStorage().getCredentialStore().addPwdForCardId(carId, pwd);
+		} catch (CryptoException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+		
+	}
 	public void open() throws Config_Exeception_UnableToReadConfigFile, Config_Exeception_MalFormedConfigFile, Config_Exception_NotDone{
 		if(!bOpen){
 			trace("Opening Session");
+//			Config.getInstance().getPlugInDB().getOpeningSessionPlugin();
 			Selector.getInstance().getUI().wakeup();
+			askUserCredentials();
 //			credStore.destroy();
 			try {
 //				cardStore.reset();
