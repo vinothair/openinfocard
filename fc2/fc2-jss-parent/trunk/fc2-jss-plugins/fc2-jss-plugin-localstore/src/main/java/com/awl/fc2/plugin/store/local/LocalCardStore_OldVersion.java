@@ -380,7 +380,8 @@ public class LocalCardStore_OldVersion  implements ICardStore {
 		//try {
 //			String username =Selector.getInstance().getUI().question("New Session", "-What's your username ?");
 //			trace("UserName : "+username);
-			theSesison.setUsername("noname");
+			//theSesison.setUsername("noname");
+			
 			update();
 //			
 //		} catch (Config_Exeception_UnableToReadConfigFile e) {
