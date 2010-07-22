@@ -36,6 +36,7 @@ import nu.xom.Element;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
 
+import org.apache.derby.impl.sql.execute.CardinalityCounter;
 import org.xmldap.crypto.CryptoUtils;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.InfoCardProcessingException;
@@ -58,6 +59,9 @@ public class Utils {
 	static String urlSTSWallet=null;
 	static CardsSupportedClaims walletClaims = null;
 	static String carIDPrefix = "https://ip-bancaire.atosworldline.bancaire.test.fc2consortium.org/sts-wallet/card/";//"http://ip-bancaire.atosworldline.bancaire.test.fc2consortium.org/sts-wallet/";
+	static public String getWalletPrefixCardId(){
+		return carIDPrefix;
+	}
 	//static String carIDPrefix = "https://localhost:8080/sts/card/";//"http://ip-bancaire.atosworldline.bancaire.test.fc2consortium.org/sts-wallet/";
 	static {
 		urlSTSWallet = "http://ip-bancaire.atosworldline.bancaire.test.fc2consortium.org/sts-wallet/mex/UserNamePasswordAuthenticate";
