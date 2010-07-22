@@ -4,8 +4,10 @@ import java.util.Iterator;
 import java.util.List;
 
 public class SupportedClaims {
-	protected static DbSupportedClaim[] dbSupportedClaims;
-
+	protected  DbSupportedClaim[] dbSupportedClaims;
+	public DbSupportedClaim[] getSupportedClaims(){
+		return dbSupportedClaims;
+	}
 	public static SupportedClaims getInstance(String name) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
 		Class<?> clasz = Class.forName(name);
 		if (clasz != null) {
