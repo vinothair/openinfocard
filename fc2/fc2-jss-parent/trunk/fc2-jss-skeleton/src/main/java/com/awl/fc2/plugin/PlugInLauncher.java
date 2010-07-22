@@ -20,6 +20,7 @@ import org.apache.commons.io.FileUtils;
 
 import com.awl.fc2.plugin.authenticationHandler.IPlugInAuthenticationHandler;
 import com.awl.fc2.plugin.connector.IPluginConnector;
+import com.awl.fc2.plugin.openingsession.IPlugInOpeningSession;
 import com.awl.fc2.plugin.preprocessing.IPlugInPreProcess;
 import com.awl.fc2.plugin.session.IPlugInSession;
 import com.awl.fc2.plugin.store.IPlugInStore;
@@ -45,6 +46,7 @@ public class PlugInLauncher {
 	int icardStore_priority = -1;
 	ISelectorUI ui = null;
 	int iui_priority = -1;
+	IPlugInOpeningSession openingSession = null;
 	
 	public void addPlugin(IJSSPlugin plugin){
 		if(plugin.getType().contains(IJSSPlugin.PLG_SESSION_ELEMENT)){
@@ -83,6 +85,23 @@ public class PlugInLauncher {
 		if(plugin.getType().contains(IJSSPlugin.PLG_PREPROCESS)){
 			trace("Adding Connector : " + plugin.getName());
 			mapPreProcessingPlugin.put(plugin.getName(), (IPlugInPreProcess)plugin);
+		}
+		
+		if(plugin.getType().contains(IJSSPlugin.PLG_OPENING_SESSION)){
+			trace("Installing : " + plugin.getName());
+			if(openingSession == null){
+				openingSession = (IPlugInOpeningSession)plugin;
+			}else{
+				if(openingSession.getPriority() < plugin.getPriority()){
+					openingSession.uninstall();
+					openingSession = ((IPlugInOpeningSession) plugin);
+					
+				}else{
+					plugin.uninstall();
+				}
+			}
+			//openingSession = (IPlugInOpeningSession)plugin;
+			
 		}
 		
 	}
@@ -196,6 +215,9 @@ public class PlugInLauncher {
 	public ISelectorUI getUI(){
 		return ui;
 	}
+	public IPlugInOpeningSession getOpeningSessionPlugin(){
+		return openingSession;
+	}
 	public void lookForPlugins(Config cnf) throws Exception{
 		String pack=IJSSPlugin.class.getPackage().getName();
 		//addClasses("D:/Cauchie stephane/progs Tmp/WrksSpaces/Web/MAP_Solution/awl.smartcards/target/classes/",null);
@@ -240,6 +262,11 @@ public class PlugInLauncher {
 					break;
 				}
 				if(parent.equals(IPlugInPreProcess.class)){
+					found=true;
+					break;
+				}
+				
+				if(parent.equals(IPlugInOpeningSession.class)){
 					found=true;
 					break;
 				}

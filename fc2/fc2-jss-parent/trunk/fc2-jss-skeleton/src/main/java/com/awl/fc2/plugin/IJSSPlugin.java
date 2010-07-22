@@ -9,7 +9,7 @@ public interface IJSSPlugin {
 	public static String PLG_CARDSTORE ="plgCardStore";
 	public static String PLG_CONNECTOR ="PLG_CONNECTOR";
 	public static String PLG_PREPROCESS ="PLG_PREPROCESS";
-	
+	public static String PLG_OPENING_SESSION ="plgOpeningSession";
 	
 	
 	public String getType();
