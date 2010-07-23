@@ -27,16 +27,12 @@
  */
 package com.awl.fc2.selector.userinterface.swing;
 
-import static java.awt.SystemTray.getSystemTray;
-
-import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -54,6 +50,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import com.awl.fc2.selector.exceptions.Config_Exception_NotDone;
 import com.awl.fc2.selector.launcher.Config;
@@ -76,7 +73,7 @@ public class MainWindow extends JFrame{
 	
 	URL url = getClass().getResource("/com/awl/fc2/plugin/session/trayicon/im.png");
 	Image icon = Toolkit.getDefaultToolkit().getImage(url);
-	private TrayIcon trayIcon = new TrayIcon(icon, "JSS", null);
+//	private TrayIcon trayIcon = new TrayIcon(icon, "JSS", null);
 	
 	Color c1 = new Color(222,122,22);
 	Dimension size = new Dimension();
@@ -101,7 +98,8 @@ public class MainWindow extends JFrame{
 
 	    try {
 	    	UIManager.setLookAndFeel(new JSSLookAndFeel());
-	    } catch(Exception ex) {
+	    } catch(UnsupportedLookAndFeelException e) {
+	    	
 	    }
 		
 		try {
@@ -115,6 +113,7 @@ public class MainWindow extends JFrame{
 		}
 		
 		build();
+		wakeupProc();
 	}
 	
 	static public MainWindow getInstance(){
@@ -143,13 +142,13 @@ public class MainWindow extends JFrame{
 			
 		});
 		
-		trayIcon.setToolTip("JSS Interface");
-		
-        trayIcon.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-            	wakeupProc();
-            }
-        });
+//		trayIcon.setToolTip("JSS Interface");
+//		
+//        trayIcon.addMouseListener(new MouseAdapter() {
+//            public void mouseClicked(MouseEvent e) {
+//            	wakeupProc();
+//            }
+//        });
 		
 		this.setIconImage(icon);
 		
@@ -309,21 +308,24 @@ public class MainWindow extends JFrame{
 	public void hideProc(){
 		
 		MainWindow.getInstance().setVisible(false);
-        try {
-            getSystemTray().add(trayIcon);
-        } catch (AWTException e1) {
-            e1.printStackTrace();
-        }	catch (java.lang.IllegalArgumentException e1) {
-            e1.printStackTrace();
-        }	
+//        try {
+//            getSystemTray().add(trayIcon);
+//        } catch (AWTException e1) {
+//            e1.printStackTrace();
+//        }	catch (java.lang.IllegalArgumentException e1) {
+//            e1.printStackTrace();
+//        }	
 	}
 	
 	public void wakeupProc(){
-		MainWindow.getInstance().setVisible(true);
-		MainWindow.getInstance().setExtendedState(MainWindow.NORMAL);
-		getSystemTray().remove(trayIcon);
-//		MainWindow.this.toFront();
-//		MainWindow.this.requestFocus();
+		
+		toFront();
+		requestFocus();
+		setVisible(true);
+		setExtendedState(MainWindow.NORMAL);
+		
+//		getSystemTray().remove(trayIcon);
+
 
 	}
 

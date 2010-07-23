@@ -63,7 +63,7 @@ public class Dialog_Profile extends JDialog{
 	JCheckBox manual;
 	JTextField textField = new JTextField();
 	ImageButton left, right, delete, create;
-	boolean check = false, profileUse = false;
+	boolean check = false, profileUse = true;
 	String nameBackup;
 	JButton valider;
 	String username = null, password = null;
@@ -326,13 +326,13 @@ public class Dialog_Profile extends JDialog{
 						return;
 					} else {
 						username = textField.getText();
+						profileUse = false;
 						jd.dispose();
 						return;
 					}
 				} else {
 					if (index >=0) {
 						//VERIF EVENTUELLE DE PROFIL CORROMPU ?
-						profileUse = true;
 						username = content[2];
 						password = content[3];
 						
@@ -490,13 +490,27 @@ public class Dialog_Profile extends JDialog{
 		
 		for(int i=0;i<4;i++)content[i] = np.getResponse()[i];
 		
+		
+		
+		//PREPARE NEW USR FILE NAME
+		boolean ok = false;
+		profile = new File(path+content[0]+".usr");
+		if(profile.exists()){
+			while(ok==false){
+				profile = new File(path+content[0]+rename+".usr");
+				if(profile.exists())rename++;
+				else ok = true;
+			}
+		}
+		
+		
+		//PROCESS AVATAR
 		if (!content[1].equals("avatar-male.png") && !content[1].equals("avatar-female.png")){
 			String backslash = "\\";
 			String slash = "/";
 			content[1] = content[1].replace(backslash,slash);
 			System.out.println("AVATAR URL: "+content[1]);
 			
-			//PROCESS AVATAR
 			
 			//ImageIcon imgI = new ImageIcon(content[1]);
 			//Image img = imgI.getImage();
@@ -508,7 +522,6 @@ public class Dialog_Profile extends JDialog{
 				img = ImageIO.read(url);
 			} catch (IOException e1) {
 				e1.printStackTrace();
-				//System.out.println("FFAAAAIIIILLLL");
 				ImageIcon imgI = new ImageIcon(content[1]);
 				img = imgI.getImage();
 			}
@@ -517,10 +530,12 @@ public class Dialog_Profile extends JDialog{
 			
 			if (width>0 && height>0) {
 			
-				int stringIndex = content[1].lastIndexOf(slash);
-				content[1] = content[1].substring(++stringIndex);
-				stringIndex = content[1].lastIndexOf(".");
-				content[1] = content[1].substring(0,stringIndex)+".png";
+//				int stringIndex = content[1].lastIndexOf(slash);
+//				content[1] = content[1].substring(++stringIndex);
+//				stringIndex = content[1].lastIndexOf(".");
+//				content[1] = content[1].substring(0,stringIndex)+".png";
+				if(ok)content[1]=content[0]+rename+".png";
+				else content[1]=content[0]+".png";
 				System.out.println("AVATAR NAME: "+content[1]);
 				
 				BufferedImage bi = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
@@ -561,25 +576,9 @@ public class Dialog_Profile extends JDialog{
 
 			} else content[1] = "avatar-family.png";
 			
-			
-			
-			
-			
 		}
 		
 		//CREATE NEW USR FILE
-		boolean ok = false;
-		profile = new File(path+content[0]+".usr");
-		if(profile.exists()){
-			while(ok==false){
-				profile = new File(path+content[0]+rename+".usr");
-				if(profile.exists())rename++;
-				else ok = true;
-			}
-		}
-		
-		
-		
 	    try {
 	    	profile.createNewFile();
 		} catch (IOException e) {
@@ -592,6 +591,7 @@ public class Dialog_Profile extends JDialog{
 				.append(content[2]).append(System.getProperty("line.separator"))
 					.append(content[3]);
 		writeInFile(profile, profileInfo.toString());
+		
 		
 		//UPDATE USR LIST
 		if(ok)userArray.add(content[0]+rename+".usr");

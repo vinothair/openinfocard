@@ -58,7 +58,7 @@ public class Dialog extends JDialog{
 	protected JDialog jd;
 	JTextField textField = new JTextField();
 	JPasswordField pwdField = new JPasswordField();
-	String response = null;
+	String response;
 	String path, imgs;
 	
 	Dimension size = new Dimension();
@@ -90,23 +90,23 @@ public class Dialog extends JDialog{
 		jd.setResizable(false);
 		jd.setLocationRelativeTo(MainWindow.getInstance());
 				
-		ImagePanel panel = new ImagePanel(new ImageIcon(imgs+"dialog2.png").getImage());
+		ImagePanel panel = new ImagePanel(new ImageIcon(imgs+"dialog.png").getImage());
 		panel.setLocation(0,0);
 		
 		jd.setContentPane(panel);
 		
-		final ImageButton closeButton = new ImageButton(new ImageIcon(imgs+"closediag.png"));
-		closeButton.setLocation(300-24,10);
-		closeButton.setToolTipText("Cancel");
-		closeButton.setRolloverIcon(new ImageIcon(imgs+"closediag2.png"));
-		closeButton.setPressedIcon(new ImageIcon(imgs+"closediag3.png"));
-		panel.add(closeButton);
-		
-		closeButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				jd.dispose();
-			}
-		});
+//		final ImageButton closeButton = new ImageButton(new ImageIcon(imgs+"closediag.png"));
+//		closeButton.setLocation(300-24,10);
+//		closeButton.setToolTipText("Cancel");
+//		closeButton.setRolloverIcon(new ImageIcon(imgs+"closediag2.png"));
+//		closeButton.setPressedIcon(new ImageIcon(imgs+"closediag3.png"));
+//		panel.add(closeButton);
+//		
+//		closeButton.addActionListener(new ActionListener(){
+//			public void actionPerformed(ActionEvent e){
+//				jd.dispose();
+//			}
+//		});
 		
 		JLabel label = new JLabel(msg);
 		label.setBounds(18,10,250,22);
@@ -137,9 +137,9 @@ public class Dialog extends JDialog{
 		});
 		
 		if (dspAsPwd){
-			pwdField.setBounds(30,35,200,22);
+			pwdField.setBounds(60,35,180,22);
 			pwdField.setOpaque(false);
-			pwdField.setBorder(null);
+			//pwdField.setBorder(null);
 			
 			jd.addWindowFocusListener(new WindowAdapter() {
 			    public void windowGainedFocus(WindowEvent e) {
@@ -150,9 +150,9 @@ public class Dialog extends JDialog{
 			panel.add(pwdField);
 		}
 		else {	
-			textField.setBounds(30,35,200,22);
+			textField.setBounds(60,35,180,22);
 			textField.setOpaque(false);
-			textField.setBorder(null);
+			//textField.setBorder(null);
 			
 			jd.addWindowFocusListener(new WindowAdapter() {
 			    public void windowGainedFocus(WindowEvent e) {

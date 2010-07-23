@@ -34,9 +34,10 @@ import javax.swing.UIDefaults;
 import javax.swing.border.Border;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.metal.MetalLookAndFeel;
+import com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel;
 
 @SuppressWarnings("serial")
-public class JSSLookAndFeel extends MetalLookAndFeel {
+public class JSSLookAndFeel extends NimbusLookAndFeel {
 	
 	protected void initSystemColorDefaults(UIDefaults table) {
         super.initSystemColorDefaults(table);
