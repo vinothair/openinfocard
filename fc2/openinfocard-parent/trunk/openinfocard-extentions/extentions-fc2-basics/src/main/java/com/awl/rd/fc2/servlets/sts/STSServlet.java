@@ -217,7 +217,7 @@ public class STSServlet  extends HttpServlet {
             Nodes rsts = req.query("//wst:RequestSecurityToken",context);
             Element rst = (Element) rsts.get(0);
             log.finest("RST: " + rst.toXML());
-            requestElements = Utils.parseRequest(rst, prefix);
+            requestElements = Utils.parseRequest_v2(rst, prefix);
         } catch (ParsingException e) {
         	response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             e.printStackTrace();

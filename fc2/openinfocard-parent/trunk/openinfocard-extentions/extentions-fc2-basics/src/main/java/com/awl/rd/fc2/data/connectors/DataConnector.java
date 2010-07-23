@@ -29,6 +29,7 @@ package com.awl.rd.fc2.data.connectors;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -68,10 +69,10 @@ public class DataConnector {
 		trace("Creating a new dataconnector");
 	}
 	public static XStream setAlias(XStream xstream){
-		xstream.alias("DataConnector", DataConnector.class);
-		xstream.alias("User", User.class);
-		xstream.alias("Service", Service.class);
-		xstream.alias("Card", Card.class);
+//		xstream.alias("DataConnector", DataConnector.class);
+//		xstream.alias("User", User.class);
+//		xstream.alias("Service", Service.class);
+//		xstream.alias("Card", Card.class);
 		return xstream;
 	}
 	public void save(){
@@ -108,10 +109,16 @@ public class DataConnector {
 		XStream xstream = new XStream();
 		xstream = setAlias(xstream);
 		try {
+			System.out.println(destFile);
+			File file = new File(destFile);
+			if(!file.exists()){
+				trace("No dataconnector creating a new one");
+				return new DataConnector();
+			}
 			BufferedReader fichier = new BufferedReader(new FileReader(destFile));
 			return (DataConnector) xstream.fromXML(fichier,new DataConnector());
 		} catch (FileNotFoundException e) {
-			
+			trace("does not work");
 		}	
 		return new DataConnector();
 	}

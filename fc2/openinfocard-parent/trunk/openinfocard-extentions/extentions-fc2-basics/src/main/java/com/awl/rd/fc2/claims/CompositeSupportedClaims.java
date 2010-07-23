@@ -51,18 +51,18 @@ http://www.fc2consortium.org/ws/2008/10/identity/claims/paymentiban
     } 
     public void addSupportedClaims(SupportedClaims setOfClaims){
     	if(dbSupportedClaims==null || dbSupportedClaims.length == 0){
-    		int size = setOfClaims.dbSupportedClaims.length;
+    		int size = setOfClaims.getSupportedClaims().length;
     		dbSupportedClaims = new DbSupportedClaim[size];
     		for(int i=0;i<size;i++){
-    			dbSupportedClaims[i] = setOfClaims.dbSupportedClaims[i];    			
+    			dbSupportedClaims[i] = setOfClaims.getSupportedClaims()[i];    			
     		}    		
     	}else{
-    		int size = setOfClaims.dbSupportedClaims.length;
+    		int size = setOfClaims.getSupportedClaims().length;
     		int Gsize =size + dbSupportedClaims.length;;
     		DbSupportedClaim[] tmp = new DbSupportedClaim[Gsize];
     		int i=0;
     		for(;i<size;i++){
-    			tmp[i] = setOfClaims.dbSupportedClaims[i];    			
+    			tmp[i] = setOfClaims.getSupportedClaims()[i];    			
     		}
     		for(int cpt=0;i<Gsize;i++){
     			tmp[i] = dbSupportedClaims[cpt];    			

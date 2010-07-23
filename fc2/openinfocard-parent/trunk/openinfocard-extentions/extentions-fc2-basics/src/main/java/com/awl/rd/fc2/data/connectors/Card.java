@@ -41,6 +41,7 @@ public class Card {
 	ManagedCard theCard;
 	SupportedClaims claims;
 	public SupportedClaims getSupportedClaims(){
+		
 		return claims;
 	}
 	public Card() {
