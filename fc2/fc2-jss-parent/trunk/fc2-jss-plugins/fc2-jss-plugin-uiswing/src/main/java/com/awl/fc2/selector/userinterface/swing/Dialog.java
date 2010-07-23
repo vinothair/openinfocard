@@ -57,6 +57,7 @@ public class Dialog extends JDialog{
 	
 	protected JDialog jd;
 	JTextField textField = new JTextField();
+	JPasswordField pwdField = new JPasswordField();
 	String response = null;
 	String path, imgs;
 	
@@ -82,7 +83,7 @@ public class Dialog extends JDialog{
 		
 	}
 	
-	public void settings(String title, String msg, Boolean dspAsPawd){
+	public void settings(String title, String msg, final Boolean dspAsPwd){
 		jd.setUndecorated(true);
 		jd.setTitle(title);
 		jd.setSize(300,100);
@@ -120,24 +121,47 @@ public class Dialog extends JDialog{
 		
 		valider.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				response = textField.getText();
-				jd.dispose();
+				if(dspAsPwd){
+					char[] temp = pwdField.getPassword();
+					response = "";
+					for(int i=0;i<temp.length;i++){
+						response += temp[i];
+					}
+					jd.dispose();
+				}
+				else{
+					response = textField.getText();
+					jd.dispose();
+				}
 			}
 		});
 		
-		
-		textField.setBounds(30,35,200,22);
-		textField.setOpaque(false);
-		textField.setBorder(null);
-		
-		jd.addWindowFocusListener(new WindowAdapter() {
-		    public void windowGainedFocus(WindowEvent e) {
-		        textField.requestFocusInWindow();
-		    }
-		});
-		
-		panel.add(textField);
+		if (dspAsPwd){
+			pwdField.setBounds(30,35,200,22);
+			pwdField.setOpaque(false);
+			pwdField.setBorder(null);
 			
+			jd.addWindowFocusListener(new WindowAdapter() {
+			    public void windowGainedFocus(WindowEvent e) {
+			    	pwdField.requestFocusInWindow();
+			    }
+			});
+			
+			panel.add(pwdField);
+		}
+		else {	
+			textField.setBounds(30,35,200,22);
+			textField.setOpaque(false);
+			textField.setBorder(null);
+			
+			jd.addWindowFocusListener(new WindowAdapter() {
+			    public void windowGainedFocus(WindowEvent e) {
+			        textField.requestFocusInWindow();
+			    }
+			});
+			
+			panel.add(textField);
+		}
 		
 		
 				
