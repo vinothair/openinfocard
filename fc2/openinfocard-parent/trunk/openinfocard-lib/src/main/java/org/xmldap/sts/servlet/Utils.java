@@ -843,6 +843,100 @@ public class Utils {
         return envelope.toXML();
     }
 
+    
+    //Added by stef (cause of https http) 
+    //TODO to be fixed 
+    //org.xmldap.exceptions.ParsingException: Expected:http://localhost:8080/weCash-purse-endpoint, but found:https://localhost:8080/weCash-purse-endpoint/card/5LTNQhDuh8YNplPBtqd9UpwaB50=
+	//at org.xmldap.sts.servlet.Utils.parseRequest(Utils.java:66)
+    public static Bag parseRequest_v2(Element requestXML, String requestURL) throws ParsingException {
+
+        Bag requestElements = new Bag();
+
+
+        XPathContext context = buildRSTcontext();
+
+        Nodes cids = requestXML.query("//wsid:CardId",context);
+        Element cid = (Element) cids.get(0);
+        String cardIdUri = cid.getValue();
+        
+//        String domainname = _su.getDomainName();
+//        String prefix = "https://" + domainname + servletPath + "card/";
+        String cardId = null;
+//        if (cardIdUri.startsWith(requestURL+"/card/")) {
+        
+        	//cardId = cardIdUri.substring(requestURL.length()+7);
+        log.finest("Entry CardID : " + cardIdUri);
+        int pos = cardIdUri.indexOf("card/");
+        cardId = cardIdUri;
+		if(pos > 0){
+			cardId = cardId.substring(pos+5);
+			//System.out.println(cardId);
+		}
+//        } else {
+//        	throw new ParsingException("Expected:"+requestURL.toString()+", but found:"+cardIdUri);
+//        }
+		log.finest("cardId: " + cardId);
+
+        requestElements.put("cardId", cardId);
+
+
+        Nodes cvs = requestXML.query("//wsid:CardVersion",context);
+        Element cv = (Element) cvs.get(0);
+        String cardVersion = cv.getValue();
+        log.finest("CardVersion: " + cardVersion);
+        requestElements.put("cardVersion", cardVersion);
+
+
+        Nodes claims = requestXML.query("//wsid:ClaimType",context);
+        for (int i = 0; i < claims.size(); i++ ) {
+
+            Element claimElm = (Element)claims.get(i);
+            Attribute uri = claimElm.getAttribute("Uri");
+            String claim = uri.getValue();
+            log.finest("claim:" + claim);
+            requestElements.put("claim", claim);
+
+        }
+
+        Nodes kts = requestXML.query("//wst:KeyType",context);
+        if ( kts != null )  {
+            Element kt = (Element) kts.get(0);
+            String keyType = kt.getValue();
+            log.finest("keyType: " + keyType);
+            requestElements.put("keyType", keyType);
+        }
+            
+
+        Nodes tts = requestXML.query("//wst:TokenType",context);
+        Element tt = (Element) tts.get(0);
+        String tokenType = tt.getValue();
+        log.finest("tokenType: " + tokenType);
+        requestElements.put("tokenType", tokenType);
+
+        {
+//            <ClientPseudonym xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">
+//        	   <PPID>gibberish</PPID>
+//        	  </ClientPseudonym>
+        	Nodes nodes = requestXML.query("//PPID",context);
+        	if ((nodes != null) && (nodes.size() > 0)) {
+        		Element one = (Element)nodes.get(0);
+        		String ppid = one.getValue();
+        		log.finest("PPID:" + ppid);
+        		requestElements.put("PPID", ppid);
+        	}
+
+        }
+        
+        {
+        	Nodes nodes = requestXML.query("//wsp:AppliesTo",context);
+        	if ((nodes != null) && (nodes.size() > 0)) {
+        		
+        	}
+        }
+        return requestElements;
+
+
+    }
 }
 //Added by stef
 
