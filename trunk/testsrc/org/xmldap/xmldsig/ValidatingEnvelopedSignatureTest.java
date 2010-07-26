@@ -13,6 +13,8 @@ import nu.xom.ParsingException;
 import org.xmldap.exceptions.CryptoException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.InfoCard;
+import org.xmldap.infocard.TokenServiceReference;
+import org.xmldap.infocard.UserCredential;
 import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimTypeList;
 import org.xmldap.infocard.policy.SupportedToken;
@@ -83,7 +85,16 @@ public class ValidatingEnvelopedSignatureTest extends TestCase {
 			SupportedTokenList tokenList = new SupportedTokenList(list);
 			validCard.setTokenList(tokenList);
 		}
-
+    {
+      ArrayList<TokenServiceReference> tokenServiceReferenceList = new ArrayList<TokenServiceReference>();
+      String address = "http://sts.example.com/";
+      String mexAddress = "https://mex.example.com/";
+      X509Certificate cert = null;
+      UserCredential userCredential = new UserCredential(UserCredential.USERNAME, "username");
+      TokenServiceReference tsr = new TokenServiceReference(address, mexAddress, cert, userCredential);
+      tokenServiceReferenceList.add(tsr);
+      validCard.setTokenServiceReference(tokenServiceReferenceList);
+    }
 	}
 
 	@Test(expected=java.security.cert.CertificateExpiredException.class)
@@ -104,15 +115,43 @@ public class ValidatingEnvelopedSignatureTest extends TestCase {
 		fail("Expected CryptoException to be thrown");
 	}
 
-	public void testSignatureWithValidCert() throws IOException, ParsingException, org.xmldap.exceptions.ParsingException, SerializationException, CryptoException {
-		String validSignedCard = validCard.toXML();
-		String expectedSignature = "<dsig:Signature xmlns:dsig=\"http://www.w3.org/2000/09/xmldsig#\"><dsig:SignedInfo><dsig:CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><dsig:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\" /><dsig:Reference URI=\"#_Object_InfoCard\"><dsig:Transforms><dsig:Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /></dsig:Transforms><dsig:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\" /><dsig:DigestValue>MYJOoqoQ2zPK1jlU/ntKnTwkgQg=</dsig:DigestValue></dsig:Reference></dsig:SignedInfo><dsig:SignatureValue>ZDpleT3JiURjh3TAdfwoynOx21ev49HeG/qi0P3tYsr6fZ78m+6pveaitJBNOUKwSxIsGgb7wW2DqbDKzClByOKFFO2s+X8q0gTtvGoAqV6LT8nZr68/3SuTCnN4s0+OvH7N2PpixyM/8zCqDcKaXYVBh485tdJb94Kn3ujahns=</dsig:SignatureValue><dsig:KeyInfo><dsig:X509Data><dsig:X509Certificate>MIIDkDCCAvmgAwIBAgIJAO+Fcd4yj0h/MA0GCSqGSIb3DQEBBQUAMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnMB4XDTA3MDgxODIxMTIzMVoXDTE3MDgxNTIxMTIzMVowgY0xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQKEwZ4bWxkYXAxJzAlBgNVBAsUHkNodWNrIE1vcnRpbW9yZSAmIEF4ZWwgTmVubmtlcjEXMBUGA1UEAxMOd3d3LnhtbGRhcC5vcmcwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAOKUn6/QqTZj/BWoQVxNFI0Z2AXI1azws+RyuJek60NiawQrFAKk0Ph+/YnUiQAnzbsT+juZV08UpaPa2IE3g0+RFZtODlqoGGGakSOd9NNnDuNhsdtXJWgQq8paM9Sc4nUue31iq7LvmjSGSL5w84NglT48AcqVGr+/5vy8CfT/AgMBAAGjgfUwgfIwHQYDVR0OBBYEFGcwQKLQtW8/Dql5t70BfXX66dmaMIHCBgNVHSMEgbowgbeAFGcwQKLQtW8/Dql5t70BfXX66dmaoYGTpIGQMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnggkA74Vx3jKPSH8wDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOBgQAYQisGgrg1xw0TTgIZcz3JXr+ZtwjeKqEewoxCxBz1uki7hJYHIznEZq4fzSMtcBMgbKmOTzFNV0Yr/tnJ9rrljRf8EXci62ffzj+Kkny7JtM6Ltxq0BJuF3jrXogdbsc5J3W9uJ7C2+uJTHG1mApbOdJGvLAGLCaNw5NpP7+ZXQ==</dsig:X509Certificate></dsig:X509Data></dsig:KeyInfo><dsig:Object Id=\"_Object_InfoCard\"><ic:InformationCard xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\" xmlns:mex=\"http://schemas.xmlsoap.org/ws/2004/09/mex\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\" xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\" xml:lang=\"en-us\"><ic:InformationCardReference><ic:CardId>validCard</ic:CardId><ic:CardVersion>1</ic:CardVersion></ic:InformationCardReference><ic:Issuer>issuer with valid cert</ic:Issuer><ic:TimeIssued>2006-09-28T12:58:26Z</ic:TimeIssued><ic:SupportedTokenTypeList><wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType></ic:SupportedTokenTypeList><ic:SupportedClaimTypeList><ic:SupportedClaimType Uri=\"uri\"><ic:DisplayTag>displayName</ic:DisplayTag><ic:Description>description</ic:Description></ic:SupportedClaimType></ic:SupportedClaimTypeList><ic07:RequireStrongRecipientIdentity xmlns:ic07=\"http://schemas.xmlsoap.org/ws/2007/01/identity\" /></ic:InformationCard></dsig:Object></dsig:Signature>";
-		assertEquals(expectedSignature, validSignedCard);
-		
-		Document doc = XmlUtils.parse(validSignedCard);
-		Element signatureElement = doc.getRootElement();
-		ValidatingEnvelopedSignature signature = new ValidatingEnvelopedSignature(signatureElement);
-		signature.validate();
-	}
+  public void testSignatureWithValidCert() throws IOException, ParsingException, org.xmldap.exceptions.ParsingException, SerializationException, CryptoException {
+    String validSignedCard = validCard.toXML();
+    String expectedSignature = "<dsig:Signature xmlns:dsig=\"http://www.w3.org/2000/09/xmldsig#\"><dsig:SignedInfo><dsig:CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><dsig:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\" /><dsig:Reference URI=\"#_Object_InfoCard\"><dsig:Transforms><dsig:Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /></dsig:Transforms><dsig:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\" /><dsig:DigestValue>vMsq1niriwx43Z/SDwp/MgJEaAQ=</dsig:DigestValue></dsig:Reference></dsig:SignedInfo><dsig:SignatureValue>bpGqGtzCC0a5SKofsezUZGhLMUdCxxqzUtYvLLdI+ghLiPUWyvujMfbYq/HMtrk6UobdoQ//ihr3jCk+aIsRSgMHgT6a/71FvDdQobuSuPJD4x2vHKI88xM6tSQEqjA/4cOEvjsTLo4hMNAxUI1/zcfRrKGCjUUzFptONWB3X+s=</dsig:SignatureValue><dsig:KeyInfo><dsig:X509Data><dsig:X509Certificate>MIIDkDCCAvmgAwIBAgIJAO+Fcd4yj0h/MA0GCSqGSIb3DQEBBQUAMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnMB4XDTA3MDgxODIxMTIzMVoXDTE3MDgxNTIxMTIzMVowgY0xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQKEwZ4bWxkYXAxJzAlBgNVBAsUHkNodWNrIE1vcnRpbW9yZSAmIEF4ZWwgTmVubmtlcjEXMBUGA1UEAxMOd3d3LnhtbGRhcC5vcmcwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAOKUn6/QqTZj/BWoQVxNFI0Z2AXI1azws+RyuJek60NiawQrFAKk0Ph+/YnUiQAnzbsT+juZV08UpaPa2IE3g0+RFZtODlqoGGGakSOd9NNnDuNhsdtXJWgQq8paM9Sc4nUue31iq7LvmjSGSL5w84NglT48AcqVGr+/5vy8CfT/AgMBAAGjgfUwgfIwHQYDVR0OBBYEFGcwQKLQtW8/Dql5t70BfXX66dmaMIHCBgNVHSMEgbowgbeAFGcwQKLQtW8/Dql5t70BfXX66dmaoYGTpIGQMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnggkA74Vx3jKPSH8wDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOBgQAYQisGgrg1xw0TTgIZcz3JXr+ZtwjeKqEewoxCxBz1uki7hJYHIznEZq4fzSMtcBMgbKmOTzFNV0Yr/tnJ9rrljRf8EXci62ffzj+Kkny7JtM6Ltxq0BJuF3jrXogdbsc5J3W9uJ7C2+uJTHG1mApbOdJGvLAGLCaNw5NpP7+ZXQ==</dsig:X509Certificate></dsig:X509Data></dsig:KeyInfo><dsig:Object Id=\"_Object_InfoCard\"><ic:InformationCard xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\" xmlns:mex=\"http://schemas.xmlsoap.org/ws/2004/09/mex\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\" xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\" xml:lang=\"en-us\"><ic:InformationCardReference><ic:CardId>validCard</ic:CardId><ic:CardVersion>1</ic:CardVersion></ic:InformationCardReference><ic:Issuer>issuer with valid cert</ic:Issuer><ic:TimeIssued>2006-09-28T12:58:26Z</ic:TimeIssued><ic:TokenServiceList><ic:TokenService><wsa:EndpointReference><wsa:Address>http://sts.example.com/</wsa:Address><wsa:Metadata><mex:Metadata><mex:MetadataSection><mex:MetadataReference><wsa:Address>https://mex.example.com/</wsa:Address></mex:MetadataReference></mex:MetadataSection></mex:Metadata></wsa:Metadata></wsa:EndpointReference><ic:UserCredential><ic:DisplayCredentialHint>Please enter your username and password.</ic:DisplayCredentialHint><ic:UsernamePasswordCredential><ic:Username>username</ic:Username></ic:UsernamePasswordCredential></ic:UserCredential></ic:TokenService></ic:TokenServiceList><ic:SupportedTokenTypeList><wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType></ic:SupportedTokenTypeList><ic:SupportedClaimTypeList><ic:SupportedClaimType Uri=\"uri\"><ic:DisplayTag>displayName</ic:DisplayTag><ic:Description>description</ic:Description></ic:SupportedClaimType></ic:SupportedClaimTypeList><ic07:RequireStrongRecipientIdentity xmlns:ic07=\"http://schemas.xmlsoap.org/ws/2007/01/identity\" /></ic:InformationCard></dsig:Object></dsig:Signature>";
+    assertEquals(expectedSignature, validSignedCard);
+    
+    Document doc = XmlUtils.parse(validSignedCard);
+    Element signatureElement = doc.getRootElement();
+    ValidatingEnvelopedSignature signature = new ValidatingEnvelopedSignature(signatureElement);
+    Element elt = signature.validate();
+    assertNotNull(elt);
+    assertEquals("Object", elt.getLocalName());
+    Element infocardElt = elt.getFirstChildElement("InformationCard", WSConstants.INFOCARD_NAMESPACE);
+    assertNotNull(infocardElt);
+    InfoCard card = new InfoCard(infocardElt);
+  }
+  
+  public void testSignatureWithValidCert1() throws IOException, ParsingException, org.xmldap.exceptions.ParsingException, SerializationException, CryptoException {
+    InfoCard vcard = new InfoCard(validCard);
+    ArrayList<TokenServiceReference> tokenServiceReferenceList = new ArrayList<TokenServiceReference>();
+    String address = "http://sts.example.com/";
+    String mexAddress = "https://mex.example.com/";
+    X509Certificate cert = null;
+    UserCredential userCredential = new UserCredential(UserCredential.USERNAME, "username");
+    TokenServiceReference tsr = new TokenServiceReference(address, mexAddress, cert, userCredential);
+    tokenServiceReferenceList.add(tsr);
+    vcard.setTokenServiceReference(tokenServiceReferenceList);
+    String validSignedCard = vcard.toXML();
+    String expectedSignature = "<dsig:Signature xmlns:dsig=\"http://www.w3.org/2000/09/xmldsig#\"><dsig:SignedInfo><dsig:CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><dsig:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\" /><dsig:Reference URI=\"#_Object_InfoCard\"><dsig:Transforms><dsig:Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /></dsig:Transforms><dsig:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\" /><dsig:DigestValue>vMsq1niriwx43Z/SDwp/MgJEaAQ=</dsig:DigestValue></dsig:Reference></dsig:SignedInfo><dsig:SignatureValue>bpGqGtzCC0a5SKofsezUZGhLMUdCxxqzUtYvLLdI+ghLiPUWyvujMfbYq/HMtrk6UobdoQ//ihr3jCk+aIsRSgMHgT6a/71FvDdQobuSuPJD4x2vHKI88xM6tSQEqjA/4cOEvjsTLo4hMNAxUI1/zcfRrKGCjUUzFptONWB3X+s=</dsig:SignatureValue><dsig:KeyInfo><dsig:X509Data><dsig:X509Certificate>MIIDkDCCAvmgAwIBAgIJAO+Fcd4yj0h/MA0GCSqGSIb3DQEBBQUAMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnMB4XDTA3MDgxODIxMTIzMVoXDTE3MDgxNTIxMTIzMVowgY0xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQKEwZ4bWxkYXAxJzAlBgNVBAsUHkNodWNrIE1vcnRpbW9yZSAmIEF4ZWwgTmVubmtlcjEXMBUGA1UEAxMOd3d3LnhtbGRhcC5vcmcwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAOKUn6/QqTZj/BWoQVxNFI0Z2AXI1azws+RyuJek60NiawQrFAKk0Ph+/YnUiQAnzbsT+juZV08UpaPa2IE3g0+RFZtODlqoGGGakSOd9NNnDuNhsdtXJWgQq8paM9Sc4nUue31iq7LvmjSGSL5w84NglT48AcqVGr+/5vy8CfT/AgMBAAGjgfUwgfIwHQYDVR0OBBYEFGcwQKLQtW8/Dql5t70BfXX66dmaMIHCBgNVHSMEgbowgbeAFGcwQKLQtW8/Dql5t70BfXX66dmaoYGTpIGQMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnggkA74Vx3jKPSH8wDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOBgQAYQisGgrg1xw0TTgIZcz3JXr+ZtwjeKqEewoxCxBz1uki7hJYHIznEZq4fzSMtcBMgbKmOTzFNV0Yr/tnJ9rrljRf8EXci62ffzj+Kkny7JtM6Ltxq0BJuF3jrXogdbsc5J3W9uJ7C2+uJTHG1mApbOdJGvLAGLCaNw5NpP7+ZXQ==</dsig:X509Certificate></dsig:X509Data></dsig:KeyInfo><dsig:Object Id=\"_Object_InfoCard\"><ic:InformationCard xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\" xmlns:mex=\"http://schemas.xmlsoap.org/ws/2004/09/mex\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\" xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\" xml:lang=\"en-us\"><ic:InformationCardReference><ic:CardId>validCard</ic:CardId><ic:CardVersion>1</ic:CardVersion></ic:InformationCardReference><ic:Issuer>issuer with valid cert</ic:Issuer><ic:TimeIssued>2006-09-28T12:58:26Z</ic:TimeIssued><ic:TokenServiceList><ic:TokenService><wsa:EndpointReference><wsa:Address>http://sts.example.com/</wsa:Address><wsa:Metadata><mex:Metadata><mex:MetadataSection><mex:MetadataReference><wsa:Address>https://mex.example.com/</wsa:Address></mex:MetadataReference></mex:MetadataSection></mex:Metadata></wsa:Metadata></wsa:EndpointReference><ic:UserCredential><ic:DisplayCredentialHint>Please enter your username and password.</ic:DisplayCredentialHint><ic:UsernamePasswordCredential><ic:Username>username</ic:Username></ic:UsernamePasswordCredential></ic:UserCredential></ic:TokenService></ic:TokenServiceList><ic:SupportedTokenTypeList><wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType></ic:SupportedTokenTypeList><ic:SupportedClaimTypeList><ic:SupportedClaimType Uri=\"uri\"><ic:DisplayTag>displayName</ic:DisplayTag><ic:Description>description</ic:Description></ic:SupportedClaimType></ic:SupportedClaimTypeList><ic07:RequireStrongRecipientIdentity xmlns:ic07=\"http://schemas.xmlsoap.org/ws/2007/01/identity\" /></ic:InformationCard></dsig:Object></dsig:Signature>";
+    assertEquals(expectedSignature, validSignedCard);
+    
+    Document doc = XmlUtils.parse(validSignedCard);
+    Element signatureElement = doc.getRootElement();
+    ValidatingEnvelopedSignature signature = new ValidatingEnvelopedSignature(signatureElement);
+    Element objectElt = signature.validate();
+    assertNotNull(objectElt);
+    Element infocardElt = (Element)objectElt.getChild(0);
+    InfoCard card = new InfoCard(infocardElt);
+  }
 
 }

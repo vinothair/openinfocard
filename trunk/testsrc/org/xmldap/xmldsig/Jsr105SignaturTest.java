@@ -3,12 +3,13 @@ package org.xmldap.xmldsig;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 import javax.xml.crypto.dsig.DigestMethod;
@@ -16,12 +17,60 @@ import javax.xml.crypto.dsig.SignatureMethod;
 
 import junit.framework.TestCase;
 
+import org.xmldap.exceptions.SerializationException;
 import org.xmldap.exceptions.SigningException;
+import org.xmldap.infocard.InfoCard;
+import org.xmldap.infocard.TokenServiceReference;
+import org.xmldap.infocard.UserCredential;
+import org.xmldap.infocard.policy.SupportedClaim;
+import org.xmldap.infocard.policy.SupportedClaimTypeList;
+import org.xmldap.infocard.policy.SupportedToken;
+import org.xmldap.infocard.policy.SupportedTokenList;
+import org.xmldap.ws.WSConstants;
 
 public class Jsr105SignaturTest extends TestCase {
-
+  InfoCard validCard = null;
+  
 	protected void setUp() throws Exception {
 		super.setUp();
+		
+    X509Certificate validCert = org.xmldap.util.XmldapCertsAndKeys.getXmldapCert1();
+    RSAPrivateKey privateKey1 = org.xmldap.util.XmldapCertsAndKeys.getXmldapPrivateKey1();
+    X509Certificate[] validCertChain = {validCert};
+    
+    validCard = new InfoCard(validCertChain, privateKey1);
+
+    validCard.setCardId("validCard", 1);
+    validCard.setIssuer("issuer with valid cert");
+    validCard.setTimeIssued("2006-09-28T12:58:26Z");
+    {
+          ArrayList<SupportedClaim> cl = new ArrayList<SupportedClaim>();
+      String displayName = "displayName";
+      String uri = "uri";
+      String description = "description";
+      SupportedClaim claim = new SupportedClaim(displayName, uri, description);
+      cl.add(claim);
+      SupportedClaimTypeList claimList = new SupportedClaimTypeList(cl);
+      validCard.setClaimList(claimList);
+    }
+    {
+      SupportedToken token = new SupportedToken(WSConstants.SAML11_NAMESPACE); // default is SAML11
+      List<SupportedToken> list = new ArrayList<SupportedToken>();
+      list.add(token);
+      SupportedTokenList tokenList = new SupportedTokenList(list);
+      validCard.setTokenList(tokenList);
+    }
+    {
+      ArrayList<TokenServiceReference> tokenServiceReferenceList = new ArrayList<TokenServiceReference>();
+      String address = "http://sts.example.com/";
+      String mexAddress = "https://mex.example.com/";
+      X509Certificate cert = null;
+      UserCredential userCredential = new UserCredential(UserCredential.USERNAME, "username");
+      TokenServiceReference tsr = new TokenServiceReference(address, mexAddress, cert, userCredential);
+      tokenServiceReferenceList.add(tsr);
+      validCard.setTokenServiceReference(tokenServiceReferenceList);
+   
+    }
 	}
 
 //	public void testGenevaInformationCardSignature() throws SigningException, FileNotFoundException {
@@ -55,6 +104,14 @@ public class Jsr105SignaturTest extends TestCase {
 	  String expectedSignature = "<dsig:Signature xmlns:dsig=\"http://www.w3.org/2000/09/xmldsig#\"><dsig:SignedInfo><dsig:CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><dsig:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\" /><dsig:Reference URI=\"#_Object_InfoCard\"><dsig:Transforms><dsig:Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /></dsig:Transforms><dsig:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\" /><dsig:DigestValue>94kbRiYjQSLPnDk2Wt90hMHnXaI=</dsig:DigestValue></dsig:Reference></dsig:SignedInfo><dsig:SignatureValue>EVT5Add3Sq9dtE7v9GImcDV2ESNI6syQPVV18W6CRKl4b99z3sgFo7YYr77u50imYgULwCGln0o5F7m6I6YrqWr3RY6uuRfUjC9ViZ6YnbOnkAFK4pHgWoc5nWGEVZHuNrPJzF3jU5P2LXGCja9/TMWsQaGPThI8nkY4Cl+22HA=</dsig:SignatureValue><dsig:KeyInfo><dsig:X509Data><dsig:X509Certificate>MIIDkDCCAvmgAwIBAgIJAO+Fcd4yj0h/MA0GCSqGSIb3DQEBBQUAMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnMB4XDTA3MDgxODIxMTIzMVoXDTE3MDgxNTIxMTIzMVowgY0xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQKEwZ4bWxkYXAxJzAlBgNVBAsUHkNodWNrIE1vcnRpbW9yZSAmIEF4ZWwgTmVubmtlcjEXMBUGA1UEAxMOd3d3LnhtbGRhcC5vcmcwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAOKUn6/QqTZj/BWoQVxNFI0Z2AXI1azws+RyuJek60NiawQrFAKk0Ph+/YnUiQAnzbsT+juZV08UpaPa2IE3g0+RFZtODlqoGGGakSOd9NNnDuNhsdtXJWgQq8paM9Sc4nUue31iq7LvmjSGSL5w84NglT48AcqVGr+/5vy8CfT/AgMBAAGjgfUwgfIwHQYDVR0OBBYEFGcwQKLQtW8/Dql5t70BfXX66dmaMIHCBgNVHSMEgbowgbeAFGcwQKLQtW8/Dql5t70BfXX66dmaoYGTpIGQMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnggkA74Vx3jKPSH8wDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOBgQAYQisGgrg1xw0TTgIZcz3JXr+ZtwjeKqEewoxCxBz1uki7hJYHIznEZq4fzSMtcBMgbKmOTzFNV0Yr/tnJ9rrljRf8EXci62ffzj+Kkny7JtM6Ltxq0BJuF3jrXogdbsc5J3W9uJ7C2+uJTHG1mApbOdJGvLAGLCaNw5NpP7+ZXQ==</dsig:X509Certificate></dsig:X509Data></dsig:KeyInfo><dsig:Object Id=\"_Object_InfoCard\"><ic:InformationCard xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\" xmlns:mex=\"http://schemas.xmlsoap.org/ws/2004/09/mex\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\" xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\" xml:lang=\"en-us\"><ic:InformationCardReference><ic:CardId>card1</ic:CardId><ic:CardVersion>1</ic:CardVersion></ic:InformationCardReference><ic:Issuer>issuer</ic:Issuer><ic:TimeIssued>2006-09-28T12:58:26Z</ic:TimeIssued><ic:SupportedTokenTypeList><wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType></ic:SupportedTokenTypeList><ic:SupportedClaimTypeList><ic:SupportedClaimType Uri=\"uri\"><ic:DisplayTag>displayName</ic:DisplayTag><ic:Description>description</ic:Description></ic:SupportedClaimType></ic:SupportedClaimTypeList><ic07:RequireStrongRecipientIdentity xmlns:ic07=\"http://schemas.xmlsoap.org/ws/2007/01/identity\" /></ic:InformationCard></dsig:Object></dsig:Signature>";
 	  InputStream inputStream = new ByteArrayInputStream(expectedSignature.getBytes());
 	  boolean valid = Jsr105Signatur.validateSignature(inputStream);
+    assertTrue(valid);
+	}
+	
+
+	public void testValidCard() throws SerializationException, SigningException {
+	  String validCardString = validCard.toXML();
+    InputStream inputStream = new ByteArrayInputStream(validCardString.getBytes());
+    boolean valid = Jsr105Signatur.validateSignature(inputStream);
     assertTrue(valid);
 	}
 
