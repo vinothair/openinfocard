@@ -99,9 +99,29 @@ public class UserCredential {
 		} else {
 			throw new ParsingException("Expected UserCredential but found" + name);
 		}
-	}
-	
-	public UserCredential(String authType, String value) {
+  }
+  
+  public UserCredential(JSONObject json) throws JSONException {
+    authType = json.optString("Type", null);
+    hint = json.optString("Hint", null);
+    
+    json.put("Type", authType);
+    if (USERNAME.equals(authType)) {
+      userName = json.getString("Username");
+    } else if (KERB.equals(authType)) {
+      // TODO
+      throw new JSONException("Unsupported Authentication Type: " + authType);
+    } else if (SELF_ISSUED.equals(authType)) {
+      ppi = json.getString("PPID");
+      json.put("PPID", ppi);
+    } else if (X509.equals(authType)) {
+      x509Hash = json.getString("X509Hash");
+    } else {
+      throw new JSONException("Unsupported Authentication Type: " + authType);
+    }
+  }
+  
+  public UserCredential(String authType, String value) {
 		setAuthType(authType, value);
 	}
 	
