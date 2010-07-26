@@ -126,6 +126,156 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
         this.certChain = null;
     }
 
+    public InfoCard(JSONObject json) throws ParsingException {
+      this.lang = json.optString("lang");
+      
+      String CardId = json.optString("CardId", null);
+      String CardVersion = json.optString("CardVersion", null);
+      if (CardId != null && CardVersion != null) {
+        informationCardReference = new InformationCardReference(CardId, Integer.valueOf(CardVersion).longValue());
+      }
+      this.cardName = json.optString("CardName", null);
+      this.CardType = json.optString("CardType", null);
+      this.IssuerName = json.optString("IssuerName", null);
+      this.base64BinaryCardImage = json.optString("CardImage", null);
+      this.mimeType = json.optString("MimeType", null);
+
+      this.issuer = json.optString("Issuer", null);
+
+      this.timeIssued = json.optString("TimeIssued", null);
+      this.timeExpires = json.optString("TimeExpired", null);
+      
+      this.tokenServiceReferenceList = null;
+      try {
+        JSONArray ja = null;
+        try {
+          ja = json.getJSONArray("TokenServiceList");
+        } catch (JSONException e) {}
+        if (ja != null && ja.length() > 0) {
+          this.tokenServiceReferenceList = new ArrayList<TokenServiceReference>();
+          for (int index=0; index<ja.length(); index++) {
+            JSONObject jo = ja.getJSONObject(index);
+            TokenServiceReference tsr = new TokenServiceReference(jo);
+            tokenServiceReferenceList.add(tsr);
+          }
+        }
+      } catch (JSONException e) {
+        throw new ParsingException(e);
+      }
+      
+      tokenList = null;
+      try {
+        JSONArray ja = null;
+        try {
+          ja = json.getJSONArray("SupportedTokenTypeList");
+        } catch (JSONException e) {}
+        if (ja != null && ja.length() > 0) {
+          List<SupportedToken> supportedTokenList = new ArrayList<SupportedToken>();
+          for (int index=0; index<ja.length(); index++) {
+            String tokenType = ja.getString(index);
+            SupportedToken token = new SupportedToken(tokenType);
+            supportedTokenList.add(token);
+          }
+          tokenList = new SupportedTokenList(supportedTokenList);
+        }
+      } catch (JSONException e) {
+        throw new ParsingException(e);
+      }
+        
+      claimList = null;
+      try {
+        JSONArray ja = null;
+        try {
+          ja = json.getJSONArray("SupportedClaimTypeList");
+        } catch (JSONException e) {}
+        if (ja != null && ja.length() > 0) {
+          List<SupportedClaim> list = new ArrayList<SupportedClaim>();
+          for (int index=0; index<ja.length(); index++) {
+            JSONObject jo = ja.getJSONObject(index);
+            SupportedClaim claim = new SupportedClaim(jo);
+            list.add(claim);
+          }
+          claimList = new SupportedClaimTypeList(list);
+        }
+      } catch (JSONException e) {
+        throw new ParsingException(e);
+      }
+      
+      requireAppliesTo = null;
+      if (json.has("RequireAppliesTo")) {
+        requireAppliesTo = new RequireAppliesTo(json.optBoolean("RequireAppliesTo"));
+      }
+
+      privacyPolicy = null;
+      if (json.has("PrivacyPolicyUri")) {
+        try {
+          privacyPolicy = new PrivacyNotice(
+              json.getString("PrivacyPolicyUri"), Integer.valueOf(json.getString("PrivacyPolicyVersion")).longValue());
+        } catch (URISyntaxException e) {
+          throw new ParsingException(e);
+        } catch (JSONException e) {
+          throw new ParsingException(e);
+        }
+      }
+
+      requireStrongRecipientIdentity = false;
+      if (json.has("RequireStrongRecipientIdentity")) {
+        try {
+          requireStrongRecipientIdentity = json.getBoolean("RequireStrongRecipientIdentity");
+        } catch (JSONException e) {
+          throw new ParsingException(e);
+        }
+      }
+
+      issuerInformation = null;
+      if (json.has("IssuerInformation")) {
+        try {
+          JSONArray ja = json.getJSONArray("IssuerInformation");
+          for (int index=0; index<ja.length(); index++) {
+            JSONObject jo = ja.getJSONObject(index);
+            // FIXME hier geht es weiter
+          }
+        } catch (JSONException e) {
+          throw new ParsingException(e);
+        }
+      }
+      
+      try {
+        if ((issuerInformation != null) && (issuerInformation.size() > 0)) {
+          JSONArray ja = new JSONArray();
+          int index = 0;
+          for (String entryName : issuerInformation.keySet()) {
+            String entryValue = issuerInformation.get(entryName);
+            JSONObject jo = new JSONObject();
+              jo.put("EntryName", entryName);
+              jo.put("EntryValue", entryValue);
+              ja.put(index++, jo);
+          }
+          json.put("IssuerInformation", ja);
+        }
+      } catch (JSONException e) {
+        throw new ParsingException(e);
+      }
+      
+      try {
+        if (bastards != null) {
+          JSONArray ja = new JSONArray();
+          // <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+          int index = 0;
+          for (Element bastard : bastards) {
+            JSONObject jo = XmlUtils.toJSON(bastard);
+            ja.put(index++, jo);
+          }
+          if (index >0) { 
+            json.put("ExtraElements", ja);
+          }
+        }
+      } catch (JSONException e) {
+        throw new ParsingException(e);
+      }
+  
+    }
+
     public InfoCard(Element infoCardElement) throws ParsingException {
       // <ic:InformationCard xml:lang="xs:language" ...> 
       //  <ic:InformationCardReference> ... </ic:InformationCardReference> 
@@ -805,7 +955,7 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
           throw new SerializationException("timeIssued is null but required");
         }
         if (timeExpires != null) {
-          json.put("TimeIssued", timeExpires);
+          json.put("TimeExpired", timeExpires);
         } // else optional
         
         if ((tokenServiceReferenceList != null) && (tokenServiceReferenceList.size() > 0)){
