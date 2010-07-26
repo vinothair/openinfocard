@@ -1038,7 +1038,6 @@ public class TokenIssuer {
       String audience,
       String confirmationMethod,
       String ppi) throws TokenIssuanceException {
-    String issuedToken = null;
 
     System.out.println("INFO: TokenIssuer Infocard:" + infocard.toXML());
     
@@ -1076,8 +1075,8 @@ public class TokenIssuer {
 
     System.out.println("INFO: TokenIssuer requiredClaims: " + requiredClaims);
     System.out.println("INFO: TokenIssuer optionalClaims: " + optionalClaims);
-    issuedToken = getSelfAssertedToken(
-        relyingPartyCert, requiredClaims, optionalClaims, issuedToken, siicpd, ppi, 
+    String issuedToken = getSelfAssertedToken(
+        relyingPartyCert, requiredClaims, optionalClaims, siicpd, ppi, 
         signingCert, signingKey, audience, confirmationMethod);
 //    System.out.println("INFO: TokenIssuer issuedToken: " + issuedToken);
     return issuedToken;
@@ -1131,7 +1130,6 @@ public class TokenIssuer {
   public static String getSelfAssertedToken(
       X509Certificate relyingPartyCert, 
       String requiredClaims, String optionalClaims, 
-      String issuedToken, 
       SelfIssuedInformationCardPrivateData siicpd, String ppi,
       X509Certificate signingCert,
       PrivateKey signingKey,
@@ -1189,6 +1187,7 @@ public class TokenIssuer {
         }
     }
 
+    String issuedToken = null;
     try {
       if (relyingPartyCert != null) {
         Element securityToken = null;
