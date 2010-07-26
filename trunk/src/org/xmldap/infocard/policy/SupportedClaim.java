@@ -51,6 +51,12 @@ public class SupportedClaim {
         this.description = description;
     }
 
+    public SupportedClaim(JSONObject json) {
+      uri = json.optString("Uri", null);
+      displayName = json.optString("DisplayTag", null);
+      description = json.optString("Description", null);
+    }
+
 // <ic:SupportedClaimType Uri=”xs:anyURI”> 
 //  <ic:DisplayTag> xs:string </ic:DisplayTag> ? 
 //  <ic:Description> xs:string </ic:Description> ? 

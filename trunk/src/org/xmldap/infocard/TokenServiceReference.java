@@ -99,6 +99,13 @@ public class TokenServiceReference implements Serializable {
     	}
     }
     
+    public TokenServiceReference(JSONObject json) throws JSONException {
+      EndpointReference epr = new EndpointReference(json.getJSONObject("EndpointReference"));
+      epList = new ArrayList<EndpointReference>();
+      epList.add(epr);
+      userCredential = new UserCredential(json.getJSONObject("UserCredential"));
+    }
+    
     public String getMexAddress() {
     	EndpointReference epr = epList.get(0);
     	return epr.getMexAddress();
@@ -149,7 +156,7 @@ public class TokenServiceReference implements Serializable {
     public JSONObject toJSON() throws SerializationException {
       try {
         JSONObject json = new JSONObject();
-        json.put("Address", epList.get(0).getMexAddress());
+        json.put("EndpointReference", epList.get(0).toJSON());
         json.put("UserCredential", userCredential.toJSON());
         return json;
       } catch (JSONException e) {

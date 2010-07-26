@@ -44,10 +44,15 @@ public class EndpointReference implements Serializable {
     String mex = null;
 
     public EndpointReference(String sts, String mex) {
-        this.sts = sts;
-        this.mex = mex;
+      this.sts = sts;
+      this.mex = mex;
+  }
+  
+    public EndpointReference(JSONObject json) throws JSONException {
+      this.sts = json.getString("Mex");
+      this.mex = json.getString("STS");
     }
-
+  
     public EndpointReference(Element elt) throws ParsingException {
     	String name = elt.getLocalName();
     	if ("EndpointReference".equals(name)) {
@@ -159,7 +164,8 @@ public class EndpointReference implements Serializable {
     public JSONObject toJSON() throws SerializationException {
       try {
         JSONObject json = new JSONObject();
-        json.put("Address", mex);
+        json.put("Mex", mex);
+        json.put("STS", mex);
         return json;
       } catch (JSONException e) {
         throw new SerializationException(e);
