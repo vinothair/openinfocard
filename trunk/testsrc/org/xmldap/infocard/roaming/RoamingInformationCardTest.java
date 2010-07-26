@@ -8,6 +8,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.junit.Before;
+import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.infocard.InfoCard;
 import org.xmldap.infocard.TokenServiceReference;
@@ -73,8 +74,27 @@ public class RoamingInformationCardTest extends TestCase {
 		}
 	}
 
-	public void testToXml() throws SerializationException {
+	public void testRoamingInformationCardToXml() throws SerializationException {
 		String expected = "<RoamingInformationCard xmlns=\"http://schemas.xmlsoap.org/ws/2005/05/identity\"><InformationCardMetaData xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\" xmlns:mex=\"http://schemas.xmlsoap.org/ws/2004/09/mex\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\" xmlns:wsid=\"http://schemas.xmlsoap.org/ws/2006/02/addressingidentity\" xmlns:wst=\"http://schemas.xmlsoap.org/ws/2005/02/trust\" xml:lang=\"en\"><ic:InformationCardReference><ic:CardId>card1</ic:CardId><ic:CardVersion>1</ic:CardVersion></ic:InformationCardReference><ic:Issuer>issuer</ic:Issuer><ic:TimeIssued>2006-09-28T12:58:26Z</ic:TimeIssued><ic:TokenServiceList><ic:TokenService><wsa:EndpointReference><wsa:Address>sts</wsa:Address><wsa:Metadata><mex:Metadata><mex:MetadataSection><mex:MetadataReference><wsa:Address>mex</wsa:Address></mex:MetadataReference></mex:MetadataSection></mex:Metadata></wsa:Metadata><wsid:Identity><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIDkDCCAvmgAwIBAgIJAO+Fcd4yj0h/MA0GCSqGSIb3DQEBBQUAMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnMB4XDTA3MDgxODIxMTIzMVoXDTE3MDgxNTIxMTIzMVowgY0xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQKEwZ4bWxkYXAxJzAlBgNVBAsUHkNodWNrIE1vcnRpbW9yZSAmIEF4ZWwgTmVubmtlcjEXMBUGA1UEAxMOd3d3LnhtbGRhcC5vcmcwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAOKUn6/QqTZj/BWoQVxNFI0Z2AXI1azws+RyuJek60NiawQrFAKk0Ph+/YnUiQAnzbsT+juZV08UpaPa2IE3g0+RFZtODlqoGGGakSOd9NNnDuNhsdtXJWgQq8paM9Sc4nUue31iq7LvmjSGSL5w84NglT48AcqVGr+/5vy8CfT/AgMBAAGjgfUwgfIwHQYDVR0OBBYEFGcwQKLQtW8/Dql5t70BfXX66dmaMIHCBgNVHSMEgbowgbeAFGcwQKLQtW8/Dql5t70BfXX66dmaoYGTpIGQMIGNMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEPMA0GA1UEChMGeG1sZGFwMScwJQYDVQQLFB5DaHVjayBNb3J0aW1vcmUgJiBBeGVsIE5lbm5rZXIxFzAVBgNVBAMTDnd3dy54bWxkYXAub3JnggkA74Vx3jKPSH8wDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOBgQAYQisGgrg1xw0TTgIZcz3JXr+ZtwjeKqEewoxCxBz1uki7hJYHIznEZq4fzSMtcBMgbKmOTzFNV0Yr/tnJ9rrljRf8EXci62ffzj+Kkny7JtM6Ltxq0BJuF3jrXogdbsc5J3W9uJ7C2+uJTHG1mApbOdJGvLAGLCaNw5NpP7+ZXQ==</ds:X509Certificate></ds:X509Data></ds:KeyInfo></wsid:Identity></wsa:EndpointReference><ic:UserCredential><ic:DisplayCredentialHint>Please enter your username and password.</ic:DisplayCredentialHint><ic:UsernamePasswordCredential><ic:Username>username</ic:Username></ic:UsernamePasswordCredential></ic:UserCredential></ic:TokenService></ic:TokenServiceList><ic:SupportedTokenTypeList><wst:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</wst:TokenType></ic:SupportedTokenTypeList><ic:SupportedClaimTypeList><ic:SupportedClaimType Uri=\"uri\"><ic:DisplayTag>displayName</ic:DisplayTag><ic:Description>description</ic:Description></ic:SupportedClaimType></ic:SupportedClaimTypeList><ic:PrivacyNotice Version=\"1\">privacyPolicyUrl</ic:PrivacyNotice><ic07:RequireStrongRecipientIdentity xmlns:ic07=\"http://schemas.xmlsoap.org/ws/2007/01/identity\" /><IsSelfIssued>false</IsSelfIssued><HashSalt>hashsalt</HashSalt><TimeLastUpdated>2009-04-27T19:39:19.6053152Z</TimeLastUpdated><IssuerId /><IssuerName>issuer</IssuerName><BackgroundColor>16777215</BackgroundColor></InformationCardMetaData><InformationCardPrivateData><MasterKey>masterkeybytes</MasterKey></InformationCardPrivateData></RoamingInformationCard>";
 		assertEquals(expected, ric.toXML());
 	}
+	
+	public void testRoamingInformationCardToInfocard() throws ParsingException, SerializationException {
+	  InfoCard cc = new InfoCard(ric);
+//	  assertEquals(card.toXML(), cc.toXML());
+	  
+    assertEquals(card.getCardId(), cc.getCardId());
+    assertEquals(card.getCardName(), cc.getCardName());
+    assertEquals(card.getCardType(), cc.getCardType());
+    assertEquals(card.getCardVersion(), cc.getCardVersion());
+    assertEquals(card.getIssuer(), cc.getIssuer());
+    assertEquals(card.getPrivacyPolicyVersion(), cc.getPrivacyPolicyVersion());
+    assertEquals(card.getRequireStrongRecipientIdentity(), cc.getRequireStrongRecipientIdentity());
+    assertEquals(card.getRequireAppliesTo(), cc.getRequireAppliesTo());
+    assertEquals(card.getMimeType(), cc.getMimeType());
+    assertEquals(card.getRequireStrongRecipientIdentity(), cc.getRequireStrongRecipientIdentity());
+    assertEquals(card.getRequireStrongRecipientIdentity(), cc.getRequireStrongRecipientIdentity());
+    assertEquals(card.getRequireStrongRecipientIdentity(), cc.getRequireStrongRecipientIdentity());
+	}
+	
 }

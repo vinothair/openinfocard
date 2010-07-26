@@ -62,6 +62,8 @@ public class Token {
     private boolean haveValidatedConditions = false;
     private boolean conditionsValid = false;
     private Conditions conditions = null;
+    
+    private boolean haveAudience = false;
     private String	audience = null;
 
     private boolean haveValidatedCertificate = false;
@@ -137,8 +139,11 @@ public class Token {
         return decryptedToken;
     }
 
-    public String getAudience() {
-    	return audience;
+    public String getAudience() throws InfoCardProcessingException {
+      if (!haveValidatedConditions) {
+        validateConditions();
+      }
+      return audience;
     }
     
     public boolean isConditionsValid() throws InfoCardProcessingException {
