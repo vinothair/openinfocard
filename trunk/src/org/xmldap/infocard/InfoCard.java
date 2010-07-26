@@ -55,9 +55,13 @@ import org.xmldap.infocard.policy.SupportedClaim;
 import org.xmldap.infocard.policy.SupportedClaimTypeList;
 import org.xmldap.infocard.policy.SupportedToken;
 import org.xmldap.infocard.policy.SupportedTokenList;
+import org.xmldap.infocard.roaming.InformationCardMetaData;
 import org.xmldap.infocard.roaming.InformationCardReference;
+import org.xmldap.infocard.roaming.ManagedInformationCardPrivateData;
 import org.xmldap.infocard.roaming.PrivacyNotice;
 import org.xmldap.infocard.roaming.RequireAppliesTo;
+import org.xmldap.infocard.roaming.RoamingInformationCard;
+import org.xmldap.infocard.roaming.SelfIssuedInformationCardPrivateData;
 import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
@@ -76,8 +80,13 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
     
     InformationCardReference informationCardReference = null; // required
     private String cardName = null;
+    
+    // This required attribute provides a MIME type specifying the format of the 
+    // included card image. This value MUST be one of the five image formats:  
+    // image/jpeg, image/gif, image/bmp, image/png, or image/tiff.
     private String base64BinaryCardImage; // optional
     String mimeType = null; // optional
+    
     private String issuer = null;
     private String timeIssued = null;
     private String timeExpires = null; // optional
@@ -85,10 +94,11 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
     private List<TokenServiceReference> tokenServiceReferenceList = null;
     private SupportedTokenList tokenList = null;
     private SupportedClaimTypeList claimList = null;
-    private String userName = null;
     private RequireAppliesTo requireAppliesTo = null; // optional 
     protected String lang = null;
 
+    private String masterSecretBase64 = null; // FIXME unused
+    
     boolean requireStrongRecipientIdentity = true;
 
     String CardType = null;
@@ -114,7 +124,6 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
         this.tokenServiceReferenceList = that.tokenServiceReferenceList;
         this.tokenList = that.tokenList;
         this.claimList = that.claimList;
-        this.userName = that.userName;
         this.requireAppliesTo = that.requireAppliesTo; // optional 
         this.lang = that.lang;
         this.CardType = that.CardType;
@@ -274,6 +283,60 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
         throw new ParsingException(e);
       }
   
+    }
+
+    public InfoCard(RoamingInformationCard ric) throws ParsingException {
+      InformationCardMetaData metaData = ric.getInformationCardMetaData();
+      
+      // this.backgroudColor = metaData.getBackgroundColor(); // FIXME
+      this.base64BinaryCardImage = metaData.getBase64BinaryCardImage();
+      this.mimeType = metaData.getMimeType();
+
+      this.lang = metaData.getLang();
+      this.requireStrongRecipientIdentity = metaData.getRequireStrongRecipientIdentity();
+      
+      this.certChain = null;
+      this.privateKey = null;
+      
+      this.informationCardReference = new InformationCardReference(metaData.getCardId(), metaData.getCardVersion());
+      
+      cardName = metaData.getCardName();
+      this.issuer = metaData.getIssuer();
+      
+      this.timeIssued = metaData.getTimeIssued();
+      this.timeExpires = metaData.getTimeExpires();
+
+      try {
+        this.privacyPolicy = new PrivacyNotice(metaData.getPrivacyPolicy(), metaData.getPrivacyPolicyVersion());
+      } catch (URISyntaxException e) {
+        throw new ParsingException(e);
+      }
+      
+      this.tokenServiceReferenceList = metaData.getTokenServiceReference();
+      
+      this.tokenList = metaData.getTokenList();
+      this.claimList = metaData.getClaimList();
+      
+      this.requireAppliesTo = metaData.getRequireAppliesTo(); 
+
+      this.CardType = metaData.getCardType();
+      this.IssuerName = metaData.getIssuerName();
+      
+      this.issuerInformation = null; // FIXME unimplemented in RoamingInformationCard
+
+      // <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+      this.bastards = null; // // FIXME unimplemented in RoamingInformationCard
+
+      if (metaData.getIsSelfIssued()) {
+        SelfIssuedInformationCardPrivateData sicPrivateData = 
+          (SelfIssuedInformationCardPrivateData)ric.getInformationCardPrivateData();
+        SelfIssuedClaims selfIssuedClaims = sicPrivateData.getSelfIssuedClaims(); // FIXME unused 
+        this.masterSecretBase64 = sicPrivateData.getMasterKey();
+      } else {
+        ManagedInformationCardPrivateData managedPrivateData = 
+          (ManagedInformationCardPrivateData)ric.getInformationCardPrivateData();
+        this.masterSecretBase64 = managedPrivateData.getMasterKey();
+      }
     }
 
     public InfoCard(Element infoCardElement) throws ParsingException {
@@ -599,11 +662,16 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
     }
 
     public String getBase64BinaryCardImage() {
-        return base64BinaryCardImage;
-    }
+      return base64BinaryCardImage;
+  }
 
-    public void setBase64BinaryCardImage(String base64BinaryCardImage) {
+    public String getMimeType() {
+      return mimeType;
+  }
+
+    public void setBase64BinaryCardImage(String base64BinaryCardImage, String mimeType) {
         this.base64BinaryCardImage = base64BinaryCardImage;
+        this.mimeType = mimeType;
     }
 
     public String getTimeIssued() {
@@ -652,15 +720,6 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
         this.claimList = claimList;
     }
 
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-
     public Element serialize() throws SerializationException {
 
         Element infoCard = new Element(WSConstants.INFOCARD_PREFIX + ":InformationCard", WSConstants.INFOCARD_NAMESPACE);
@@ -676,7 +735,7 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
         if (certChain != null && certChain.length > 0) {
             System.out.println("SigningCArd");
             //Get the signing util
-            String signingAlgorithm = "SHA1withRSA";
+            String signingAlgorithm = "SHA1withRSA"; // FIXME remove hardcoding of algorithm
             InfoCardSignature signer = new InfoCardSignature(certChain,privateKey, signingAlgorithm);
 
             Element signedCard = null;
@@ -834,88 +893,6 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
         }
   }
 
-    /*
-
-    public static void main(String[] args) {
-
-        //Get my keystore
-        KeystoreUtil keystore = null;
-        try {
-            keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap_org.jks", "password");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-        X509Certificate cert = null;
-        try {
-            cert = keystore.getCertificate("xmldap");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-        PrivateKey pKey = null;
-        try {
-            pKey = keystore.getPrivateKey("xmldap", "password");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-
-        InfoCard card = new InfoCard(cert, pKey);
-        card.setCardId("https://xmldap.org/cards/123456");
-        card.setCardName("Custom card");
-        card.setCardVersion(1);
-        card.setIssuerName("xmldap.org");
-        //card.setIssuer("http://xmldap.org/jaxws-sts/sts");
-        card.setIssuer("http://xmldap.org/");
-        XSDDateTime issued = new XSDDateTime();
-        XSDDateTime expires = new XSDDateTime(525600);
-
-        card.setTimeIssued(issued.getDateTime());
-        card.setTimeExpires(expires.getDateTime());
-
-        TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/sts/tokenservice", "https://xmldap.org/sts/mex", cert);
-        //TokenServiceReference tsr = new TokenServiceReference("http://xmldap.org/jaxws-sts/sts", "https://xmldap.org/sts/mex", cert);
-        //TokenServiceReference tsr = new TokenServiceReference("http://localhost:8080/jaxws-sts/sts", "https://xmldap.org/sts/mex", cert);
-        //TokenServiceReference tsr = new TokenServiceReference("https://www.fabrikam.com:7000/sample/trust/usernamepassword/sts", "https://www.fabrikam.com:7001/sample/trust/usernamepassword/mex", cert);
-        tsr.setUserName("cmort");
-        card.setTokenServiceReference(tsr);
-
-
-        SupportedTokenList tokenList = new SupportedTokenList();
-        SupportedToken token = new SupportedToken(SupportedToken.SAML11);
-        tokenList.addSupportedToken(token);
-        card.setTokenList(tokenList);
-
-        SupportedClaimList claimList = new SupportedClaimList();
-        //SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname");
-        //SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname");
-        //SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress");
-        //SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier");
-        SupportedClaim given = new SupportedClaim("GivenName", "http://schemas.microsoft.com/ws/2005/05/identity/claims/givenname");
-        SupportedClaim sur = new SupportedClaim("Surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/surname");
-        SupportedClaim email = new SupportedClaim("EmailAddress", "http://schemas.microsoft.com/ws/2005/05/identity/claims/emailaddress");
-        SupportedClaim ppid = new SupportedClaim("PPID", "http://schemas.microsoft.com/ws/2005/05/identity/claims/privatepersonalidentifier");
-        claimList.addSupportedClaim(given);
-        claimList.addSupportedClaim(sur);
-        claimList.addSupportedClaim(email);
-        claimList.addSupportedClaim(ppid);
-        card.setClaimList(claimList);
-
-        card.setPrivacyPolicy("https://xmldap.org/PrivacyPolicy.xml");
-
-        try {
-            System.out.println(card.toXML());
-        } catch (InfoCardProcessingException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-
-
-
-    }
-    */
-
   private void appendChildren(JSONObject json) throws SerializationException {
     try {
         if (informationCardReference != null) {
@@ -1072,9 +1049,9 @@ public class InfoCard implements Serializable,  Comparable<InfoCard> {
 
     }
     
-//  public boolean getRequireAppliesTo() {
-//    return requireAppliesTo;
-//  }
+  public RequireAppliesTo getRequireAppliesTo() {
+    return requireAppliesTo;
+  }
 
 
   public void setRequireAppliesTo() {

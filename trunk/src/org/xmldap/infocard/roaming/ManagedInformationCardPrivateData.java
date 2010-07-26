@@ -9,8 +9,8 @@ import org.xmldap.ws.WSConstants;
 import nu.xom.Element;
 import nu.xom.Elements;
 
-public class ManagedInformationCardPrivateData implements
-		InformationCardPrivateData, Comparable<InformationCardPrivateData>  {
+public class ManagedInformationCardPrivateData 
+		extends InformationCardPrivateData implements Comparable<InformationCardPrivateData>  {
 	String masterKey = null;
 
 	public ManagedInformationCardPrivateData(Element managedInformationCardPrivateData) throws ParsingException {
