@@ -12,7 +12,7 @@ import org.xmldap.infocard.SelfIssuedClaims;
 import org.xmldap.util.Base64;
 import org.xmldap.ws.WSConstants;
 
-public class SelfIssuedInformationCardPrivateData implements InformationCardPrivateData, Comparable<SelfIssuedInformationCardPrivateData> {
+public class SelfIssuedInformationCardPrivateData extends InformationCardPrivateData implements Comparable<SelfIssuedInformationCardPrivateData> {
 //    <ic:InformationCardPrivateData> ?
 //    <ic:MasterKey> xs:base64Binary </ic:MasterKey>
 //    <ic:ClaimValueList> ?
@@ -22,7 +22,6 @@ public class SelfIssuedInformationCardPrivateData implements InformationCardPriv
 //    </ic:ClaimValueList>
 //  </ic:InformationCardPrivateData>
 
-	String masterKey = null;
 	SelfIssuedClaims selfIssuedClaims = null;
 	
 	public SelfIssuedClaims getSelfIssuedClaims() {

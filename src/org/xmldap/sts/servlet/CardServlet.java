@@ -202,7 +202,7 @@ public class CardServlet extends HttpServlet {
         
         // set card logo/image if available . . . 
         if (base64ImageFile != null) {
-            card.setBase64BinaryCardImage(base64ImageFile);
+            card.setBase64BinaryCardImage(base64ImageFile, "image/png"); // FIXME hardcoded mimeType
         }
 
 //		The next line made no sense since the dates are in the database and 

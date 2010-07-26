@@ -33,6 +33,14 @@ public class RoamingInformationCard implements org.xmldap.xml.Serializable, Comp
 	InformationCardMetaData informationCardMetaData = null;
 	InformationCardPrivateData informationCardPrivateData = null;
 	
+  public InformationCardMetaData getInformationCardMetaData() {
+    return informationCardMetaData;
+  }
+  
+  public InformationCardPrivateData getInformationCardPrivateData() {
+    return informationCardPrivateData;
+  }
+  
     public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if ((obj == null) || (obj.getClass() != this.getClass())) return false;
