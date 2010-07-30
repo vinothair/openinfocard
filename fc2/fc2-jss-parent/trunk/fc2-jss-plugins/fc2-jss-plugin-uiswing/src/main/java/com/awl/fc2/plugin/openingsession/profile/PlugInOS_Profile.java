@@ -24,13 +24,10 @@ public class PlugInOS_Profile implements IPlugInOpeningSession {
 			password = Selector.getInstance().getUI().getBasicInterface().sendQuestion(Lang.get(Lang.NEW_SESSION), "-" + Lang.get(Lang.ASKPWD),true);
 			return password;
 		} catch (Config_Exeception_UnableToReadConfigFile e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (Config_Exeception_MalFormedConfigFile e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (Config_Exception_NotDone e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -45,13 +42,10 @@ public class PlugInOS_Profile implements IPlugInOpeningSession {
 //			username = Selector.getInstance().getUI().getBasicInterface().sendQuestion(Lang.get(Lang.NEW_SESSION), "-" + Lang.get(Lang.ASK_USERNAME),false);
 			return username;
 //		} catch (Config_Exeception_UnableToReadConfigFile e) {
-//			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		} catch (Config_Exeception_MalFormedConfigFile e) {
-//			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		} catch (Config_Exception_NotDone e) {
-//			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
 //		return null;
@@ -59,12 +53,11 @@ public class PlugInOS_Profile implements IPlugInOpeningSession {
 
 	@Override
 	public void retrieveUserCredentials() {
-		// TODO Auto-generated method stub
-		Dialog_Profile pd = new Dialog_Profile();
-		pd.settings("opening a session");
-		profileUse = pd.getProfileUse();
-		username = pd.getUsername();
-		if(profileUse) password = pd.getPassword();
+		
+		Dialog_Profile.getFreshInstance().settings("opening a session");
+		profileUse = Dialog_Profile.getInstance().getProfileUse();
+		username = Dialog_Profile.getInstance().getUsername();
+		if(profileUse) password = Dialog_Profile.getInstance().getPassword();
 	}
 
 	@Override
@@ -74,7 +67,7 @@ public class PlugInOS_Profile implements IPlugInOpeningSession {
 
 	@Override
 	public int getPriority() {
-		return 1;
+		return 2;
 	}
 
 	@Override
