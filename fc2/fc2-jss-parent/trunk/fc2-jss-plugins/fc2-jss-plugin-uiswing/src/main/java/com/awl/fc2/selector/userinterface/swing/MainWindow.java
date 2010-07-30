@@ -40,6 +40,14 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
@@ -69,7 +77,7 @@ public class MainWindow extends JFrame{
 	
 	private static MainWindow _instance = null;
 	
-	String imgs,cardimgs;
+	String path,imgs,cardimgs;
 	
 	URL url = getClass().getResource("/com/awl/fc2/plugin/session/trayicon/im.png");
 	Image icon = Toolkit.getDefaultToolkit().getImage(url);
@@ -87,6 +95,11 @@ public class MainWindow extends JFrame{
 	
 	String response = null;
 	
+	File titleFile;
+	String[] titleContent = new String[2];
+	BufferedReader reader = null;
+	Writer writer = null;
+	
 	static Logger log = new Logger(MainWindow.class);
 	public static void trace(Object msg){
 		log.trace(msg);
@@ -103,6 +116,7 @@ public class MainWindow extends JFrame{
 	    }
 		
 		try {
+			path = XMLParser.getFirstValue(Config.getInstance().getXML(),"DEFAULT_PATH")+"/";
 			imgs = XMLParser.getFirstValue(Config.getInstance().getXML(),"IMGS");
 			cardimgs = imgs;
 			imgs += "interface/";
@@ -112,7 +126,9 @@ public class MainWindow extends JFrame{
 			e.printStackTrace();
 		}
 		
+		prepareTitle();
 		build();
+		hideProc();
 		wakeupProc();
 	}
 	
@@ -122,6 +138,79 @@ public class MainWindow extends JFrame{
 		return _instance;
 	}
 
+	private void prepareTitle(){
+		
+		boolean freshlyCreated = false;
+		titleFile = new File(path+"title.txt");
+		if(!titleFile.exists()){
+		    try {
+		    	titleFile.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				titleContent[0] = "J a v a   S m a r t   S e l e c t o r";
+				titleContent[1] = "14";
+				StringBuffer titleSB = new StringBuffer();
+				titleSB.append(titleContent[0]).append(System.getProperty("line.separator"))
+					.append(titleContent[1]);
+				writer = new BufferedWriter(new FileWriter(titleFile));
+				writer.write(titleSB.toString());
+				freshlyCreated = true;
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} finally {
+				try
+	            {
+	                if (writer != null)
+	                {
+	                    writer.close();
+	                }
+	            } catch (IOException e2)
+	            {
+	                e2.printStackTrace();
+	            }
+			}
+		}
+		
+		if(!freshlyCreated){
+	        try
+	        {
+	            reader = new BufferedReader(new FileReader(titleFile));
+	            String text = null;
+	            int i = 0;
+	
+	            while (i < 2)
+	            {
+	            	text = reader.readLine();
+	            	if (text == null) text = "";
+	            	titleContent[i++] = text;
+	            }
+	        } catch (FileNotFoundException e)
+	        {
+	            e.printStackTrace();
+	        } catch (IOException e)
+	        {
+	            e.printStackTrace();
+	        } finally
+	        {
+	            try
+	            {
+	                if (reader != null)
+	                {
+	                    reader.close();
+	                }
+	            } catch (IOException e)
+	            {
+	                e.printStackTrace();
+	            }
+	        }
+		}
+		
+//        for(int i=0;i<2;i++)System.out.println(titleContent[i]);
+		
+	}
+	
 	private void build(){
 		
 		setTitle("Java Smart Selector");
@@ -183,11 +272,11 @@ public class MainWindow extends JFrame{
 		fish.setLocation(10,8);
 		panel.add(fish);
 		
-		JLabel title = new JLabel("J a v a   S m a r t   S e l e c t o r");
-		title.setFont(new Font("Trebuchet MS", Font.PLAIN, 14));
+		JLabel title = new JLabel(titleContent[0]);
+		title.setFont(new Font("Trebuchet MS", Font.PLAIN, Integer.valueOf(titleContent[1])));
 		title.setForeground(c1);
 		size = title.getPreferredSize();
-		title.setBounds(122,8,size.width,size.height);
+		title.setBounds(222-size.width/2,17-size.height/2,size.width,size.height);
 		titlebar.add(title);
 		
         CopyRight copyright = new CopyRight("Copyright © 2010 Atos Worldline");
@@ -307,7 +396,7 @@ public class MainWindow extends JFrame{
 
 	public void hideProc(){
 		
-		MainWindow.getInstance().setVisible(false);
+		setVisible(false);
 //        try {
 //            getSystemTray().add(trayIcon);
 //        } catch (AWTException e1) {
@@ -319,10 +408,11 @@ public class MainWindow extends JFrame{
 	
 	public void wakeupProc(){
 		
-		toFront();
-		requestFocus();
+		//toFront();
+		//requestFocus();
 		setVisible(true);
 		setExtendedState(MainWindow.NORMAL);
+		//toFront();
 		
 //		getSystemTray().remove(trayIcon);
 
@@ -469,7 +559,7 @@ public class MainWindow extends JFrame{
 		
 		
 		ImageButton ok = new ImageButton(new ImageIcon(imgs+"ok.png"));
-		ok.setLocation(192,165);
+		ok.setLocation(160,165);
 		ok.setPressedIcon(new ImageIcon(imgs+"ok2.png"));
 		cardpanel.add(ok);
 		cardpanel.repaint();
@@ -498,5 +588,42 @@ public class MainWindow extends JFrame{
 		response = null;
 	}
 
+	
+	
+	@Override
+	public void setVisible(final boolean visible) {
+	  // make sure that frame is marked as not disposed if it is asked to be visible
+//	  if (visible) {
+//	      setDisposed(false);
+//	  }
+	  // let's handle visibility...
+	  if (!visible || !isVisible()) { // have to check this condition simply because super.setVisible(true) invokes toFront if frame was already visible
+	      super.setVisible(visible);
+	  }
+	  // ...and bring frame to the front.. in a strange and weird way
+	  if (visible) {
+	      int state = super.getExtendedState();
+	      state &= ~JFrame.ICONIFIED;
+	      super.setExtendedState(state);
+	      super.setAlwaysOnTop(true);
+	      super.toFront();
+	      super.requestFocus();
+	      super.setAlwaysOnTop(false);
+	  }
+	}
+
+	@Override
+	public void toFront() {
+	  super.setVisible(true);
+	  int state = super.getExtendedState();
+	  state &= ~JFrame.ICONIFIED;
+	  super.setExtendedState(state);
+	  super.setAlwaysOnTop(true);
+	  super.toFront();
+	  super.requestFocus();
+	  super.setAlwaysOnTop(false);
+	}
+	
+	
 }
 

@@ -96,17 +96,24 @@ public class CardPanel extends JPanel {
 		//TESTING INFO POP UP
 		
 		final ImageLabel info = new ImageLabel(new ImageIcon(imgs+"info.png"));
-		info.setLocation(125,170);
+		info.setLocation(15,260);
 		add(info);
 		
-		final DataInfo popup = new DataInfo(MainWindow.getInstance());
-		//final String[] list = {"test","emailadress","phonenumber","drivinglicensenumber","lotowinner","etc..."};
+		final JLabel infoLabel = new JLabel("Informations recherchées");
+		infoLabel.setBounds(50,267,infoLabel.getPreferredSize().width,infoLabel.getPreferredSize().height);
+		add(infoLabel);
 		
 		info.addMouseListener(new MouseAdapter() {  
 			public void mouseEntered(MouseEvent e) {
 				if (!MainWindow.getInstance().isActive())return;
-				Point mouse = MouseInfo.getPointerInfo().getLocation();
-				popup.settings(mouse,claims);
+				Point position = MainWindow.getInstance().getLocation();
+				InfoPopUp.getFreshInstance().settings(position,claims);
+			}  
+		});
+		
+		info.addMouseListener(new MouseAdapter() {  
+			public void mouseExited(MouseEvent e) {
+				InfoPopUp.getInstance().dispose();
 			}  
 		});
 		

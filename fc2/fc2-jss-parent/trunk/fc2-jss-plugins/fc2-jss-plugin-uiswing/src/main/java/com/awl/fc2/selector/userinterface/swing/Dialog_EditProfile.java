@@ -46,7 +46,7 @@ import com.utils.execeptions.XMLParser_Exception_NO_ATTRIBUTE;
  *
  */
 
-public class Dialog_NewProfile extends JDialog{
+public class Dialog_EditProfile extends JDialog{
 
 	private static final long serialVersionUID = 1L;
 	
@@ -57,7 +57,7 @@ public class Dialog_NewProfile extends JDialog{
 	JLabel password1;
 	JLabel password2;
 	JLabel error;
-	JTextField profileNameField;
+	JLabel profileNameField;
 	JTextField urlField;
 	JTextField userNameField;
 	JPasswordField passwordField1;
@@ -66,7 +66,7 @@ public class Dialog_NewProfile extends JDialog{
 	JRadioButton femaleButton;
 	JRadioButton urlButton;
 	ButtonGroup group = new ButtonGroup();
-	String[] response = new String[5];
+	String[] response = new String[4];
 	String path, imgs;
 	
 	Dimension size = new Dimension();
@@ -74,7 +74,7 @@ public class Dialog_NewProfile extends JDialog{
 	int choice = 0;
 
 
-	public Dialog_NewProfile(JDialog parent){
+	public Dialog_EditProfile(JDialog parent, String[] content){
 		
 		jd = new JDialog(parent, Dialog.ModalityType.DOCUMENT_MODAL);
 		
@@ -89,11 +89,11 @@ public class Dialog_NewProfile extends JDialog{
 			e.printStackTrace();
 		}
 		
-		settings(parent);
+		settings(parent, content);
 		
 	}
 	
-	public void settings(JDialog parent){
+	public void settings(JDialog parent, final String[] content){
 		
 		//GENERAL SETTINGS//
 		jd.setUndecorated(true);
@@ -128,7 +128,7 @@ public class Dialog_NewProfile extends JDialog{
 		
 		//INPUT SETTINGS//
 		
-		JLabel label = new JLabel("CREATE A NEW PROFILE");
+		JLabel label = new JLabel("EDIT A PROFILE");
 		size = label.getPreferredSize();
 		label.setBounds(15,9,size.width,size.height);
 		panel.add(label);
@@ -138,10 +138,9 @@ public class Dialog_NewProfile extends JDialog{
 		profileName.setBounds(20,40,size.width,size.height);
 		panel.add(profileName);
 		
-		profileNameField = new JTextField();
-		profileNameField.selectAll();
-		profileNameField.setBounds(30+size.width,35,240-size.width,26);
-		profileNameField.setOpaque(false);
+		profileNameField = new JLabel(content[0]);
+		profileNameField.setBounds(30+size.width,35,230-size.width,26);
+		//profileNameField.setOpaque(false);
 		//profileNameField.setBorder(null);
 		panel.add(profileNameField);
 		
@@ -154,7 +153,6 @@ public class Dialog_NewProfile extends JDialog{
 		maleButton.setSize(maleButton.getPreferredSize());
 		maleButton.setLocation(30+size.width,70);
 		maleButton.setOpaque(false);
-		maleButton.setSelected(true);
 		panel.add(maleButton);
 		
 		maleButton.addActionListener(new ActionListener(){
@@ -200,23 +198,29 @@ public class Dialog_NewProfile extends JDialog{
 	    urlField = new JTextField();
 	    urlField.setBounds(60+size.width,133,210-size.width,26);
 		urlField.setOpaque(false);
-		//urlField.setBorder(null);
 		urlField.setVisible(false);
-		//urlField.setEnabled(false);
 		panel.add(urlField);
+		
+		if (content[1].equals("avatar-male.png")) maleButton.setSelected(true);
+		else if (content[1].equals("avatar-female.png")) femaleButton.setSelected(true);
+		else {
+			urlButton.setSelected(true);
+			urlField.setText(content[1]);
+			urlField.setVisible(true);
+		}
 		
 		userName = new JLabel("User name:");
 		size = userName.getPreferredSize();
 		userName.setBounds(20,175,size.width,size.height);
 		panel.add(userName);
 		
-		userNameField = new JTextField();
+		userNameField = new JTextField(content[2]);
 		userNameField.setBounds(30+size.width,170,240-size.width,26);
 		userNameField.setOpaque(false);
 		//userNameField.setBorder(null);
 		panel.add(userNameField);
 		
-		password1 = new JLabel("Password:");
+		password1 = new JLabel("Password (if new):");
 		size = password1.getPreferredSize();
 		password1.setBounds(20,200,size.width,size.height);
 		panel.add(password1);
@@ -253,11 +257,8 @@ public class Dialog_NewProfile extends JDialog{
 		valider.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				
-				if(profileNameField.getText().equals("")
-					|| userNameField.getText().equals("")
-					|| getPassword(passwordField1).equals("")
-					|| getPassword(passwordField2).equals("")){
-						error.setText("Missing informations");
+				if(userNameField.getText().equals("")){
+						error.setText("Missing user name");
 						size = error.getPreferredSize();
 						error.setBounds(20,265,size.width,size.height);
 						error.repaint();
@@ -280,17 +281,15 @@ public class Dialog_NewProfile extends JDialog{
 					return;
 				}
 				
-				//CHECK VALID URL ???
 				
-				response[0] = profileNameField.getText();
+				response[0] = content[0];
 				if (urlButton.isSelected()) response[1] = urlField.getText();
 				else if (femaleButton.isSelected()) response[1] = "avatar-female.png";
 				else response[1] = "avatar-male.png";
 				response[2] = userNameField.getText();
-				response[3] = getPassword(passwordField1);
-				response[4] = getPassword(passwordField2);
-				
-				for(int i=0;i<5;i++)System.out.println(response[i]);
+				if (getPassword(passwordField1).equals("")) response[3] = content[3];
+				else response[3] = getPassword(passwordField1);
+				for(int i=0;i<4;i++)System.out.println(response[i]);
 				
 				jd.dispose();
 			}
@@ -300,7 +299,7 @@ public class Dialog_NewProfile extends JDialog{
 
 		jd.addWindowFocusListener(new WindowAdapter() {
 		    public void windowGainedFocus(WindowEvent e) {
-		        profileNameField.requestFocusInWindow();
+		        userNameField.requestFocusInWindow();
 		    }
 		});
 		

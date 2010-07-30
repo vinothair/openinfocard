@@ -31,8 +31,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JDialog;
@@ -42,28 +40,46 @@ import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 
-public class DataInfo extends JDialog{
+public class InfoPopUp extends JDialog{
 
 	private static final long serialVersionUID = 1L;
 	
-	protected JDialog info;
+	private static InfoPopUp _instance = null;
+	
+	//protected JDialog info;
 	Point point = new Point();
-	Color bg = new Color(230,233,240);
+	//Color bg = new Color(230,233,240);
+	Color bg = new Color(222,222,222);
 	Border blackline = new CompoundBorder(BorderFactory.createLineBorder(Color.black), new EmptyBorder(10,10,10,22));
 	Dimension size = new Dimension();
 
 	
-	public DataInfo(MainWindow parent){
+	public InfoPopUp(MainWindow parent){
 		
-		info = new JDialog(parent);
+		super(parent);
+		//info = new JDialog(parent);
 		
 	}
 	
+	public static InfoPopUp getFreshInstance(){
+		if(_instance != null)
+			_instance.dispose();
+			
+		_instance = new InfoPopUp(MainWindow.getInstance());
+		return _instance;
+	}
+	
+	public static InfoPopUp getInstance(){
+		if(_instance == null)
+			_instance = new InfoPopUp(MainWindow.getInstance());
+			
+		return _instance;
+	}
 
 	public void settings(Point p, String[] list){
 		
-		info.setUndecorated(true);
-		info.setBackground(bg);
+		setUndecorated(true);
+		setBackground(bg);
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(0,1));
 		panel.setBackground(bg);
@@ -73,22 +89,29 @@ public class DataInfo extends JDialog{
 			panel.add(new JLabel("- "+list[i]));
 		}
 		
-		panel.addMouseListener(new MouseAdapter() {  
-			public void mouseExited(MouseEvent e) {
-				info.dispose();
-			}  
-		});
+//		panel.addMouseListener(new MouseAdapter() {  
+//			public void mouseExited(MouseEvent e) {
+//				dispose();
+//			}  
+//		});
 		
-		info.setContentPane(panel);
-		info.setMinimumSize(new Dimension(70,70));
-		info.pack();
+		setContentPane(panel);
+		setMinimumSize(new Dimension(70,70));
+		pack();
 		
-		size = info.getSize();
-		point.x = p.x - size.width + 35;
-		point.y = p.y - 35;
-		info.setLocation(point);
+		size = getSize();
+		if (p.x > size.width){
+			point.x = p.x - size.width;
+		} else {
+			point.x = p.x + 400;
+		}
+		point.y = p.y + 400 - size.height;
+		setLocation(point);
 		
-		info.setVisible(true);
+		setVisible(true);
 	}
 		
+	public void hideit(){
+		dispose();
+	}
 }

@@ -137,7 +137,7 @@ public class Dialog extends JDialog{
 		});
 		
 		if (dspAsPwd){
-			pwdField.setBounds(60,35,180,22);
+			pwdField.setBounds(60,33,180,26);
 			pwdField.setOpaque(false);
 			//pwdField.setBorder(null);
 			
@@ -150,7 +150,7 @@ public class Dialog extends JDialog{
 			panel.add(pwdField);
 		}
 		else {	
-			textField.setBounds(60,35,180,22);
+			textField.setBounds(60,33,180,26);
 			textField.setOpaque(false);
 			//textField.setBorder(null);
 			

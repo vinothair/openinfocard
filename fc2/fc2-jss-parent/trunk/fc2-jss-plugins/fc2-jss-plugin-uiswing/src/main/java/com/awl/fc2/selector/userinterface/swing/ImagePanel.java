@@ -65,5 +65,10 @@ public class ImagePanel extends JLayeredPane {
 		setMinimumSize(size);
 		setMaximumSize(size);
 	}
+	
+	public Image getImg(){
+		
+		return img;
+	}
 
 }
