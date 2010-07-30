@@ -47,6 +47,7 @@ public class Lang {
 	public static String MENU_LOG_ON = "MENU_LOG_ON";
 	public static String MENU_LOG_OFF = "MENU_LOG_OFF";
 	public static String MENU_RESET_SSO_TOKEN = "MENU_RESET_SSO_TOKEN";
+	public static String MENU_SHOW_GUI = "MENU_SHOW_GUI";
 	
 	public static String ALLREADY_LOG = "ALLREADY_LOG";
 	public static String NEW_SESSION="NEW_SESSION";

@@ -152,6 +152,8 @@ public class SessionSelector {
 	public boolean isOpen(){
 		return bOpen;
 	}
+	boolean bOpening = false;
+	
 	public void askUserCredentials() throws Config_Exeception_UnableToReadConfigFile, Config_Exeception_MalFormedConfigFile, Config_Exception_NotDone{
 		//String username =Selector.getInstance().getUI().getBasicInterface().sendQuestion(Lang.get(Lang.NEW_SESSION), "-" + Lang.get(Lang.ASK_USERNAME),false);
 		trace("UserName : "+username);
@@ -175,13 +177,16 @@ public class SessionSelector {
 		
 	}
 	public void open() throws Config_Exeception_UnableToReadConfigFile, Config_Exeception_MalFormedConfigFile, Config_Exception_NotDone{
-		if(!bOpen){
+		if(!bOpen && !bOpening){
 			trace("Opening Session");
 //			Config.getInstance().getPlugInDB().getOpeningSessionPlugin();
 			Selector.getInstance().getUI().wakeup();
 			askUserCredentials();
+			
 //			credStore.destroy();
+			if(!username.equals("")){
 			try {
+				bOpening = true;
 //				cardStore.reset();
 //				credStore.reset();
 //				trayicon.reset();
@@ -191,25 +196,33 @@ public class SessionSelector {
 				if(getCredentialStore() != null){
 					getCredentialStore().reset();
 				}
+				bOpening = false;
 				bOpen = true;
 			} catch (CardStore_Execption_FailedRetrieving e) {
+				bOpening = false;
 				bOpen = false;
 			} catch (CredentialStore_Execption_FailedRetrieving e) {
+				bOpening = false;
 				bOpen = false;
 			}
 			
 			Selector.getInstance().getUI().sleep();
+			}
 			
 		}else{
-			JOptionPane.showOptionDialog(null, Lang.get(Lang.ALLREADY_LOG), "JSS", JOptionPane.CLOSED_OPTION, JOptionPane.WARNING_MESSAGE, null, null, null);
+			if(bOpen) JOptionPane.showOptionDialog(null, Lang.get(Lang.ALLREADY_LOG), "JSS", JOptionPane.CLOSED_OPTION, JOptionPane.WARNING_MESSAGE, null, null, null);
 			
 		}
 	}
 	public void close(){
-		trace("Closing Session");
-		bOpen = false;
-		getCredentialStore().destroy();
-		getCardStore().destroy();
+		if (bOpen){
+			trace("Closing Session");
+			bOpen = false;
+			getCredentialStore().destroy();
+			getCardStore().destroy();
+		}
+		else trace("No session open, can't close it");
+
 		
 	}
 	

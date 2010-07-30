@@ -362,7 +362,7 @@ public class FC2TrayIcon implements ISessionElement {
 				fc2tray.menuDel = new Menu(Lang.get(Lang.MENU_DELETE_CARDS));
 				add(fc2tray.menuDel);
 			}
-			// LogOff meny
+			// LogOff menu
 			{
 				MenuItem item = new MenuItem(Lang.get(Lang.MENU_LOG_OFF));
 				item.addActionListener(new ActionListener() {
@@ -408,6 +408,16 @@ public class FC2TrayIcon implements ISessionElement {
 				});
 				add(item);
 			}
+			// Show GUI
+			{
+				MenuItem item = new MenuItem(Lang.get(Lang.MENU_SHOW_GUI));
+				item.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						showGUI();
+					}
+				});
+				add(item);
+			}
 		}
 
 		@Override
@@ -416,12 +426,27 @@ public class FC2TrayIcon implements ISessionElement {
 			super.show(origin, x, y);
 		}
 	}
+	
+	public void showGUI(){
+		
+		try {
+			Selector.getInstance().getUI().wakeup();
+		} catch (Config_Exeception_UnableToReadConfigFile e1) {
+			e1.printStackTrace();
+		} catch (Config_Exeception_MalFormedConfigFile e1) {
+			e1.printStackTrace();
+		} catch (Config_Exception_NotDone e1) {
+			e1.printStackTrace();
+		}
+		
+	}
 
 	class PopupMouseListener implements MouseListener {
 
 		public void mouseClicked(MouseEvent e) {
 			System.out.println("Recompute the menu");
 			update_Deletemenu();
+			if(e.getClickCount()==2) showGUI();
 		}
 
 		public void mouseEntered(MouseEvent e) {

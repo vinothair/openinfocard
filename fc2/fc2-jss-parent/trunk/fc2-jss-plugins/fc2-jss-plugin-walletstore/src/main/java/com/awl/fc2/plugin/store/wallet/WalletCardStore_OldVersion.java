@@ -102,13 +102,20 @@ public class WalletCardStore_OldVersion  implements ICardStore {
 				g2.drawImage(img, 0, 0, null);
 				g2.dispose();
 				int newHeight = 70;
-				Image Resized =  bi.getScaledInstance(width*newHeight/height,newHeight , BufferedImage.SCALE_DEFAULT);
-								
-					BufferedImage bi2 = new BufferedImage(width*newHeight/height,newHeight,BufferedImage.TYPE_INT_RGB);//img.getWidth(null),img.getHeight(null));
-					Graphics2D g3 = bi2.createGraphics();
-					// Draw img into bi so we can write it to file.
-					g3.drawImage(Resized, 0, 0, null);
-					g3.dispose();
+				int newWidth = 110;
+				Image resized;
+				BufferedImage bi2;
+				if (width*newHeight/height<=newWidth){
+					resized =  bi.getScaledInstance(width*newHeight/height,newHeight , BufferedImage.SCALE_SMOOTH);
+					bi2 = new BufferedImage(width*newHeight/height,newHeight,BufferedImage.TYPE_INT_RGB);//img.getWidth(null),img.getHeight(null));
+				} else {
+					resized =  bi.getScaledInstance(newWidth,height*newWidth/width , BufferedImage.SCALE_SMOOTH);
+					bi2 = new BufferedImage(newWidth,height*newWidth/width,BufferedImage.TYPE_INT_RGB);
+				}
+				Graphics2D g3 = bi2.createGraphics();
+				// Draw img into bi so we can write it to file.
+				g3.drawImage(resized, 0, 0, null);
+				g3.dispose();
 				
 				
 				
