@@ -31,7 +31,6 @@ package org.xmldap.saml;
 import nu.xom.Element;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.AsymmetricKeyInfo;
@@ -81,34 +80,6 @@ public class AttributeStatement implements Serializable {
     public Element serialize() throws SerializationException {
 
         return getAttributeStatement();
-
-    }
-
-    public static void main(String[] args) throws KeyStoreException {
-
-        //Get my keystore
-        KeystoreUtil keystore = null;
-        keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
-        
-        AsymmetricKeyInfo keyInfo = null;
-		keyInfo = new AsymmetricKeyInfo(keystore.getCertificate("xmldap"));
-        Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
-        Attribute given = new Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName", "Chuck");
-        Attribute sur = new Attribute("surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/SurName", "Mortimore");
-        Attribute email = new Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress", "cmortspam@gmail.com");
-
-        AttributeStatement statement = new AttributeStatement();
-        statement.setSubject(subject);
-        statement.addAttribute(given);
-        statement.addAttribute(sur);
-        statement.addAttribute(email);
-
-        try {
-            System.out.println(statement.toXML());
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-
 
     }
 
