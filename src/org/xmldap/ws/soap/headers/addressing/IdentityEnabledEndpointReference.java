@@ -34,7 +34,6 @@ import nu.xom.Elements;
 import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.ParsingException;
 import org.xmldap.exceptions.SerializationException;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
 import org.xmldap.xmldsig.InfocardKeyInfo;
@@ -113,35 +112,5 @@ public class IdentityEnabledEndpointReference extends EndpointReference implemen
         return getIEPR();
 
     }
-
-
-    public static void main(String[] args) {
-
-        //Get my keystore
-        KeystoreUtil keystore = null;
-        try {
-            keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-        X509Certificate cert = null;
-        try {
-            cert = keystore.getCertificate("xmldap");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-        IdentityEnabledEndpointReference iepr = new IdentityEnabledEndpointReference("http://sts", "http://mex", cert);
-
-        try {
-            System.out.println(iepr.toXML());
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-
-
-    }
-
 
 }
