@@ -32,14 +32,11 @@ import java.util.Calendar;
 
 import nu.xom.Element;
 
-import org.xmldap.exceptions.KeyStoreException;
 import org.xmldap.exceptions.SerializationException;
-import org.xmldap.util.KeystoreUtil;
 import org.xmldap.util.RandomGUID;
 import org.xmldap.util.XSDDateTime;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.AsymmetricKeyInfo;
 
 
 public class SAMLAssertion implements Serializable {
@@ -131,46 +128,4 @@ public class SAMLAssertion implements Serializable {
         return getSAMLAssertion();
     }
 
-
-    public static void main(String[] args) {
-
-        //Get my keystore
-        KeystoreUtil keystore = null;
-        try {
-            keystore = new KeystoreUtil("/Users/cmort/build/infocard/conf/xmldap.jks", "storepassword");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-
-
-        Conditions conditions = new Conditions(-5, 10);
-
-        AsymmetricKeyInfo keyInfo = null;
-		try {
-			keyInfo = new AsymmetricKeyInfo(keystore.getCertificate("xmldap"));
-		} catch (KeyStoreException e1) {
-			e1.printStackTrace();
-		}
-        Subject subject = new Subject(keyInfo, Subject.HOLDER_OF_KEY);
-        Attribute given = new Attribute("givenname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName", "Chuck");
-        Attribute sur = new Attribute("surname", "http://schemas.microsoft.com/ws/2005/05/identity/claims/SurName", "Mortimore");
-        Attribute email = new Attribute("email", "http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress", "cmortspam@gmail.com");
-        AttributeStatement statement = new AttributeStatement();
-        statement.setSubject(subject);
-        statement.addAttribute(given);
-        statement.addAttribute(sur);
-        statement.addAttribute(email);
-
-        SAMLAssertion assertion = new SAMLAssertion();
-        assertion.setConditions(conditions);
-        assertion.setAttributeStatement(statement);
-
-        try {
-            System.out.println(assertion.toXML());
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-
-
-    }
 }
