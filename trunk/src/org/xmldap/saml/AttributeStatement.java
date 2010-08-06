@@ -28,15 +28,14 @@
 
 package org.xmldap.saml;
 
+import java.util.Iterator;
+import java.util.Vector;
+
 import nu.xom.Element;
-import org.xmldap.exceptions.KeyStoreException;
+
 import org.xmldap.exceptions.SerializationException;
 import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.Serializable;
-import org.xmldap.xmldsig.AsymmetricKeyInfo;
-
-import java.util.Iterator;
-import java.util.Vector;
 
 
 public class AttributeStatement implements Serializable {
