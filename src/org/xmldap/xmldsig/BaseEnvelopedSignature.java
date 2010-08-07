@@ -44,13 +44,13 @@ import java.util.Vector;
 
 
 public class BaseEnvelopedSignature {
-	String mAlgorithm;
+  String mAlgorithm;
 
 //    private X509Certificate signingCert;
     protected PrivateKey privateKey;
-	protected KeyInfo keyInfo;
-	protected String Id = null;
-	
+  protected KeyInfo keyInfo;
+  protected String Id = null;
+  
 //    public EnvelopedSignature(X509Certificate signingCert, PrivateKey privateKey) {
 //        this.privateKey = privateKey;
 //        this.signingCert = signingCert;
@@ -70,37 +70,37 @@ public class BaseEnvelopedSignature {
 
     protected BaseEnvelopedSignature() {}
     
-	/**
-	 * @param xml
-	 * @param nodesToReference
-	 * @throws SigningException
-	 * @return a signed copy of this element
-	 */
-	public Element sign(Element xml) throws SigningException {
+  /**
+   * @param xml
+   * @param nodesToReference
+   * @throws SigningException
+   * @return a signed copy of this element
+   */
+  public Element sign(Element xml) throws SigningException {
         Element signThisOne = (Element) xml.copy();
 
         String prefixes = null;
         {
-        	StringBuilder sb = null;
-	        for (int i=0; i<signThisOne.getNamespaceDeclarationCount(); i++) {
-	        	String prefix = signThisOne.getNamespacePrefix(i);
-	        	if ("".equals(prefix)) {
-	        		prefix ="#default";
-	        	}
-	        	if (sb == null) {
-	        		sb = new StringBuilder();
-	        		sb.append(prefix);
-	        	} else {
-	        		sb.append(" ");
-	        		sb.append(prefix);
-	        	}
-	        }
-	        if (sb != null) {
-	        	prefixes = sb.toString();
-	        }
+          StringBuilder sb = null;
+          for (int i=0; i<signThisOne.getNamespaceDeclarationCount(); i++) {
+            String prefix = signThisOne.getNamespacePrefix(i);
+            if ("".equals(prefix)) {
+              prefix ="#default";
+            }
+            if (sb == null) {
+              sb = new StringBuilder();
+              sb.append(prefix);
+            } else {
+              sb.append(" ");
+              sb.append(prefix);
+            }
+          }
+          if (sb != null) {
+            prefixes = sb.toString();
+          }
         }
         
-	    String idVal = signThisOne.getAttributeValue("Id", WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
+      String idVal = signThisOne.getAttributeValue("Id", WSConstants.WSSE_OASIS_10_WSU_NAMESPACE);
         if (idVal == null) {
             //let's see if its a SAML assertions
             Attribute assertionID = signThisOne.getAttribute("AssertionID");
@@ -109,10 +109,10 @@ public class BaseEnvelopedSignature {
             }
         }
         if (idVal == null) {
-        	throw new IllegalArgumentException("BaseEnvelopedSignature: Element to sign does not have an id-ttribute");
+          throw new IllegalArgumentException("BaseEnvelopedSignature: Element to sign does not have an id-ttribute");
         }
-		Reference reference = new Reference(signThisOne, idVal, prefixes, "SHA1");
-		
+    Reference reference = new Reference(signThisOne, idVal, prefixes, "SHA1");
+    
         //Get SignedInfo for reference
         SignedInfo signedInfo = new SignedInfo(reference, mAlgorithm);
 
@@ -120,20 +120,20 @@ public class BaseEnvelopedSignature {
 
         //Envelope it.
         try {
-        	signThisOne.appendChild(signature.serialize());
+          signThisOne.appendChild(signature.serialize());
         } catch (SerializationException e) {
             throw new SigningException("Could not create enveloped signature due to serialization error", e);
         }
         return signThisOne;
-	}
+  }
 
-	/**
-	 * @param xml
-	 * @param nodesToReference
-	 * @return Signture Element
-	 * @throws SigningException
-	 */
-	public Signature signNodes(Element xml, List references) throws SigningException {
+  /**
+   * @param xml
+   * @param nodesToReference
+   * @return Signture Element
+   * @throws SigningException
+   */
+  public Signature signNodes(Element xml, List references) throws SigningException {
 
         //Get SignedInfo for reference
         SignedInfo signedInfo = new SignedInfo(references, mAlgorithm);
@@ -149,15 +149,15 @@ public class BaseEnvelopedSignature {
             throw new SigningException("Could not create enveloped signature due to serialization error", e);
         }
         return signature;
-	}
-	
-	/**
-	 * @param nodesToReference
-	 * @return
-	 * @throws SigningException
-	 */
-	private Vector getReferences(Nodes nodesToReference) throws SigningException {
-		Vector references = new Vector();
+  }
+  
+  /**
+   * @param nodesToReference
+   * @return
+   * @throws SigningException
+   */
+  private Vector getReferences(Nodes nodesToReference) throws SigningException {
+    Vector references = new Vector();
 
         for (int i = 0; i < nodesToReference.size(); i++) {
 
@@ -218,25 +218,25 @@ public class BaseEnvelopedSignature {
             }
 
         }
-		return references;
-	}
+    return references;
+  }
 
-	/**
-	 * @param xml
-	 * @param nodesToReference
-	 * @throws SigningException
-	 */
-	public void signNodes(Element xml, Nodes nodesToReference) throws SigningException {
-		Vector references = getReferences(nodesToReference);
-		signNodes(xml, references);
-	}
+  /**
+   * @param xml
+   * @param nodesToReference
+   * @throws SigningException
+   */
+  public void signNodes(Element xml, Nodes nodesToReference) throws SigningException {
+    Vector references = getReferences(nodesToReference);
+    signNodes(xml, references);
+  }
 
-	/**
-	 * @param signedInfo
-	 * @return
-	 */
-	protected Signature getSignatureValue(SignedInfo signedInfo) {
-		//Get sigvalue for the signedInfo
+  /**
+   * @param signedInfo
+   * @return
+   */
+  protected Signature getSignatureValue(SignedInfo signedInfo) {
+    //Get sigvalue for the signedInfo
         SignatureValue signatureValue = new SignatureValue(signedInfo, privateKey);
 
         //Get KeyInfo
@@ -245,47 +245,51 @@ public class BaseEnvelopedSignature {
 
         //Create the signature block
         Signature signature = new Signature(signedInfo, signatureValue, keyInfo);
-		return signature;
-	}
+    return signature;
+  }
 
-	protected static byte[] getAssertionCanonicalBytes(Element r00t) throws IOException {
-		// make a deep copy because we don not want to modify the parameter
-		Element root = (Element)r00t.copy();
-		
-		// REMOVE the siganture element
-		Element signature = root.getFirstChildElement("Signature",
-				WSConstants.DSIG_NAMESPACE);
-		// System.out.println(signature.toXML());
-		if (signature != null) {
-			root.removeChild(signature);
-		}
-		
-		return XmlUtils.canonicalize(root, Canonicalizable.EXCLUSIVE_CANONICAL_XML);
-	}
+  protected static byte[] getAssertionCanonicalBytes(Element r00t) throws IOException {
+    // make a deep copy because we don not want to modify the parameter
+    Element root = (Element)r00t.copy();
+    
+    // REMOVE the siganture element
+    Element signature = root.getFirstChildElement("Signature",
+        WSConstants.DSIG_NAMESPACE);
+    // System.out.println(signature.toXML());
+    if (signature != null) {
+      root.removeChild(signature);
+    }
+    
+    return XmlUtils.canonicalize(root, Canonicalizable.EXCLUSIVE_CANONICAL_XML);
+  }
 
-	/**
-	 * @param root
-	 * @return
-	 * @throws CryptoException
-	 */
-	protected static String digestElement(Element root) throws CryptoException {
-		String b64EncodedDigest = null;
+  protected static String digestElement(Element root) throws CryptoException {
+    return digestElement(root, "SHA");
+  }
 
-		byte[] assertionCanonicalBytes;
-		try {
-			assertionCanonicalBytes = getAssertionCanonicalBytes(root);
-		} catch (IOException e) {
-			throw new CryptoException(e);
-		}
+  /**
+   * @param root
+   * @return
+   * @throws CryptoException
+   */
+  protected static String digestElement(Element root, String messageDigestAlgorithm) throws CryptoException {
+    String b64EncodedDigest = null;
 
-		// WE've got the canonical without the signature.
-		// Let's calculate the Digest to validate the references
-		try {
-			b64EncodedDigest = CryptoUtils.digest(assertionCanonicalBytes, "SHA");
-		} catch (CryptoException e) {
-			throw new CryptoException(e);
-		}
-		return b64EncodedDigest;
-	}
+    byte[] assertionCanonicalBytes;
+    try {
+      assertionCanonicalBytes = getAssertionCanonicalBytes(root);
+    } catch (IOException e) {
+      throw new CryptoException(e);
+    }
+
+    // WE've got the canonical without the signature.
+    // Let's calculate the Digest to validate the references
+    try {
+      b64EncodedDigest = CryptoUtils.digest(assertionCanonicalBytes, messageDigestAlgorithm);
+    } catch (CryptoException e) {
+      throw new CryptoException(e);
+    }
+    return b64EncodedDigest;
+  }
 
 }

@@ -78,32 +78,45 @@ import org.xmldap.util.Base64;
 public class CryptoUtils {
 
     public static String convertSigningAlgorithm(String signatureAlgorithm) throws SerializationException {
-    	if (signatureAlgorithm.equalsIgnoreCase("SHA1withRSA")) {
-    		return "http://www.w3.org/2000/09/xmldsig#rsa-sha1";
-    	}
-    	if (signatureAlgorithm.equalsIgnoreCase("SHA256withRSA")) {
-    		return "http://www.w3.org/2000/09/xmldsig#rsa-sha256";
-    	}
-    	throw new SerializationException("unsupported signature algorithm");
+      if (signatureAlgorithm.equalsIgnoreCase("SHA1withRSA")) {
+        return "http://www.w3.org/2000/09/xmldsig#rsa-sha1";
+      }
+      if (signatureAlgorithm.equalsIgnoreCase("SHA256withRSA")) {
+        return "http://www.w3.org/2000/09/xmldsig#rsa-sha256";
+      }
+      throw new SerializationException("unsupported signature algorithm");
    }
     
     public static String convertMessageDigestAlgorithm(String signatureAlgorithm) throws SerializationException {
-    	if (signatureAlgorithm.equalsIgnoreCase("SHA")) {
-    		return "http://www.w3.org/2000/09/xmldsig#sha1";
-    	}
-    	if (signatureAlgorithm.equalsIgnoreCase("SHA1")) {
-    		return "http://www.w3.org/2000/09/xmldsig#sha1";
-    	}
-    	if (signatureAlgorithm.equalsIgnoreCase("SHA-1")) {
-    		return "http://www.w3.org/2000/09/xmldsig#sha1";
-    	}
-    	if (signatureAlgorithm.equalsIgnoreCase("SHA256")) {
-    		return "http://www.w3.org/2000/09/xmldsig#sha256";
-    	}
-    	if (signatureAlgorithm.equalsIgnoreCase("SHA-256")) {
-    		return "http://www.w3.org/2000/09/xmldsig#sha256";
-    	}
-    	throw new SerializationException("unsupported signature algorithm");
+      if (signatureAlgorithm.equalsIgnoreCase("SHA")) {
+        return "http://www.w3.org/2000/09/xmldsig#sha1";
+      }
+      if (signatureAlgorithm.equalsIgnoreCase("SHA1")) {
+        return "http://www.w3.org/2000/09/xmldsig#sha1";
+      }
+      if (signatureAlgorithm.equalsIgnoreCase("SHA-1")) {
+        return "http://www.w3.org/2000/09/xmldsig#sha1";
+      }
+      if (signatureAlgorithm.equalsIgnoreCase("SHA256")) {
+        return "http://www.w3.org/2000/09/xmldsig#sha256";
+      }
+      if (signatureAlgorithm.equalsIgnoreCase("SHA-256")) {
+        return "http://www.w3.org/2000/09/xmldsig#sha256";
+      }
+      throw new SerializationException("unsupported signature algorithm");
+   }
+    
+    public static String convertMessageDigestAlgorithmUrl(String signatureAlgorithmUrl) throws CryptoException {
+      if (signatureAlgorithmUrl.equals("http://www.w3.org/2000/09/xmldsig#sha1")) {
+        return "SHA";
+      }
+      if (signatureAlgorithmUrl.equals("http://www.w3.org/2001/04/xmlenc#sha256")) {
+        return "SHA256";
+      }
+      if (signatureAlgorithmUrl.equals("http://www.w3.org/2000/09/xmldsig#sha256")) {
+        return "SHA256";
+      }
+      throw new CryptoException("unsupported signature algorithm");
    }
     
 
@@ -123,7 +136,7 @@ public class CryptoUtils {
     }
 
     /**
-     * Creates a Base64 encoded SHA Digest of a byte[]
+     * Creates a Base64 encoded Digest of a byte[]
      *
      * @param data the data to digest
      * @return Base64 encoded digest of the data
@@ -133,15 +146,15 @@ public class CryptoUtils {
         return Base64.encodeBytesNoBreaks(byteDigest(data, messageDigestAlgorithm));
     }
 
-	/**
-	 * @param keys
-	 * @param iv
-	 * @param dataBytes
-	 * @return
-	 * @throws CryptoException
-	 */
-	public static byte[] aesCbcEncrypt(byte[] encryptionKey, byte[] iv, ByteArrayOutputStream dataBytes) throws CryptoException {
-		//encrypt
+  /**
+   * @param keys
+   * @param iv
+   * @param dataBytes
+   * @return
+   * @throws CryptoException
+   */
+  public static byte[] aesCbcEncrypt(byte[] encryptionKey, byte[] iv, ByteArrayOutputStream dataBytes) throws CryptoException {
+    //encrypt
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             AESLightEngine aes = new AESLightEngine();
@@ -166,8 +179,8 @@ public class CryptoUtils {
         }
 
         byte[] cipherText = outputStream.toByteArray();
-		return cipherText;
-	}
+    return cipherText;
+  }
 
     /**
      * Encrypts data using AES with a Chained Block Cipber.   Got rid of my own impl, and wrapped lightcrypto
@@ -241,7 +254,7 @@ public class CryptoUtils {
 //        PublicKey pk = cert.getPublicKey();
 //        String algorithm = pk.getAlgorithm();
 //        if (!algorithm.equalsIgnoreCase("RSA")) {
-//        	throw new CryptoException("Algorithm " + algorithm + " is not supported");
+//          throw new CryptoException("Algorithm " + algorithm + " is not supported");
 //        }
 //        
 //        //populate modulus
@@ -338,7 +351,10 @@ public class CryptoUtils {
      * @return valid or invalid
      * @throws CryptoException
      */
-    public static boolean verify(byte[] data, byte[] signature, BigInteger mod, BigInteger exp) throws CryptoException {
+    public static boolean verifyRSA(
+        byte[] data, byte[] signature, BigInteger mod, BigInteger exp,
+        String messageDigestAlgorithm // SHA or SHA256
+        ) throws CryptoException {
 
         boolean verified = false;
 
@@ -347,7 +363,16 @@ public class CryptoUtils {
             RSAPublicKeySpec rsaKeySpec = new RSAPublicKeySpec(mod, exp);
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             PublicKey pubKey = keyFactory.generatePublic(rsaKeySpec);
-            Signature sig = Signature.getInstance("SHA1withRSA");
+            String signatureAlgorithm = null;
+            if ("SHA".equals(messageDigestAlgorithm)) {
+              signatureAlgorithm = "SHA1withRSA";
+            } else if ("SHA256".equals(messageDigestAlgorithm)) {
+              signatureAlgorithm = "SHA256withRSA";
+            }
+            if (signatureAlgorithm == null) {
+              throw new CryptoException("Unsupported digest algorithm " + messageDigestAlgorithm);
+            }
+            Signature sig = Signature.getInstance(signatureAlgorithm);
             sig.initVerify(pubKey);
             sig.update(data);
             verified = sig.verify(signature);
@@ -412,25 +437,25 @@ public class CryptoUtils {
         try {
             cf = CertificateFactory.getInstance("X509");
         } catch (CertificateException e) {
-        	throw new CryptoException("Error creating X509 CertificateFactory", e);	
+          throw new CryptoException("Error creating X509 CertificateFactory", e); 
         }
         try {
             X509Certificate certificate = (X509Certificate)cf.generateCertificate(bis);
             return certificate;
         } catch (CertificateException e) {
-        	// in case that the base64 coding is not compliant
-        	byte[] decodedBase64 = Base64.decode(b64EncodedX509Certificate);
-        	String b64 = Base64.encodeBytes(decodedBase64);
+          // in case that the base64 coding is not compliant
+          byte[] decodedBase64 = Base64.decode(b64EncodedX509Certificate);
+          String b64 = Base64.encodeBytes(decodedBase64);
             X509Certificate certificate;
-			try {
-		        sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
-		        sb.append(b64);
-		        sb.append("\n-----END CERTIFICATE-----\n");
+      try {
+            sb = new StringBuffer("-----BEGIN CERTIFICATE-----\n");
+            sb.append(b64);
+            sb.append("\n-----END CERTIFICATE-----\n");
 
-		        bis = new ByteArrayInputStream(sb.toString().getBytes());
-				certificate = (X509Certificate)cf.generateCertificate(bis);
-			} catch (CertificateException e1) {
-	            throw new CryptoException("Error creating X509Certificate from base64-encoded String", e1);			}
+            bis = new ByteArrayInputStream(sb.toString().getBytes());
+        certificate = (X509Certificate)cf.generateCertificate(bis);
+      } catch (CertificateException e1) {
+              throw new CryptoException("Error creating X509Certificate from base64-encoded String", e1);     }
             return certificate;
         }
 
