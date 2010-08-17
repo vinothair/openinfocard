@@ -161,6 +161,8 @@ public class SessionSelector {
 		plg.retrieveUserCredentials();
 		username  = plg.getUsername();
 		String pwd = plg.getPassword();
+//		System.out.println(username);
+//		System.out.println(pwd);
 		
 
 		try {
