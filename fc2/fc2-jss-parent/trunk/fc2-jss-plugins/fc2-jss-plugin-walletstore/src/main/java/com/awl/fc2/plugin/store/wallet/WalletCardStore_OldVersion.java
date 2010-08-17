@@ -240,6 +240,7 @@ public class WalletCardStore_OldVersion  implements ICardStore {
 		traceUI(Lang.get(Lang.NEGOCIATING_WITH_REMOTE_WALLET));
 		try {
 			response = Utils.getSTSResponse(theSesison,theSesison.getUsername(),lstRequiredClaims);
+//			System.out.println(theSesison.getUsername());
 		} catch (FC2Authentication_Exeception_AuthenticationFailed e1) {
 			throw(new CardStore_Execption_FailedRetrieving(e1.getMessage()));
 		}
