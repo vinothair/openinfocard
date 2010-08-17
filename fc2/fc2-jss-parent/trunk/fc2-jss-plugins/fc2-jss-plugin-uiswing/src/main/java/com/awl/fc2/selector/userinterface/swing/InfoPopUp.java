@@ -100,17 +100,18 @@ public class InfoPopUp extends JDialog{
 		pack();
 		
 		size = getSize();
-		if (p.x > size.width){
-			point.x = p.x - size.width;
-		} else {
-			point.x = p.x + 400;
-		}
-		point.y = p.y + 400 - size.height;
+//		if (p.x > size.width){
+//			point.x = p.x - size.width;
+//		} else {
+//			point.x = p.x + 400;
+//		}
+		point.x = p.x - (int)(0.6*size.width);
+		point.y = p.y + 335 - size.height;
 		setLocation(point);
 		
 		setVisible(true);
 	}
-		
+	
 	public void hideit(){
 		dispose();
 	}

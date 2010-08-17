@@ -71,8 +71,7 @@ public class Dialog_NewProfile extends JDialog{
 	
 	Dimension size = new Dimension();
 	
-	int choice = 0;
-
+	boolean open = false;
 
 	public Dialog_NewProfile(JDialog parent){
 		
@@ -300,7 +299,9 @@ public class Dialog_NewProfile extends JDialog{
 
 		jd.addWindowFocusListener(new WindowAdapter() {
 		    public void windowGainedFocus(WindowEvent e) {
+		    	if(open) return;
 		        profileNameField.requestFocusInWindow();
+		        open = true;
 		    }
 		});
 		

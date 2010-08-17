@@ -51,6 +51,7 @@ import java.io.Writer;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
@@ -62,6 +63,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import com.awl.fc2.selector.exceptions.Config_Exception_NotDone;
 import com.awl.fc2.selector.launcher.Config;
+import com.awl.fc2.selector.userinterface.swing.cobra.BrowserWindow;
 import com.awl.logger.Logger;
 import com.utils.XMLParser;
 import com.utils.execeptions.XMLParser_Exception_NO_ATTRIBUTE;
@@ -130,6 +132,7 @@ public class MainWindow extends JFrame{
 		build();
 		hideProc();
 		wakeupProc();
+		
 	}
 	
 	static public MainWindow getInstance(){
@@ -273,7 +276,11 @@ public class MainWindow extends JFrame{
 		panel.add(fish);
 		
 		JLabel title = new JLabel(titleContent[0]);
-		title.setFont(new Font("Trebuchet MS", Font.PLAIN, Integer.valueOf(titleContent[1])));
+		if (containsOnlyNumbers(titleContent[1])) {
+			title.setFont(new Font("Trebuchet MS", Font.PLAIN, Integer.valueOf(titleContent[1])));
+		} else {
+			title.setFont(new Font("Trebuchet MS", Font.PLAIN, 15));
+		}
 		title.setForeground(c1);
 		size = title.getPreferredSize();
 		title.setBounds(222-size.width/2,17-size.height/2,size.width,size.height);
@@ -331,56 +338,33 @@ public class MainWindow extends JFrame{
 		});
 		
 		
-//		//TEST BUTTONS
-//		
-//		final ImageButton cons = new ImageButton(new ImageIcon(imgs+"button.png"));
-//		cons.setLocation(120,50);
-//		cons.setToolTipText("Console mode");
-//		
-//		panel.add(cons);
-//		
-//		cons.addActionListener(new ActionListener(){
-//			public void actionPerformed(ActionEvent e){
-//				
-//				cardTOcons();
-//			}
-//		});
-//		
-//		
-//		final ImageButton select = new ImageButton(new ImageIcon(imgs+"button.png"));
-//		select.setLocation(150,50);
-//		select.setToolTipText("Card select mode");
-//		
-//		panel.add(select);
-//		
-//		select.addActionListener(new ActionListener(){
-//			public void actionPerformed(ActionEvent e){
-//				
-//				//consTOcard();
-//				selectCard(null,null,null);
-//			}
-//		});
-//		
-//		
-//		final ImageButton print = new ImageButton(new ImageIcon(imgs+"button.png"));
-//		print.setLocation(200,50);
-//		print.setToolTipText("Trace console");
-//		
-//		panel.add(print);
-//		
-//		print.addActionListener(new ActionListener(){
-//			public void actionPerformed(ActionEvent e){
-//				traceConsole("traceConsole : test");
-//			}
-//		});
-//			
-//		
-//		//TEST END
-		
+		final JButton browser = new JButton("N");
+		browser.setSize(browser.getPreferredSize());
+		browser.setLocation(350,40);
+		browser.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				BrowserWindow.getInstance().setVisible(true);
+			}
+		});
+		panel.add(browser);
 		
 		
 		return panel;
 	}
+	
+    public boolean containsOnlyNumbers(String str) {
+        
+        if (str == null || str.length() == 0)
+            return false;
+        
+        for (int i = 0; i < str.length(); i++) {
+
+            if (!Character.isDigit(str.charAt(i)))
+                return false;
+        }
+        
+        return true;
+    }
 
 	public void exitProc(){
 		final Dialog_Exit ex = new Dialog_Exit();
@@ -397,26 +381,13 @@ public class MainWindow extends JFrame{
 	public void hideProc(){
 		
 		setVisible(false);
-//        try {
-//            getSystemTray().add(trayIcon);
-//        } catch (AWTException e1) {
-//            e1.printStackTrace();
-//        }	catch (java.lang.IllegalArgumentException e1) {
-//            e1.printStackTrace();
-//        }	
 	}
 	
 	public void wakeupProc(){
 		
-		//toFront();
-		//requestFocus();
 		setVisible(true);
 		setExtendedState(MainWindow.NORMAL);
-		//toFront();
 		
-//		getSystemTray().remove(trayIcon);
-
-
 	}
 
 

@@ -66,7 +66,7 @@ public class Dialog_Profile extends JDialog{
 	JCheckBox manual;
 	JTextField textField = new JTextField();
 	ImageButton left, right;
-	boolean check = false, profileUse = true;
+	boolean check = false, profileUse = true, open = false;
 	String nameBackup;
 	JButton create, edit, delete, valider;
 	String username = "", password = "";
@@ -270,6 +270,9 @@ public class Dialog_Profile extends JDialog{
 		create.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				
+//				Dialog_Browser browser = new Dialog_Browser();
+//				browser.settings("");
+//				return;
 				create();
 			}
 		});
@@ -362,10 +365,11 @@ public class Dialog_Profile extends JDialog{
 		valider.setBounds((450-size.width)/2,260,size.width,size.height);
 		getRootPane().setDefaultButton(valider);
 		panel.add(valider);
-		
 		addWindowFocusListener(new WindowAdapter() {
 		    public void windowGainedFocus(WindowEvent e) {
-		        valider.requestFocusInWindow();
+		    	if(open) return;
+		    	valider.requestFocusInWindow();
+		    	open = true;
 		    }
 		});
 		
@@ -413,10 +417,8 @@ public class Dialog_Profile extends JDialog{
 			}
 		});		
         //END OF INPUT SETTINGS
-        
-        //inUse = true;
 		setVisible(true);
-		requestFocus();
+		//requestFocus();
 		
 	}
 	

@@ -71,7 +71,7 @@ public class Dialog_EditProfile extends JDialog{
 	
 	Dimension size = new Dimension();
 	
-	int choice = 0;
+	boolean open = false;
 
 
 	public Dialog_EditProfile(JDialog parent, String[] content){
@@ -299,7 +299,9 @@ public class Dialog_EditProfile extends JDialog{
 
 		jd.addWindowFocusListener(new WindowAdapter() {
 		    public void windowGainedFocus(WindowEvent e) {
+		    	if(open) return;
 		        userNameField.requestFocusInWindow();
+		        open = true;
 		    }
 		});
 		
