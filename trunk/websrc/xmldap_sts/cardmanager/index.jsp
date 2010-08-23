@@ -149,7 +149,7 @@
                 } catch (StorageException e) {
                     %>
 
-                        <p style="font-style:bold">Authentication failed.</p><p>
+                        <p style="font-style:bold">Authentication failed.</p>
 
                     <%
 
