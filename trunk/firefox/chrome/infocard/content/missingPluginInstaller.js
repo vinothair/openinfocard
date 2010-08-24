@@ -1,5 +1,6 @@
 
-if (typeof(missingPluginInstaller) !== "undefind") {
+//Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService).logStringMessage("typeof(missingPluginInstaller)="+typeof(missingPluginInstaller));
+if (typeof(missingPluginInstaller) !== "undefined") {
   // store the original
   missingPluginInstaller.prototype.__newMissingPlugin = missingPluginInstaller.prototype.newMissingPlugin;
   
@@ -16,23 +17,23 @@ if (typeof(missingPluginInstaller) !== "undefind") {
   	}
   	missingPluginInstaller.prototype.__newMissingPlugin(aEvent);
   };
-}
-
-if (typeof(gMissingPluginInstaller) !== "undefined") {
-  // store the original
-  gMissingPluginInstaller.prototype.__newMissingPlugin = gMissingPluginInstaller.prototype.newMissingPlugin;
+} else {
   
-  gMissingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
-    var pluginInfo = getPluginInfo(aEvent.target);
-    if ("application/x-informationcard" == pluginInfo.mimetype) {
-      var doc = aEvent.target.ownerDocument;
-      var objElem = aEvent.target;
-      // send event
-      var event = doc.createEvent( "Event");
-          event.initEvent( "ICObjectLoaded", true, true);
-          objElem.dispatchEvent( event);
-      return;
-    }
-    gMissingPluginInstaller.prototype.__newMissingPlugin(aEvent);
-  };
+  //Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService).logStringMessage("typeof(gMissingPluginInstaller)="+typeof(gMissingPluginInstaller));
+  if (gBrowser) {
+    gBrowser.addEventListener("PluginNotFound", 
+        function(aEvent){
+          var pluginInfo = getPluginInfo(aEvent.target);
+          if ("application/x-informationcard" == pluginInfo.mimetype) {
+            var doc = aEvent.target.ownerDocument;
+            var objElem = aEvent.target;
+            // send event
+            var event = doc.createEvent( "Event");
+                event.initEvent( "ICObjectLoaded", true, true);
+                objElem.dispatchEvent( event);
+            return;
+          }
+        }, 
+        true);
+  }
 }
