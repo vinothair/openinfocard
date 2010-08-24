@@ -1708,7 +1708,12 @@ function digestNewCard(callback) {
    return;
   }
   
-    var cardName = callback.cardname;
+  var cardName = "" + callback.cardName;
+  if (cardName == "") {
+    alert("No new card was imported!");
+    return;
+  }
+  
     var type = "" + callback.type;
     var cardId = "" + callback.cardId;
     var card = null;
