@@ -135,6 +135,11 @@ function pollForPhoneAvailableCallback(policy){
         var i = optionalClaims.indexOf("http://schemas.t-labs.de/ws/2010/10/identity/claims/shopname?v=");
         if (i>=0) {
           var shopname = optionalClaims.substring(i+ ("http://schemas.t-labs.de/ws/2010/10/identity/claims/shopname?v=".length));
+          shopname = shopname.replace(/\s+/g,' ');
+          var j = shopname.indexOf(" ");
+          if (j > 0) {
+            shopname = shopname.substring(0,j);
+          }
           policy.shopname = unescape(shopname);
         }
       }
@@ -145,6 +150,11 @@ function pollForPhoneAvailableCallback(policy){
         var i = optionalClaims.indexOf("http://schemas.t-labs.de/ws/2010/10/identity/claims/price?v=");
         if (i>=0) {
           var price = optionalClaims.substring(i + ("http://schemas.t-labs.de/ws/2010/10/identity/claims/price?v=".length));
+          price = price.replace(/\s+/g,' ');
+          var j = price.indexOf(" ");
+          if (j > 0) {
+            price = price.substring(0,j);
+          }
           policy.price = unescape(price);
         }
       }
