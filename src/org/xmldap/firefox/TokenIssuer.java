@@ -37,7 +37,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -56,8 +55,9 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Random;
-import java.util.SortedMap;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -107,6 +107,8 @@ import org.xmldap.ws.WSConstants;
 import org.xmldap.xml.XmlUtils;
 import org.xmldap.xmldsig.Jsr105Signatur;
 import org.xmldap.xmlenc.EncryptedData;
+
+import de.dtag.tlabs.mwallet.card.CardManager;
 
 public class TokenIssuer {
 
@@ -1290,6 +1292,55 @@ public class TokenIssuer {
     }
   }
   
+  public void startCardSelection(String serializedPolicy) throws TokenIssuanceException {
+    System.out.println("TokenIssuer.startCardSelection");
+    Class<?> cardmanagerClasz;
+    try {
+      cardmanagerClasz = Class.forName("de.dtag.tlabs.mwallet.card.CardManager");
+    } catch (ClassNotFoundException e1) {
+      throw new TokenIssuanceException(e1);
+    }
+    try {
+      Method getInstanceMethod = cardmanagerClasz.getDeclaredMethod("getInstance");
+      Object cardmanager = getInstanceMethod.invoke(null, (Object[])null);
+
+      Hashtable<String, String>ht = new Hashtable<String, String>();
+      try {
+        JSONObject policy = new JSONObject(serializedPolicy);
+        Iterator<String> keyIter = (Iterator<String>)policy.keys();
+        while (keyIter.hasNext()) {
+          String key = (String)keyIter.next();
+          String value = null;
+          try {
+            value = policy.getString(key);
+          } catch (JSONException e) {
+            // ignore type is not String
+          }
+          ht.put(key, value);
+          System.out.println("startCardSelection: key=" + key + " value=" + value);
+        }
+      } catch (JSONException e) {
+          throw new TokenIssuanceException(e);
+      }
+      
+      //beginCardSelection(Hashtable parameters);
+      Class<?>[] paramTypes = { Hashtable.class };
+      Method beginCardSelectionMethod = cardmanagerClasz.getDeclaredMethod("beginCardSelection", paramTypes);
+      Object args[] = { ht };
+      beginCardSelectionMethod.invoke(cardmanager, (Object[])args);
+    } catch (SecurityException e) {
+      throw new TokenIssuanceException(e);
+    } catch (NoSuchMethodException e) {
+      throw new TokenIssuanceException(e);
+    } catch (IllegalArgumentException e) {
+      throw new TokenIssuanceException(e);
+    } catch (IllegalAccessException e) {
+      throw new TokenIssuanceException(e);
+    } catch (InvocationTargetException e) {
+      throw new TokenIssuanceException(e);
+    }
+  }
+  
   public void beginCardSelection() throws TokenIssuanceException {
     Class<?> cardmanagerClasz;
     try {
@@ -1355,6 +1406,7 @@ public class TokenIssuer {
   }
   
   public void phoneFini() throws TokenIssuanceException {
+//    CardManager.getInstance().fini()
     Class<?> cardmanagerClasz;
     try {
       cardmanagerClasz = Class.forName("de.dtag.tlabs.mwallet.card.CardManager");
@@ -1367,19 +1419,20 @@ public class TokenIssuer {
       Method finiMethod = cardmanagerClasz.getDeclaredMethod("fini");
       finiMethod.invoke(cardmanager, (Object[])null);
     } catch (SecurityException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("phoneFini", e);
     } catch (NoSuchMethodException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("phoneFini", e);
     } catch (IllegalArgumentException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("phoneFini", e);
     } catch (IllegalAccessException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("phoneFini", e);
     } catch (InvocationTargetException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("phoneFini", e);
     }
   }
 
   public Exception getWalletException() throws TokenIssuanceException {
+//    CardManager.getInstance().getWalletException();
     Class<?> cardmanagerClasz;
     try {
       cardmanagerClasz = Class.forName("de.dtag.tlabs.mwallet.card.CardManager");
@@ -1392,15 +1445,15 @@ public class TokenIssuer {
       Method getWalletExceptionMethod = cardmanagerClasz.getDeclaredMethod("getWalletException");
       return (Exception)getWalletExceptionMethod.invoke(cardmanager, (Object[])null);
     } catch (SecurityException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("getWalletException", e);
     } catch (NoSuchMethodException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("getWalletException", e);
     } catch (IllegalArgumentException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("getWalletException", e);
     } catch (IllegalAccessException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("getWalletException", e);
     } catch (InvocationTargetException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("getWalletException", e);
     }
   }
 
@@ -1412,20 +1465,21 @@ public class TokenIssuer {
       throw new TokenIssuanceException(e1);
     }
     try {
+//      CardManager.getInstance().resetWalletException()
       Method getInstanceMethod = cardmanagerClasz.getDeclaredMethod("getInstance");
       Object cardmanager = getInstanceMethod.invoke(null, (Object[])null);
       Method getWalletExceptionMethod = cardmanagerClasz.getDeclaredMethod("resetWalletException");
       getWalletExceptionMethod.invoke(cardmanager, (Object[])null);
     } catch (SecurityException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("resetWalletException", e);
     } catch (NoSuchMethodException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("resetWalletException", e);
     } catch (IllegalArgumentException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("resetWalletException", e);
     } catch (IllegalAccessException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("resetWalletException", e);
     } catch (InvocationTargetException e) {
-      throw new TokenIssuanceException(e);
+      throw new TokenIssuanceException("resetWalletException", e);
     }
   }
 
