@@ -56,12 +56,7 @@
 
     <unjar src="${lib.dir}/wallethost.jar"
        dest="${build.jars.dir}"/>
-    <unzip src="${lib.dir}/RXTXcomm.jar"
-       dest="${build.jars.dir}"/>
-    <!--
-    <unzip src="${lib.dir}/bluecove-2.1.0.jar"
-       dest="${build.jars.dir}"/>
-    -->
+
     <unzip src="${lib.dir}/lightcrypto.jar"
    dest="${build.jars.dir}"/>
 
