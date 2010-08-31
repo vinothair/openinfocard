@@ -37,9 +37,9 @@
 			src="chrome://infocard/locale/mwallet.properties" />
 	</stringbundleset>
 
-	<script src="chrome://infocard/content/json.js" />
-	<script src="chrome://infocard/content/tokenissuerXul.js" />
-	<script src="chrome://infocard/content/mWallet.js" />
+	<script type="application/javascript;version=1.8" src="chrome://infocard/content/json.js" />
+	<script type="application/javascript;version=1.8" src="chrome://infocard/content/tokenissuerXul.js" />
+	<script type="application/javascript;version=1.8" src="chrome://infocard/content/mWallet.js" />
 
 	<keyset>
 		<key id="cancel-key" keycode="VK_ESCAPE" oncommand="cancel();" />

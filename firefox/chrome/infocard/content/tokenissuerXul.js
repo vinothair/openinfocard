@@ -9,16 +9,19 @@ var TokenIssuer = {
     },
     
     _fail : function(e) {
-      var msg;
+      var msg = "TokenIssuer._fail: ";
         if (e.getMessage) {
-            msg = e + ": " + e.getMessage() + "\n";
-            while (e.getCause() != null) {
+            msg = msg + e + ": " + e.getMessage() + "\n";
+            while (e.getCause() !== null) {
                 e = e.getCause();
                 msg += "caused by " + e + ": " + e.getMessage() + "\n";
             }
         } else {
-            msg = e;
+            msg = msg + e;
         }
+        Components.classes["@mozilla.org/consoleservice;1"]
+                           .getService(Components.interfaces.nsIConsoleService)
+                                .logStringMessage(msg);
         alert(msg);  
     },
     
@@ -84,6 +87,31 @@ var TokenIssuer = {
         anInstance.addPermission(new java.security.SecurityPermission("insertProvider.BC"));
         anInstance.addPermission(new java.util.PropertyPermission("org.bouncycastle.*", "read"));
         anInstance.addPermission(new java.util.PropertyPermission("jsr105Provider", "read"));
+
+        // D:\bluecove 
+        java.lang.System.setProperty("bluecove.debug.log4j", "false");
+        java.lang.System.setProperty("bluecove.debug.stdout", "true");
+        java.lang.System.setProperty("bluecove.native.path", "D:\\bluecove");
+        java.lang.System.setProperty("bluecove.native.resource", "false");
+        anInstance.addFilePermission("file:///d:/bluecove", "read,write"); //FIXME
+        anInstance.addFilePermission("file:///d:/bluecove/intelbth.dll", "read"); //FIXME
+        anInstance.addFilePermission("file:///d:/bluecove/bluecove.dll", "read"); //FIXME
+        
+        anInstance.addPermission(new java.util.PropertyPermission("bluecove.native.path", "read"));
+        anInstance.addPermission(new java.util.PropertyPermission("bluecove.native.resource", "read"));
+        anInstance.addPermission(new java.util.PropertyPermission("java.io.tmpdir", "read"));
+        anInstance.addPermission(new java.util.PropertyPermission("user.name", "read"));
+        anInstance.addFilePermission("file:///d:/DOKUME~1/NENNKE~1.AXE/LOKALE~1/Temp/bluecove_Nennker.Axel_0", "read,write"); //FIXME
+        anInstance.addFilePermission("file:///d:/DOKUME~1/NENNKE~1.AXE/LOKALE~1/Temp/bluecove_Nennker.Axel_0/intelbth.dll", "read,write,delete"); //FIXME
+        anInstance.addFilePermission("file:///d:/DOKUME~1/NENNKE~1.AXE/LOKALE~1/Temp/bluecove_Nennker.Axel_0/bluecove.dll", "read,write"); //FIXME
+        anInstance.addPermission(new java.util.PropertyPermission("java.library.path", "read"));
+        
+        anInstance.addPermission(new java.lang.RuntimePermission("loadLibrary.D:\\bluecove\\intelbth.dll"));
+        anInstance.addPermission(new java.lang.RuntimePermission("loadLibrary.D:\\bluecove\\bluecove.dll"));
+        anInstance.addPermission(new java.lang.RuntimePermission("loadLibrary.D:\bluecove\intelbth.dll"));
+        anInstance.addPermission(new java.lang.RuntimePermission("loadLibrary.D:\bluecove\bluecove.dll"));
+        anInstance.addPermission(new java.lang.RuntimePermission("loadLibrary.intelbth"));
+        anInstance.addPermission(new java.lang.RuntimePermission("loadLibrary.bluecove"));
         
         // anInstance.addPermission(new javax.smartcardio.CardPermission("*", "*")); // all terminals, all action
         var cpClasz = java.lang.Class.forName("javax.smartcardio.CardPermission", true, cl);
@@ -127,12 +155,13 @@ var TokenIssuer = {
         this.tokenIssuer = tiConstructor.newInstance( [extensionPath] );
         return (this.tokenIssuer !== null);
       } catch(e) {
-        TokenIssuer._trace("TokenIssuer.initialize threw " + e + "\ndocument.location.href=" + document.location.href);
+        this._trace("TokenIssuer.initialize threw " + e + "\ndocument.location.href=" + document.location.href);
         return null;
       }
     },
     
     getToken : function(serializedPolicy) {
+      TokenIssuer._trace("TokenIssuer.getToken " + serializedPolicy);
       return this.tokenIssuer.getToken(serializedPolicy);
     },
     
@@ -212,6 +241,17 @@ var TokenIssuer = {
       }
     },
     
+    startCardSelection : function(serializedPolicy) {
+      TokenIssuer._trace("startCardSelection: " + serializedPolicy);
+      try {
+        var result = this.tokenIssuer.startCardSelection(serializedPolicy);
+        return result;
+      } catch(e) {
+        TokenIssuer._fail(e);
+        throw e;
+      }
+    },
+    
     getSelectedCard : function() {
       TokenIssuer._trace("getSelectedCard");
       try {
@@ -228,7 +268,7 @@ var TokenIssuer = {
       try {
         this.tokenIssuer.phoneFini();
       } catch(e) {
-        TokenIssuer._fail(e);
+        //TokenIssuer._fail(e);
       }
     },
     
