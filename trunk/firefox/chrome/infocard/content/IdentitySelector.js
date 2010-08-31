@@ -699,6 +699,7 @@ var IdentitySelector =
                             "doc.__identityselector__.submitIntercepted=" + doc.__identityselector__.submitIntercepted);
                         if (doc.__identityselector__.submitIntercepted) {
                           IdentitySelectorDiag.logMessage( "onFormSubmit", "form submit was already handled");
+                          event.preventDefault(); // do not submit the form
                           return;
                         }
 
