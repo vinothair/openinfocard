@@ -1316,7 +1316,9 @@ public class TokenIssuer {
           } catch (JSONException e) {
             // ignore type is not String
           }
-          ht.put(key, value);
+          if (value != null) {
+            ht.put(key, value);
+          }
           System.out.println("startCardSelection: key=" + key + " value=" + value);
         }
       } catch (JSONException e) {
