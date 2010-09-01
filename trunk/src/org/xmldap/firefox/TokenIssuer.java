@@ -1316,10 +1316,10 @@ public class TokenIssuer {
           } catch (JSONException e) {
             // ignore type is not String
           }
-          if (value != null) {
+          if ((value != null) && !("null".equals(value))){
             ht.put(key, value);
+            System.out.println("startCardSelection: key=" + key + " value=" + value);
           }
-          System.out.println("startCardSelection: key=" + key + " value=" + value);
         }
       } catch (JSONException e) {
           throw new TokenIssuanceException(e);
