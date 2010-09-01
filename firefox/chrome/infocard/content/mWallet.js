@@ -112,6 +112,8 @@ function pollForPhoneAvailableCallback(policy){
       delete policy.timeoutId;
     }
 
+    var parameters = {};
+    
     try {
 //    TokenIssuer.beginCardSelection();
       try {
@@ -141,6 +143,7 @@ function pollForPhoneAvailableCallback(policy){
             shopname = shopname.substring(0,j);
           }
           policy.shopname = unescape(shopname);
+          parameters.shopname = unescape(shopname);
         }
       }
       
@@ -156,10 +159,12 @@ function pollForPhoneAvailableCallback(policy){
             price = price.substring(0,j);
           }
           policy.price = unescape(price);
+          parameters.price = unescape(price);
         }
       }
       policy.timestamp = (new Date()).toLocaleString();
-      var serializedPolicy = JSON.stringify(policy);
+      parameters.timestamp = (new Date()).toLocaleString();
+      var serializedPolicy = JSON.stringify(parameters);
       TokenIssuer.startCardSelection(serializedPolicy);
     } catch (e) {
       Components.utils.reportError("TokenIssuer.startCardSelection " + e);
@@ -170,185 +175,201 @@ function pollForPhoneAvailableCallback(policy){
 }
 
 function _card2token(policy, card) {
+  var claimValueList = "";
+  var cardname;
+  var givenname;
+  var surname;
+  var emailaddress;
+  var modulus;
+  var cardXml;
+  var domain;
+  var icon;
+  var number;
+
   mwDebug("_card2token: card=" + card);
-//  var claimValueList = "";
-//  var cardname;
-//  var givenname;
-//  var surname;
-//  var emailaddress;
-//  var modulus;
-//  var cardXml;
-//  var domain;
-//  var icon;
-//  var number;
-//  try {
-//    mwDebug("_card2token: typeof(card)=" + typeof(card));
-//    var aCard = "" + card;
-//    mwDebug("_card2token: typeof(aCard)=" + typeof(aCard));
-////    var cardXml = new XML(Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance(Components.interfaces.nsIDOMSerializer).serializeToString(card));
-//    cardXml = new XML(aCard);
-//  } catch (e) {
-//    Components.utils.reportError("_card2token: xml error: " + e + "\n" + card);
-//    return null;
-//  }
-//  if (cardXml) {
-//    try {
-//      mwDebug("_card2token: typeof(cardXml)=" + typeof(cardXml));
-//      mwDebug("_card2token: cardXml=" + cardXml.toXMLString());
-//      mwDebug("_card2token: cardXml.Attribute.length()=" + cardXml.Attribute.length());
-//      for (var i = 0; i < cardXml.Attribute.length(); i++) {
-//        var attr = cardXml.Attribute[i];
-//        mwDebug(attr.toString());
-//        var name = attr.@name.toString();
-//        var value = attr.child(0);
-//        mwDebug("_card2token: name=" + name + " value=" + value);
-//        if (name === "email") {
-//          emailaddress = value;
-//          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\">" +
-//          "<ic:Value>" + value + "</ic:Value>" + 
-//          "</ic:ClaimValue>";
-//        } else if (name === "name") {
-//          cardname = value;
-//          var x = cardname.split(' ');
-//          givenname = x[0];
-//          "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\">" +
-//          "<ic:Value>" + givenname + "</ic:Value>" + 
-//          "</ic:ClaimValue>";
-//          surname = x[1];
-//          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\">" +
-//          "<ic:Value>" + surname + "</ic:Value>" + 
-//          "</ic:ClaimValue>";
-//        } else if (name === "surname") {
-//          surname = value;
-//          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\">" +
-//          "<ic:Value>" + value + "</ic:Value>" + 
-//          "</ic:ClaimValue>";
-//        } else if (name === "givenname") {
-//          givenname = value;
-//          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\">" +
-//          "<ic:Value>" + value + "</ic:Value>" + 
-//          "</ic:ClaimValue>";
-//        } else if (name === "Modulus") {
-//          modulus = value;
-//        } else if (name === "number") {
-//          number = value;
-//          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/cardnumber\">" +
-//          "<ic:Value>" + value + "</ic:Value>" + 
-//          "</ic:ClaimValue>";
-//        } else {
-//          mwDebug("_card2token: unsupported Attributename name=" + name + " value=" + value);
-//          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/" + name + "\">" +
-//          "<ic:Value>" + value + "</ic:Value>" + 
-//          "</ic:ClaimValue>";
-//        }
-//      }
-//    } catch (ee) {
-//      mwDebug("_card2token: Exception: " + ee);
-//      Components.utils.reportError("_card2token: Exception: " + ee);
-//    }
-//  } else {
-//    Components.utils.reportError("_card2token: cardXml is undefined" + cardXml);
-//  }
-//  
-//  domain = cardXml.@domain;
-//  if (domain) {
-//    domain = domain.toString();
-//    claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/carddomain\">" +
-//    "<ic:Value>" + domain + "</ic:Value>" + 
-//    "</ic:ClaimValue>";
-//  }
-//  
-//  icon = cardXml.@icon;
-//  if (icon) {
-//    icon = icon.toString();
-//    claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/imageref\">" +
-//    "<ic:Value>" + icon + "</ic:Value>" + 
-//    "</ic:ClaimValue>";
-//  }
-//  
-//  cardname = cardXml.@name;
-//  if (cardname) {
-//    cardname = cardname.toString();
-//  }
-//  
-//  if (domain === "Identity") {
-//  } else if (domain === "Payment") {
-//    claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/cardname\">" +
-//    "<ic:Value>" + cardname + "</ic:Value>" + 
-//    "</ic:ClaimValue>";
-//  } else {
-//    mwDebug("_card2token: unsupported domain=" + domain);
-//  }
-//  
-////  infocard: choosenCard=<infocard>
-////  <name>sechs</name>
-////  <type>selfAsserted</type>
-////  <version>1</version>
-////  <id>19064</id>
-////  <privatepersonalidentifier>446e7f7a527d75e24329ecd2982769311c36dff8</privatepersonalidentifier>
-////  <ic:InformationCardPrivateData xmlns:ic="http://schemas.xmlsoap.org/ws/2005/05/identity">
-////    <ic:MasterKey>446e7f7a527d75e24329ecd2982769311c36dff8</ic:MasterKey>
-////    <ic:ClaimValueList>
-////      <ic:ClaimValue Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname">
-////        <ic:Value>Axel</ic:Value>
-////      </ic:ClaimValue>
-////      <ic:ClaimValue Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname">
-////        <ic:Value>Nennker</ic:Value>
-////      </ic:ClaimValue>
-////      <ic:ClaimValue Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress">
-////        <ic:Value>axel@nennker.de</ic:Value>
-////      </ic:ClaimValue>
-////    </ic:ClaimValueList>
-////  </ic:InformationCardPrivateData>
-////  <ic:SupportedClaimTypeList xmlns:ic="http://schemas.xmlsoap.org/ws/2005/05/identity">
-////    <ic:SupportedClaimType Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname">
-////      <ic:DisplayTag>Vorname:</ic:DisplayTag>
-////    </ic:SupportedClaimType>
-////    <ic:SupportedClaimType Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname">
-////      <ic:DisplayTag>Nachname:</ic:DisplayTag>
-////    </ic:SupportedClaimType>
-////    <ic:SupportedClaimType Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress">
-////      <ic:DisplayTag>Email:</ic:DisplayTag>
-////    </ic:SupportedClaimType>
-////    <ic:SupportedClaimType Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier"/>
-////  </ic:SupportedClaimTypeList>
-////  <rpIds>ef328e98c0fd49dab2629400914924156616f2e2</rpIds>
-////</infocard>
-//
-//  var masterKey;
-//  if (modulus) {
-//    masterKey = modulus;
-//  } else {
-//    masterKey = "446e7f7a527d75e24329ecd2982769311c36dff8"; // FIXME
-//  }
-//
-//  var infocard = "<infocard>" +
-//  "<id>" + cardXml.@name.toString() + "</id>" +
-//  "<privatepersonalidentifier>" + cardXml.@name.toString() + "</privatepersonalidentifier>" +
-//  "<ic:InformationCardPrivateData xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" + 
-//    "<ic:MasterKey>" + masterKey + "</ic:MasterKey>" +
-//    "<ic:ClaimValueList>" + claimValueList + "</ic:ClaimValueList>" +
-//  "</ic:InformationCardPrivateData>" + 
-//  "</infocard>";
-//  mwDebug("_card2token: infocard=" + infocard);
-//  
-//  try {
-//    policy.type = "selfAsserted";
-//    policy.card = infocard;
-//    
-//    var serializedPolicy = JSON.stringify(policy);
-//    var sp = TokenIssuer.getToken(serializedPolicy);
-//    var newPolicy = JSON.parse(sp);
-//    if (newPolicy.hasOwnProperty("tokenToReturn")) {
-//      var tokenToReturn = newPolicy("tokenToReturn"));
-//      return tokenToReturn;
-//    }
-//    mwDebug("_card2token: no tokenToReturn" + sp);
-//    return null;
-//  } catch (getTokenException) {
-//    mwDebug("_card2token: getTokenException=" + getTokenException);
-//    return null;
-//  }
+//  mWallet: _card2token: card=
+//    <Card name="Postbank VISA Card" issuer="Postbank" domain="Payment" type="Visa" icon="http://212.201.108.49/wallet/card_pb_visa.jpg"> <Attribute name="number" type="4" scope="0">2345678 </Attribute> 
+//     <Attribute name="validFrom" type="4" scope="0">08.2008 </Attribute> 
+//     <Attribute name="validTo" type="4" scope="0">08.2012 </Attribute> 
+//    </Card>
+  var cardXml = null;
+  try {
+//    var serializer = Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance(Components.interfaces.nsIDOMSerializer);
+//    var serializedCard = serializer.serializeToString("" + card);
+    cardXml = new XML("" + card);
+  } catch(e) {
+    mwDebug("_card2token: exception=" + e);
+  }
+  if (cardXml) {
+    try {
+      mwDebug("_card2token: typeof(cardXml)=" + typeof(cardXml));
+      mwDebug("_card2token: cardXml=" + cardXml.toXMLString());
+      mwDebug("_card2token: cardXml.Attribute.length()=" + cardXml.Attribute.length());
+      for (var i = 0; i < cardXml.Attribute.length(); i++) {
+        var attr = cardXml.Attribute[i];
+        mwDebug(attr.toString());
+        var name = attr.@name.toString();
+        var value = attr.child(0);
+        mwDebug("_card2token: name=" + name + " value=" + value);
+        
+        if (name === "email") {
+          emailaddress = value;
+          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress\">" +
+          "<ic:Value>" + value + "</ic:Value>" + 
+          "</ic:ClaimValue>";
+        } else if (name === "name") {
+          cardname = value;
+          var x = cardname.split(' ');
+          givenname = x[0];
+          "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\">" +
+          "<ic:Value>" + givenname + "</ic:Value>" + 
+          "</ic:ClaimValue>";
+          surname = x[1];
+          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\">" +
+          "<ic:Value>" + surname + "</ic:Value>" + 
+          "</ic:ClaimValue>";
+        } else if (name === "surname") {
+          surname = value;
+          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\">" +
+          "<ic:Value>" + value + "</ic:Value>" + 
+          "</ic:ClaimValue>";
+        } else if (name === "givenname") {
+          givenname = value;
+          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\">" +
+          "<ic:Value>" + value + "</ic:Value>" + 
+          "</ic:ClaimValue>";
+        } else if (name === "Modulus") {
+          modulus = value;
+        } else if (name === "number") {
+          number = value;
+          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/cardnumber\">" +
+          "<ic:Value>" + value + "</ic:Value>" + 
+          "</ic:ClaimValue>";
+        } else {
+          mwDebug("_card2token: unsupported Attributename name=" + name + " value=" + value);
+          claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/" + name + "\">" +
+          "<ic:Value>" + value + "</ic:Value>" + 
+          "</ic:ClaimValue>";
+        }
+        mwDebug("_card2token: claimValueList=" + claimValueList);
+      }
+    } catch (ee) {
+      mwDebug("_card2token: exception=" + ee);
+    }
+  }
+  
+  
+  domain = cardXml.@domain;
+  if (domain) {
+    domain = domain.toString();
+    claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/carddomain\">" +
+    "<ic:Value>" + domain + "</ic:Value>" + 
+    "</ic:ClaimValue>";
+  }
+  
+  icon = cardXml.@icon;
+  if (icon) {
+    icon = icon.toString();
+    claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/imageref\">" +
+    "<ic:Value>" + icon + "</ic:Value>" + 
+    "</ic:ClaimValue>";
+  }
+  
+  cardname = cardXml.@name;
+  if (cardname) {
+    cardname = cardname.toString();
+  } else {
+    cardname = "cardname";
+  }
+  
+  if (domain === "Identity") {
+  } else if (domain === "Payment") {
+    claimValueList += "<ic:ClaimValue Uri=\"http://schemas.t-labs.de/ws/2010/10/identity/claims/cardname\">" +
+    "<ic:Value>" + cardname + "</ic:Value>" + 
+    "</ic:ClaimValue>";
+  } else {
+    mwDebug("_card2token: unsupported domain=" + domain);
+  }
+  mwDebug("_card2token: claimValueList=" + claimValueList);
+  
+//  infocard: choosenCard=<infocard>
+//  <name>sechs</name>
+//  <type>selfAsserted</type>
+//  <version>1</version>
+//  <id>19064</id>
+//  <privatepersonalidentifier>446e7f7a527d75e24329ecd2982769311c36dff8</privatepersonalidentifier>
+//  <ic:InformationCardPrivateData xmlns:ic="http://schemas.xmlsoap.org/ws/2005/05/identity">
+//    <ic:MasterKey>446e7f7a527d75e24329ecd2982769311c36dff8</ic:MasterKey>
+//    <ic:ClaimValueList>
+//      <ic:ClaimValue Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname">
+//        <ic:Value>Axel</ic:Value>
+//      </ic:ClaimValue>
+//      <ic:ClaimValue Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname">
+//        <ic:Value>Nennker</ic:Value>
+//      </ic:ClaimValue>
+//      <ic:ClaimValue Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress">
+//        <ic:Value>axel@nennker.de</ic:Value>
+//      </ic:ClaimValue>
+//    </ic:ClaimValueList>
+//  </ic:InformationCardPrivateData>
+//  <ic:SupportedClaimTypeList xmlns:ic="http://schemas.xmlsoap.org/ws/2005/05/identity">
+//    <ic:SupportedClaimType Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname">
+//      <ic:DisplayTag>Vorname:</ic:DisplayTag>
+//    </ic:SupportedClaimType>
+//    <ic:SupportedClaimType Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname">
+//      <ic:DisplayTag>Nachname:</ic:DisplayTag>
+//    </ic:SupportedClaimType>
+//    <ic:SupportedClaimType Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress">
+//      <ic:DisplayTag>Email:</ic:DisplayTag>
+//    </ic:SupportedClaimType>
+//    <ic:SupportedClaimType Uri="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier"/>
+//  </ic:SupportedClaimTypeList>
+//  <rpIds>ef328e98c0fd49dab2629400914924156616f2e2</rpIds>
+//</infocard>
+
+  try {
+    var masterKey;
+    if (modulus) {
+      masterKey = modulus;
+    } else {
+      masterKey = "446e7f7a527d75e24329ecd2982769311c36dff8"; // FIXME
+    }
+  } catch (eee) {
+    mwDebug("_card2token: exception=" + eee);
+  }
+  
+  try {
+    var infocard = "<infocard>" +
+    "<id>" + cardname + "</id>" +
+    "<privatepersonalidentifier>" + cardname + "</privatepersonalidentifier>" +
+    "<ic:InformationCardPrivateData xmlns:ic=\"http://schemas.xmlsoap.org/ws/2005/05/identity\">" + 
+      "<ic:MasterKey>" + masterKey + "</ic:MasterKey>" +
+      "<ic:ClaimValueList>" + claimValueList + "</ic:ClaimValueList>" +
+    "</ic:InformationCardPrivateData>" + 
+    "</infocard>";
+    mwDebug("_card2token: infocard=" + infocard);
+  } catch (eeee) {
+    mwDebug("_card2token: exception=" + eeee);
+  }
+  
+  try {
+    policy.type = "selfAsserted";
+    policy.card = infocard;
+    
+    var serializedPolicy = JSON.stringify(policy);
+    var sp = TokenIssuer.getToken(serializedPolicy);
+    mwDebug("_card2token: sp=" + sp);
+    var newPolicy = JSON.parse(sp);
+    if (newPolicy.hasOwnProperty("tokenToReturn")) {
+      var tokenToReturn = newPolicy.tokenToReturn;
+      return tokenToReturn;
+    }
+    mwDebug("_card2token: no tokenToReturn" + sp);
+    return null;
+  } catch (getTokenException) {
+    mwDebug("_card2token: getTokenException=" + getTokenException);
+    return null;
+  }
 }
 
 function pollForSelectedCardCallback(policy){
