@@ -1,0 +1,6 @@
+ATTENTION
+
+Avant d'utiliser ce projet, installer JS puis COBRA
+à l'aide du fichier install/install.bat
+
+Sinon, des dépendances ne pourront pas être résolues.
