@@ -27,5 +27,10 @@
 			<artifactId>fc2-jss-skeleton</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-	</dependencies>
+		<dependency>
+  			<groupId>org.lobobrowser</groupId>
+  			<artifactId>cobra</artifactId>
+  			<version>0.98.4</version>
+		</dependency>
+</dependencies>
 </project>
