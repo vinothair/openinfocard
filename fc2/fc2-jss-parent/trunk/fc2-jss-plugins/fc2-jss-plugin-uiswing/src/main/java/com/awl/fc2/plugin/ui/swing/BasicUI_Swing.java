@@ -37,7 +37,7 @@ public class BasicUI_Swing implements IUI_BasicInterface {
 		}
 		//Scanner in = new Scanner(System.in);
 		//String response = in.nextLine();
-		String response = "0";
+		String response = "1";
 		int idx = Integer.valueOf(response).intValue();
 		return idx;
 	}

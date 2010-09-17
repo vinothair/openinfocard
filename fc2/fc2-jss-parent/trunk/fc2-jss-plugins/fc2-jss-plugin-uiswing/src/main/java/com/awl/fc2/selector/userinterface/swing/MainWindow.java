@@ -83,7 +83,6 @@ public class MainWindow extends JFrame{
 	
 	URL url = getClass().getResource("/com/awl/fc2/plugin/session/trayicon/im.png");
 	Image icon = Toolkit.getDefaultToolkit().getImage(url);
-//	private TrayIcon trayIcon = new TrayIcon(icon, "JSS", null);
 	
 	Color c1 = new Color(222,122,22);
 	Dimension size = new Dimension();
@@ -117,6 +116,7 @@ public class MainWindow extends JFrame{
 	    	
 	    }
 		
+	    //preparing access paths
 		try {
 			path = XMLParser.getFirstValue(Config.getInstance().getXML(),"DEFAULT_PATH")+"/";
 			imgs = XMLParser.getFirstValue(Config.getInstance().getXML(),"IMGS");
@@ -128,19 +128,31 @@ public class MainWindow extends JFrame{
 			e.printStackTrace();
 		}
 		
+		//preparing title variables from title.txt
 		prepareTitle();
+		//build window content
 		build();
+		//pop on top test
 		hideProc();
 		wakeupProc();
 		
 	}
 	
+	/**
+	 * Singleton pattern
+	 * @return the current instance of MainWindow if it exists, else a new instance.
+	 */
 	static public MainWindow getInstance(){
 		if(_instance == null)
 			_instance = new MainWindow();
 		return _instance;
 	}
 
+	
+	/**
+	* title.txt must be read to retrieve the title and font size to be used.
+	* If the file does not exist, it will be created with a set of default values.
+	*/
 	private void prepareTitle(){
 		
 		boolean freshlyCreated = false;
@@ -210,10 +222,13 @@ public class MainWindow extends JFrame{
 	        }
 		}
 		
-//        for(int i=0;i<2;i++)System.out.println(titleContent[i]);
-		
 	}
 	
+	
+	/**
+	 * Used to set the main characteristics of MainWindow, before calling {@link buildContentPane}.
+	 * Properties such as size, location and resizable are set here.
+	 */
 	private void build(){
 		
 		setTitle("Java Smart Selector");
@@ -234,25 +249,24 @@ public class MainWindow extends JFrame{
 			
 		});
 		
-//		trayIcon.setToolTip("JSS Interface");
-//		
-//        trayIcon.addMouseListener(new MouseAdapter() {
-//            public void mouseClicked(MouseEvent e) {
-//            	wakeupProc();
-//            }
-//        });
-		
 		this.setIconImage(icon);
 		
 		setContentPane(buildContentPane());
 	}
 	
+	/**
+	 * All swing components are designed and placed within this method.
+	 * @return the content pane to be applied with {@link setContentPane()}.
+	 */
 	private JLayeredPane buildContentPane(){
 		
+		//the background panel that will support all other components
 		panel = new ImagePanel(new ImageIcon(imgs+"background.png").getImage());
 		panel.setLayout(null);
 		panel.setLocation(0,0);
 		
+		//a slightly smaller panel that is necessary
+		//for transitions excluding borders of the background.
 		content = new JPanel();
 		content.setLayout(null);
 		content.setSize(394,290);
@@ -261,9 +275,17 @@ public class MainWindow extends JFrame{
 		
 		panel.add(content);
 		
-		setConsole();
+		//console panel to display messages
+		console = new JPanel();
+		console.setLayout(null);
+		console.setSize(394,290);
+		console.setLocation(0,0);
+		console.setOpaque(false);
 		content.add(console);
 		
+		//title bar that will use the informations from title.txt
+		//contains the close and minimize buttons
+		//it also has listeners to let the user click and drag it in order to move the window.
 		JPanel titlebar = new JPanel();
 		titlebar.setLayout(null);
 		titlebar.setOpaque(false);
@@ -318,7 +340,7 @@ public class MainWindow extends JFrame{
 				hideProc();
 			}
 		});
-		
+	
 		titlebar.addMouseListener(new MouseAdapter() {  
 			public void mousePressed(MouseEvent e) {  
 				if(!e.isMetaDown()){  
@@ -338,6 +360,8 @@ public class MainWindow extends JFrame{
 		});
 		
 		
+		//test button that is used to open an html browser window
+		
 		final JButton browser = new JButton("N");
 		browser.setSize(browser.getPreferredSize());
 		browser.setLocation(350,40);
@@ -352,6 +376,11 @@ public class MainWindow extends JFrame{
 		return panel;
 	}
 	
+	/**
+	 * used to determine if the font size retrieved in title.txt is correct, i.e. if it contains only numbers.
+	 * @param str the string to be checked
+	 * @return true if the string contains only number, false otherwise.
+	 */
     public boolean containsOnlyNumbers(String str) {
         
         if (str == null || str.length() == 0)
@@ -366,6 +395,10 @@ public class MainWindow extends JFrame{
         return true;
     }
 
+    /**
+     * called when the user clicks "close".
+     * opens a dialogs that asks for what to do : cancel operation, simply minimize, or really close the program.
+     */
 	public void exitProc(){
 		final Dialog_Exit ex = new Dialog_Exit();
 		ex.settings();
@@ -378,11 +411,20 @@ public class MainWindow extends JFrame{
 		}
 	}
 
+	/**
+	 * called on a "minimize" action.
+	 * simply hides the window.
+	 * to make it visible again, use the trayicon.
+	 */
 	public void hideProc(){
 		
 		setVisible(false);
 	}
 	
+	/**
+	 * inverse procedure of hideProc.
+	 * makes the window visible.
+	 */
 	public void wakeupProc(){
 		
 		setVisible(true);
@@ -390,7 +432,11 @@ public class MainWindow extends JFrame{
 		
 	}
 
-
+	/**
+	 * displays a jlabel in the console panel.
+	 * a timer is used to add a color change effect.
+	 * @param msg the message to be displayed in the console
+	 */
 	public void traceConsole(final String msg){
 		
 		SwingUtilities.invokeLater(new Runnable() {
@@ -429,19 +475,9 @@ public class MainWindow extends JFrame{
 		
 	}
 	
-	public void setConsole(){
-		
-//		this.setContentPane(buildContentPane());
-//		index_y = 80;
-		
-		console = new JPanel();
-		console.setLayout(null);
-		console.setSize(394,290);
-		console.setLocation(0,0);
-		console.setOpaque(false);
-				
-	}
-	
+	/**
+	 * clears the console and resets the vertical index to top position for next message to trace.
+	 */
 	public void clearConsole(){
 		
 		console.removeAll();
@@ -449,7 +485,9 @@ public class MainWindow extends JFrame{
 		index_y = 0;
 	}
 
-	
+	/**
+	 * makes the transition from the card selection panel to the console panel (timer included).
+	 */
 	public void cardTOcons(){
 		
 		if (state==0)return;
@@ -487,7 +525,9 @@ public class MainWindow extends JFrame{
 		state = 0;
 	}
 	
-	
+	/**
+	 * makes the transition from the console panel to the card selection panel (timer included).
+	 */
 	public void consTOcard(){
 		
 		if (state==1)return;
@@ -524,6 +564,12 @@ public class MainWindow extends JFrame{
 		state = 1;
 	}
 	
+	/**
+	 * creates and switches to the CardPanel for card selection
+	 * @param claims
+	 * @param urls
+	 * @param labels
+	 */
 	public void selectCard(final String[] claims, final String[] urls, final String[] labels){
 		
 		cardpanel = new CardPanel(claims, urls, labels);
@@ -548,30 +594,35 @@ public class MainWindow extends JFrame{
 		
 	}
 	
-	
+	/**
+	 * used by other classes to retrieve the user's choice when selecting a card
+	 * @return the user response for card selection
+	 */
 	public String getResponse(){
 		
 		return response;
 	}
 	
+	/**
+	 * reset card selection response to null.
+	 * necessary between 2 selectCard().
+	 */
 	public void resetResponse(){
 		
 		response = null;
 	}
 
 	
-	
+	//pop on top test
 	@Override
 	public void setVisible(final boolean visible) {
-	  // make sure that frame is marked as not disposed if it is asked to be visible
-//	  if (visible) {
-//	      setDisposed(false);
-//	  }
-	  // let's handle visibility...
+
+	  //handling visibility
 	  if (!visible || !isVisible()) { // have to check this condition simply because super.setVisible(true) invokes toFront if frame was already visible
 	      super.setVisible(visible);
 	  }
-	  // ...and bring frame to the front.. in a strange and weird way
+	  
+	  //bring frame to the front
 	  if (visible) {
 	      int state = super.getExtendedState();
 	      state &= ~JFrame.ICONIFIED;

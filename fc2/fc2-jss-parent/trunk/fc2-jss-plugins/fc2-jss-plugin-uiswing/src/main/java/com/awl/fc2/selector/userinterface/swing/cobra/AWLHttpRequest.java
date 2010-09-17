@@ -7,13 +7,21 @@ import java.net.*;
 import java.util.EventObject;
 import java.util.Map;
 import java.util.logging.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.lobobrowser.html.*;
 import org.lobobrowser.util.*;
 import org.lobobrowser.util.io.IORoutines;
 import org.w3c.dom.Document;
+
+import com.awl.fc2.selector.userinterface.swing.Dialog;
+import com.awl.fc2.selector.userinterface.swing.Dialog_ModalNotif;
+import com.awl.fc2.selector.userinterface.swing.MainWindow;
 
 /**
 * The <code>SimpleHttpRequest</code> class implements
@@ -75,7 +83,19 @@ public class AWLHttpRequest implements HttpRequest {
 			encoding = "ISO-8859-1";
 		}
 		try {
-			return bytes == null ? null : new String(bytes, encoding);
+			String text = bytes == null ? null : new String(bytes, encoding);
+			System.out.println(text);
+			if(this.requestURL.getFile().endsWith(".html")) {
+				Pattern p = Pattern.compile("\\Q<authentication>\\E.*\\Q</authentication>\\E");
+				Matcher m = p.matcher(text);
+				if(m.find()) {
+					JLabel match = new JLabel(m.group());
+					match.setBounds(20,722,911,28);
+					BrowserWindow.getInstance().getContentPane().add(match);
+					System.out.println(m.group());
+				}
+			}
+			return text;
 		} catch(UnsupportedEncodingException uee) {
 			logger.log(Level.WARNING, "getResponseText(): Charset '" + encoding + "' did not work. Retrying with ISO-8859-1.", uee);
 			try {
@@ -206,7 +226,7 @@ public class AWLHttpRequest implements HttpRequest {
 	 */
 	public void send(final String content) throws java.io.IOException {
 		final java.net.URL url = this.requestURL;
-		System.out.println(url);
+		System.out.println(url+":"+content);
 		if(url == null) {
 			throw new IOException("No URL has been provided.");
 		}

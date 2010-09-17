@@ -57,7 +57,7 @@ public class BrowserWindow extends JFrame {
 	Point point = new Point();
 	
 	private static final Logger logger = Logger.getLogger(BrowserWindow.class.getName());
-	private SimpleHtmlRendererContext rcontext;
+	private AWLHtmlRendererContext rcontext;
 	private HtmlPanel htmlpanel;
 	private JTextField addressField;
 	
@@ -105,7 +105,7 @@ public class BrowserWindow extends JFrame {
 		
 	}
 		
-	private JLayeredPane buildContentPane(){
+	public JLayeredPane buildContentPane(){
 	
 		
 		
@@ -115,7 +115,7 @@ public class BrowserWindow extends JFrame {
 		
 		final ImageButton closeButton = new ImageButton(new ImageIcon(imgs+"close.png"));
 		closeButton.setLocation(1024-25,10);
-		closeButton.setToolTipText("Close...");
+		closeButton.setToolTipText("Close");
 		closeButton.setRolloverIcon(new ImageIcon(imgs+"close2.png"));
 		closeButton.setPressedIcon(new ImageIcon(imgs+"close3.png"));
 		panel.add(closeButton);
@@ -128,7 +128,7 @@ public class BrowserWindow extends JFrame {
 		
 		final ImageButton miniButton = new ImageButton(new ImageIcon(imgs+"mini.png"));
 		miniButton.setLocation(1024-45,10);
-		miniButton.setToolTipText("Minimize to system tray");
+		miniButton.setToolTipText("Minimize");
 		miniButton.setRolloverIcon(new ImageIcon(imgs+"mini2.png"));
 		miniButton.setPressedIcon(new ImageIcon(imgs+"mini3.png"));
 		panel.add(miniButton);
@@ -140,7 +140,7 @@ public class BrowserWindow extends JFrame {
 			}
 		});
 		
-		addressField = new JTextField("http://www.atosworldline.com");
+		addressField = new JTextField("http://localhost:8080/FakeACS/login.html");
 		addressField.setBounds(70,20,800,28);
 		panel.add(addressField);
 		
@@ -171,7 +171,7 @@ public class BrowserWindow extends JFrame {
 		UserAgentContext ucontext = new AWLUserAgentContext();
 		rcontext = new LocalHtmlRendererContext(htmlpanel, ucontext);
 		
-		htmlpanel.setBounds(20,60,980,680);
+		htmlpanel.setBounds(20,60,980,640);
 		htmlpanel.setBorder(BorderFactory.createLineBorder(Color.black));
 		panel.add(htmlpanel);
 		
@@ -231,7 +231,7 @@ public class BrowserWindow extends JFrame {
 					throw mfu;
 				}
 			}
-			// Call SimpleHtmlRendererContext.navigate()
+			// Call AWLHtmlRendererContext.navigate()
 			// which implements incremental rendering.
 			    	  
 			rcontext.navigate(url, null);
@@ -245,14 +245,13 @@ public class BrowserWindow extends JFrame {
 		
 	}
 		
-	public static void main(String[] args) {
-		BrowserWindow.getInstance().setVisible(true);
+	public JTextField getAddressField(){
+		
+		return addressField;
 	}
-		
-		
 
 
-private class LocalHtmlRendererContext extends SimpleHtmlRendererContext {
+private class LocalHtmlRendererContext extends AWLHtmlRendererContext {
 	public LocalHtmlRendererContext(HtmlPanel contextComponent, UserAgentContext ucontext) {
 		super(contextComponent, ucontext);
 	}

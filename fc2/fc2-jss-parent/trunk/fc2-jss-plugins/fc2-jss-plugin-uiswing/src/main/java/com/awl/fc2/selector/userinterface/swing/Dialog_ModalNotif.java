@@ -38,6 +38,7 @@ import java.awt.event.MouseMotionAdapter;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import com.awl.fc2.selector.exceptions.Config_Exception_NotDone;
@@ -50,13 +51,13 @@ public class Dialog_ModalNotif extends JDialog{
 	private static final long serialVersionUID = 1L;
 
 	protected JDialog inform;
-	MainWindow window = null;
+	JFrame window = null;
 	String imgs;
 	
 	Dimension size = new Dimension();
 	Point point = new Point();
 	
-	public Dialog_ModalNotif(MainWindow parent){
+	public Dialog_ModalNotif(JFrame parent){
 		inform = new JDialog(parent, Dialog.ModalityType.DOCUMENT_MODAL);
 		window = parent;
 		
